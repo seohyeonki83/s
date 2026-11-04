@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v130</div>
+  <div id="ver">v131</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -385,6 +385,10 @@
   const gaugeFillGeo = new THREE.PlaneGeometry(GAUGE_W - GAUGE_PAD * 2, GAUGE_H - GAUGE_PAD * 2).translate((GAUGE_W - GAUGE_PAD * 2) / 2, 0, 0);   // 왼쪽 끝 기준으로 늘어난다
   const gaugeTrackMat = new THREE.MeshBasicMaterial({ color: 0x1c1c1e, transparent: true, opacity: 0.7, depthTest: false, depthWrite: false });
   const gaugeFillMat = new THREE.MeshBasicMaterial({ color: 0x4d7cff, transparent: true, depthTest: false, depthWrite: false });
+  // 감염 게이지 = 물린 시민 머리 위 둥근 시계 (v131) — 12시부터 시계 방향으로 차오른다. 체력바가 떠 있으면 그 위에
+  const CLOCK_R = 0.55, CLOCK_N = 64;   // 반지름 0.55 = 지름이 예전 막대 길이쯤
+  const clockBackGeo = new THREE.CircleGeometry(CLOCK_R + 0.06, 48);
+  const clockFillGeos = Array.from({ length: CLOCK_N + 1 }, (_, k) => new THREE.CircleGeometry(CLOCK_R, Math.max(1, k), Math.PI / 2 - (k / CLOCK_N) * Math.PI * 2, (k / CLOCK_N) * Math.PI * 2));
 
   // 체력바 = 감염 게이지와 같은 모양, 체력이 깎여 있는 동안 머리 위에 뜬다 — 꽉 차 있으면 안 보인다, 0이면 빈 바 (시민 빨강, 좀비 초록. 나도 같다)
   const hpFoeMat = new THREE.MeshBasicMaterial({ color: 0xff4d4d, transparent: true, depthTest: false, depthWrite: false });
@@ -669,12 +673,12 @@
     scene.add(c.icon);
     c.iconKind = '';
     c.iconT = 0;
-    c.gauge = new THREE.Group();         // 감염 게이지 (물리는 동안만 보인다)
+    c.gauge = new THREE.Group();         // 감염 게이지 = 둥근 시계 (물리는 동안만 보인다, v131)
     c.gauge.quaternion.copy(camera.quaternion);
-    const track = new THREE.Mesh(gaugeTrackGeo, gaugeTrackMat);
+    const track = new THREE.Mesh(clockBackGeo, gaugeTrackMat);
     track.renderOrder = 10;
-    c.gaugeFill = new THREE.Mesh(gaugeFillGeo, gaugeFillMat);
-    c.gaugeFill.position.set(-(GAUGE_W - GAUGE_PAD * 2) / 2, 0, 0.001);
+    c.gaugeFill = new THREE.Mesh(clockFillGeos[0], gaugeFillMat);
+    c.gaugeFill.position.set(0, 0, 0.001);
     c.gaugeFill.renderOrder = 11;
     c.gauge.add(track, c.gaugeFill);
     c.gauge.visible = false;
@@ -1743,11 +1747,12 @@
       b.arrow.rotation.z = Math.atan2(-b.vel.y * SIN_P, b.vel.x);   // 바닥 위 방향 → 화면 위 방향
       const gauged = b.state === 'held' && b.biter === me;   // 감염 게이지는 내가 물 때만 (동료가 물 땐 안 뜬다)
       b.gauge.visible = gauged && !hide;
-      if (gauged) {
-        b.gauge.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + 0.22 + (barUp ? BAR_STEP : 0));   // 체력바가 떠 있으면 그 위에 쌓는다
-        b.gaugeFill.scale.x = Math.min(1, Math.max(0.001, 1 - b.biter.biteT / b.biter.biteLen));
+      if (gauged) {                           // 둥근 시계 — 체력바 자리 위로 (물 때는 내 굵은 체력바도 바로 옆에 있어서 늘 그 위로 띄운다)
+        b.gauge.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + 0.22 + GAUGE_H / 2 + 0.2 + CLOCK_R + 0.06);
+        const f = Math.min(1, Math.max(0, 1 - b.biter.biteT / b.biter.biteLen));
+        b.gaugeFill.geometry = clockFillGeos[Math.round(f * CLOCK_N)];
       }
-      const kind = b.marked ? '!!!' : b.state === 'super' ? '!!' : b.state === 'alert' ? '?' : (b.state === 'panic' || b.state === 'fight') && b.notice > 0 ? '!' : '';
+      const kind = b.state === 'super' ? '!!' : b.state === 'alert' ? '?' : (b.state === 'panic' || b.state === 'fight') && b.notice > 0 ? '!' : '';   // 덮칠 때 뜨던 !!!는 뺐다 (v131)
       if (kind !== b.iconKind) {
         b.iconKind = kind;
         b.iconT = 0;
@@ -1758,7 +1763,7 @@
       b.iconT += dt;
       const k = Math.min(1, b.iconT / 0.12), s = ICON_H * (0.6 + 0.4 * (1 - (1 - k) * (1 - k)));   // 뜰 때 살짝 튀어나온다
       b.icon.scale.set(s * 2, s, 1);
-      b.icon.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + ICON_H * 0.6 + (gauged || barUp ? 0.35 : 0) + (gauged && barUp ? BAR_STEP : 0));   // 게이지·체력바가 있으면 그 위로
+      b.icon.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + ICON_H * 0.6 + (barUp ? 0.35 : 0) + (gauged ? CLOCK_R * 2 + 0.25 : 0));   // 체력바·게이지가 있으면 그 위로
     }
     if (me.aim) { me.aim.mesh.add(aimRing); aimRing.visible = true; }
     else aimRing.visible = false;
