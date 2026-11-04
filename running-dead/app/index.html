@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v155</div>
+  <div id="ver">v156</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -199,7 +199,7 @@
   const STAR_AT = (() => { let t = 0, d = STAR_BASE; return Array.from({ length: 5 }, () => { t += d; d *= STAR_GROW; return Math.round(t); }); })();   // [5, 18, 49, 127, 322]
   const DROP_SENSE = 2, DROP_SENSE_T = 3;   // 경찰차에서 내린 경찰: 인지거리가 순간 2배 → 3초에 걸쳐 원래대로 (v114)
   const DISPATCH_T = (n) => 30 - 5 * (n - 1);   // 별 n개일 때 출동 간격 (초) — 30·25·20·15·10 (v118)
-  const STATION_IN = 12, STATION_OUT = 8, STATION_FRONT = 4;   /* v147에 20% 줄임 (15·10·5 → 12·8·4) */ //   // 경찰서 안에 상주 · 둘레 배회 · 앞마당 배회(v115) — 출동하지 않는다. 안의 15명이 전부 감염되면 경찰서 파괴
+  const STATION_IN = 12, STATION_OUT = 4, STATION_FRONT = 2;   /* v156: 둘레·앞마당 반으로 (8·4 → 4·2) — 모자라면 5초마다 한 명씩 다시 채운다 (경찰서가 부서질 때까지) */ const STATION_REFILL = 5; //   /* v147에 20% 줄임 (15·10·5 → 12·8·4) */ //   // 경찰서 안에 상주 · 둘레 배회 · 앞마당 배회(v115) — 출동하지 않는다. 안의 15명이 전부 감염되면 경찰서 파괴
   const AROUND_MIX = (i) => ['', 'guard', 'attacker', i % 2 ? 'attacker' : 'guard'];   // 시민 건물 i번 둘레에 흩어 두는 사람 — 일반 1 · 수비형·공격형 1~2 (v118에 전부 절반: 건물 3채 합쳐 일반 3 · 수비형 5 · 공격형 4)
   const PATROL_AT = [[-16 * 0.8, -4 * 0.8], [16 * 0.8, -4 * 0.8]];   /* v144·v145: 자리 20% 좁힘 (POS) */ //   // 동네마다 길거리 순찰 경찰 두 명의 자리 (동네 가운데 기준, 건물·시작 자리 피해서) — 동네 다섯 개 × 2 = 10명 (v134)
   const SAFE_R = 10;                // 판을 깔 때 내 시작 자리 둘레 이만큼 안(건물 밖)에는 아무도 안 둔다 (v115)
@@ -1037,6 +1037,15 @@
       S.roof.material = stationDownMat;
     }
     stationDown = stations.every((S) => S.down);
+    for (const S of stations) {               // 경찰서 둘레·앞마당 경찰이 줄면 5초마다 한 명씩 그 자리에서 다시 나온다 — 경찰서가 부서지면 끝 (v156)
+      if (S.down || !S.outer) continue;
+      S.outer = S.outer.filter((c) => c.kind === 'citizen' && bodies.includes(c));
+      const ring = S.outer.filter((c) => c.area === S.ringA).length, front = S.outer.length - ring;
+      if (ring >= STATION_OUT && front >= STATION_FRONT) { S.refillT = STATION_REFILL; continue; }
+      if ((S.refillT -= dt) > 0) continue;
+      S.refillT = STATION_REFILL;
+      addStationCop(S, ring < STATION_OUT ? S.ringA : S.frontA);
+    }
     if (!stars || stationDown) return;
     dispatchT += dt;
     if (dispatchT < DISPATCH_T(stars)) return;
@@ -2186,6 +2195,7 @@
       const cx = (S.x0 + S.x1) / 2;
       const ring = { x0: S.x0 - 5, z0: S.z0 - 5, x1: S.x1 + 5, z1: S.z1 + 5 };   // 둘레 (건물 안은 pickGoal이 뺀다)
       const front = { x0: cx - 6, z0: S.z1 + 1.5, x1: cx + 6, z1: S.z1 + 8 };    // 앞마당 = 문 앞(남쪽)
+      S.ringA = ring; S.frontA = front; S.outer = []; S.refillT = STATION_REFILL;
       for (let i = 0; i < STATION_IN + STATION_OUT + STATION_FRONT; i++) {
         const inside = i < STATION_IN, area = inside ? S : i < STATION_IN + STATION_OUT ? ring : front;
         let g = pickGoal(area);
@@ -2194,9 +2204,18 @@
         c.station = S;                        // 어느 경찰서 경찰인지
         c.area = area;
         enterNormal(c);
-        if (inside) S.residents.push(c);
+        if (inside) S.residents.push(c); else S.outer.push(c);
       }
     }
+  }
+  function addStationCop(S, area) {          // 경찰서 둘레·앞마당에 경찰 한 명 더 (v156) — 빈 자리, 다른 사람과 1.2칸 넘게
+    let g = pickGoal(area);
+    for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(area);
+    const c = addCitizen(g.x, g.y, area, 'police');
+    c.station = S;
+    c.area = area;
+    enterNormal(c);
+    S.outer.push(c);
   }
   document.getElementById('reset').addEventListener('click', spawn);
 
