@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v134</div>
+  <div id="ver">v135</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -191,12 +191,12 @@
   const ARRIVE = 1.0;               // 사건 자리에 이만큼 다가가면 도착
   const SHOT_FLASH = 0.15;          // 쏠 때 경찰 → 좀비로 노란 선이 번쩍이는 시간 (초)
 
-  // 수배 별·출동 (v113) — 감염된 사람 수(시민·경찰)에 따라 별이 붙는다: v133부터 기하급수 — 5명 1개, 15명 2개, 45명 3개, 135명 4개, 405명 5개(최대). 별이 생기면 경찰서에서 출동 간격마다 한 번 출동한다.
+  // 수배 별·출동 (v113) — 감염된 사람 수(시민·경찰)에 따라 별이 붙는다: v135부터 늘어나는 양이 2.5배씩 — 5명 1개, 18명 2개, 49명 3개, 127명 4개, 322명 5개(최대). 별이 생기면 경찰서에서 출동 간격마다 한 번 출동한다.
   //   출동 간격 = 별 1개 30초, 별 하나 늘 때마다 5초씩 짧게 (5개면 10초 — v118에 전부 5초씩 줄임). 한 번 출동 = 경찰 1~2명이 걸어서,
   //   별 2개부터는 50% 확률로 경찰차 한 대(1~2명 탑승). 가는 곳 = 마지막 사건(감염) 자리. 경찰서가 파괴되면 더는 안 나온다.
   const STAR_MAX = 5;
-  const STAR_BASE = 5, STAR_RATIO = 3;   // 별 1개 = 감염 5명, 그 뒤로 별 하나마다 3배씩 (v133 — 전엔 5·15·30·45·60)
-  const STAR_AT = Array.from({ length: 5 }, (_, i) => STAR_BASE * STAR_RATIO ** i);   // [5, 15, 45, 135, 405]
+  const STAR_BASE = 5, STAR_GROW = 2.5;   // 별 사이에 더 필요한 감염 수가 2.5배씩 늘어난다: +5, +12.5, +31, +78, +195 (v135)
+  const STAR_AT = (() => { let t = 0, d = STAR_BASE; return Array.from({ length: 5 }, () => { t += d; d *= STAR_GROW; return Math.round(t); }); })();   // [5, 18, 49, 127, 322]
   const DROP_SENSE = 2, DROP_SENSE_T = 3;   // 경찰차에서 내린 경찰: 인지거리가 순간 2배 → 3초에 걸쳐 원래대로 (v114)
   const DISPATCH_T = (n) => 30 - 5 * (n - 1);   // 별 n개일 때 출동 간격 (초) — 30·25·20·15·10 (v118)
   const STATION_IN = 15, STATION_OUT = 10, STATION_FRONT = 5;   // 경찰서 안에 상주 · 둘레 배회 · 앞마당 배회(v115) — 출동하지 않는다. 안의 15명이 전부 감염되면 경찰서 파괴
