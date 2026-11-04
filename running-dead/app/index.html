@@ -61,7 +61,7 @@
   }
   #stars i { display: block; margin-top: 4px; font: 600 11px/1 var(--font); font-style: normal; color: rgba(255, 255, 255, 0.75); }
   #minimap {   /* 미니맵 (v123) — 지도 전체. 못 가 본 곳은 까맣게, 가 본 곳은 흐리게, 지금 보이는 곳은 밝게. 경찰서(보라)·나(빨강)만 표시 */
-    position: absolute; top: calc(44px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+    position: absolute; top: calc(6px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px));   /* '처음부터' 버튼이 있던 자리로 (v130) */
     width: 85px; height: 91px; border-radius: 5px; outline: 1px solid rgba(255, 255, 255, 0.25);   /* 크기는 지도 비율에 맞춰 스크립트가 정한다 */
     background: rgba(28, 28, 33, 0.45); pointer-events: none;   /* 못 가 본 곳 — v129부터 반투명 (뒤 게임 화면이 비친다) */
   }
@@ -75,8 +75,8 @@
   #legend .domain { background: var(--domain); }
   #legend .fight { height: 0; border-top: 3px dashed var(--fight); border-radius: 0; }
   #legend .gap { margin-left: 6px; }
-  #reset {
-    position: absolute; top: calc(6px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+  #reset {   /* 오른쪽 아래 (v130) */
+    position: absolute; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
     padding: 7px 11px; border: 0; border-radius: 8px;
     background: var(--btn-bg); color: var(--btn-fg); font: 600 13px/1 var(--font);
     touch-action: manipulation; cursor: pointer;
@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v129</div>
+  <div id="ver">v130</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
