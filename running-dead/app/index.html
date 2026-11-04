@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v132</div>
+  <div id="ver">v133</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -191,11 +191,12 @@
   const ARRIVE = 1.0;               // 사건 자리에 이만큼 다가가면 도착
   const SHOT_FLASH = 0.15;          // 쏠 때 경찰 → 좀비로 노란 선이 번쩍이는 시간 (초)
 
-  // 수배 별·출동 (v113) — 감염된 사람 수(시민·경찰)에 따라 별이 붙는다: 5명 1개, 15명 2개, 30명 3개, 45명 4개, 60명 5개(최대) (v114). 별이 생기면 경찰서에서 출동 간격마다 한 번 출동한다.
+  // 수배 별·출동 (v113) — 감염된 사람 수(시민·경찰)에 따라 별이 붙는다: v133부터 기하급수 — 5명 1개, 15명 2개, 45명 3개, 135명 4개, 405명 5개(최대). 별이 생기면 경찰서에서 출동 간격마다 한 번 출동한다.
   //   출동 간격 = 별 1개 30초, 별 하나 늘 때마다 5초씩 짧게 (5개면 10초 — v118에 전부 5초씩 줄임). 한 번 출동 = 경찰 1~2명이 걸어서,
   //   별 2개부터는 50% 확률로 경찰차 한 대(1~2명 탑승). 가는 곳 = 마지막 사건(감염) 자리. 경찰서가 파괴되면 더는 안 나온다.
   const STAR_MAX = 5;
-  const STAR_AT = [5, 15, 30, 45, 60];   // 별 1~5개가 붙는 감염 수 (v114) — 처음 5명, 그다음 15명, 그 뒤로 15명 간격
+  const STAR_BASE = 5, STAR_RATIO = 3;   // 별 1개 = 감염 5명, 그 뒤로 별 하나마다 3배씩 (v133 — 전엔 5·15·30·45·60)
+  const STAR_AT = Array.from({ length: 5 }, (_, i) => STAR_BASE * STAR_RATIO ** i);   // [5, 15, 45, 135, 405]
   const DROP_SENSE = 2, DROP_SENSE_T = 3;   // 경찰차에서 내린 경찰: 인지거리가 순간 2배 → 3초에 걸쳐 원래대로 (v114)
   const DISPATCH_T = (n) => 30 - 5 * (n - 1);   // 별 n개일 때 출동 간격 (초) — 30·25·20·15·10 (v118)
   const STATION_IN = 15, STATION_OUT = 10, STATION_FRONT = 5;   // 경찰서 안에 상주 · 둘레 배회 · 앞마당 배회(v115) — 출동하지 않는다. 안의 15명이 전부 감염되면 경찰서 파괴
@@ -678,7 +679,7 @@
     c.iconT = 0;
     c.gauge = new THREE.Group();         // 감염 게이지 = 둥근 시계 (물리는 동안만 보인다, v131)
     c.gauge.quaternion.copy(camera.quaternion);
-    const track = new THREE.Mesh(clockBackGeo, gaugeTrackMat);
+    const track = c.gaugeTrack = new THREE.Mesh(clockBackGeo, gaugeTrackMat);
     track.renderOrder = UI_ME + 2;       // 감염 시계는 내가 물 때만 뜨는 내 UI — 다른 UI보다 위, 내 체력바보다도 위 (v132)
     c.gaugeFill = new THREE.Mesh(clockFillGeos[0], gaugeFillMat);
     c.gaugeFill.position.set(0, 0, 0.001);
@@ -1748,10 +1749,14 @@
       }
       b.arrow.visible = b.vel.length() > 0.15;
       b.arrow.rotation.z = Math.atan2(-b.vel.y * SIN_P, b.vel.x);   // 바닥 위 방향 → 화면 위 방향
-      const gauged = b.state === 'held' && b.biter === me;   // 감염 게이지는 내가 물 때만 (동료가 물 땐 안 뜬다)
+      const gauged = b.state === 'held' && !!b.biter;   // 감염 시계 — 내가 물 때는 크게(내 UI 층), 동료가 물 때는 절반 크기로 (v133)
       b.gauge.visible = gauged && !hide;
       if (gauged) {                           // 둥근 시계 — 체력바 자리 위로 (물 때는 내 굵은 체력바도 바로 옆에 있어서 늘 그 위로 띄운다)
-        b.gauge.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + 0.22 + GAUGE_H / 2 + 0.2 + CLOCK_R + 0.06);
+        const mine = b.biter === me, k = mine ? 1 : 0.5;
+        b.gauge.scale.setScalar(k);
+        b.gaugeTrack.renderOrder = (mine ? UI_ME : UI) + 2;   // 내 것은 내 UI 층, 동료 것은 보통 UI 층
+        b.gaugeFill.renderOrder = (mine ? UI_ME : UI) + 3;
+        b.gauge.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + 0.22 + GAUGE_H / 2 + (mine ? 0.2 : 0.08) + (CLOCK_R + 0.06) * k);
         const f = Math.min(1, Math.max(0, 1 - b.biter.biteT / b.biter.biteLen));
         b.gaugeFill.geometry = clockFillGeos[Math.round(f * CLOCK_N)];
       }
@@ -1766,7 +1771,7 @@
       b.iconT += dt;
       const k = Math.min(1, b.iconT / 0.12), s = ICON_H * (0.6 + 0.4 * (1 - (1 - k) * (1 - k)));   // 뜰 때 살짝 튀어나온다
       b.icon.scale.set(s * 2, s, 1);
-      b.icon.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + ICON_H * 0.6 + (barUp ? 0.35 : 0) + (gauged ? CLOCK_R * 2 + 0.25 : 0));   // 체력바·게이지가 있으면 그 위로
+      b.icon.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + ICON_H * 0.6 + (barUp ? 0.35 : 0) + (gauged ? (CLOCK_R * 2 + 0.25) * (b.biter === me ? 1 : 0.5) : 0));   // 체력바·게이지가 있으면 그 위로
     }
     if (me.aim) { me.aim.mesh.add(aimRing); aimRing.visible = true; }
     else aimRing.visible = false;
