@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v140</div>
+  <div id="ver">v141</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1719,7 +1719,7 @@
 
   // ── 시야 — 좀비마다 자기 인지거리만큼 둥글게 보이고, 벽에 가린 곳은 안 보인다. 모든 좀비 시야를 합쳐서 보여 준다.
   //    시야 밖은 어둡게 덮고, 거기 있는 시민·경찰은 안 그린다. 지붕이 덮인 건물(좀비가 없는 건물) 안 사람도 안 보인다 ──
-  const FOG = 0.85;            // 시야 밖 어둠 진하기 (1 = 완전 검정)
+  const FOG = 0.85 * 0.8;   /* v141에 20% 옅게 (0.85 → 0.68) */ //            // 시야 밖 어둠 진하기 (1 = 완전 검정)
   const VIEW_RAYS = 120;       // 시야 둘레를 이만큼 나눠 벽까지 거리를 잰다 (벽 끝 모서리 쪽은 따로 더 쏜다)
   const MAX_TRI = 60000;
   const visGeo = new THREE.BufferGeometry();
