@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v145</div>
+  <div id="ver">v146</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -251,7 +251,7 @@
   // 시험 판 — 시민 묶음 = 활동 영역 하나에 다섯 명. 처음 내 자리를 둘러싼 원 위에 북쪽부터 시계 방향으로 고르게 놓는다
   const AREA = 7 * MAP;   // 활동 영역 한 변 (유닛)
   const GROUP_DIST = 24 * MAP * POS;   // 묶음 가운데 ~ 처음 내 자리 거리 (이웃 영역 사이 최소 약 4.5칸)
-  const GROUPS = ['n', 'g', 'na', 'a', 'ga', 'n', 'g', 'na', 'a', 'ga'];   /* v143: 일반 +2 · 수비형 +1 · 공격형 +1 (빈 묶음 채움) */ //   // 묶음 구성 — n 일반 · g 수비형 · a 공격형 ('' = 빈 묶음, 안 깐다). v118에 전부 절반: 일반 6 → 3 · 수비형 5 → 3 · 공격형 8 → 4
+  const GROUPS = ['n', 'g', 'na', 'a', 'gn', 'n', 'g', 'na', 'a', 'ga'];   /* v143: 일반 +2 · 수비형 +1 · 공격형 +1 (빈 묶음 채움). v146: 공격형 1 → 일반 (동네마다 일반 11→12, 공격형 12→11) */ //   // 묶음 구성 — n 일반 · g 수비형 · a 공격형 ('' = 빈 묶음, 안 깐다). v118에 전부 절반: 일반 6 → 3 · 수비형 5 → 3 · 공격형 8 → 4
   const GROUP_TYPE = { n: '', g: 'guard', a: 'attacker' };
 
   // 건물 — 벽으로 둘러싼 네모, 문으로만 드나든다. 안에서는 밖을, 밖에서는 안을 못 본다.
