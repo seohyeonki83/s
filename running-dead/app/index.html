@@ -62,8 +62,8 @@
   #stars i { display: block; margin-top: 4px; font: 600 11px/1 var(--font); font-style: normal; color: rgba(255, 255, 255, 0.75); }
   #minimap {   /* 미니맵 (v123) — 지도 전체. 못 가 본 곳은 까맣게, 가 본 곳은 흐리게, 지금 보이는 곳은 밝게. 경찰서(보라)·나(빨강)만 표시 */
     position: absolute; top: calc(44px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
-    width: 96px; height: 150px; border-radius: 6px; outline: 1px solid rgba(255, 255, 255, 0.35);   /* 크기는 지도 비율에 맞춰 스크립트가 정한다 */
-    background: #24242a; pointer-events: none;   /* 못 가 본 곳 — v125에 살짝 밝게 */
+    width: 85px; height: 91px; border-radius: 5px; outline: 1px solid rgba(255, 255, 255, 0.25);   /* 크기는 지도 비율에 맞춰 스크립트가 정한다 */
+    background: rgba(28, 28, 33, 0.45); pointer-events: none;   /* 못 가 본 곳 — v129부터 반투명 (뒤 게임 화면이 비친다) */
   }
   #legend {
     position: absolute; top: calc(50px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));   /* 위 가운데 수배 별과 안 겹치게 (v113) */
@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v128</div>
+  <div id="ver">v129</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1118,7 +1118,7 @@
   }
   // ── 미니맵 (v123) — 스타크래프트처럼: 못 가 본 곳 = 까맣게, 가 본 곳 = 흐린 회색(건물도 보임), 지금 좀비 시야 안 = 밝게. 경찰서는 늘 보라, 나는 빨간 점 ──
   const MM = { x0: Math.min(...BLOCKS.map((b) => b[0])) - 26, x1: Math.max(...BLOCKS.map((b) => b[0])) + 26, z0: Math.min(...BLOCKS.map((b) => b[1])) - 55, z1: Math.max(...BLOCKS.map((b) => b[1])) + 26 };   // 지도 전체 (동네 다섯 개 + 여유)
-  const MM_S = Math.min(128 / (MM.x1 - MM.x0), 136 / (MM.z1 - MM.z0));   // 미니맵 배율 (화면 px / 유닛) — 가로세로 같은 비율로, 128×136 안에 맞춘다 (v125, v126)
+  const MM_S = Math.min(128 * 2 / 3 / (MM.x1 - MM.x0), 136 * 2 / 3 / (MM.z1 - MM.z0));   // 미니맵 배율 (화면 px / 유닛) — 가로세로 같은 비율로 (v125, v126), v129에 3분의 2 크기 (약 85×91)
   const MM_CW = Math.round((MM.x1 - MM.x0) * MM_S), MM_CH = Math.round((MM.z1 - MM.z0) * MM_S);
   const MM_CELL = 2;                          // 가 본 곳 기록 칸 (유닛)
   const mmW = Math.ceil((MM.x1 - MM.x0) / MM_CELL), mmH = Math.ceil((MM.z1 - MM.z0) / MM_CELL);
@@ -1146,7 +1146,7 @@
     for (const z of eyes) exploreAround(z.foot.x, z.foot.z, z.sense);
     if (mmDirty) {                            // 가 본 곳 그림을 다시 만든다
       const d = mmImg.data;
-      for (let i = 0; i < explored.length; i++) { const o = i * 4; d[o] = 104; d[o + 1] = 104; d[o + 2] = 112; d[o + 3] = explored[i] ? 255 : 0; }
+      for (let i = 0; i < explored.length; i++) { const o = i * 4; d[o] = 104; d[o + 1] = 104; d[o + 2] = 112; d[o + 3] = explored[i] ? 150 : 0;   /* 가 본 곳도 반투명 (v129) */ }
       mmFogCtx.putImageData(mmImg, 0, 0);
       mmDirty = false;
     }
@@ -1155,11 +1155,11 @@
     mmCtx.clearRect(0, 0, W, H);
     mmCtx.imageSmoothingEnabled = true;
     mmCtx.drawImage(mmFog, 0, 0, W, H);                         // 가 본 곳
-    mmCtx.fillStyle = 'rgba(232, 232, 240, 0.9)';              // 지금 보이는 곳
+    mmCtx.fillStyle = 'rgba(232, 232, 240, 0.6)';              // 지금 보이는 곳 (반투명)
     mmCtx.beginPath();
     for (const z of eyes) { if (!isZombie(z)) continue; const cx = X(z.foot.x), cz = Z(z.foot.z), r = z.sense * sx; mmCtx.moveTo(cx + r, cz); mmCtx.arc(cx, cz, r, 0, Math.PI * 2); }
     mmCtx.fill();
-    mmCtx.fillStyle = '#3a3a42';                                // 가 본 곳의 건물
+    mmCtx.fillStyle = 'rgba(40, 40, 46, 0.75)';                // 가 본 곳의 건물
     for (const B of buildings) {
       if (B.station) continue;
       const k = Math.floor(((B.z0 + B.z1) / 2 - MM.z0) / MM_CELL) * mmW + Math.floor(((B.x0 + B.x1) / 2 - MM.x0) / MM_CELL);
@@ -1175,15 +1175,15 @@
       mmCtx.fillStyle = found ? '#b44ee6' : 'rgba(180, 78, 230, 0.28)';
       mmCtx.fillRect(x, y, w, h);
       if (S.down) {                                            // 부서진 경찰서 = 흰 X
-        const e = 1.5 * mmDpr;
+        const e = 1.2 * mmDpr;
         mmCtx.beginPath();
         mmCtx.moveTo(x - e, y - e); mmCtx.lineTo(x + w + e, y + h + e);
         mmCtx.moveTo(x + w + e, y - e); mmCtx.lineTo(x - e, y + h + e);
-        mmCtx.lineWidth = 1.8 * mmDpr; mmCtx.strokeStyle = '#ffffff'; mmCtx.lineCap = 'round';
+        mmCtx.lineWidth = 1.4 * mmDpr; mmCtx.strokeStyle = '#ffffff'; mmCtx.lineCap = 'round';
         mmCtx.stroke();
       }
     }
-    const r = 2.6 * mmDpr;                                       // 나 = 빨간 점
+    const r = 2.2 * mmDpr;                                       // 나 = 빨간 점 (미니맵이 작아져서 조금 작게)
     mmCtx.beginPath(); mmCtx.arc(X(me.foot.x), Z(me.foot.z), r, 0, Math.PI * 2);
     mmCtx.fillStyle = '#ff3b30'; mmCtx.fill();
     mmCtx.lineWidth = 1 * mmDpr; mmCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; mmCtx.stroke();
