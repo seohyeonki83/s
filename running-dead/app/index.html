@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v149</div>
+  <div id="ver">v150</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -886,6 +886,7 @@
       }
     }
   }
+  const GUARD_PACE = 0.8;      // 수비형 이동 속도 배율 (v150에 20% 내림) — 걷기·배회·패닉·초패닉 전부
   function updateCitizen(c, dt) {
     if (c.knockT > 0) { knockStep(c, dt); return; }
     if (c.dropT > 0) {                       // 경찰차에서 막 내린 경찰: 늘어난 인지거리가 3초에 걸쳐 원래대로 (v114)
@@ -900,6 +901,7 @@
     if (c.state === 'super') {               // 초패닉: 주변을 안 보고 벽을 타고 문으로
       wantV.set(0, 0);
       superPanic(c);
+      if (c.guard) wantV.multiplyScalar(GUARD_PACE);
       steer(c.vel, wantV, ACCEL * dt);
       return;
     }
@@ -931,6 +933,7 @@
       if (d < 0.1) { c.goal = null; c.back = false; c.timer = rand(...IDLE_TIME); }
       else toward(c, c.goal.x, c.goal.y, Math.min((c.back ? WALK_SPEED : CIT_WANDER) * (c.police ? POLICE_PACE : 1), d * 3));
     } else if ((c.timer -= dt) <= 0) c.goal = pickGoal(c.area);   // 일반: 서 있다가 다음 곳으로
+    if (c.guard) wantV.multiplyScalar(GUARD_PACE);   // 수비형은 모든 이동이 20% 느리다 (v150)
     steer(c.vel, wantV, ACCEL * dt);
   }
 
