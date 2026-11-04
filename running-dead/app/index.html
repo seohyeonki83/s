@@ -35,11 +35,11 @@
   html { box-sizing: border-box; height: 100%; overflow: hidden; }
   body {
     height: 100%; margin: 0; overflow: hidden;
-    background: var(--ground); font-family: var(--font);
+    background: #1f1f23; font-family: var(--font);   /* 게임 밖으로 보이는 데가 있어도 어둡게 (v128) */
     touch-action: none; overscroll-behavior: none;
     -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
   }
-  #stage { position: relative; width: 100%; height: 100%; overflow: hidden; touch-action: none; }
+  #stage { position: fixed; inset: 0; overflow: hidden; touch-action: none; }   /* 받은 화면 전체를 게임으로 — 아래 빈 띠가 안 남게 (v128) */
   #view { display: block; width: 100%; height: 100%; }
   #joy {
     position: absolute; left: 50%; bottom: calc(56px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; width: 124px; height: 124px; margin-left: -62px;
@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v127</div>
+  <div id="ver">v128</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
