@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v141</div>
+  <div id="ver">v142</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -142,7 +142,7 @@
   // 카메라
   const PITCH = 50;       // 카메라가 내려다보는 각 (유니티 카메라 X = 50)
   const FOV = 40;         // 세로 시야각 (유니티와 같음)
-  const DIST = 77.175 * 0.8 * 0.75;   // 카메라 ~ 나 거리 (유닛) — v26의 51.45에서 50% 뒤로, v122에 20% 당김, v140에 25% 더 당김 (약 46.3). 동료가 5명 넘으면 한 명마다 1%씩 뒤로 (armyK)
+  const DIST = 77.175 * 0.8 * 0.75 * 0.8;   /* v142에 20% 더 당김 (46.3 → 37.0) */ //   // 카메라 ~ 나 거리 (유닛) — v26의 51.45에서 50% 뒤로, v122에 20% 당김, v140에 25% 더 당김 (약 46.3). 동료가 5명 넘으면 한 명마다 1%씩 뒤로 (armyK)
   const SCREEN_Y = 0.40;  // 내 자리 = 화면 위에서 40% (가운데보다 살짝 위 — 아래는 엄지 자리)
 
   // 나 (좀비) — 감염된 시민은 동료 좀비가 되어 손 뗀 나처럼 움직인다
