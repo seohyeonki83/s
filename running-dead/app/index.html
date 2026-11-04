@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v137</div>
+  <div id="ver">v138</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -209,7 +209,7 @@
   const CAR_ACCEL = 14, CAR_BRAKE = 8;    // 가속·감속 (유닛/초²) — v137: 서기로 하면 마지막 방향으로 미끄러지듯 천천히 선다 (전엔 감속 24)
   const CAR_BRAKE_DELAY = 0.2;            // 서기로 한 뒤 이만큼은 속도 그대로 (살짝 늦게 밟는다)
   const CAR_MASS = 10;                    // 경찰차 무게 = 몸 10개 — 몸 하나를 칠 때마다 최고 속도의 1/10씩 느려진다 (10명이면 선다)
-  const CAR_HIT_DMG = 50;                 // 최고 속도로 친 좀비 데미지 50 — 속도에 비례, 서 있으면 0 (시민은 날아가기만)
+  const CAR_HIT_DMG = 50;                 // 최고 속도로 치면 데미지 50 — 속도에 비례, 서 있으면 0. 좀비·시민·경찰 모두 (v138)
   const KNOCK = 2.2, KNOCK_T = 0.6;       // 치인 몸은 차 속도의 2.2배로 튕겨 날아간다 (최대 0.6초, 점점 느려짐)
   const CAR_L = 2.8, CAR_W = 1.5;   // 길이·폭 (유닛)
 
@@ -858,6 +858,9 @@
       b.knockT = 0;
       b.vel.set(0, 0);
       if (b.knockDie) { b.knockDie = false; dying.push(b); }   // 멈췄는데 죽었다 → 사라진다
+      else if (b.kind === 'citizen' && b.maxHp > 0 && b.hp <= 0 && !b.police && b.state !== 'panic' && b.state !== 'held') {   // 체력이 다한 수비형·공격형 → 놀라서 도망 (때려서 0이 됐을 때와 같다)
+        b.lastSeen.copy(b.foot); enterPanic(b, null, true); b.tick = 0;
+      }
     }
   }
   function updateCitizen(c, dt) {
@@ -1135,7 +1138,9 @@
           b.knockVX = kx / kl * sp * KNOCK;
           b.knockVZ = kz / kl * sp * KNOCK;
           b.knockT = KNOCK_T;
-          if (isZombie(b)) { b.hp = Math.max(0, b.hp - CAR_HIT_DMG * sp / CAR_SPEED); if (b.hp <= 0) b.knockDie = true; }   // 죽어도 날아가서 멈춘 뒤에 사라진다
+          const dmg = CAR_HIT_DMG * sp / CAR_SPEED;   // 모두 데미지 (v138 — 시민·경찰도)
+          if (isZombie(b)) { b.hp = Math.max(0, b.hp - dmg); if (b.hp <= 0) b.knockDie = true; }   // 좀비는 죽으면 날아가서 멈춘 뒤에 사라진다
+          else if (b.hp > 0) b.hp = Math.max(0, b.hp - dmg);   // 시민·경찰은 체력이 깎인다 (0이 되면 덮칠 수 있게 된다)
           const ns = Math.max(0, sp - CAR_SPEED / CAR_MASS);   // 차는 몸 하나 무게만큼 느려진다
           car.vx *= ns / sp; car.vz *= ns / sp;
         }
