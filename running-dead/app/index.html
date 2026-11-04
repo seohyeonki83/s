@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v136</div>
+  <div id="ver">v137</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -206,7 +206,11 @@
   // 경찰차 — 네모(앞이 있다). 좀비를 보기(경찰 시야) 전엔 서지 않는다: 사건 자리들을 가까운 곳부터 차례로 돌고, 더 없으면 주인공 쪽으로 (v116).
   //   좀비를 보면 바로 서서 양옆 문으로 경찰이 내리고, 그 뒤엔 그 자리에 계속 서 있다. 시야는 안 가리지만 몸은 막는다 (부딪히면 밀려난다)
   const CAR_SPEED = MY_SPEED * 1.5; // 내 속도의 1.5배 (v113에 3배 → v116에 절반)
-  const CAR_ACCEL = 14, CAR_BRAKE = 24;   // 가속·감속 (유닛/초²)
+  const CAR_ACCEL = 14, CAR_BRAKE = 8;    // 가속·감속 (유닛/초²) — v137: 서기로 하면 마지막 방향으로 미끄러지듯 천천히 선다 (전엔 감속 24)
+  const CAR_BRAKE_DELAY = 0.2;            // 서기로 한 뒤 이만큼은 속도 그대로 (살짝 늦게 밟는다)
+  const CAR_MASS = 10;                    // 경찰차 무게 = 몸 10개 — 몸 하나를 칠 때마다 최고 속도의 1/10씩 느려진다 (10명이면 선다)
+  const CAR_HIT_DMG = 50;                 // 최고 속도로 친 좀비 데미지 50 — 속도에 비례, 서 있으면 0 (시민은 날아가기만)
+  const KNOCK = 2.2, KNOCK_T = 0.6;       // 치인 몸은 차 속도의 2.2배로 튕겨 날아간다 (최대 0.6초, 점점 느려짐)
   const CAR_L = 2.8, CAR_W = 1.5;   // 길이·폭 (유닛)
 
   // 동료 좀비가 나를 따르는 거리
@@ -845,7 +849,19 @@
   }
 
   const wantV = new THREE.Vector2();
+  function knockStep(b, dt) {                 // 차에 치여 날아가는 중 — 그 방향으로 튕겨 가다가 점점 느려져 멈춘다 (v137)
+    b.vel.set(b.knockVX, b.knockVZ);
+    const f = Math.exp(-4 * dt);
+    b.knockVX *= f; b.knockVZ *= f;
+    b.knockT -= dt;
+    if (b.knockT <= 0 || Math.hypot(b.knockVX, b.knockVZ) < 0.3) {
+      b.knockT = 0;
+      b.vel.set(0, 0);
+      if (b.knockDie) { b.knockDie = false; dying.push(b); }   // 멈췄는데 죽었다 → 사라진다
+    }
+  }
   function updateCitizen(c, dt) {
+    if (c.knockT > 0) { knockStep(c, dt); return; }
     if (c.dropT > 0) {                       // 경찰차에서 막 내린 경찰: 늘어난 인지거리가 3초에 걸쳐 원래대로 (v114)
       c.dropT = Math.max(0, c.dropT - dt);
       c.sense = c.baseSense * (1 + (DROP_SENSE - 1) * c.dropT / DROP_SENSE_T);
@@ -1026,7 +1042,7 @@
     const l2 = new THREE.Mesh(lampGeo, blue); l2.position.set(-0.15, 0, 0.27); l2.renderOrder = -0.44;
     g.add(body, glass, l1, l2);
     scene.add(g);
-    cars.push({ g, red, blue, x, z, vx: 0, vz: 0, h, calls: [site], n, state: 'drive', flashT: 0, sight: SIGHT * 0.7 * rand(0.9, 1.1), foot: new THREE.Vector3(x, 0, z) });   // calls = 들를 사건 자리 (새 감염도 여기 붙는다)
+    cars.push({ g, red, blue, x, z, vx: 0, vz: 0, h, calls: [site], n, state: 'drive', flashT: 0, sight: SIGHT * 0.7 * rand(0.8, 1.2), foot: new THREE.Vector3(x, 0, z) });   // calls = 들를 사건 자리 (새 감염도 여기 붙는다)
   }
   function carGoal(car) {                     // 지금 갈 곳 = 들를 사건 자리 중 가장 가까운 곳 (k = 그 번호), 없으면 주인공 (k = -1). 건물 안이면 그 문 앞 밖
     let tx, tz, k = -1, best = Infinity;
@@ -1063,7 +1079,7 @@
         let zombie = false;                   // 경찰 시야 안에 좀비 (밖에 있는 좀비만 — 경찰차는 늘 밖)
         for (const z of zombies) if (isZombie(z) && !z.space && Math.hypot(z.foot.x - car.x, z.foot.z - car.z) <= car.sight) { zombie = true; break; }
         const goal = zombie ? null : carGoal(car);
-        if (zombie || !goal) car.state = 'brake';   // 좀비를 봤다 (또는 좀비가 하나도 없다) → 선다
+        if (zombie || !goal) { car.state = 'brake'; car.brakeT = CAR_BRAKE_DELAY; }   // 좀비를 봤다 (또는 좀비가 하나도 없다) → 선다
         else {
           const [tx, tz, k] = goal, d = Math.hypot(tx - car.x, tz - car.z);
           if (k >= 0 && d < 2.5) car.calls.splice(k, 1);   // 사건 자리에 닿았다 → 지우고 다음 곳으로 (서지 않는다)
@@ -1076,7 +1092,8 @@
         }
       }
       if (car.state === 'brake') {
-        carSteer(car, 0, 0, CAR_BRAKE * dt);
+        if (car.brakeT > 0) car.brakeT -= dt;  // 살짝 늦게 밟고
+        else carSteer(car, 0, 0, CAR_BRAKE * dt);   // 가던 방향 그대로 미끄러지며 선다
         if (Math.hypot(car.vx, car.vz) < 0.05) {   // 섰다 → 경찰이 내리고 차는 그 자리에 계속 서 있다
           car.vx = car.vz = 0;
           car.state = 'parked';
@@ -1100,14 +1117,28 @@
     const dx = wx - car.vx, dz = wz - car.vz, d = Math.hypot(dx, dz);
     if (d <= step) { car.vx = wx; car.vz = wz; } else { car.vx += dx / d * step; car.vz += dz / d * step; }
   }
-  function carCollide() {                     // 경찰차 몸 = 네모 — 겹친 사람·좀비를 가장 가까운 변 밖으로 민다 (차는 안 밀린다)
+  function carCollide() {                     // 경찰차 몸 = 네모 — 겹친 몸은 가장 가까운 변 밖으로. 달리던 차에 치이면 튕겨 날아가고(좀비는 데미지), 차는 그만큼 느려진다 (v137)
     for (const car of cars) {
       const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx;
       for (const b of bodies) {
-        if (b.fixed) continue;
+        if (b.fixed || b.knockT > 0) continue;
         const dx = b.foot.x - car.x, dz = b.foot.z - car.z, hu = CAR_L / 2 + b.r, hv = CAR_W / 2 + b.r;
+        if (b.hitT > 0 && b.hitT < clock) b.hitT = 0;
         let u = dx * fx + dz * fz, v = dx * rx + dz * rz;
         if (Math.abs(u) >= hu || Math.abs(v) >= hv) continue;
+        const sp = Math.hypot(car.vx, car.vz);
+        if (sp > 0.8 && !b.hitT) {            // 치였다 (한 번 치인 몸은 1초 동안은 다시 안 치인다 — 밀려나기만)
+          b.hitT = clock + 1;
+          const nl = Math.hypot(dx, dz) || 1;
+          let kx = car.vx / sp * 0.7 + dx / nl * 0.3, kz = car.vz / sp * 0.7 + dz / nl * 0.3;   // 차가 가던 쪽 + 살짝 옆으로
+          const kl = Math.hypot(kx, kz) || 1;
+          b.knockVX = kx / kl * sp * KNOCK;
+          b.knockVZ = kz / kl * sp * KNOCK;
+          b.knockT = KNOCK_T;
+          if (isZombie(b)) { b.hp = Math.max(0, b.hp - CAR_HIT_DMG * sp / CAR_SPEED); if (b.hp <= 0) b.knockDie = true; }   // 죽어도 날아가서 멈춘 뒤에 사라진다
+          const ns = Math.max(0, sp - CAR_SPEED / CAR_MASS);   // 차는 몸 하나 무게만큼 느려진다
+          car.vx *= ns / sp; car.vz *= ns / sp;
+        }
         if (hu - Math.abs(u) < hv - Math.abs(v)) u = (u < 0 ? -1 : 1) * hu; else v = (v < 0 ? -1 : 1) * hv;
         b.foot.x = car.x + u * fx + v * rx;
         b.foot.z = car.z + u * fz + v * rz;
@@ -1531,6 +1562,7 @@
   }
 
   function updateZombie(z, dt) {
+    if (z.knockT > 0) { knockStep(z, dt); return; }
     const commanding = z === me && cmdPid !== null;   // 명령키를 누르고 있는 동안 주인공은 가만히 선다 — 이동·사냥 안 함 (v107. 하던 습격·감염은 마저 한다)
     const touching = z === me && pid !== null && !commanding;   // 손가락을 대고 있다 (조종하는 나만)
     const input = z === me && !commanding ? move : NO_INPUT;
@@ -1722,6 +1754,7 @@
       const hide = !(b === me || isZombie(b) || seen(b, eyes));   // 시민·경찰은 좀비 시야 안에 있을 때만 보인다
       b.mesh.visible = !hide;
       b.mesh.position.copy(b.foot).addScaledVector(UP, RADIUS);   // 원 아랫끝이 바닥에 닿는다
+      if (b.knockT > 0) b.mesh.position.y += Math.sin(Math.PI * (1 - b.knockT / KNOCK_T)) * 0.9;   // 치여 날아갈 때 살짝 떠오른다
       if (b.lungeT >= 0) {                    // 때리는 모션: 상대 쪽으로 빠르게 붙었다가 돌아온다 (그림만)
         const k = b.lungeT < LUNGE_IN ? b.lungeT / LUNGE_IN : Math.max(0, 1 - (b.lungeT - LUNGE_IN) / LUNGE_OUT);
         b.mesh.position.x += b.lungeX * LUNGE * k;
