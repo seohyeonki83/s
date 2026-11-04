@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v153</div>
+  <div id="ver">v154</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1390,7 +1390,7 @@
       const d = Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z);
       if (d > ad && d > bd) continue;
       if (d <= ad) { ad = d; any = b; }
-      if (d <= bd && (b.hp <= 0 || (crowd.get(b) || 0) < CROWD_MAX)) { bd = d; best = b; }
+      if (d <= bd && (z === me || b.hp <= 0 || (crowd.get(b) || 0) < CROWD_MAX)) { bd = d; best = b; }   // 나는 3명 제한 없이 늘 가장 가까운 시민 (v154)
     }
     return best || any;
   }
