@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v135</div>
+  <div id="ver">v136</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -391,7 +391,8 @@
   const gaugeTrackMat = new THREE.MeshBasicMaterial({ color: 0x1c1c1e, transparent: true, opacity: 0.7, depthTest: false, depthWrite: false });
   const gaugeFillMat = new THREE.MeshBasicMaterial({ color: 0x4d7cff, transparent: true, depthTest: false, depthWrite: false });
   // 감염 게이지 = 물린 시민 머리 위 둥근 시계 (v131) — 12시부터 시계 방향으로 차오른다. 체력바가 떠 있으면 그 위에
-  const CLOCK_R = 0.55, CLOCK_N = 64;   // 반지름 0.55 = 지름이 예전 막대 길이쯤
+  const CLOCK_R = 0.55, CLOCK_N = 64;
+  const CLOCK_ME = 1.2;                  // 내 감염 시계 크기 배율 (v136에 20% 키움)   // 반지름 0.55 = 지름이 예전 막대 길이쯤
   const clockBackGeo = new THREE.CircleGeometry(CLOCK_R + 0.06, 48);
   const clockFillGeos = Array.from({ length: CLOCK_N + 1 }, (_, k) => new THREE.CircleGeometry(CLOCK_R, Math.max(1, k), Math.PI / 2 - (k / CLOCK_N) * Math.PI * 2, (k / CLOCK_N) * Math.PI * 2));
 
@@ -1025,7 +1026,7 @@
     const l2 = new THREE.Mesh(lampGeo, blue); l2.position.set(-0.15, 0, 0.27); l2.renderOrder = -0.44;
     g.add(body, glass, l1, l2);
     scene.add(g);
-    cars.push({ g, red, blue, x, z, vx: 0, vz: 0, h, calls: [site], n, state: 'drive', flashT: 0, sight: SIGHT * rand(0.9, 1.1), foot: new THREE.Vector3(x, 0, z) });   // calls = 들를 사건 자리 (새 감염도 여기 붙는다)
+    cars.push({ g, red, blue, x, z, vx: 0, vz: 0, h, calls: [site], n, state: 'drive', flashT: 0, sight: SIGHT * 0.7 * rand(0.9, 1.1), foot: new THREE.Vector3(x, 0, z) });   // calls = 들를 사건 자리 (새 감염도 여기 붙는다)
   }
   function carGoal(car) {                     // 지금 갈 곳 = 들를 사건 자리 중 가장 가까운 곳 (k = 그 번호), 없으면 주인공 (k = -1). 건물 안이면 그 문 앞 밖
     let tx, tz, k = -1, best = Infinity;
@@ -1753,7 +1754,7 @@
       const gauged = b.state === 'held' && !!b.biter;   // 감염 시계 — 내가 물 때는 크게(내 UI 층), 동료가 물 때는 절반 크기로 (v133)
       b.gauge.visible = gauged && !hide;
       if (gauged) {                           // 둥근 시계 — 체력바 자리 위로 (물 때는 내 굵은 체력바도 바로 옆에 있어서 늘 그 위로 띄운다)
-        const mine = b.biter === me, k = mine ? 1 : 0.5;
+        const mine = b.biter === me, k = mine ? CLOCK_ME : CLOCK_ME * 2 / 3;   // 내 시계 1.2배, 동료 시계는 내 것의 3분의 2 (v136)
         b.gauge.scale.setScalar(k);
         b.gaugeTrack.renderOrder = (mine ? UI_ME : UI) + 2;   // 내 것은 내 UI 층, 동료 것은 보통 UI 층
         b.gaugeFill.renderOrder = (mine ? UI_ME : UI) + 3;
@@ -1772,7 +1773,7 @@
       b.iconT += dt;
       const k = Math.min(1, b.iconT / 0.12), s = ICON_H * (0.6 + 0.4 * (1 - (1 - k) * (1 - k)));   // 뜰 때 살짝 튀어나온다
       b.icon.scale.set(s * 2, s, 1);
-      b.icon.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + ICON_H * 0.6 + (barUp ? 0.35 : 0) + (gauged ? (CLOCK_R * 2 + 0.25) * (b.biter === me ? 1 : 0.5) : 0));   // 체력바·게이지가 있으면 그 위로
+      b.icon.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + ICON_H * 0.6 + (barUp ? 0.35 : 0) + (gauged ? (CLOCK_R * 2 + 0.25) * (b.biter === me ? CLOCK_ME : CLOCK_ME * 2 / 3) : 0));   // 체력바·게이지가 있으면 그 위로
     }
     if (me.aim) { me.aim.mesh.add(aimRing); aimRing.visible = true; }
     else aimRing.visible = false;
@@ -2025,7 +2026,7 @@
     me.r = MY_BODY;                          // 내 부딪힘은 작고 미는 힘은 세다 — 동료들 사이에 덜 갇히게
     me.force = MY_FORCE;
     addHpBar(me, hpOurMat);
-    me.hpBar.scale.y = 3;   // v76에 1.5배 더 두껍게 (늘 떠 있다)                    // 내 체력바는 두 배 두껍고, 다른 바·표시보다 늘 위에 그린다 (섞여도 보이게)
+    me.hpBar.scale.set(1.2, 3, 1);   // v136에 가로 20% 늘림   // v76에 1.5배 더 두껍게 (늘 떠 있다)                    // 내 체력바는 두 배 두껍고, 다른 바·표시보다 늘 위에 그린다 (섞여도 보이게)
     for (const m of me.hpBar.children) m.renderOrder += UI_ME - UI;   // 내 체력바 = 내 UI 층 (다른 UI보다 위)
     me.sense = SIGHT * rand(0.9, 1.1);       // 좀비 인지거리 = 시민의 시야
     me.speed = MY_SPEED;                     // 이동 속도 (동료와 같다)
