@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v150</div>
+  <div id="ver">v151</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -214,7 +214,7 @@
   const CAR_L = 2.8, CAR_W = 1.5;   // 길이·폭 (유닛)
 
   // 동료 좀비가 나를 따르는 거리
-  const NEAR = 3.24 * 1.15 * 1.1 * 0.8;   // v75에 15%, v76에 10% 올리고 v122에 20% 줄임 (약 3.28) — 동료 수에 따라 armyK배
+  const NEAR = 3.24 * 1.15 * 1.1 * 0.8 * 0.8;   /* v151에 20% 더 줄임 (3.28 → 2.62) */ //   // v75에 15%, v76에 10% 올리고 v122에 20% 줄임 (약 3.28) — 동료 수에 따라 armyK배
             // 근접 거리 (유닛) — 동료 좀비 자리 거리는 이 거리의 50~150%에서 매번 새로 뽑는다
   const DOMAIN = 9 * 1.1 * 1.1 * 0.8 * 0.9 * 0.8 * 1.2 * 0.8;   // v75·v76에 10%씩 올리고 v78에 20%, v80에 10%, v86에 20% 줄이고 v112에 20% 늘리고 v122에 20% 줄임 (약 6.02) — 공격 지배 거리도 이 배수라 같이 줄어든다. 동료 수에 따라 armyK배
   // 부대 크기 (v122) — 동료(감염시킨 좀비)가 5명 넘으면 한 명 늘 때마다 근접·지배·공격 지배 거리(명령 받는 범위·원이 밀리는 거리도)와 카메라 거리가 1%씩 커진다
