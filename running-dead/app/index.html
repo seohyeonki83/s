@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v138</div>
+  <div id="ver">v139</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -597,6 +597,29 @@
       const t = segRect(px, pz, tx, tz, B, pad);
       if (t < first) { first = t; hit = B; }
     }
+    // 서 있는 경찰차 (v139) — 차(붙어 선 차들은 한 덩어리)를 원으로 보고 옆으로 돌아간다. 이미 원 안(차에 붙어 있음)이면 원을 따라 목적지 쪽으로 돈다
+    const L = Math.hypot(tx - px, tz - pz) || 1e-6, ux = (tx - px) / L, uz = (tz - pz) / L;
+    let cHit = null, cT = Infinity;
+    for (const O of carObs) {
+      const R = O.r + Math.max(pad, BODY) + 0.45;   // 돌아갈 원 = 차 원 + 몸 반지름 + 여유 — 모서리를 긁지 않게
+      const cx = O.x - px, cz = O.z - pz, dc = Math.hypot(cx, cz);
+      const along = cx * ux + cz * uz, perp = -cx * uz + cz * ux;   // 차 가운데의 앞쪽 거리, 옆으로 떨어진 거리(부호)
+      const a0 = Math.max(0, Math.min(L, along));
+      if (Math.hypot(px + ux * a0 - O.x, pz + uz * a0 - O.z) >= O.r + Math.max(pad, BODY)) continue;   // 가는 길이 차 무더기에 안 닿는다
+      if (dc < R || Math.hypot(tx - O.x, tz - O.z) < R) {   // 차에 붙어 있거나 목적지가 차 바로 옆 → 원을 따라 목적지 쪽으로 돈다 (붙어 있으면 바깥으로 먼저)
+        const ap = Math.atan2(-cz, -cx), at = Math.atan2(tz - O.z, tx - O.x);
+        let dA = at - ap; dA = Math.atan2(Math.sin(dA), Math.cos(dA));
+        const a = ap + Math.sign(dA || 1) * Math.min(Math.abs(dA), dc < R ? 0.25 : 0.9);
+        return wp.set(O.x + Math.cos(a) * (R + 0.5), O.z + Math.sin(a) * (R + 0.5));
+      }
+      if (along <= 0 || Math.abs(perp) >= R) continue;
+      const t = along - Math.sqrt(R * R - perp * perp);
+      if (t < cT) { cT = t; cHit = { O, perp, R }; }
+    }
+    if (cHit && (!hit || cT < first * L)) {   // 차가 먼저 막는다 → 차 옆(원 둘레에서 길과 수직인 쪽)으로
+      const s = cHit.perp >= 0 ? 1 : -1;
+      return wp.set(cHit.O.x + uz * s * (cHit.R + 0.3), cHit.O.z - ux * s * (cHit.R + 0.3));
+    }
     if (!hit) return wp.set(tx, tz);
     // 지금 자리·그 건물 모서리 넷(벽에서 띄운 곳)·목적지를 벽을 안 지나는 선분으로만 이어서 가장 짧은 길을 구하고, 그 길의 다음 자리를 돌려준다
     const pts = [[px, pz], [hit.x0 - m, hit.z0 - m], [hit.x1 + m, hit.z0 - m], [hit.x1 + m, hit.z1 + m], [hit.x0 - m, hit.z1 + m], [tx, tz]];
@@ -1033,6 +1056,23 @@
 
   // ── 경찰차 (v113) ──
   const cars = [];
+  let carObs = [];                            // 길 찾기용 서 있는 경찰차 원 {x, z, r} — 사이로 몸이 못 지나갈 만큼 붙은 차들은 한 원으로 합친다 (v139)
+  function updateCarObs() {
+    const cs = cars.filter((c) => c.state === 'parked').map((c) => ({ x: c.x, z: c.z, r: CAR_L / 2 + 0.15 }));
+    for (let merged = true; merged; ) {
+      merged = false;
+      for (let i = 0; i < cs.length && !merged; i++) for (let j = i + 1; j < cs.length; j++) {
+        const a = cs[i], b = cs[j], d = Math.hypot(a.x - b.x, a.z - b.z);
+        if (d >= a.r + b.r + 2 * BODY + 0.2) continue;
+        if (d + b.r <= a.r) { cs.splice(j, 1); merged = true; break; }          // b가 a 안에
+        if (d + a.r <= b.r) { cs[i] = b; cs.splice(j, 1); merged = true; break; } // a가 b 안에
+        const r = (d + a.r + b.r) / 2, t = (r - a.r) / d;                         // 둘을 감싸는 원
+        cs[i] = { x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t, r };
+        cs.splice(j, 1); merged = true; break;
+      }
+    }
+    carObs = cs;
+  }
   const carGeo = new THREE.PlaneGeometry(CAR_L, CAR_W).rotateX(-Math.PI / 2);          // 몸통 (+x가 앞)
   const glassGeo = new THREE.PlaneGeometry(0.45, CAR_W * 0.78).rotateX(-Math.PI / 2);  // 앞 유리
   const lampGeo = new THREE.PlaneGeometry(0.34, 0.5).rotateX(-Math.PI / 2);            // 지붕 경광등 (빨강·파랑)
@@ -1100,6 +1140,7 @@
         if (Math.hypot(car.vx, car.vz) < 0.05) {   // 섰다 → 경찰이 내리고 차는 그 자리에 계속 서 있다
           car.vx = car.vz = 0;
           car.state = 'parked';
+          updateCarObs();                     // 길 찾기에 이 차를 넣는다
           car.red.color.setHex(0x4a3a3a);
           car.blue.color.setHex(0x3a3f4a);
           unload(car);
@@ -1498,6 +1539,11 @@
       if (x <= C.x0 - m || x >= C.x1 + m || y <= C.z0 - m || y >= C.z1 + m) continue;
       const l = x - (C.x0 - m), r = C.x1 + m - x, u = y - (C.z0 - m), w = C.z1 + m - y, k = Math.min(l, r, u, w);   // 가장 가까운 벽 바깥으로
       if (k === l) x = C.x0 - m; else if (k === r) x = C.x1 + m; else if (k === u) y = C.z0 - m; else y = C.z1 + m;
+    }
+    if (!B) for (const O of carObs) {         // 서 있는 경찰차 위에 자리가 걸리면 차 밖으로 (v139)
+      const dx = x - O.x, dz = y - O.z, d = Math.hypot(dx, dz), R = O.r + BODY + 0.6;   // 길 찾기가 돌아가는 원보다 살짝 밖
+      if (d >= R) continue;
+      if (d > 1e-6) { x = O.x + dx / d * R; y = O.z + dz / d * R; } else x = O.x + R;
     }
     return slotV.set(x, y);
   }
@@ -2050,6 +2096,7 @@
     lastIncident = null;
     for (const car of cars) scene.remove(car.g);
     cars.length = 0;
+    carObs = [];
     for (const S of stations) { S.down = false; S.found = false; S.roof.material = stationRoofMat; }   // 미니맵에서 다시 '발견 전'으로
     cmdReadyAt = 0;
     for (const r of rings) scene.remove(r);
