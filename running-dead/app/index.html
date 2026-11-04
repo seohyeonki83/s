@@ -63,7 +63,7 @@
   #minimap {   /* 미니맵 (v123) — 지도 전체. 못 가 본 곳은 까맣게, 가 본 곳은 흐리게, 지금 보이는 곳은 밝게. 경찰서(보라)·나(빨강)만 표시 */
     position: absolute; top: calc(6px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px));   /* '처음부터' 버튼이 있던 자리로 (v130) */
     width: 85px; height: 91px; border-radius: 5px; outline: 1px solid rgba(255, 255, 255, 0.25);   /* 크기는 지도 비율에 맞춰 스크립트가 정한다 */
-    background: rgba(28, 28, 33, 0.45); pointer-events: none;   /* 못 가 본 곳 — v129부터 반투명 (뒤 게임 화면이 비친다) */
+    background: #24242a; pointer-events: none;   /* 못 가 본 곳 — v129에 반투명으로 했다가 밝은 바닥 위에서 가 본 곳과 구분이 안 돼서 v140에 다시 불투명 (v125 색) */
   }
   #legend {
     position: absolute; top: calc(50px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));   /* 위 가운데 수배 별과 안 겹치게 (v113) */
@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v139</div>
+  <div id="ver">v140</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -142,7 +142,7 @@
   // 카메라
   const PITCH = 50;       // 카메라가 내려다보는 각 (유니티 카메라 X = 50)
   const FOV = 40;         // 세로 시야각 (유니티와 같음)
-  const DIST = 77.175 * 0.8;   // 카메라 ~ 나 거리 (유닛) — v26의 51.45에서 50% 뒤로, v122에 20% 당김 (약 61.7). 동료가 5명 넘으면 한 명마다 1%씩 뒤로 (armyK)
+  const DIST = 77.175 * 0.8 * 0.75;   // 카메라 ~ 나 거리 (유닛) — v26의 51.45에서 50% 뒤로, v122에 20% 당김, v140에 25% 더 당김 (약 46.3). 동료가 5명 넘으면 한 명마다 1%씩 뒤로 (armyK)
   const SCREEN_Y = 0.40;  // 내 자리 = 화면 위에서 40% (가운데보다 살짝 위 — 아래는 엄지 자리)
 
   // 나 (좀비) — 감염된 시민은 동료 좀비가 되어 손 뗀 나처럼 움직인다
@@ -1233,7 +1233,7 @@
     for (const z of eyes) exploreAround(z.foot.x, z.foot.z, z.sense);
     if (mmDirty) {                            // 가 본 곳 그림을 다시 만든다
       const d = mmImg.data;
-      for (let i = 0; i < explored.length; i++) { const o = i * 4; d[o] = 104; d[o + 1] = 104; d[o + 2] = 112; d[o + 3] = explored[i] ? 150 : 0;   /* 가 본 곳도 반투명 (v129) */ }
+      for (let i = 0; i < explored.length; i++) { const o = i * 4; d[o] = 104; d[o + 1] = 104; d[o + 2] = 112; d[o + 3] = explored[i] ? 255 : 0;   /* 가 본 곳 — v140에 다시 불투명 */ }
       mmFogCtx.putImageData(mmImg, 0, 0);
       mmDirty = false;
     }
@@ -1242,11 +1242,11 @@
     mmCtx.clearRect(0, 0, W, H);
     mmCtx.imageSmoothingEnabled = true;
     mmCtx.drawImage(mmFog, 0, 0, W, H);                         // 가 본 곳
-    mmCtx.fillStyle = 'rgba(232, 232, 240, 0.6)';              // 지금 보이는 곳 (반투명)
+    mmCtx.fillStyle = 'rgba(232, 232, 240, 0.9)';              // 지금 보이는 곳 (v140에 반투명 전 색으로)
     mmCtx.beginPath();
     for (const z of eyes) { if (!isZombie(z)) continue; const cx = X(z.foot.x), cz = Z(z.foot.z), r = z.sense * sx; mmCtx.moveTo(cx + r, cz); mmCtx.arc(cx, cz, r, 0, Math.PI * 2); }
     mmCtx.fill();
-    mmCtx.fillStyle = 'rgba(40, 40, 46, 0.75)';                // 가 본 곳의 건물
+    mmCtx.fillStyle = '#3a3a42';                                // 가 본 곳의 건물 (v140에 반투명 전 색으로)
     for (const B of buildings) {
       if (B.station) continue;
       const k = Math.floor(((B.z0 + B.z1) / 2 - MM.z0) / MM_CELL) * mmW + Math.floor(((B.x0 + B.x1) / 2 - MM.x0) / MM_CELL);
