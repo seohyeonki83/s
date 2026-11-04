@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v131</div>
+  <div id="ver">v132</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -277,6 +277,8 @@
   const ICON_H = 0.55;    // 머리 위 ? ! !!! 높이 (유닛)
   const COLOR = { me: 0x3366f2, citizen: 0xffcf33, guard: 0xff8c1a, attacker: 0xc62828, police: 0x8e24aa, ally: 0x8aa4f5, dead: 0x555555 };   // 나 = 유니티 큐브 파랑, 시민 = 노랑, 수비형 = 주황, 공격형 = 진한 빨강, 경찰 = 보라, 동료 좀비 = 연한 파랑
 
+  // 그리는 층 (v132) — 바닥·벽·어둠·경찰차·캐릭터 < 모든 UI(체력바·머리 위 표시) < 내 UI(내 체력바·감염 시계·조준 테두리·명령 화살표)
+  const UI = 10, UI_ME = 20;
   const GROUND = 400;     // 바닥 크기 (유닛) — 나를 1칸 단위로 따라다닌다
   const p = PITCH * Math.PI / 180;
   const SIN_P = Math.sin(p);
@@ -345,6 +347,7 @@
   // 지금 손을 떼면 덮칠 시민 = 빨간 테두리 (한 명만 — 그때마다 그 시민 원에 붙인다)
   const aimRing = new THREE.Mesh(new THREE.RingGeometry(RADIUS - 0.03, RADIUS + 0.1, 48), new THREE.MeshBasicMaterial({ color: 0xff2a2a, transparent: true, depthTest: false, depthWrite: false }));
   aimRing.position.z = 0.005;            // 원 바로 앞, 화살표 뒤
+  aimRing.renderOrder = UI_ME + 4;       // 내 UI — 다른 몸·UI보다 늘 위 (v132)
   aimRing.visible = false;
 
   // 거리 표시 = 나를 따라다니는 바닥 원 — 지배(파란 실선)·공격 지배(주황 점선). 어둠 위에 그려서 시야 밖에서도 보인다
@@ -397,10 +400,10 @@
     b.hpBar = new THREE.Group();
     b.hpBar.quaternion.copy(camera.quaternion);
     const track = new THREE.Mesh(gaugeTrackGeo, gaugeTrackMat);
-    track.renderOrder = 10;
+    track.renderOrder = UI;
     b.hpFill = new THREE.Mesh(gaugeFillGeo, mat);
     b.hpFill.position.set(-(GAUGE_W - GAUGE_PAD * 2) / 2, 0, 0.001);
-    b.hpFill.renderOrder = 11;
+    b.hpFill.renderOrder = UI + 1;
     b.hpBar.add(track, b.hpFill);
     b.hpBar.visible = false;
     scene.add(b.hpBar);
@@ -668,7 +671,7 @@
     c.arrow.position.z = 0.01;           // 원 바로 앞 (카메라 쪽)
     c.mesh.add(c.arrow);
     c.icon = new THREE.Sprite(new THREE.SpriteMaterial({ map: ICONS['?'], transparent: true, depthTest: false, depthWrite: false }));
-    c.icon.renderOrder = 10;
+    c.icon.renderOrder = UI;
     c.icon.visible = false;
     scene.add(c.icon);
     c.iconKind = '';
@@ -676,10 +679,10 @@
     c.gauge = new THREE.Group();         // 감염 게이지 = 둥근 시계 (물리는 동안만 보인다, v131)
     c.gauge.quaternion.copy(camera.quaternion);
     const track = new THREE.Mesh(clockBackGeo, gaugeTrackMat);
-    track.renderOrder = 10;
+    track.renderOrder = UI_ME + 2;       // 감염 시계는 내가 물 때만 뜨는 내 UI — 다른 UI보다 위, 내 체력바보다도 위 (v132)
     c.gaugeFill = new THREE.Mesh(clockFillGeos[0], gaugeFillMat);
     c.gaugeFill.position.set(0, 0, 0.001);
-    c.gaugeFill.renderOrder = 11;
+    c.gaugeFill.renderOrder = UI_ME + 3;
     c.gauge.add(track, c.gaugeFill);
     c.gauge.visible = false;
     scene.add(c.gauge);
@@ -1862,7 +1865,7 @@
     const a = new THREE.Shape();
     a.moveTo(0.75, -0.14); a.lineTo(2.3, -0.14); a.lineTo(2.3, -0.45); a.lineTo(3.1, 0); a.lineTo(2.3, 0.45); a.lineTo(2.3, 0.14); a.lineTo(0.75, 0.14); a.closePath();
     const m = new THREE.Mesh(new THREE.ShapeGeometry(a).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, depthTest: false, depthWrite: false }));
-    m.renderOrder = -0.4;                    // 어둠·벽 위, 캐릭터 밑
+    m.renderOrder = UI_ME + 6;               // 내 UI — 맨 위 (v132, 전엔 캐릭터 밑)
     m.visible = false;
     scene.add(m);
     return m;
@@ -2017,7 +2020,7 @@
     me.force = MY_FORCE;
     addHpBar(me, hpOurMat);
     me.hpBar.scale.y = 3;   // v76에 1.5배 더 두껍게 (늘 떠 있다)                    // 내 체력바는 두 배 두껍고, 다른 바·표시보다 늘 위에 그린다 (섞여도 보이게)
-    for (const m of me.hpBar.children) m.renderOrder += 10;
+    for (const m of me.hpBar.children) m.renderOrder += UI_ME - UI;   // 내 체력바 = 내 UI 층 (다른 UI보다 위)
     me.sense = SIGHT * rand(0.9, 1.1);       // 좀비 인지거리 = 시민의 시야
     me.speed = MY_SPEED;                     // 이동 속도 (동료와 같다)
     me.attack = ATTACK;
