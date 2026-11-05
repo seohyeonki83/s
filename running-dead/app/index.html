@@ -109,7 +109,7 @@
   <canvas id="view"></canvas>
   <canvas id="smell"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v188</div>
+  <div id="ver">v189</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2682,12 +2682,12 @@
       const k = 1 + (BANG_MAX - 1) * (R1 - d) / (R1 - R0), size = BANG_PX * k;
       const ux = dx / d, uz = dz / d, edge = Math.min(unionEdge(mx, mz, ux, uz), d);   // 나와 모든 좀비 시야를 합친 영역의 바깥 테두리 위 그 방향
       let [x, y] = toScreen(mx + ux * edge, mz + uz * edge, W, H);
-      const m = size * 0.6 + 4;
-      if (x < m || x > W - m || y < m || y > H - m) {   // 화면 밖 → 나에서 그쪽으로 그은 선이 화면 가장자리에 닿는 곳
+      const mx2 = size * 0.12 + 1, my2 = size * 0.32;   // 화면 가장자리에 걸치게 (v189 — 전엔 너무 안쪽): 느낌표가 가늘어서 양옆은 거의 붙이고, 위아래는 키의 1/3쯤
+      if (x < mx2 || x > W - mx2 || y < my2 || y > H - my2) {   // 화면 밖 → 나에서 그쪽으로 그은 선이 화면 가장자리에 닿는 곳
         const vx = x - ox, vy = y - oy;
         let t = 1;
-        if (vx < 0) t = Math.min(t, (m - ox) / vx); if (vx > 0) t = Math.min(t, (W - m - ox) / vx);
-        if (vy < 0) t = Math.min(t, (m - oy) / vy); if (vy > 0) t = Math.min(t, (H - m - oy) / vy);
+        if (vx < 0) t = Math.min(t, (mx2 - ox) / vx); if (vx > 0) t = Math.min(t, (W - mx2 - ox) / vx);
+        if (vy < 0) t = Math.min(t, (my2 - oy) / vy); if (vy > 0) t = Math.min(t, (H - my2 - oy) / vy);
         x = ox + vx * t; y = oy + vy * t;
       }
       smellCtx.font = '900 ' + size.toFixed(1) + 'px ' + getComputedStyle(document.body).fontFamily;
