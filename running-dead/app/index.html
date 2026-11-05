@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v268</div>
+  <div id="ver">v269</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2913,10 +2913,24 @@
   }
 
   // ── 기술 (v190) — 경찰서 금고를 부수면 처음 두 번에 테이저건·현금이 하나씩 (순서 랜덤). 조이스틱 오른쪽 위부터 둘레로 버튼 (최대 3개) ──
+  // v269: 아이콘 = 단순한 2D 플랫 그림 (이모지 대신) — 글자 크기(1em)에 맞춰 커진다
+  const svgI = (body) => `<svg viewBox="0 0 24 24" width="1em" height="1em" style="display:block;margin:0 auto">${body}</svg>`;
+  const IC = {
+    taser: svgI('<path d="M14 2 5 14h6l-2 8 10-13h-6l3-7z" fill="#ffd23a"/>'),
+    cash: svgI('<rect x="2" y="6" width="20" height="12" rx="2" fill="#3fbf6a"/><rect x="4.5" y="8.5" width="15" height="7" rx="1" fill="#2f9a53"/><circle cx="12" cy="12" r="2.6" fill="#bdf2cf"/>'),
+    vest: svgI('<path d="M8 3 5 5v15a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5l-3-2-1.5 3h-5z" fill="#566b8a"/><rect x="7.5" y="9" width="3.6" height="5.5" rx="0.8" fill="#8fa2bd"/><rect x="12.9" y="9" width="3.6" height="5.5" rx="0.8" fill="#8fa2bd"/><rect x="7" y="16.5" width="10" height="2" rx="0.6" fill="#28333f"/>'),
+    brain: svgI('<path d="M12 4c-1.4-1.6-4.6-1.2-5.2 1.1C4.4 5.4 3.2 7.8 4.2 9.8 2.8 11.2 3 14 5 15c0 2.4 2.6 4 4.6 3 .6 1 1.6 1.4 2.4 1.4V4z" fill="#f29ab8"/><path d="M12 4c1.4-1.6 4.6-1.2 5.2 1.1 2.4.3 3.6 2.7 2.6 4.7 1.4 1.4 1.2 4.2-.8 5.2 0 2.4-2.6 4-4.6 3-.6 1-1.6 1.4-2.4 1.4V4z" fill="#e57fa3"/>'),
+    meat: svgI('<circle cx="10" cy="11" r="7" fill="#c8673b"/><circle cx="9" cy="10" r="3" fill="#e08a5c"/><rect x="14.5" y="14.5" width="6" height="3" rx="1.5" transform="rotate(45 17.5 16)" fill="#f2ead8"/><circle cx="20.5" cy="18.5" r="1.8" fill="#f2ead8"/><circle cx="18.5" cy="20.5" r="1.8" fill="#f2ead8"/>'),
+    arm: svgI('<path d="M4 20c0-4 1-7 3-9l3-5c1-1.5 3-1.2 3.3.4l.3 2.6c2.5-.7 5.4.7 6.2 3.4.9 3.2-1.5 6.6-5.8 7.6z" fill="#f0a35e"/><circle cx="12.5" cy="6.3" r="2.4" fill="#d9884a"/>'),
+    bite: svgI('<path d="M6 4c2-1.2 4 .2 6 .2S16 2.8 18 4c2 1.4 1.6 5-.2 7.4-.8 1.2-1 4-1.6 7.2-.4 2-2.4 2.2-2.8 0L12.6 14c-.2-.8-1-.8-1.2 0l-.8 4.6c-.4 2.2-2.4 2-2.8 0-.6-3.2-.8-6-1.6-7.2C4.4 9 4 5.4 6 4z" fill="#f4f1ea"/>'),
+    skin: svgI('<path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z" fill="#5b8def"/><path d="M12 2v20c4.6-1.6 8-6 8-11V5z" fill="#3f6fd1"/>'),
+    life: svgI('<path d="M12 21C5 16 2 12.5 2 8.5 2 5.4 4.4 3 7.3 3c1.9 0 3.6 1 4.7 2.6C13.1 4 14.8 3 16.7 3 19.6 3 22 5.4 22 8.5c0 4-3 7.5-10 12.5z" fill="#e8455a"/>'),
+    leg: svgI('<path d="M9 2h5v11l1 3h5a2 2 0 0 1 2 2v2H7.5a1.5 1.5 0 0 1-1.5-1.5V15l3-2z" fill="#7d9bd8"/><rect x="6" y="18" width="16" height="3" rx="1" fill="#4b6aa8"/>'),
+  };
   const ITEM = {
-    taser: { max: 3, reload: 20, icon: '⚡', name: '테이저건', col: '#ffd34d' },   // 3발, 1발 20초 — 내 인지거리 안 적 1명 (위험도 높은 순 → 가까운 순) 4초 감전 (v195), 감전 중인 적은 다시 안 쏨 (v196)
-    cash: { max: 1, reload: 15, icon: '💵', name: '현금', col: '#43d17a' },       // 1번, 15초 — 내 둘레 1~2칸에 돈다발 (v201: 처음 1개 + 똑똑한 두뇌마다 1개)
-    vest: { icon: '🦺', name: '방탄복', passive: true },                         // 패시브 (v201) — 총알 피해 30% 감소, 똑똑한 두뇌마다 10% 더
+    taser: { max: 3, reload: 20, icon: IC.taser, name: '테이저건', col: '#ffd34d' },   // 3발, 1발 20초 — 내 인지거리 안 적 1명 (위험도 높은 순 → 가까운 순) 4초 감전 (v195), 감전 중인 적은 다시 안 쏨 (v196)
+    cash: { max: 1, reload: 15, icon: IC.cash, name: '현금', col: '#43d17a' },       // 1번, 15초 — 내 둘레 1~2칸에 돈다발 (v201: 처음 1개 + 똑똑한 두뇌마다 1개)
+    vest: { icon: IC.vest, name: '방탄복', passive: true },                         // 패시브 (v201) — 총알 피해 30% 감소, 똑똑한 두뇌마다 10% 더
   };
   const STUN_T = 4, CASH_N = 3, CASH_R = [1, 2], CASH_GET = 0.7;   // v195: 감전 2 → 4초, 돈다발 뿌리는 거리 2~4 → 1~2칸
   function itemDesc(kind) {                   // 획득할 때 뜨는 설명 (v228: 사용자가 정한 문구 그대로)
@@ -2938,19 +2952,19 @@
   // ── 레벨·능력치 (v201) — 동료가 생길 때마다(누가 감염시켰든) 경험치 1. 레벨마다 새로 필요한 수 10 → 20 → 40 → 80 …
   //   레벨이 오르면 일시정지 → 능력치 카드 3장 중 하나 고르고 확인 → 오르는 연출 → 다시 움직임. 수치는 다 처음 값 기준으로 같은 양씩 더해진다
   const ABIL = {
-    brain: { icon: '🧠', name: '똑똑한 두뇌', desc: '나에게만 — 인간의 도구를 잘 다룸',
-      val: (n) => `테이저 ${1 + n}→${2 + n}명 · 유혹 거리 +${n * 20}→+${(n + 1) * 20}% · 유혹 버팀 ${4 + n}→${5 + n}대 · 방탄복 ${vestPct(n)}→${vestPct(n + 1)}%` },
-    meat: { icon: '🍖', name: '고기 흡수율', desc: '나와 동료들의 물어뜯을 때 회복량 증가',
+    brain: { icon: IC.brain, name: '똑똑한 두뇌', desc: '나에게만 — 인간의 도구를 잘 다룸',
+      val: (n) => `테이저 ${1 + n}→${2 + n}명 · 유혹 거리 +${n * 20}→+${(n + 1) * 20}% · 유혹 버팀 ${4 + 2 * n}→${6 + 2 * n}대 · 방탄복 ${vestPct(n)}→${vestPct(n + 1)}%` },
+    meat: { icon: IC.meat, name: '고기 흡수율', desc: '나와 동료들의 물어뜯을 때 회복량 증가',
       val: (n) => `내 회복 초당 ${(MY_BITE_HEAL * 100 + n * 3).toFixed(1)}→${(MY_BITE_HEAL * 100 + (n + 1) * 3).toFixed(1)}%` },
-    arm: { icon: '💪', name: '강한 팔', desc: '나와 동료들의 공격력 증가',
+    arm: { icon: IC.arm, name: '강한 팔', desc: '나와 동료들의 공격력 증가',
       val: (n) => `공격력 +${n * 5}→+${(n + 1) * 5}% (나 ${(MY_DAMAGE * (1 + n * 0.05)).toFixed(1)}→${(MY_DAMAGE * (1 + (n + 1) * 0.05)).toFixed(1)})` },
-    bite: { icon: '🦷', name: '물어뜯기', desc: '나와 동료들의 감염시키는 속도 증가',
+    bite: { icon: IC.bite, name: '물어뜯기', desc: '나와 동료들의 감염시키는 속도 증가',
       val: (n) => `감염 시간 −${n * 5}→−${(n + 1) * 5}% (나 ${myBiteLen(n).toFixed(2)}→${myBiteLen(n + 1).toFixed(2)}초)` },
-    skin: { icon: '🛡️', name: '단단한 피부', desc: '나와 동료들의 체력 증가',
+    skin: { icon: IC.skin, name: '단단한 피부', desc: '나와 동료들의 최대 체력을 소폭 상승시킵니다',
       val: (n) => `최대 체력 +${n * 5}→+${(n + 1) * 5}% (나 ${Math.round(MY_HP * (1 + n * 0.05))}→${Math.round(MY_HP * (1 + (n + 1) * 0.05))})` },
-    life: { icon: '❤️', name: '끈질긴 생명력', desc: '나에게만 — 최대 체력 증가',   // v266: 내 최대 체력 레벨당 +15% (기본값 기준, 복리 아님)
+    life: { icon: IC.life, name: '끈질긴 생명력', desc: '나에게만 — 최대 체력을 대폭 상승시킵니다',   // v266: 내 최대 체력 레벨당 +15% (기본값 기준, 복리 아님)
       val: (n) => `내 최대 체력 +${n * 15}→+${(n + 1) * 15}%` },
-    leg: { icon: '🦵', name: '튼튼한 다리', desc: '나와 동료들의 이동 속도 증가',
+    leg: { icon: IC.leg, name: '튼튼한 다리', desc: '나와 동료들의 이동 속도 증가',
       val: (n) => `이동 속도 +${n * 5}→+${(n + 1) * 5}%` },
   };
   const up = { brain: 0, meat: 0, arm: 0, bite: 0, skin: 0, leg: 0, life: 0 };
@@ -2965,7 +2979,7 @@
   const allyAttack = () => ALLY_ATTACK;       // v256: 튼튼한 다리는 이제 습격 거리가 아니라 이동 속도
   const legK = () => 1 + 0.05 * up.leg;      // 튼튼한 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
   const cashK = () => 1.6 * 1.1 * 1.1 * (1 + 0.2 * up.brain);   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
-  const lureHits = () => 4 + up.brain;        // v237: 유혹 중 4대째 맞으면 정신 차린다 (3대까진 무시), 두뇌마다 +1
+  const lureHits = () => 4 + 2 * up.brain;    // v269: 유혹 중 4대째 맞으면 정신 차린다, 두뇌마다 +2 (4, 6, 8 …)
   function gainXp() {
     xp++;
     if (xp >= needXp(level + pendingLv)) { xp -= needXp(level + pendingLv); pendingLv++; }
@@ -3358,7 +3372,7 @@
       it.el.style.visibility = 'hidden';
       const big = ov.querySelector('.big'), br = big.getBoundingClientRect(), sr = stage.getBoundingClientRect(), tr = it.el.getBoundingClientRect();
       const fly = document.createElement('div');
-      fly.className = 'fly'; fly.textContent = d.icon; fly.style.fontSize = '96px';
+      fly.className = 'fly'; fly.innerHTML = d.icon; fly.style.fontSize = '96px';
       fly.style.left = (br.left + br.width / 2 - sr.left) + 'px'; fly.style.top = (br.top + br.height / 2 - sr.top) + 'px';
       stage.appendChild(fly);
       big.style.visibility = 'hidden';
