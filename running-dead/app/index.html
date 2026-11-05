@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v176</div>
+  <div id="ver">v177</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -306,7 +306,7 @@
   const knob = document.getElementById('knob');
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, stencil: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));   // v177: 2배 → 1.5배 (그리는 픽셀 약 44% 줄임 — 폰에선 거의 티 안 남)
   renderer.setClearColor(0x999999);
 
   const scene = new THREE.Scene();
@@ -564,7 +564,20 @@
   const wp = new THREE.Vector2();
   const LANE = 1.2;                           // 문 앞뒤로 이만큼 = 문을 지나는 길
   const GAP = BODY / 2;                       // 가는 길이 벽에 이만큼 가까우면 막힌 걸로 본다
+  // 길 찾기 기억 (v177) — 같은 목적지(0.3칸 안)·같은 공간·0.5칸 안에서 0.1초 동안은 지난 결과를 쓴다.
+  //   곧장 가는 길이었으면 지금 목적지를 그대로, 돌아가는 길이면 그 경유지를 (경유지가 1.2칸 넘게 멀 때만)
   function via(b, tx, tz) {
+    if (b.pathT > clock && b.pathSp === b.space && Math.abs(tx - b.pathTX) < 0.3 && Math.abs(tz - b.pathTZ) < 0.3 && Math.abs(b.foot.x - b.pathFX) < 0.5 && Math.abs(b.foot.z - b.pathFZ) < 0.5) {
+      return b.pathStraight ? wp.set(tx, tz) : wp.set(b.pathWX, b.pathWZ);
+    }
+    const w = via0(b, tx, tz), straight = w.x === tx && w.y === tz;
+    if (straight || Math.hypot(w.x - b.foot.x, w.y - b.foot.z) > 1.2) {
+      b.pathT = clock + 0.1; b.pathSp = b.space; b.pathTX = tx; b.pathTZ = tz; b.pathFX = b.foot.x; b.pathFZ = b.foot.z;
+      b.pathStraight = straight; b.pathWX = w.x; b.pathWZ = w.y;
+    } else b.pathT = 0;
+    return w;
+  }
+  function via0(b, tx, tz) {
     const from = b.space, to = spaceOf(tx, tz);
     if (from !== to) {
       const B = from || to;
@@ -780,11 +793,40 @@
   const sees = (c, z) => z && isZombie(z) && z.space === c.space;   // 살아 있는 좀비이고 같은 공간(같은 건물 안, 또는 둘 다 밖)에 있다
 
   // 틱마다 주변을 본다. 좀비 = 나 + 동료 좀비 전부. 같은 공간(같은 건물 안, 또는 둘 다 밖)에 있는 좀비만 보인다
+  // ── 근처 찾기 칸 (v177) — 걸음마다 좀비·시민을 4칸 네모 칸에 나눠 담는다. 근처를 찾을 땐 둘레 칸만 본다 (지도 전체 330명을 매번 훑지 않게) ──
+  const G_CELL = 4;
+  let G_W = 0, G_H = 0, zCells = [], cCells = [];
+  const seBuf = [], nzBuf = [], ncBuf = [], poBuf = [], viBuf = [], lzBuf = [];
+  const gUsed = [];
+  const gCol = (x) => Math.max(0, Math.min(G_W - 1, Math.floor((x - MM.x0) / G_CELL)));
+  const gRow = (z) => Math.max(0, Math.min(G_H - 1, Math.floor((z - MM.z0) / G_CELL)));
+  function buildGrids() {
+    if (!G_W) {
+      G_W = Math.ceil((MM.x1 - MM.x0) / G_CELL) + 1; G_H = Math.ceil((MM.z1 - MM.z0) / G_CELL) + 1;
+      zCells = Array.from({ length: G_W * G_H }, () => []); cCells = Array.from({ length: G_W * G_H }, () => []);
+    }
+    for (const i of gUsed) { zCells[i].length = 0; cCells[i].length = 0; }   // 지난번에 담았던 칸만 비운다
+    gUsed.length = 0;
+    for (const b of bodies) {
+      const L = isZombie(b) ? zCells : b.kind === 'citizen' ? cCells : null;
+      if (!L) continue;
+      const i = gRow(b.foot.z) * G_W + gCol(b.foot.x);
+      if (!zCells[i].length && !cCells[i].length) gUsed.push(i);
+      L[i].push(b);
+    }
+  }
+  function nearIn(cells, x, z, r, out) {     // (x, z) 둘레 r(+여유)에 걸치는 칸의 몸들 — 거리는 부르는 쪽이 다시 잰다
+    out.length = 0;
+    if (!G_W) return out;
+    const c0 = gCol(x - r - 0.5), c1 = gCol(x + r + 0.5), r0 = gRow(z - r - 0.5), r1 = gRow(z + r + 0.5);
+    for (let rr = r0; rr <= r1; rr++) for (let cc = c0; cc <= c1; cc++) { const L = cells[rr * G_W + cc]; for (let i = 0; i < L.length; i++) out.push(L[i]); }
+    return out;
+  }
   function sense(c) {
     const reach = c.state === 'panic' ? c.sight : c.sense;   // 패닉 중엔 인지거리가 시야만큼 늘어난다
     const seen = [];
     let near = Infinity, nearZ = null;
-    for (const z of zombies) {
+    for (const z of nearIn(zCells, c.foot.x, c.foot.z, c.sight, seBuf)) {   // 둘레 칸의 좀비만 (v177)
       if (!isZombie(z) || z.space !== c.space) continue;
       const d = Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
       if (d > c.sight) continue;
@@ -1036,7 +1078,7 @@
 
   function nearestZombie(c, range) {
     let best = null, bd = range;
-    for (const z of zombies) {
+    for (const z of nearIn(zCells, c.foot.x, c.foot.z, range, nzBuf)) {   // 둘레 칸의 좀비만 (v177)
       if (!sees(c, z)) continue;
       const d = Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
       if (d <= bd) { bd = d; best = z; }
@@ -1238,7 +1280,7 @@
       let vis = false;
       for (const z of eyes) {
         if (Math.hypot(car.x - z.foot.x, car.z - z.foot.z) > z.sense + CAR_L / 2) continue;
-        if (!sightWalls.some((w) => crosses(z.foot.x, z.foot.z, car.x, car.z, w))) { vis = true; break; }
+        if (!blocked(z.foot.x, z.foot.z, car.x, car.z)) { vis = true; break; }
       }
       car.g.visible = vis;
       car.g.position.set(car.x, 0.05, car.z);
@@ -1443,7 +1485,7 @@
   const crowd = new Map();
   function nearestCitizen(z, range) {
     let best = null, bd = range, any = null, ad = range;
-    for (const b of bodies) {
+    for (const b of nearIn(cCells, z.foot.x, z.foot.z, range, ncBuf)) {   // 둘레 칸의 시민만 (v177)
       if (!huntable(z, b)) continue;           // 다른 좀비가 노리는 중이면 건너뛴다
       if (!inSight(z, b)) continue;            // 명령 중인 동료는 좁아진 인지 범위(1.8칸 원 + 명령 방향 부채꼴) 안만 본다
       const d = Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z);
@@ -1458,7 +1500,7 @@
   // 이게 있으면 무조건 먼저 덮친다 — 복귀 명령·싸움·다른 동료의 찜보다 앞 (덮치기부터 감염까지를 한 덩어리로 친다)
   function pounceable(z) {
     let best = null, bd = z.attack;
-    for (const b of bodies) {
+    for (const b of nearIn(cCells, z.foot.x, z.foot.z, z.attack, poBuf)) {   // 둘레 칸의 시민만 (v177)
       if (b.kind !== 'citizen' || b.marked || b.hp > 0 || b.space !== z.space) continue;
       if (!inSight(z, b)) continue;            // 명령 중엔 보이는 시민만 덮친다
       const d = Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z);
@@ -1825,6 +1867,21 @@
     sightWalls.push([x0, z0, x1, z0], [x1, z0, x1, z1], [x0, z1, x1, z1], [x0, z0, x0, z1]);
     sightCorners.push([x0, z0], [x1, z0], [x1, z1], [x0, z1]);
   }
+  buildings.forEach((B, i) => { B.sightW = sightWalls.slice(i * 8, i * 8 + 8); B.sightC = sightCorners.slice(i * 8, i * 8 + 8); });   // 건물마다 자기 시야 벽·모서리 (v177)
+  const nbBuf = [], nearBuf = [];
+  function bldgsNear(x0, z0, x1, z1) {         // 이 네모에 걸치는 건물들 (v177 — 지도 전체 벽 200개를 매번 훑지 않게)
+    nbBuf.length = 0;
+    for (const B of buildings) if (B.x1 + WALL >= x0 && B.x0 - WALL <= x1 && B.z1 + WALL >= z0 && B.z0 - WALL <= z1) nbBuf.push(B);
+    return nbBuf;
+  }
+  function blocked(ax, az, bx, bz) {          // 두 점 사이를 시야 벽이 가리나 (그 선분 둘레 건물 벽만 본다)
+    const x0 = Math.min(ax, bx), x1 = Math.max(ax, bx), z0 = Math.min(az, bz), z1 = Math.max(az, bz);
+    for (const B of buildings) {
+      if (B.x1 + WALL < x0 || B.x0 - WALL > x1 || B.z1 + WALL < z0 || B.z0 - WALL > z1) continue;
+      for (const w of B.sightW) if (crosses(ax, az, bx, bz, w)) return true;
+    }
+    return false;
+  }
   const rayAngles = [];
   // 화면에 보이는 바닥 네모 (v172) — 화면 네 귀퉁이에서 바닥으로 쏜 점들. 이 밖의 캐릭터·시야는 그리지 않는다
   const viewR = { x0: -1e9, z0: -1e9, x1: 1e9, z1: 1e9 };
@@ -1844,24 +1901,64 @@
   const onView = (x, z, r = 0) => x + r >= viewR.x0 && x - r <= viewR.x1 && z + r >= viewR.z0 && z - r <= viewR.z1;
   const EYE_MERGE = 1.0;      // 다른 시야 눈과 이만큼 안에 붙은 동료는 시야를 따로 안 그린다 (거의 같은 모양, v172)
   const ALLY_RAYS = 80;       // 동료 시야 둘레 광선 수 (나는 VIEW_RAYS 그대로, v172)
-  let visFrame = 0;
   const kept = [];
+  const full = [];                            // 이번 프레임에 벽 없이 온전한 원으로 그린 눈 {x, z, R} (v177)
+  const CIRC = {};
+  const circ = (n) => CIRC[n] || (CIRC[n] = Array.from({ length: n }, (_, k) => [Math.cos(k / n * Math.PI * 2), Math.sin(k / n * Math.PI * 2)]));
+  const COVER_PTS = (() => {                  // 덮였나 볼 점 — 가운데, 반지름 절반 8곳, 둘레 바로 바깥 16곳 (점 사이 틈까지 덮이게 둘레는 0.2칸 바깥)
+    const p = [[0, 0, 0]];
+    for (let k = 0; k < 8; k++) p.push([Math.cos(k * Math.PI / 4), Math.sin(k * Math.PI / 4), 0.5]);
+    for (let k = 0; k < 16; k++) p.push([Math.cos(k * Math.PI / 8), Math.sin(k * Math.PI / 8), 1]);
+    return p;
+  })();
+  function covered(x, y, R) {                 // 이 원이 이미 그린 온전한 원들에 다 덮이나
+    if (!full.length) return false;
+    for (const [ux, uz, k] of COVER_PTS) {
+      const r = k === 1 ? R + 0.2 : R * k, px = x + ux * r, pz = y + uz * r;
+      let ok = false;
+      for (const f of full) if ((px - f.x) ** 2 + (pz - f.z) ** 2 <= f.R * f.R) { ok = true; break; }
+      if (!ok) return false;
+    }
+    return true;
+  }
   function drawVision(eyes) {
     // v173: 두 프레임에 한 번 그리기는 뺐다 — 어둠 가장자리가 덜그덕거렸다. 시야 어둠은 다시 매 프레임
     visDirty = false;
     let n = 0;
     kept.length = 0;
-    const order = eyes.includes(me) ? [me, ...eyes.filter((z) => z !== me)] : eyes;
+    full.length = 0;
+    let gx = 0, gz = 0;                       // 눈들의 가운데 — 바깥 눈부터 그려서 무리 안쪽 눈이 덮여 빠지게 (v177)
+    for (const z of eyes) { gx += z.foot.x; gz += z.foot.z; }
+    gx /= eyes.length || 1; gz /= eyes.length || 1;
+    const far2 = (z) => (z.foot.x - gx) ** 2 + (z.foot.z - gz) ** 2;
+    const others = eyes.filter((z) => z !== me).sort((a, b) => far2(b) - far2(a));
+    const order = eyes.includes(me) ? [me, ...others] : others;
     for (const z of order) {
       const x = z.foot.x, y = z.foot.z, R = z.sense;
       if (!onView(x, y, R)) continue;          // 시야가 화면에 안 걸치면 안 그린다
       if (z !== me && kept.some((k) => k.space === z.space && k.sense >= R - 0.3 && Math.hypot(k.foot.x - x, k.foot.z - y) < EYE_MERGE)) continue;   // 바로 옆 눈이 이미 그렸다
-      kept.push(z);
       const RAYS = z === me ? VIEW_RAYS : ALLY_RAYS;
-      const near = sightWalls.filter(([ax, az, bx, bz]) => Math.max(ax, bx) >= x - R && Math.min(ax, bx) <= x + R && Math.max(az, bz) >= y - R && Math.min(az, bz) <= y + R);   // 시야 안에 걸치는 벽만 (지도가 커져서, v121)
+      const nb = bldgsNear(x - R - 0.5, y - R - 0.5, x + R + 0.5, y + R + 0.5);   // 시야 둘레에 걸치는 건물만 (v177)
+      nearBuf.length = 0;
+      for (const B of nb) for (const w of B.sightW) nearBuf.push(w);
+      const near = nearBuf;
+      if (!near.length && z !== me && covered(x, y, R)) continue;   // 벽 없는 곳에서 이미 그린 원들에 다 덮이면 안 그린다 (v177)
+      kept.push(z);
+      if (!near.length) {                      // 둘레에 벽이 없으면 광선 없이 미리 만든 원 그대로 (v177)
+        full.push({ x, z: y, R });
+        const C = circ(RAYS);
+        for (let i = 0; i < RAYS && n < MAX_TRI; i++) {
+          const a = C[i], b2 = C[(i + 1) % RAYS], o = n * 9;
+          visPos[o] = x; visPos[o + 1] = 0.04; visPos[o + 2] = y;
+          visPos[o + 3] = x + a[0] * R; visPos[o + 4] = 0.04; visPos[o + 5] = y + a[1] * R;
+          visPos[o + 6] = x + b2[0] * R; visPos[o + 7] = 0.04; visPos[o + 8] = y + b2[1] * R;
+          n++;
+        }
+        continue;
+      }
       rayAngles.length = 0;
       for (let k = 0; k < RAYS; k++) rayAngles.push(k / RAYS * Math.PI * 2);
-      for (const [ex, ez] of sightCorners) {      // 벽 끝을 스치는 방향 — 가장자리가 반듯하게
+      for (const B of nb) for (const [ex, ez] of B.sightC) {   // 벽 끝을 스치는 방향 — 가장자리가 반듯하게 (둘레 건물 모서리만, v177)
         if (Math.hypot(ex - x, ez - y) > R + 0.5) continue;
         const a = (Math.atan2(ez - y, ex - x) + Math.PI * 2) % (Math.PI * 2);   // 0~2π로 맞춰야 순서대로 이어진다
         rayAngles.push(a - 1e-4, a + 1e-4);
@@ -1890,17 +1987,21 @@
     visGeo.setDrawRange(0, n * 3);
     fog.position.set(Math.round(me.foot.x), 0.04, Math.round(me.foot.z));
   }
+  let eyeMaxR = 0;                            // 이번 프레임 눈들 중 가장 긴 인지거리 (v177)
   function seen(b, eyes) {                    // 좀비 하나라도 인지거리 안에서 벽에 안 가리고 보고 있나 (지붕 덮인 건물 안이면 안 보인다)
     if (b.space && !b.space.open) return false;
-    for (const z of eyes) {
+    if (eyes.includes(me) && !isZombie(me)) { const z = me; if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) <= z.sense + RADIUS && !blocked(z.foot.x, z.foot.z, b.foot.x, b.foot.z)) return true; }   // 죽은 나의 마지막 시야
+    for (const z of nearIn(zCells, b.foot.x, b.foot.z, eyeMaxR + RADIUS, viBuf)) {   // 둘레 칸의 좀비만 (v177)
+      if (!isZombie(z)) continue;
       if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) > z.sense + RADIUS) continue;
-      if (!sightWalls.some((w) => crosses(z.foot.x, z.foot.z, b.foot.x, b.foot.z, w))) return true;
+      if (!blocked(z.foot.x, z.foot.z, b.foot.x, b.foot.z)) return true;
     }
     return false;
   }
 
   function draw(dt) {
     const eyes = bodies.filter((b) => isZombie(b) || b === me);   // 시야 = 나 + 동료 좀비 전부 (내가 죽어도 마지막 자리 시야는 남는다)
+    eyeMaxR = 0; for (const z of eyes) if (z.sense > eyeMaxR) eyeMaxR = z.sense;
     for (const B of buildings) {              // 좀비가 하나라도 들어간 건물만 지붕이 열린다
       B.open = eyes.some((z) => z.space === B);
       B.roof.visible = !B.open;
@@ -2422,6 +2523,16 @@
   document.getElementById('reset').addEventListener('click', spawn);
 
   let camDist = DIST;                         // 지금 카메라 거리 — 부대 크기에 맞춰 부드럽게 따라간다 (v122)
+  // 화면 밖이고 좀비와 먼(LAZY_R 밖) 조용한(평소·쉬는 중) 시민 (v177)
+  const LAZY_R = 14;
+  let lazyFrame = 0;
+  function lazy(c) {
+    if (c.state !== 'normal' && c.state !== 'rest') return false;
+    if ((c.calls && c.calls.length) || c.knockT > 0 || c.boostT > 0 || c.dropT > 0 || c.sortie) return false;
+    if (onView(c.foot.x, c.foot.z, 3)) return false;
+    for (const z of nearIn(zCells, c.foot.x, c.foot.z, LAZY_R, lzBuf)) if (isZombie(z) && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) < LAZY_R) return false;
+    return true;
+  }
   function stepWorld(dt) {
     clock += dt;
     zombies.length = 0;
@@ -2440,8 +2551,19 @@
       b.space = spaceOf(b.foot.x, b.foot.z);
       if (b.home && b.space !== b.home) b.freed = true;
     }
+    buildGrids();                             // 근처 찾기 칸 (v177)
     for (const b of bodies) if (isZombie(b)) updateZombie(b, dt);
-    for (const b of bodies) if (b.kind === 'citizen') updateCitizen(b, dt);
+    lazyFrame++;
+    for (const b of bodies) if (b.kind === 'citizen') {   // 화면 밖·좀비와 먼 조용한 시민은 판단을 4프레임에 한 번 (v177) — 그 사이엔 걷던 대로 걷는다
+      if (b.lazyK === undefined) b.lazyK = Math.floor(Math.random() * 4);
+      if (((lazyFrame + b.lazyK) & 3) === 0) {   // 4프레임에 한 번: 다시 따져 보고, 모아 둔 시간만큼 한 번에 판단
+        const acc = (b.lazyDt || 0) + dt;
+        b.lazyDt = 0;
+        b.lazyOn = lazy(b);
+        updateCitizen(b, acc);
+      } else if (b.lazyOn) b.lazyDt = (b.lazyDt || 0) + dt;
+      else updateCitizen(b, dt);
+    }
     for (const b of bodies) {
       if (!b.fixed) { b.foot.x += b.vel.x * dt; b.foot.z += b.vel.y * dt; }
       if (b.split && (b.splitT -= dt) <= 0) b.split = null;
