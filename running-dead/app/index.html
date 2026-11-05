@@ -187,7 +187,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v230</div>
+  <div id="ver">v231</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3187,10 +3187,10 @@
     if (v > 0.5) { scr.hx = me.vel.x / v; scr.hz = me.vel.y / v; }
     if ((scr.tick -= dt) > 0) return;
     scr.tick = 0.25;
-    if (scr.st === 0 && (v > 0.5 || scr.t > 2)) { scrWant.push('n', 'n', 'n'); scr.st = 1; }
-    else if (scr.st === 1 && scr.inf.n >= 2) { scrWant.push('g', 'n', 'g'); scr.st = 2; }
-    else if (scr.st === 2 && scr.inf.g >= 2) { scrWant.push('a', 'a'); scr.st = 3; scr.t3 = scr.t; }
-    else if (scr.st === 3 && scr.t - scr.t3 > 6) { scrWant.push('p'); if (Math.random() < 0.5) scrWant.push('p'); scr.st = 4; }
+    if (scr.st === 0 && (v > 0.5 || scr.t > 2)) { scrWant.push('n', 'n', 'n', 'n', 'n'); scr.st = 1; }   // v231: 모두 15마리 (좃밥 5 → 헬창 3·좃밥 1 → 만두귀 3·헬창 1 → 짭새 2)
+    else if (scr.st === 1 && scr.inf.n >= 2) { scrWant.push('g', 'n', 'g', 'g'); scr.st = 2; }
+    else if (scr.st === 2 && scr.inf.g >= 2) { scrWant.push('a', 'g', 'a', 'a'); scr.st = 3; scr.t3 = scr.t; }
+    else if (scr.st === 3 && scr.t - scr.t3 > 6) { scrWant.push('p', 'p'); scr.st = 4; }
     while (scrWant.length && scrSpawn(scrWant[0])) scrWant.shift();
     for (const c of scr.list.slice()) {
       if (c.kind !== 'citizen' || !bodies.includes(c)) { scr.list.splice(scr.list.indexOf(c), 1); continue; }
