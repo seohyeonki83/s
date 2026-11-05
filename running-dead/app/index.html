@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v164</div>
+  <div id="ver">v165</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2175,34 +2175,60 @@
       }
       return null;
     };
-    for (const [ox, oz] of BLOCKS) GROUPS.forEach((kinds, i) => {   // 동네마다 시민 묶음 10개 (v121)
-      if (!kinds) return;                     // 빈 묶음 — 영역 테두리도 안 그린다 (다른 묶음 자리는 그대로)
-      const a = i / GROUPS.length * Math.PI * 2, cx = ox + Math.sin(a) * GROUP_DIST, cz = oz - Math.cos(a) * GROUP_DIST;   // 그 동네 가운데에서 북쪽(-z)부터 시계 방향
-      const area = square(cx, cz);
-      const ring = new THREE.Mesh(ringGeo, ringMat);
-      ring.rotation.x = -Math.PI / 2;
-      ring.position.set(cx, 0.01, cz);
-      ring.renderOrder = -1;
-      scene.add(ring);
-      rings.push(ring);
-      for (const k of kinds) {
-        const g = placeOut(area);
-        if (g) addCitizen(g.x, g.y, area, GROUP_TYPE[k]);
+    // 시민 깔기 (v165) — 마을마다 사람 수·종류(일반·수비형·공격형)는 그대로, 누가 어디에 서는지는 판마다 섞는다.
+    //   ① 그 마을 사람(시민 묶음 + 건물 안 + 건물 둘레)을 전부 한 주머니에 넣고 섞는다
+    //   ② 건물 안: 건물마다 원래 인원 ±1 (최소 1명)   ③ 건물 둘레: 건물마다 원래 인원 ±1
+    //   ④ 남은 사람은 시민 묶음 10곳에 무작위로 나눈다 — 묶음 자리도 원래 자리에서 방향 ±0.4칸(1/10 바퀴 기준), 거리 ±20% 흔든다
+    const jit = (n) => n + Math.floor(Math.random() * 3) - 1;   // n − 1, n, n + 1 중 하나
+    const place = (areas, type, home) => {   // areas[0]에 자리가 없으면 나머지 영역에서 찾는다 — 사람 수가 줄지 않게
+      for (const A of areas) { const g = placeOut(A); if (g) { const c = addCitizen(g.x, g.y, A, type); if (home) c.home = home; return c; } }
+      const A = areas[0], g = pickGoal(A), c = addCitizen(g.x, g.y, A, type);
+      if (home) c.home = home;
+      return c;
+    };
+    BLOCKS.forEach(([ox, oz], k) => {
+      const homes = buildings.filter((B) => B.block === k && !B.station);
+      const bag = [];
+      for (const ch of GROUPS.join('')) bag.push(GROUP_TYPE[ch]);
+      for (const B of homes) {
+        for (const [ch, n] of Object.entries(B.kinds)) for (let i = 0; i < n; i++) bag.push(GROUP_TYPE[ch]);
+        for (const t of AROUND_MIX(B.local)) bag.push(t);
       }
-    });
-    for (const B of buildings) {             // 건물 사람들 — 활동 영역 = 그 건물 안
-      for (const [k, n] of Object.entries(B.kinds)) for (let i = 0; i < n; i++) {
-        let g = pickGoal(B);
-        for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(B);
-        addCitizen(g.x, g.y, B, GROUP_TYPE[k]).home = B;
+      for (let i = bag.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; }
+      const groups = GROUPS.map((_, i) => {   // 시민 묶음 자리 — 원래 자리에서 살짝 흔든다
+        const a = (i + rand(-0.4, 0.4)) / GROUPS.length * Math.PI * 2, r = GROUP_DIST * rand(0.8, 1.2);
+        const cx = ox + Math.sin(a) * r, cz = oz - Math.cos(a) * r;
+        return { cx, cz, area: square(cx, cz), w: rand(0.3, 1.7), n: 0 };
+      });
+      const count = (c) => { const G = groups.find((H) => H.area === c.area); if (G) G.n++; };   // 어느 묶음 영역에 섰나 (테두리 그릴 묶음)
+      for (const B of homes) {                // 건물 안 — 활동 영역 = 그 건물 안
+        const n = Math.max(1, jit(Object.values(B.kinds).reduce((s, v) => s + v, 0)));
+        for (let i = 0; i < n && bag.length; i++) {
+          let g = pickGoal(B);
+          for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(B);
+          addCitizen(g.x, g.y, B, bag.pop()).home = B;
+        }
       }
-    }
-    buildings.forEach((B, bi) => {           // 시민 건물 둘레 — 자리는 랜덤 (v115, v118에 인원 절반)
-      if (B.station) return;
-      const ring = { x0: B.x0 - 6, z0: B.z0 - 6, x1: B.x1 + 6, z1: B.z1 + 6 };   // 건물 둘레 6칸 (건물 안은 pickGoal이 뺀다)
-      for (const type of AROUND_MIX(B.local)) {
-        const g = placeOut(ring);
-        if (g) addCitizen(g.x, g.y, ring, type);
+      for (const B of homes) {                // 건물 둘레 6칸 (건물 안은 pickGoal이 뺀다)
+        const ring = { x0: B.x0 - 6, z0: B.z0 - 6, x1: B.x1 + 6, z1: B.z1 + 6 };
+        const n = Math.max(0, jit(AROUND_MIX(B.local).length));
+        for (let i = 0; i < n && bag.length; i++) count(place([ring, ...groups.map((G) => G.area)], bag.pop()));
+      }
+      const W = groups.reduce((s, G) => s + G.w, 0);
+      while (bag.length) {                    // 남은 사람 → 시민 묶음 (무게 따라 무작위)
+        let r = Math.random() * W, G = groups[0];
+        for (const H of groups) { if ((r -= H.w) <= 0) { G = H; break; } }
+        const others = groups.filter((H) => H !== G).sort(() => Math.random() - 0.5).map((H) => H.area);
+        count(place([G.area, ...others], bag.pop()));
+      }
+      for (const G of groups) {               // 사람이 한 명이라도 있는 묶음만 영역 테두리를 그린다
+        if (!G.n) continue;
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.set(G.cx, 0.01, G.cz);
+        ring.renderOrder = -1;
+        scene.add(ring);
+        rings.push(ring);
       }
     });
     for (const [ox, oz] of BLOCKS) for (const [px, pz] of PATROL_AT) {   // 길거리 순찰 경찰 — 동네마다 2명씩, 지도 전체 10명. 자기 자리 둘레만 배회하고 출동·추적은 안 한다 (v134)
