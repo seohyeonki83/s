@@ -142,6 +142,12 @@
   #legend .domain { background: var(--domain); }
   #legend .fight { height: 0; border-top: 3px dashed var(--fight); border-radius: 0; }
   #legend .gap { margin-left: 6px; }
+  #retry {   /* 죽으면 화면 아래 가운데에 뜨는 다시 하기 (v225) */
+    position: absolute; z-index: 30; left: 50%; transform: translateX(-50%); bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+    padding: 16px 44px; border: 0; border-radius: 14px; background: rgba(255, 255, 255, 0.94); color: #15151c; font: 800 20px/1 var(--font);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); touch-action: manipulation; cursor: pointer;
+  }
+  #retry[hidden] { display: none; }
   #reset {   /* 오른쪽 아래 (v130) */
     position: absolute; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
     padding: 7px 11px; border: 0; border-radius: 8px;
@@ -176,13 +182,14 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v224</div>
+  <div id="ver">v225</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
   <div id="note" hidden></div>
 </div>
 <button id="reset" type="button">처음부터</button>
+<button id="retry" type="button" hidden>다시 하기</button>
 <div id="cmd" role="button" aria-label="명령 컨트롤키"><div id="cmdKnob"></div></div>
 
 <script>
@@ -1574,8 +1581,10 @@
     if (z === me) {                           // 내 체력바는 빈 채로 남는다
       me.mode = 'dead';
       me.mesh.material.color.setHex(COLOR.dead);
-      note.textContent = "죽었어 — 오른쪽 위 '처음부터'를 눌러";
+      note.textContent = '죽었어';
       note.hidden = false;
+      retryEl.hidden = false;                 // 화면 아래 '다시 하기' (v225) — 그 자리 조이스틱은 숨긴다
+      joy.style.visibility = 'hidden';
       return;
     }
     scene.remove(z.mesh);
@@ -2496,6 +2505,7 @@
     for (const r of rings) scene.remove(r);
     rings.length = 0;
     note.hidden = true;
+    retryEl.hidden = true; joy.style.visibility = '';
 
     me = addBody('me', 0, 0);
     me.mode = 'free';
@@ -2694,6 +2704,9 @@
     }
   }
   document.getElementById('reset').addEventListener('click', spawn);
+  const retryEl = document.getElementById('retry');
+  retryEl.addEventListener('pointerdown', (e) => e.stopPropagation());
+  retryEl.addEventListener('click', spawn);   // 다시 하기 = 처음부터와 같은 새 판 (v225)
 
   let camDist = DIST;                         // 지금 카메라 거리 — 부대 크기에 맞춰 부드럽게 따라간다 (v122)
   // 화면 밖이고 좀비와 먼(LAZY_R 밖) 조용한(평소·쉬는 중) 시민 (v177)
