@@ -126,7 +126,7 @@
   <canvas id="view"></canvas>
   <canvas id="smell"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v190</div>
+  <div id="ver">v191</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -223,7 +223,7 @@
   const STATION_IN = 14, STATION_OUT = 2, STATION_FRONT = 1;   /* v162: 안 20 → 14 (30% 줄임) */   /* v157: 안 20 · 바깥 3 (둘레 2·앞마당 1), 다시 채우기 없음. 바깥 경찰 피해 합이 경찰 체력의 1/10을 넘을 때마다 호출 → 안에서 1~2명 출동 */ const STATION_OUT_MIN = 3; //   /* v147에 20% 줄임 (15·10·5 → 12·8·4) */ //   // 경찰서 안에 상주 · 둘레 배회 · 앞마당 배회(v115) — 출동하지 않는다. 안의 15명이 전부 감염되면 경찰서 파괴
   const AROUND_MIX = (i) => ['', 'guard', 'attacker', i % 2 ? 'attacker' : 'guard'];   // 시민 건물 i번 둘레에 흩어 두는 사람 — 일반 1 · 수비형·공격형 1~2 (v118에 전부 절반: 건물 3채 합쳐 일반 3 · 수비형 5 · 공격형 4)
   const PATROL_AT = [[-16 * 0.8, -4 * 0.8], [16 * 0.8, -4 * 0.8]];   /* v144·v145: 자리 20% 좁힘 (POS) */ //   // 동네마다 길거리 순찰 경찰 두 명의 자리 (동네 가운데 기준, 건물·시작 자리 피해서) — 동네 다섯 개 × 2 = 10명 (v134)
-  const START_COP_CLEAR = 15;       // 내 시작 자리 (v164) — 마을 안 아무 데나(건물 밖). 경찰·경찰서는 이만큼 안에 없고, 시민(일반·수비형·공격형)은 내 인지거리 밖이면 가까워도 된다
+  const START_COP_CLEAR = 11;       // v191: 15 → 11 (마을 4개라 땅이 좁아져서 — 경찰 시야 약 7.9칸 + 여유 3칸)  // 내 시작 자리 (v164) — 마을 안 아무 데나(건물 밖). 경찰·경찰서는 이만큼 안에 없고, 시민(일반·수비형·공격형)은 내 인지거리 밖이면 가까워도 된다
   // 경찰차 — 네모(앞이 있다). 좀비를 보기(경찰 시야) 전엔 서지 않는다: 사건 자리들을 가까운 곳부터 차례로 돌고, 더 없으면 주인공 쪽으로 (v116).
   //   좀비를 보면 바로 서서 양옆 문으로 경찰이 내리고, 그 뒤엔 그 자리에 계속 서 있다. 시야는 안 가리지만 몸은 막는다 (부딪히면 밀려난다)
   const CAR_SPEED = MY_SPEED * 1.5; // 내 속도의 1.5배 (v113에 3배 → v116에 절반)
@@ -284,7 +284,7 @@
   // 지도 = 동네 다섯 개 (v121) — v126부터 위 줄 2개 · 아래 줄 3개 (위 줄은 아래 줄 사이에 엇갈려 놓여 지도가 정사각형에 가깝다).
   //   동네마다 지금까지의 한 판이 그대로: 시민 건물 3채·시민 묶음 10개·경찰서 1개(동네 북쪽). 그래서 밀집도는 그대로, 넓이·건물·시민·경찰서는 다섯 배
   const BLOCK_X = 48 * 0.8, BLOCK_Z = 77 * 0.8;   /* v144·v145: 자리 20% 좁힘 (POS) */ //   // 동네 사이 간격 (유닛) — v125에 거의 붙게: 동네 하나가 동서 약 47 · 남북 약 75라 그보다 조금만 더 (v121엔 84·84)
-  const BLOCKS = [[0, 0], [-BLOCK_X / 2, -BLOCK_Z], [BLOCK_X / 2, -BLOCK_Z], [-BLOCK_X, 0], [BLOCK_X, 0]];   // 아래 가운데(시작) · 위 왼쪽 · 위 오른쪽 · 아래 왼쪽 · 아래 오른쪽
+  const BLOCKS = [[-BLOCK_X / 2, 0], [BLOCK_X / 2, 0], [-BLOCK_X / 2, -BLOCK_Z], [BLOCK_X / 2, -BLOCK_Z]];   // v191: 마을 4개 (2 × 2) — 아래 왼쪽 · 아래 오른쪽 · 위 왼쪽 · 위 오른쪽. 경찰서도 4개
   const TOWN = [       // 동네 하나 (가운데 = 그 동네 시작 자리)
     { x: 0, z: -11, w: 14, d: 10, doors: ['s'], kinds: { a: 1, g: 1, n: 2 } },    // 대: 공격형 1 · 수비형 1 · 일반 2 (v118에 전부 절반)
     { x: -10, z: 8, w: 11, d: 8, doors: ['e'], kinds: { g: 1, n: 1, a: 1 } },   /* v143에 공격형 +1 */           // 중: 수비형 1 · 일반 1
@@ -2486,7 +2486,7 @@
         rings.push(ring);
       }
     });
-    for (const [ox, oz] of BLOCKS) for (const [px, pz] of PATROL_AT) {   // 길거리 순찰 경찰 — 동네마다 2명씩, 지도 전체 10명. 자기 자리 둘레만 배회하고 출동·추적은 안 한다 (v134)
+    for (const [ox, oz] of BLOCKS) for (const [px, pz] of PATROL_AT) {   // 길거리 순찰 경찰 — 동네마다 2명씩, 지도 전체 8명 (v191 마을 4개). 자기 자리 둘레만 배회하고 출동·추적은 안 한다 (v134)
       const area = { x0: ox + px - 4, z0: oz + pz - 4, x1: ox + px + 4, z1: oz + pz + 4 };
       const g = placeOut(area);
       if (!g) continue;
