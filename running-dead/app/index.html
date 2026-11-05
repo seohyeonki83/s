@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v175</div>
+  <div id="ver">v176</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -221,7 +221,7 @@
             // 근접 거리 (유닛) — 동료 좀비 자리 거리는 이 거리의 50~150%에서 매번 새로 뽑는다
   const DOMAIN = 9 * 1.1 * 1.1 * 0.8 * 0.9 * 0.8 * 1.2 * 0.8;   // v75·v76에 10%씩 올리고 v78에 20%, v80에 10%, v86에 20% 줄이고 v112에 20% 늘리고 v122에 20% 줄임 (약 6.02) — 공격 지배 거리도 이 배수라 같이 줄어든다. 동료 수에 따라 armyK배
   // 부대 크기 (v122) — 동료(감염시킨 좀비)가 5명 넘으면 한 명 늘 때마다 근접·지배·공격 지배 거리(명령 받는 범위·원이 밀리는 거리도)와 카메라 거리가 1%씩 커진다
-  const ARMY_FREE = 5, ARMY_STEP = 0.015;   // v171: 동료 한 명마다 1% → 1.5%
+  const ARMY_FREE = 5, ARMY_STEP = 0.0125;   // v171: 동료 한 명마다 1% → 1.5%, v176: → 1.25%
   let armyN = 0, armyK = 1;                   // 지금 동료 수, 배율 = 1 + (동료 수 − 5) × 1% (5명 이하면 1)
   const DOMAIN_FIGHT = DOMAIN * 1.3 * 1.2 * 1.2 * 1.2 / 0.8 * 0.85;   // '공격 중'인 동료의 지배 거리 — 때리던 걸 웬만하면 마무리하고 오게 (v79에 1.3배, v83·v84·v85에 20%씩 더, v86에 기본만 20% 줄이고 이건 그대로, v87에 15% 줄임 → 기본의 약 2.39배, 약 15.0)
   const ATTACK_HOLD = GUARD_CLOSE;    // '공격 중' = 근접 거리에 붙어 한 대라도 휘두른 뒤로, 상대가 이 거리(근접 + 0.5 = 2.2칸) 안에 있는 동안.
