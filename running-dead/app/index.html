@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v171</div>
+  <div id="ver">v172</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1451,6 +1451,8 @@
     return best;
   }
 
+  const stillPounceable = (z, b) => b && b.kind === 'citizen' && !b.marked && b.hp <= 0 && b.space === z.space && inSight(z, b) && dashOk(z, b)
+    && Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) <= z.attack ? b : null;   // 0.1초 전에 찾아 둔 시민이 아직 덮칠 수 있나 (v172)
   // 덮쳐도 되나: 덮치는 동안은 다른 몸을 통과해서(벽만 막힌다) 거의 늘 0.2초 안에 닿는다.
   // 그래도 1초 안에 못 닿은 시민은(벽 모서리 등) 1초 동안 다시 안 덮친다 — 막혀서 제자리 덮치기를 되풀이하지 않게
   const dashOk = (z, t) => !(z.skip === t && z.skipT > 0);
@@ -1685,6 +1687,7 @@
       if (old && crowd.has(old)) crowd.set(old, crowd.get(old) - 1);   // 내 몫을 빼고 다시 고른다
       z.pick = nearestCitizen(z, z.sense);
       if (z.pick && z.pick.hp > 0) crowd.set(z.pick, (crowd.get(z.pick) || 0) + 1);
+      if (z !== me) z.pcand = pounceable(z);    // 덮칠 시민도 타겟과 같이 0.1초마다만 찾는다 (v172 — 전엔 매 프레임 지도 전체를 뒤졌다)
     }
     if (z !== me) recallCheck(z, dt);            // 감염 중에도 시간은 센다 — 물기는 끝까지, 끝나면 바로 복귀
     const p = z.pick;
@@ -1709,7 +1712,7 @@
         z.aim = ready;                             // 지금 손을 떼면 덮칠 시민 → 빨간 테두리
       } else if (commanding) {
         steer(z.vel, wantV.set(0, 0), ACCEL * dt);   // 명령 중: 그냥 선다 (아이들)
-      } else if (z !== me && (jump = pounceable(z))) {   // 동료: 덮칠 수 있으면 무조건 먼저 (복귀 명령 중이어도)
+      } else if (z !== me && (jump = stillPounceable(z, z.pcand))) {   // 동료: 덮칠 수 있으면 무조건 먼저 (복귀 명령 중이어도)
         unclaim(z);
         z.phase = 'track';
         z.mode = 'pounce'; z.target = jump; z.pounceT = 1; jump.marked = true;
@@ -1779,6 +1782,7 @@
   // ── 시야 — 좀비마다 자기 인지거리만큼 둥글게 보이고, 벽에 가린 곳은 안 보인다. 모든 좀비 시야를 합쳐서 보여 준다.
   //    시야 밖은 어둡게 덮고, 거기 있는 시민·경찰은 안 그린다. 지붕이 덮인 건물(좀비가 없는 건물) 안 사람도 안 보인다 ──
   const FOG = 0.85 * 0.8;   /* v141에 20% 옅게 (0.85 → 0.68) */ //            // 시야 밖 어둠 진하기 (1 = 완전 검정)
+  let visDirty = true;        // 다음 프레임에 시야를 꼭 다시 그린다 (새 판 등)
   const VIEW_RAYS = 120;       // 시야 둘레를 이만큼 나눠 벽까지 거리를 잰다 (벽 끝 모서리 쪽은 따로 더 쏜다)
   const MAX_TRI = 60000;
   const visGeo = new THREE.BufferGeometry();
@@ -1806,13 +1810,41 @@
     sightCorners.push([x0, z0], [x1, z0], [x1, z1], [x0, z1]);
   }
   const rayAngles = [];
+  // 화면에 보이는 바닥 네모 (v172) — 화면 네 귀퉁이에서 바닥으로 쏜 점들. 이 밖의 캐릭터·시야는 그리지 않는다
+  const viewR = { x0: -1e9, z0: -1e9, x1: 1e9, z1: 1e9 };
+  const vTmp = new THREE.Vector3();
+  function updateViewRect() {
+    camera.updateMatrixWorld();
+    let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
+    for (const [nx, ny] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      vTmp.set(nx, ny, 0.5).unproject(camera).sub(camera.position);
+      const t = vTmp.y < -1e-6 ? -camera.position.y / vTmp.y : 200;
+      const gx = camera.position.x + vTmp.x * t, gz = camera.position.z + vTmp.z * t;
+      x0 = Math.min(x0, gx); x1 = Math.max(x1, gx); z0 = Math.min(z0, gz); z1 = Math.max(z1, gz);
+    }
+    const m = 2.5;                            // 여유 — 체력바·머리 위 표시가 화면 끝에 걸쳐도 그린다
+    viewR.x0 = x0 - m; viewR.x1 = x1 + m; viewR.z0 = z0 - m; viewR.z1 = z1 + m;
+  }
+  const onView = (x, z, r = 0) => x + r >= viewR.x0 && x - r <= viewR.x1 && z + r >= viewR.z0 && z - r <= viewR.z1;
+  const EYE_MERGE = 1.0;      // 다른 시야 눈과 이만큼 안에 붙은 동료는 시야를 따로 안 그린다 (거의 같은 모양, v172)
+  const ALLY_RAYS = 80;       // 동료 시야 둘레 광선 수 (나는 VIEW_RAYS 그대로, v172)
+  let visFrame = 0;
+  const kept = [];
   function drawVision(eyes) {
+    if ((visFrame++ & 1) && !visDirty) return;   // 시야 어둠은 두 프레임에 한 번만 다시 그린다 (v172) — 그 사이 움직임은 0.1칸도 안 된다
+    visDirty = false;
     let n = 0;
-    for (const z of eyes) {
+    kept.length = 0;
+    const order = eyes.includes(me) ? [me, ...eyes.filter((z) => z !== me)] : eyes;
+    for (const z of order) {
       const x = z.foot.x, y = z.foot.z, R = z.sense;
+      if (!onView(x, y, R)) continue;          // 시야가 화면에 안 걸치면 안 그린다
+      if (z !== me && kept.some((k) => k.space === z.space && k.sense >= R - 0.3 && Math.hypot(k.foot.x - x, k.foot.z - y) < EYE_MERGE)) continue;   // 바로 옆 눈이 이미 그렸다
+      kept.push(z);
+      const RAYS = z === me ? VIEW_RAYS : ALLY_RAYS;
       const near = sightWalls.filter(([ax, az, bx, bz]) => Math.max(ax, bx) >= x - R && Math.min(ax, bx) <= x + R && Math.max(az, bz) >= y - R && Math.min(az, bz) <= y + R);   // 시야 안에 걸치는 벽만 (지도가 커져서, v121)
       rayAngles.length = 0;
-      for (let k = 0; k < VIEW_RAYS; k++) rayAngles.push(k / VIEW_RAYS * Math.PI * 2);
+      for (let k = 0; k < RAYS; k++) rayAngles.push(k / RAYS * Math.PI * 2);
       for (const [ex, ez] of sightCorners) {      // 벽 끝을 스치는 방향 — 가장자리가 반듯하게
         if (Math.hypot(ex - x, ez - y) > R + 0.5) continue;
         const a = (Math.atan2(ez - y, ex - x) + Math.PI * 2) % (Math.PI * 2);   // 0~2π로 맞춰야 순서대로 이어진다
@@ -1858,9 +1890,21 @@
       B.roof.visible = !B.open;
       if (B.label) B.label.visible = !B.open;
     }
+    updateViewRect();
     drawVision(eyes);
     drawCars(eyes);
     for (const b of bodies) {
+      if (b !== me && !onView(b.foot.x, b.foot.z, 1)) {   // 화면 밖 캐릭터는 숨기고 그림 갱신을 건너뛴다 (v172)
+        if (b.offView) continue;
+        b.offView = true;
+        b.mesh.visible = false;
+        if (b.hpBar) b.hpBar.visible = false;
+        if (b.icon) b.icon.visible = false;
+        if (b.gauge) b.gauge.visible = false;
+        if (b.tracer) b.tracer.visible = false;
+        continue;
+      }
+      b.offView = false;
       const hide = !(b === me || isZombie(b) || seen(b, eyes));   // 시민·경찰은 좀비 시야 안에 있을 때만 보인다
       b.mesh.visible = !hide;
       b.mesh.position.copy(b.foot).addScaledVector(UP, RADIUS);   // 원 아랫끝이 바닥에 닿는다
@@ -2148,6 +2192,7 @@
     camVel.set(0, 0);
     camDist = DIST;
     explored.fill(0);                         // 미니맵 — 새 판은 다시 다 까맣게
+    visDirty = true;
     mmDirty = true;
     mmT = 0;
     deaths = stars = dispatchT = 0;
