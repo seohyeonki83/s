@@ -187,7 +187,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v239</div>
+  <div id="ver">v240</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1977,13 +1977,15 @@
           if (prey && !t && prey.hp <= 0) claimPrey(z, prey); else unclaim(z);   // HP 0 시민을 쫓는 동안 찜 (덮치면 marked가 대신한다)
         }
         const sf = z === me && !t ? nearSafe(z) : null;   // 나만: 금고가 가장 가까우면 가서 때린다 (v190)
-        if (sf && (!go || Math.hypot(sf.foot.x - z.foot.x, sf.foot.z - z.foot.z) < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z))) fight(z, sf, dt);
+        const ob = !t ? nearObj(z) : null;     // v240: 문·경찰차도 다른 타겟과 같은 우선순위 — 더 가까우면 그걸 (대신 아주 가까이 있어야 알아챈다)
+        if (ob && (!go || objGap(ob, z) < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z) - RADIUS) && (!sf || objGap(ob, z) < Math.hypot(sf.foot.x - z.foot.x, sf.foot.z - z.foot.z) - sf.r)) fightObj(z, ob, dt);
+        else if (sf && (!go || Math.hypot(sf.foot.x - z.foot.x, sf.foot.z - z.foot.z) < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z))) fight(z, sf, dt);
         else if (go && go.hp > 0) fight(z, go, dt);     // HP가 남았으면 가서 때린다
         else if (t && dashOk(z, t)) { z.mode = 'pounce'; z.target = t; z.pounceT = 1; t.marked = true; }
         else if (prey || t) { const q = prey || t; steer(z.vel, toward(z, q.foot.x, q.foot.z, z.speed * RAID), ACCEL * dt); }   // 습격: 타겟이 인지거리 안 → 습격 속도로 자동으로 달려간다 (방금 덮쳐서 못 닿은 시민이면 1초 동안은 덮치지 않고 다가간다)
-        else if (z === me) { const ob = nearObj(z); if (ob) fightObj(z, ob, dt); else steer(z.vel, wantV.set(0, 0), ACCEL * dt); }   // 나는 타겟이 없으면 살짝 미끄러지며 선다 — 부술 사물이 있으면 그걸 (v239: 우선순위 맨 끝)
+        else if (z === me) steer(z.vel, wantV.set(0, 0), ACCEL * dt);   // 나는 타겟이 없으면 살짝 미끄러지며 선다
         else if (z.cmd) cmdRun(z, z.cmd, dt);    // 명령 중: 보이는 타겟이 없으면 명령 방향으로 달린다
-        else { const ob = nearObj(z); if (ob) fightObj(z, ob, dt); else allyIdle(z, dt); }   // 동료도 다른 타겟이 하나도 없을 때만 사물을 부순다 (v239)
+        else allyIdle(z, dt);
       }
     }
     if (!z.engaging) z.attacking = false;     // 이번 걸음에 싸우지 않았다 (습격·감염·복귀·추적·배회) = 공격 중 아님
@@ -3090,7 +3092,8 @@
   }
   // ── 부술 수 있는 사물 (v239): 경찰서 동·서 잠긴 문, 서 있는 경찰차. 체력 = 경찰의 10배.
   //   좀비(나·동료)는 다른 타겟이 하나도 없을 때만 인지거리 안 가장 가까운 사물을 때린다 (거리와 상관없이 맨 마지막 순위)
-  const OBJ_HP = POLICE_HP * 10;
+  const OBJ_HP = POLICE_HP * 5;               // v240: 절반 (경찰의 5배)
+  const OBJ_SEE = (MELEE - RADIUS) * 1.5;     // v240: 사물은 근접 공격 거리의 1.5배 안에 있어야 알아챈다
   function objPoint(o, z) {                   // 좀비가 서서 때릴 자리 (그 좀비 쪽)
     if (o.type === 'car') return [o.car.x, o.car.z];
     const L = o.L, sgn = z.space === o.B ? -1 : 1;
@@ -3111,7 +3114,7 @@
       if (o.dead) continue;
       if (o.type === 'car' ? z.space : (z.space && z.space !== o.B)) continue;   // 차는 밖에서만, 문은 그 경찰서 밖이나 안에서
       const g = objGap(o, z);
-      if (g > z.sense || g >= bd) continue;
+      if (g > OBJ_SEE || g >= bd) continue;
       const [px, pz] = objPoint(o, z);
       if (blocked(z.foot.x, z.foot.z, px, pz)) continue;
       bd = g; best = o;
