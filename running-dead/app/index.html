@@ -187,7 +187,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v236</div>
+  <div id="ver">v237</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2850,7 +2850,7 @@
   //   레벨이 오르면 일시정지 → 능력치 카드 3장 중 하나 고르고 확인 → 오르는 연출 → 다시 움직임. 수치는 다 처음 값 기준으로 같은 양씩 더해진다
   const ABIL = {
     brain: { icon: '🧠', name: '똑똑한 두뇌', desc: '인간의 도구를 잘 다룸',
-      val: (n) => `테이저 ${1 + n}→${2 + n}명 · 돈다발 ${1 + n}→${2 + n}개 · 유혹 버팀 ${2 + 2 * n}→${4 + 2 * n}대 · 방탄복 ${vestPct(n)}→${vestPct(n + 1)}%` },
+      val: (n) => `테이저 ${1 + n}→${2 + n}명 · 유혹 거리 +${n * 20}→+${(n + 1) * 20}% · 유혹 버팀 ${4 + n}→${5 + n}대 · 방탄복 ${vestPct(n)}→${vestPct(n + 1)}%` },
     meat: { icon: '🍖', name: '고기 흡수율', desc: '물어뜯을 때 회복량 증가',
       val: (n) => `내 회복 초당 ${(MY_BITE_HEAL * 100 + n * 3).toFixed(1)}→${(MY_BITE_HEAL * 100 + (n + 1) * 3).toFixed(1)}%` },
     arm: { icon: '💪', name: '강한 팔', desc: '모든 좀비 공격력 증가',
@@ -2872,8 +2872,8 @@
   const zHeal = (z) => (z === me ? MY_BITE_HEAL : BITE_HEAL) + 0.03 * up.meat;   // 감염 시간 1배 기준 초당 회복 (최대 체력 대비)
   const allyMaxHp = () => ALLY_HP * (1 + 0.03 * up.skin);
   const allyAttack = () => ALLY_ATTACK * (1 + 0.1 * up.leg);
-  const cashK = () => 1.6;                    // 사람들이 돈다발을 알아채는 거리 배율 — v234: 1.6배 고정 (똑똑한 두뇌로 안 늘어난다)
-  const lureHits = () => 2 + 2 * up.brain;    // v234: 유혹 중 이만큼 맞으면 정신 차린다 — 2대, 두뇌 오를 때마다 +2 (4, 6 …)
+  const cashK = () => 1.6 * 1.1 * (1 + 0.2 * up.brain);   // 사람들이 돈다발을 알아채는 거리 배율 — v237: 기본 1.76배(1.6배에서 10% 더), 똑똑한 두뇌마다 +20%
+  const lureHits = () => 4 + up.brain;        // v237: 유혹 중 4대째 맞으면 정신 차린다 (3대까진 무시), 두뇌마다 +1
   function gainXp() {
     xp++;
     if (xp >= needXp(level + pendingLv)) { xp -= needXp(level + pendingLv); pendingLv++; }
@@ -2991,7 +2991,7 @@
       if (!hit.length) zaps.push({ to: null, t: 0.2 });
     } else {                                  // 돈다발 3개를 내 둘레 2~4칸에 뿌린다 (나와 같은 공간)
       const fresh = [];
-      for (let i = 0; i < 1 + up.brain; i++) {   // 돈다발 수 = 1 + 똑똑한 두뇌 (v201)
+      for (let i = 0; i < CASH_N; i++) {      // v237: 한 번에 늘 3개 (두뇌로 안 늘어난다)
         for (let t = 0; t < 30; t++) {
           const a = Math.random() * Math.PI * 2, r = CASH_R[0] + Math.random() * (CASH_R[1] - CASH_R[0]);
           const x = me.foot.x + Math.cos(a) * r, z = me.foot.z + Math.sin(a) * r;
@@ -3031,11 +3031,17 @@
     }
     return best ? { k: best, d: bd } : null;
   }
-  function enterLured(c) { c.state = 'lured'; c.lureAlert = false; c.foe = null; c.locked = false; c.lureHit = 0; }
+  const CASH_PICK = 1.5;
+  function enterLured(c) { c.state = 'lured'; c.lureAlert = false; c.foe = null; c.locked = false; c.lureHit = 0; c.pickT = 0; }
   function luredStep(c, dt) {                 // 유혹: 좀비는 안 보고 가장 가까운 돈다발로 달려간다. 닿으면 돈다발이 사라진다
     const s = seeCash(c, c.sight * cashK());
     if (!s) { enterNormal(c); return; }      // 볼 수 있는 돈다발이 없으면 유혹 끝
-    if (s.d < CASH_GET) { removeCash(s.k); return; }
+    if (s.d < CASH_GET) {                    // v237: 돈다발에 닿으면 1.5초 동안 가만히 서서 줍고, 그다음 돈다발이 사라진다
+      c.vel.set(0, 0);
+      if ((c.pickT = (c.pickT || 0) + dt) >= CASH_PICK) { c.pickT = 0; removeCash(s.k); }
+      return;
+    }
+    c.pickT = 0;
     const sp = PANIC_SPEED * (c.police ? POLICE_PACE : 1) * (c.guard ? GUARD_PACE : 1);
     steer(c.vel, toward(c, s.k.x, s.k.z, sp), ACCEL * dt);
   }
