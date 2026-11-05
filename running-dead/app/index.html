@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v269</div>
+  <div id="ver">v270</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2939,7 +2939,7 @@
       taser: ['대상을 감전시킵니다.', '똑똑한 두뇌가 올라가면 감전 대상이 늘어납니다.'],
       cash: ['인간들이 정신 못 차립니다.', '똑똑한 두뇌 강화 시 더 많은 돈을 뿌리고 더 많은 인간들이 몰려듭니다.'],
     }[kind];
-    return `<div>${t[0]}</div><div class="up">🧠 ${t[1]}</div>`;
+    return `<div>${t[0]}</div><div class="up"><span style="display:inline-block;width:1.15em;vertical-align:-0.22em;margin-right:4px">${IC.brain}</span>${t[1]}</div>`;   // v270: 설명 속 두뇌도 플랫 아이콘
   }
 
   const SLOT_A = [45, 15, 75], SLOT_R = 125;   // 버튼 자리 = 조이스틱 가운데에서 이 각도(오른쪽 0°, 위 90°)·거리(px)
@@ -3423,7 +3423,7 @@
     citizen: { col: '#ffcf33', name: '좃밥', say: '살점을 뜯어먹어 체력을 회복하세요' },   // 이름 (v204) — 원 위에 뜬다
     guard: { col: '#ff8c1a', name: '헬창', say: '깝침' },
     attacker: { col: '#c62828', name: '만두귀', say: '좀 침' },
-    police: { col: '#8e24aa', name: '짭새', say: '권법 씀' },
+    police: { col: '#8e24aa', name: '짭새', say: '건법 씀' },   // v270: 총(건) — 권법 아님
     station: { col: '#b44ee6', name: '경찰서', say: '깝치면 개털림' },   // v223: 이름 줄에 '경찰서 발견!!!'이 있으니 설명은 짧게   // v221: 사람과 같은 방식 — 대상이 지붕 느낌표일 뿐
   };
   let goalShown = false, tutOpen = false, spawnFrames = 0, mmBang = false;
