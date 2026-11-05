@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v158</div>
+  <div id="ver">v159</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -767,6 +767,8 @@
     }
     c.state = 'fight';
     c.foe = z || null;
+    c.chaseR = 0;
+    if (z) c.spot = null;
     c.locked = false;                  // 공격형: 근접 거리에 붙어 때리기 시작하면 true (그 상대로 고정)
     c.atkT = GUARD_REACT;
     c.notice = quiet ? 0 : NOTICE;     // 좀비를 보고 덤빌 땐 패닉처럼 머리 위 ! (맞아서 시작하면 없음)
@@ -794,7 +796,7 @@
       if (charges(c)) enterFight(c, nearZ);  // 공격형: 가장 가까운 좀비에게 덤빈다
       else enterPanic(c, seen);
     }
-    else if (near <= c.sight) { if (c.state !== 'alert') enterAlert(c); }
+    else if (near <= c.sight) { if (c.state !== 'alert') { enterAlert(c); if (c.police) { c.spot = nearZ; c.spotR = c.sight; } } }   // 경찰은 경계할 때 본 좀비를 기억한다 (시야가 줄어들어도 그걸 쫓게, v159)
     else if (c.state === 'alert') enterNormal(c);
   }
 
@@ -1002,19 +1004,31 @@
   }
 
   // 경찰 (공격형과 같다 — 좀비를 보면 경계 뒤 패닉 대신 싸움, 먼저 맞아도 싸움. 싸우는 동안 인지거리 = 시야):
-  //   다가가지 않고 그 자리에 서서 쏜다 — 사거리 = 자기 시야, 1초마다, 공격력 2배. 붙어 있어도 쏜다.
+  //   사거리 안이면 그 자리에 서서 쏜다 — 사거리 = 자기 원래(1배) 시야, 1초마다, 공격력 2배. 붙어 있어도 쏜다. 늘어난 시야로 본 좀비는 사거리까지 달려간다 (v159).
   //   틱마다 시야 안 가장 가까운 좀비를 새로 뽑아서 쏜다 — 고정 없이 계속 바뀐다.
   //   HP가 0이 돼도 도망가지 않고 계속 쏜다 (덮칠 수는 있다). 시야 안에 좀비가 없으면 싸움 끝 → 다음 사건 자리로, 없으면 배회.
   function policeFight(c, dt) {
-    steer(c.vel, wantV.set(0, 0), ACCEL * dt);
     if (c.atkT > 0) c.atkT -= dt;
     if (c.notice > 0) c.notice -= dt;
     const tick = (c.tick -= dt) <= 0;
     if (tick) c.tick += TICK;
-    if (tick || !sees(c, c.foe)) c.foe = nearestZombie(c, c.sight);   // 틱마다 다시 뽑는다 (상대가 죽었거나 아직 없거나 안 보이면 바로)
-    if (!c.foe) { enterNormal(c); return; }
-    const z = c.foe;
-    if (c.atkT <= 0 && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= c.sight) { shoot(c, z); c.atkT = HIT_EVERY; }
+    const range = c.boostT > 0 ? c.boostSight : c.sight;   // 사거리 = 원래(1배) 시야 (v159)
+    const far = (z) => Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
+    if (tick || !sees(c, c.foe)) {          // 틱마다 다시 뽑는다 (상대가 죽었거나 아직 없거나 안 보이면 바로)
+      const inRange = nearestZombie(c, range);
+      if (inRange) { c.foe = inRange; c.chaseR = 0; }   // 사거리 안에 좀비가 있으면 가장 가까운 걸 쏜다
+      else {                                 // 늘어난 시야로 본 좀비 (v159): 처음 본 거리보다 멀어지지 않는 한, 시야가 줄어도 사거리에 들 때까지 쫓아간다
+        if (!sees(c, c.foe) && sees(c, c.spot)) { c.foe = c.spot; c.chaseR = c.spotR; }   // 경계할 때 본 좀비
+        if (!(sees(c, c.foe) && far(c.foe) <= (c.chaseR || c.sight))) { c.foe = nearestZombie(c, c.sight); c.chaseR = 0; }
+        if (c.foe && !c.chaseR) c.chaseR = Math.max(c.sight, far(c.foe));
+      }
+      c.spot = null;
+    }
+    if (!c.foe) { c.chaseR = 0; steer(c.vel, wantV.set(0, 0), ACCEL * dt); enterNormal(c); return; }
+    const z = c.foe, d = far(z);
+    if (d > range) { steer(c.vel, toward(c, z.foot.x, z.foot.z, PANIC_SPEED * POLICE_PACE), ACCEL * dt); return; }   // 사거리 밖 → 달려간다
+    steer(c.vel, wantV.set(0, 0), ACCEL * dt);
+    if (c.atkT <= 0) { shoot(c, z); c.atkT = HIT_EVERY; }
   }
 
   function nearestZombie(c, range) {
@@ -2204,7 +2218,7 @@
       const cx = (S.x0 + S.x1) / 2;
       const ring = { x0: S.x0 - 5, z0: S.z0 - 5, x1: S.x1 + 5, z1: S.z1 + 5 };   // 둘레 (건물 안은 pickGoal이 뺀다)
       const front = { x0: cx - 6, z0: S.z1 + 1.5, x1: cx + 6, z1: S.z1 + 8 };    // 앞마당 = 문 앞(남쪽)
-      S.ringA = ring; S.frontA = front; S.outer = []; S.members = []; S.hurt = 0; S.hitAt = null;
+      S.ringA = ring; S.frontA = front; S.outer = []; S.members = []; S.hurt = 0;
       for (let i = 0; i < STATION_IN + STATION_OUT + STATION_FRONT; i++) {
         const inside = i < STATION_IN, area = inside ? S : i < STATION_IN + STATION_OUT ? ring : front;
         let g = pickGoal(area);
@@ -2227,7 +2241,7 @@
     S.outer = S.outer.filter(alive);
     S.residents = S.residents.filter(alive);
     for (const c of S.outer) {
-      if (c.hp < c.lastHp) { S.hurt += c.lastHp - c.hp; S.hitAt = new THREE.Vector2(c.foot.x, c.foot.z); }
+      if (c.hp < c.lastHp) S.hurt += c.lastHp - c.hp;
       c.lastHp = c.hp;
     }
     for (const c of S.residents) c.lastHp = c.hp;   // 안에서 깎인 피는 안 센다
@@ -2247,12 +2261,13 @@
         S.outer.push(c);
         c.area = S.ringA;
         c.sortie = true;
-        c.calls.length = 0; c.calls.push(S.hitAt.clone());   // 다친 경찰 자리로 뛰어간다
+        const D = S.doors[0], a = rand(-1, 1);   // 문 밖 바로 앞까지만 뛰어나온다 — 거기서부터는 3배 시야로 좀비를 찾는다 (v159: 다친 경찰 자리로 가지 않는다)
+        c.calls.length = 0; c.calls.push(new THREE.Vector2(D.cx + D.nx * 2 + D.tx * a, D.cz + D.nz * 2 + D.tz * a));
       }
     }
     if (S.outer.length > STATION_OUT_MIN) for (const c of S.outer.slice()) {   // 할 일 끝난 출동 경찰 → 안으로 (바깥 3명은 남긴다)
       if (S.outer.length <= STATION_OUT_MIN) break;
-      if (!c.sortie || c.calls.length || c.state === 'fight' || c.state === 'alert') continue;
+      if (!c.sortie || c.calls.length || c.boostT > 0 || c.state === 'fight' || c.state === 'alert') continue;   // 늘어난 시야가 남아 있는 동안(4초)은 안 들어간다
       c.sortie = false;
       c.boosted = false;                      // 다음에 또 출동하면 다시 3배
       S.outer.splice(S.outer.indexOf(c), 1);
