@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v248</div>
+  <div id="ver">v249</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -587,7 +587,8 @@
     return c;
   })();
   const bangTex = new THREE.CanvasTexture(bangCv); bangTex.colorSpace = THREE.SRGBColorSpace;
-  const gapMat = flatMat(0xc4c4c4), jambMat = flatMat(0x111111);   // v247: 더 밝게 + 문틀           // v246: 문 자리 = 뚫린 벽 (바닥색) — 지붕·벽·어둠 위에 그려 어디서든 보인다
+  const gapMat = flatMat(0xc4c4c4), jambMat = flatMat(0x111111);   // v247: 더 밝게 + 문틀
+  gapMat.opacity = 0;                         // v249: 밝은 바닥은 안 보이게 — 검은 문틀만           // v246: 문 자리 = 뚫린 벽 (바닥색) — 지붕·벽·어둠 위에 그려 어디서든 보인다
   function doorGap(D) {                       // v247: 문 자리를 벽 두께보다 훨씬 깊게(안팎 0.7칸씩) 밝은 바닥색으로 + 양쪽 문틀 — 멀리서도 '뚫린 문'으로 보이게
     const deep = 1.4, m = flat(D.tx ? DOOR : deep, D.tz ? DOOR : deep, D.cx, D.cz, gapMat, -0.5025);
     for (const sgn of [-1, 1]) {
