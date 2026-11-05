@@ -103,9 +103,9 @@
   #tut .say { margin-top: 38px; padding: 0 24px; font: 800 24px/1.35 var(--font); color: #fff; text-align: center; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); word-break: keep-all; }
   #tut .h { margin-top: 14px; font: 600 13px/1 var(--font); color: rgba(255, 255, 255, 0.65); }
   @keyframes tutpop { 0% { transform: scale(0.2); } 100% { transform: scale(1); } }
-  .hold { position: absolute; z-index: 40; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; pointer-events: none;
+  .hold { position: absolute; z-index: 40; width: 96px; height: 96px; margin: -48px 0 0 -48px;   /* v215: 1.5배 */ border-radius: 50%; pointer-events: none;
     background: conic-gradient(#ffffff calc(var(--p) * 1%), rgba(255, 255, 255, 0.18) 0); box-shadow: 0 0 12px rgba(0, 0, 0, 0.5); }   /* 꾹 누르기 원 게이지 (v212) */
-  .hold::after { content: ''; position: absolute; inset: 7px; border-radius: 50%; background: rgba(20, 20, 26, 0.85); }
+  .hold::after { content: ''; position: absolute; inset: 10px; border-radius: 50%; background: rgba(20, 20, 26, 0.35); }   /* 가운데는 비쳐 보이게 — 뒤 글이 가려지지 않게 (v215) */
   #smell { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }   /* 후각 표시 (v180) — 게임 화면 위, 다른 UI 아래 */
   #joy {
     position: absolute; left: 50%; bottom: calc(56px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; width: 124px; height: 124px; margin-left: -62px;
@@ -175,7 +175,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v214</div>
+  <div id="ver">v215</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1489,10 +1489,10 @@
         mmCtx.lineWidth = 1.4 * mmDpr; mmCtx.strokeStyle = '#ffffff'; mmCtx.lineCap = 'round';
         mmCtx.stroke();
       } else if (mmBang) {                                     // 목표 연출에서 날아와 박힌 느낌표 (v214) — 안 부서진 경찰서 위에
-        mmCtx.font = `900 ${Math.round(12 * mmDpr)}px ${getComputedStyle(document.body).fontFamily}`;   // 경찰서 칸 한가운데에 겹쳐서 (맨 위 경찰서도 안 잘리게)
+        mmCtx.font = `900 ${Math.round(8 * mmDpr)}px ${getComputedStyle(document.body).fontFamily}`;   // v215: 3분의 2 크기   // 경찰서 칸 한가운데에 겹쳐서 (맨 위 경찰서도 안 잘리게)
         mmCtx.textAlign = 'center'; mmCtx.textBaseline = 'middle';
-        mmCtx.lineWidth = 2.5 * mmDpr; mmCtx.strokeStyle = 'rgba(0, 0, 0, 0.85)'; mmCtx.lineJoin = 'round';
-        const cy = Math.max(y + h / 2, 7 * mmDpr);             // 맨 위 경찰서도 느낌표 머리가 안 잘리게
+        mmCtx.lineWidth = 1.8 * mmDpr; mmCtx.strokeStyle = 'rgba(0, 0, 0, 0.85)'; mmCtx.lineJoin = 'round';
+        const cy = Math.max(y + h / 2, 5 * mmDpr);             // 맨 위 경찰서도 느낌표 머리가 안 잘리게
         mmCtx.strokeText('!', x + w / 2, cy);
         mmCtx.fillStyle = '#e6b3ff'; mmCtx.fillText('!', x + w / 2, cy);
       }
@@ -3006,7 +3006,7 @@
       try { ov.setPointerCapture(pidH); } catch (_) {}
       const sr = stage.getBoundingClientRect();
       ring = document.createElement('div'); ring.className = 'hold';
-      ring.style.left = (e.clientX - sr.left) + 'px'; ring.style.top = (e.clientY - sr.top) + 'px'; ring.style.setProperty('--p', 0);
+      ring.style.left = (e.clientX - sr.left) + 'px'; ring.style.top = Math.max(56, e.clientY - sr.top - 100) + 'px'; ring.style.setProperty('--p', 0);   // 손가락에 안 가리게 누른 자리 위쪽에 (v215)
       stage.appendChild(ring);
       t0 = performance.now();
       raf = requestAnimationFrame(tick);
@@ -3112,12 +3112,12 @@
         Object.assign(f.style, { left: (r.left + r.width / 2 - sr.left) + 'px', top: (r.top + r.height / 2 - sr.top) + 'px', fontSize: '40px', fontWeight: '900', color: '#d58cff', textShadow: '0 0 10px rgba(180,78,230,0.9), 0 2px 4px #000' });
         stage.appendChild(f);
         sp.style.visibility = 'hidden';
-        return { f, x: mr.left - sr.left + ((S.x0 + S.x1) / 2 - MM.x0) * sw, y: mr.top - sr.top + Math.max(((S.z0 + S.z1) / 2 - MM.z0) * sh, 7) };
+        return { f, x: mr.left - sr.left + ((S.x0 + S.x1) / 2 - MM.x0) * sw, y: mr.top - sr.top + Math.max(((S.z0 + S.z1) / 2 - MM.z0) * sh, 5) };
       });
       el.classList.remove('on');
       requestAnimationFrame(() => flies.forEach(({ f, x, y }, i) => {
         f.style.transition = `left 0.5s ease-in ${i * 0.06}s, top 0.5s ease-in ${i * 0.06}s, font-size 0.5s ease-in ${i * 0.06}s`;
-        f.style.left = x + 'px'; f.style.top = y + 'px'; f.style.fontSize = '11px';
+        f.style.left = x + 'px'; f.style.top = y + 'px'; f.style.fontSize = '8px';
       }));
       setTimeout(() => { for (const { f } of flies) f.remove(); mmBang = true; updateMinimap(1); }, 500 + stations.length * 60 + 20);
     }, 2100);
