@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v162</div>
+  <div id="ver">v163</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -171,6 +171,7 @@
     // v70에 30% 줄임 (273) —   // 체력 — 조종하는 나 = 동료의 2배에서 v64에 150%, v65에 30% 더 (390, 회복 없음)
   const GUARD_HP = 200;   // 체력 — 수비형·공격형 시민
   const DAMAGE = 20 / 2 * 0.7;  // 공격력 — v66에 모든 캐릭터 절반, v71에 30% 더 줄임 (7)
+  const ALLY_DAMAGE = DAMAGE * 1.1;   // 동료 좀비 공격력 — v163에 10% 올림 (7 → 7.7). 시민(수비형·공격형)은 DAMAGE 그대로
   const MY_DAMAGE = DAMAGE * 3 * 2 * 1.15;   // 내 공격력 = 3배 (v64), v67에 그 두 배, v120에 15% 더 (약 48.3)
   const HIT_EVERY = 1 / 1.3;   // 공격 간격 (초) — v71에 공속 30% 올림 (약 0.77초)
   const MELEE = 1.7;      // 근접 공격 거리 (원 중심끼리, 유닛) — v97에 1.0 → 1.7
@@ -2306,7 +2307,7 @@
       if (b.lungeT >= 0) {                    // 때리는 모션 시간 — 붙는 순간 데미지
         const before = b.lungeT;
         b.lungeT += dt;
-        if (before < LUNGE_IN && b.lungeT >= LUNGE_IN && b.lungeVictim) { landHit(b, b.lungeVictim, b === me ? MY_DAMAGE : DAMAGE); b.lungeVictim = null; }
+        if (before < LUNGE_IN && b.lungeT >= LUNGE_IN && b.lungeVictim) { landHit(b, b.lungeVictim, b === me ? MY_DAMAGE : b.kind === 'ally' ? ALLY_DAMAGE : DAMAGE); b.lungeVictim = null; }
         if (b.lungeT >= LUNGE_IN + LUNGE_OUT) b.lungeT = -1;
       }
     }
