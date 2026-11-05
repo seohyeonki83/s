@@ -171,7 +171,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v207</div>
+  <div id="ver">v208</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2765,7 +2765,7 @@
   // ── 레벨·능력치 (v201) — 동료가 생길 때마다(누가 감염시켰든) 경험치 1. 레벨마다 새로 필요한 수 10 → 20 → 40 → 80 …
   //   레벨이 오르면 일시정지 → 능력치 카드 3장 중 하나 고르고 확인 → 오르는 연출 → 다시 움직임. 수치는 다 처음 값 기준으로 같은 양씩 더해진다
   const ABIL = {
-    brain: { icon: '🧠', name: '똑똑한 두뇌', desc: '도구가 강해진다',
+    brain: { icon: '🧠', name: '똑똑한 두뇌', desc: '도구를 잘 다룸',
       val: (n) => `테이저 ${1 + n}→${2 + n}명 · 돈다발 ${1 + n}→${2 + n}개 · 유혹 거리 +${n * 10}→+${(n + 1) * 10}% · 방탄복 ${vestPct(n)}→${vestPct(n + 1)}%` },
     meat: { icon: '🍖', name: '고기 흡수율', desc: '물어뜯을 때 회복량 증가',
       val: (n) => `내 회복 초당 ${(MY_BITE_HEAL * 100 + n * 3).toFixed(1)}→${(MY_BITE_HEAL * 100 + (n + 1) * 3).toFixed(1)}%` },
