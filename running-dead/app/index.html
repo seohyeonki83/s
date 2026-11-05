@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v157</div>
+  <div id="ver">v158</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -197,6 +197,7 @@
   const STAR_MAX = 5;
   const STAR_BASE = 5, STAR_GROW = 2.5;   // 별 사이에 더 필요한 감염 수가 2.5배씩 늘어난다: +5, +12.5, +31, +78, +195 (v135)
   const STAR_AT = (() => { let t = 0, d = STAR_BASE; return Array.from({ length: 5 }, () => { t += d; d *= STAR_GROW; return Math.round(t); }); })();   // [5, 18, 49, 127, 322]
+  const SORTIE_SENSE = 3, SORTIE_SENSE_T = 4;   // 경찰서 호출로 나온 경찰: 건물 밖으로 나오는 순간 인지거리·시야 3배 → 4초에 걸쳐 원래대로 (v158)
   const DROP_SENSE = 2, DROP_SENSE_T = 3;   // 경찰차에서 내린 경찰: 인지거리가 순간 2배 → 3초에 걸쳐 원래대로 (v114)
   const DISPATCH_T = (n) => 30 - 5 * (n - 1);   // 별 n개일 때 출동 간격 (초) — 30·25·20·15·10 (v118)
   const STATION_IN = 20, STATION_OUT = 2, STATION_FRONT = 1;   /* v157: 안 20 · 바깥 3 (둘레 2·앞마당 1), 다시 채우기 없음. 바깥 경찰 피해 합이 경찰 체력의 1/10을 넘을 때마다 호출 → 안에서 1~2명 출동 */ const STATION_OUT_MIN = 3; //   /* v147에 20% 줄임 (15·10·5 → 12·8·4) */ //   // 경찰서 안에 상주 · 둘레 배회 · 앞마당 배회(v115) — 출동하지 않는다. 안의 15명이 전부 감염되면 경찰서 파괴
@@ -897,6 +898,12 @@
   }
   const GUARD_PACE = 0.8;      // 수비형 이동 속도 배율 (v150에 20% 내림) — 걷기·배회·패닉·초패닉 전부
   function updateCitizen(c, dt) {
+    if (c.boostT > 0) {                      // 경찰서에서 출동해 막 나온 경찰: 3배로 늘어난 인지거리·시야가 4초에 걸쳐 원래대로 (v158)
+      c.boostT = Math.max(0, c.boostT - dt);
+      const k = 1 + (SORTIE_SENSE - 1) * c.boostT / SORTIE_SENSE_T;
+      c.sense = c.boostSense * k;
+      c.sight = c.boostSight * k;
+    }
     if (c.knockT > 0) { knockStep(c, dt); return; }
     if (c.dropT > 0) {                       // 경찰차에서 막 내린 경찰: 늘어난 인지거리가 3초에 걸쳐 원래대로 (v114)
       c.dropT = Math.max(0, c.dropT - dt);
@@ -1473,6 +1480,7 @@
     b.vel.set(0, 0);
     b.mode = 'free';                          // free = 조작·대기, pounce = 덮치러 가는 중, bite = 무는 중
     b.target = null;
+    if (b.boostT > 0) { b.sense = b.boostSense; b.sight = b.boostSight; b.boostT = 0; }   // 출동 직후 늘어난 시야는 좀비가 되면 원래대로 (v158)
     b.sense = b.sight;                        // 좀비 인지거리 = 시민 때 자기 시야
     b.speed = SPEED;
     b.attack = ALLY_ATTACK;
@@ -2223,6 +2231,13 @@
       c.lastHp = c.hp;
     }
     for (const c of S.residents) c.lastHp = c.hp;   // 안에서 깎인 피는 안 센다
+    for (const c of S.outer) if (c.sortie && !c.boosted && c.space !== S) {   // 출동한 경찰이 경찰서 건물 밖으로 나오는 순간 → 인지거리·시야 3배 (v158)
+      c.boosted = true;
+      if (!(c.boostT > 0)) { c.boostSense = c.sense; c.boostSight = c.sight; }
+      c.boostT = SORTIE_SENSE_T;
+      c.sense = c.boostSense * SORTIE_SENSE;
+      c.sight = c.boostSight * SORTIE_SENSE;
+    }
     while (S.hurt >= CALL_HP) {
       S.hurt -= CALL_HP;
       if (S.residents.length <= 3 || zombies.some((z) => z.space === S)) continue;   // 호출 무시
@@ -2239,6 +2254,7 @@
       if (S.outer.length <= STATION_OUT_MIN) break;
       if (!c.sortie || c.calls.length || c.state === 'fight' || c.state === 'alert') continue;
       c.sortie = false;
+      c.boosted = false;                      // 다음에 또 출동하면 다시 3배
       S.outer.splice(S.outer.indexOf(c), 1);
       S.residents.push(c);
       c.area = S;
