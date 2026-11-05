@@ -97,12 +97,13 @@
   #goal .g3 { margin-top: 14px; display: flex; justify-content: center; gap: 22px; font: 900 40px/1 var(--font); color: #d58cff; text-shadow: 0 0 10px rgba(180, 78, 230, 0.9), 0 2px 4px #000; }   /* 경찰서 수만큼 느낌표 (v214) */
   #goal .g1 { font: 600 14px/1 var(--font); color: rgba(255, 255, 255, 0.8); letter-spacing: 2px; }
   #goal .g2 { margin-top: 10px; padding: 0 16px; font: 900 34px/1.2 var(--font); color: #fff; text-shadow: 0 0 14px #b44ee6, 0 3px 8px rgba(0, 0, 0, 0.8); word-break: keep-all; }
-  #tut { position: absolute; inset: 0; z-index: 22; background: rgba(0, 0, 0, 0.45); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: calc(19vh + env(safe-area-inset-top, 0px)); box-sizing: border-box; touch-action: none; }   /* 처음 만난 적 소개 (v202) — 누르면 닫힘 */
-  #tut .who { width: 110px; height: 110px; border-radius: 50%; box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.85), 0 8px 24px rgba(0, 0, 0, 0.6); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }
-  #tut .bang { font: 900 120px/1 var(--font); color: #b44ee6; text-shadow: 0 0 18px rgba(180, 78, 230, 0.9); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }
-  #tut .nm { margin-bottom: 26px; font: 900 40px/1 var(--font); text-shadow: 0 0 2px #000, 0 3px 10px rgba(0, 0, 0, 0.9); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }   /* 이름 (v204) */
-  #tut .say { margin-top: 38px; padding: 0 24px; font: 800 24px/1.35 var(--font); color: #fff; text-align: center; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); word-break: keep-all; }
-  #tut .close { margin-top: 26px; padding: 12px 40px; border: 0; border-radius: 12px; background: rgba(255, 255, 255, 0.92); color: #15151c; font: 800 17px/1 var(--font); }   /* 닫기 (v216) */
+  #tut { position: absolute; inset: 0; z-index: 22; background: rgba(0, 0, 0, 0.45); display: flex; flex-direction: column; align-items: center; box-sizing: border-box; touch-action: none; }   /* 처음 만난 적 소개 (v202) — 누르면 닫힘 */
+  #tut .who { width: 86px; height: 86px; border-radius: 50%; box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.85), 0 8px 24px rgba(0, 0, 0, 0.6); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }
+  #tut .bang { font: 900 92px/1 var(--font); color: #b44ee6; text-shadow: 0 0 18px rgba(180, 78, 230, 0.9); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }
+  #tut .nm { margin-bottom: 18px; font: 900 36px/1 var(--font); text-shadow: 0 0 2px #000, 0 3px 10px rgba(0, 0, 0, 0.9); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }   /* 이름 (v204) */
+  #tut .say { margin-top: 22px; padding: 0 24px; font: 800 24px/1.35 var(--font); color: #fff; text-align: center; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); word-break: keep-all; }
+  #tut .tb { position: absolute; left: 0; right: 0; top: calc(7% + env(safe-area-inset-top, 0px)); display: flex; flex-direction: column; align-items: center; }   /* v219: 소개는 위쪽, 대상은 화면 가운데 */
+  #tut .close { position: absolute; left: 50%; top: 61%; transform: translateX(-50%); padding: 12px 40px; border: 0; border-radius: 12px; background: rgba(255, 255, 255, 0.92); color: #15151c; font: 800 17px/1 var(--font); }   /* 닫기 (v216) */
   #tut .h { margin-top: 14px; font: 600 13px/1 var(--font); color: rgba(255, 255, 255, 0.65); }
   @keyframes tutpop { 0% { transform: scale(0.2); } 100% { transform: scale(1); } }
   .hold { position: absolute; z-index: 40; width: 96px; height: 96px; margin: -48px 0 0 -48px;   /* v215: 1.5배 */ border-radius: 50%; pointer-events: none;
@@ -177,7 +178,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v218</div>
+  <div id="ver">v219</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3095,7 +3096,7 @@
     for (const b of bodies) {
       if (b.kind !== 'citizen' || !b.mesh.visible || b.offView) continue;
       const k = b.police ? 'police' : b.attacker ? 'attacker' : b.guard ? 'guard' : 'citizen';
-      if (!tutSeen[k]) { tutSeen[k] = true; tutQueue.push({ k, x: b.foot.x, z: b.foot.z }); }   // 처음 본 자리 (v216 — 카메라가 그리로 간다)
+      if (!tutSeen[k]) { tutSeen[k] = true; tutQueue.push({ k, x: b.foot.x, z: b.foot.z, b }); }   // 처음 본 자리 (v216 — 카메라가 그리로 간다)
     }
     const S = !tutSeen.station && stations.find((S) => S.found);
     if (S) { tutSeen.station = true; tutQueue.push({ k: 'station', x: (S.x0 + S.x1) / 2, z: (S.z0 + S.z1) / 2 }); }
@@ -3139,6 +3140,13 @@
   // 발견 연출 (v216): 멈춤 → 카메라가 발견한 쪽으로 (천천히 출발해서 천천히 섬) → 소개 창 → [닫기] 누르면 바로 닫히고 카메라가 나에게 돌아옴 (그동안도 멈춤) → 다시 움직임
   let camAnim = null;
   const PAN_T = 0.8;
+  const csV = new THREE.Vector3();
+  function centerOn(x, y, z) {                // 점 (x, y, z)가 화면 정가운데 오려면 카메라를 얼마나 옮겨야 하나 (v219)
+    place(); camera.updateMatrixWorld();
+    csV.set(0, 0, 0.5).unproject(camera).sub(camera.position);   // 화면 가운데를 지나는 시선
+    const t = (y - camera.position.y) / csV.y;                   // 그 시선이 높이 y에 닿는 곳
+    return { x: camOff.x + x - (camera.position.x + csV.x * t), z: camOff.y + z - (camera.position.z + csV.z * t) };   // 카메라는 옆으로만 옮기니 그만큼 밀면 된다
+  }
   function panCam(tx, tz, done) { camAnim = { fx: camOff.x, fz: camOff.y, tx, tz, t0: performance.now(), done }; }
   function stepCamAnim(now) {
     const a = camAnim, u = Math.min(1, (now - a.t0) / 1000 / PAN_T), e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;   // 가속 → 감속
@@ -3150,10 +3158,12 @@
   function showTut(item) {
     tutOpen = true; paused = true; stopInput();
     const d = TUT[item.k];
-    panCam(item.x - me.foot.x, item.z - me.foot.z - 7.5, () => {   // 발견한 게 소개 창 아래(화면 가운데보다 조금 아래)에 보이게 카메라를 살짝 북쪽으로
+    const b = item.b, h = b ? (b.halfH || RADIUS) : 0;              // 사람은 원 한가운데, 경찰서는 바닥 한가운데
+    const o = centerOn((b ? b.foot.x : item.x) + UP.x * h, UP.y * h, (b ? b.foot.z : item.z) + UP.z * h);
+    panCam(o.x, o.z, () => {   // 발견한 게 화면 정가운데 오게 (v219)
       const ov = document.createElement('div');
       ov.id = 'tut';
-      ov.innerHTML = (d.name ? `<div class="nm" style="color:${d.col}">${d.name} 발견!!!</div>` : '') + (d.bang ? '<div class="bang">!</div>' : `<div class="who" style="background:${d.col}"></div>`) + `<div class="say">${d.say}</div><button class="close">닫기</button>`;
+      ov.innerHTML = '<div class="tb">' + (d.name ? `<div class="nm" style="color:${d.col}">${d.name} 발견!!!</div>` : '') + (d.bang ? '<div class="bang">!</div>' : `<div class="who" style="background:${d.col}"></div>`) + `<div class="say">${d.say}</div></div><button class="close">닫기</button>`;   // 위: 소개 / 가운데: 진짜 대상 / 아래: 닫기 (v219)
       stage.appendChild(ov);
       const block = (e) => { e.stopPropagation(); e.preventDefault(); };
       ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
