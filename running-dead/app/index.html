@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v251</div>
+  <div id="ver">v252</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1234,6 +1234,14 @@
   function shoot(c, z) {
     c.shotT = 0;
     c.shotAt = z;
+    {                                         // v252: 총구 불꽃(노랑, 아주 잠깐, UI 빼고 맨 위) + 반동(뒤로 팍 밀렸다가 천천히 제자리)
+      const dx = z.foot.x - c.foot.x, dz = z.foot.z - c.foot.z, d = Math.hypot(dx, dz) || 1, ux = dx / d, uz = dz / d;
+      const mx = c.foot.x + ux * (RADIUS + 0.25), mz = c.foot.z + uz * (RADIUS + 0.25);
+      const f1 = puff(mx, 0, mz, 0xffc400, 0.9, 1.5, 0.09, 0, 0, 0, 1);
+      const f2 = puff(mx, 0, mz, 0xfff6c0, 0.45, 0.8, 0.07, 0, 0, 0, 1);
+      for (const f of [f1, f2]) { f.s.position.addScaledVector(UP, RADIUS); f.s.renderOrder = UI - 0.5; f.s.material.opacity = 1; f.peak = true; }
+      c.recoilT = 0; c.recoilX = -ux; c.recoilZ = -uz;
+    }
     landHit(c, z, z === me && hasVest ? POLICE_DAMAGE * (1 - vestPct(up.brain) / 100) : POLICE_DAMAGE);   // 방탄복 — 내 총알 피해 감소 (v201)
   }
 
@@ -2248,6 +2256,11 @@
       const hide = !(b === me || isZombie(b) || seen(b, eyes));   // 시민·경찰은 좀비 시야 안에 있을 때만 보인다
       b.mesh.visible = !hide;
       b.mesh.position.copy(b.foot).addScaledVector(UP, b.halfH || RADIUS);   // 원 아랫끝이 바닥에 닿는다 (금고는 더 크다, v195)
+      if (b.recoilT >= 0) {                   // 총 반동 (v252): 0.04초에 뒤로 0.2칸 팍 → 0.3초에 걸쳐 천천히 제자리 (그림만, 실제 자리는 그대로)
+        const t = b.recoilT, k = t < 0.04 ? t / 0.04 : Math.pow(Math.max(0, 1 - (t - 0.04) / 0.3), 2);
+        b.mesh.position.x += b.recoilX * 0.2 * k; b.mesh.position.z += b.recoilZ * 0.2 * k;
+        if ((b.recoilT += dt) > 0.34) b.recoilT = -1;
+      }
       if (b.knockT > 0) b.mesh.position.y += Math.sin(Math.PI * (1 - b.knockT / KNOCK_T)) * 0.9;   // 치여 날아갈 때 살짝 떠오른다
       if (b.lungeT >= 0) {                    // 때리는 모션: 상대 쪽으로 빠르게 붙었다가 돌아온다 (그림만)
         const k = b.lungeT < LUNGE_IN ? b.lungeT / LUNGE_IN : Math.max(0, 1 - (b.lungeT - LUNGE_IN) / LUNGE_OUT);
@@ -3226,7 +3239,9 @@
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: fxTex, color, transparent: true, depthTest: false, depthWrite: false, opacity: 0 }));
     s.renderOrder = 5; s.position.set(x, y, z); s.scale.setScalar(s0);
     scene.add(s);
-    fx.push({ s, t: -delay, life, s0, s1, vx, vy, vz, op });
+    const f = { s, t: -delay, life, s0, s1, vx, vy, vz, op };
+    fx.push(f);
+    return f;
   }
   function dust(x, z, n, spread) {
     for (let i = 0; i < n; i++) {
@@ -3247,7 +3262,7 @@
       f.s.scale.setScalar(f.s0 + (f.s1 - f.s0) * e);
       f.s.position.x += f.vx * dt; f.s.position.y += f.vy * dt; f.s.position.z += f.vz * dt;
       f.vx *= 1 - Math.min(1, dt * 2.5); f.vz *= 1 - Math.min(1, dt * 2.5);
-      f.s.material.opacity = f.op * (u < 0.15 ? u / 0.15 : 1 - (u - 0.15) / 0.85);
+      f.s.material.opacity = f.peak ? f.op * (1 - u) : f.op * (u < 0.15 ? u / 0.15 : 1 - (u - 0.15) / 0.85);   // 총구 불꽃은 처음부터 가장 밝게 (v252)
       if (u >= 1) { scene.remove(f.s); f.s.material.dispose(); fx.splice(i, 1); }
     }
   }
