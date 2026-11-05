@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v252</div>
+  <div id="ver">v253</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1236,9 +1236,9 @@
     c.shotAt = z;
     {                                         // v252: 총구 불꽃(노랑, 아주 잠깐, UI 빼고 맨 위) + 반동(뒤로 팍 밀렸다가 천천히 제자리)
       const dx = z.foot.x - c.foot.x, dz = z.foot.z - c.foot.z, d = Math.hypot(dx, dz) || 1, ux = dx / d, uz = dz / d;
-      const mx = c.foot.x + ux * (RADIUS + 0.25), mz = c.foot.z + uz * (RADIUS + 0.25);
-      const f1 = puff(mx, 0, mz, 0xffc400, 0.9, 1.5, 0.09, 0, 0, 0, 1);
-      const f2 = puff(mx, 0, mz, 0xfff6c0, 0.45, 0.8, 0.07, 0, 0, 0, 1);
+      const mx = c.foot.x + ux * RADIUS * 0.95, mz = c.foot.z + uz * RADIUS * 0.95;   // v253: 경찰 몸 테두리에 딱 붙여서
+      const f1 = puff(mx, 0, mz, 0xffc400, 1.8, 3.0, 0.09, 0, 0, 0, 1);   // v253: 크기 2배
+      const f2 = puff(mx, 0, mz, 0xfff6c0, 0.9, 1.6, 0.07, 0, 0, 0, 1);
       for (const f of [f1, f2]) { f.s.position.addScaledVector(UP, RADIUS); f.s.renderOrder = UI - 0.5; f.s.material.opacity = 1; f.peak = true; }
       c.recoilT = 0; c.recoilX = -ux; c.recoilZ = -uz;
     }
