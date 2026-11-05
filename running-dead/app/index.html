@@ -109,7 +109,7 @@
   <canvas id="view"></canvas>
   <canvas id="smell"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v182</div>
+  <div id="ver">v183</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1570,7 +1570,7 @@
     b.mode = 'free';                          // free = 조작·대기, pounce = 덮치러 가는 중, bite = 무는 중
     b.target = null;
     if (b.boostT > 0) { b.sense = b.boostSense; b.sight = b.boostSight; b.boostT = 0; }   // 출동 직후 늘어난 시야는 좀비가 되면 원래대로 (v158)
-    b.sense = b.sight;                        // 좀비 인지거리 = 시민 때 자기 시야
+    b.sense = me && me.sense ? me.sense : b.sight;   // 동료 인지거리(= 시야) = 나와 똑같이 (v183 — 전엔 시민 때 자기 시야)
     b.speed = SPEED;
     b.attack = ALLY_ATTACK;
     b.tick = Math.random() * ZOMBIE_TICK;
@@ -1993,10 +1993,10 @@
   let eyeMaxR = 0;                            // 이번 프레임 눈들 중 가장 긴 인지거리 (v177)
   function seen(b, eyes) {                    // 좀비 하나라도 인지거리 안에서 벽에 안 가리고 보고 있나 (지붕 덮인 건물 안이면 안 보인다)
     if (b.space && !b.space.open) return false;
-    if (eyes.includes(me) && !isZombie(me)) { const z = me; if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) <= z.sense + RADIUS && !blocked(z.foot.x, z.foot.z, b.foot.x, b.foot.z)) return true; }   // 죽은 나의 마지막 시야
+    if (eyes.includes(me) && !isZombie(me)) { const z = me; if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) <= z.sense && !blocked(z.foot.x, z.foot.z, b.foot.x, b.foot.z)) return true; }   // 죽은 나의 마지막 시야
     for (const z of nearIn(zCells, b.foot.x, b.foot.z, eyeMaxR + RADIUS, viBuf)) {   // 둘레 칸의 좀비만 (v177)
       if (!isZombie(z)) continue;
-      if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) > z.sense + RADIUS) continue;
+      if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) > z.sense) continue;   // 몸 가운데가(몸 반 이상이) 인지거리 안에 들어와야 보인다 (v183)
       if (!blocked(z.foot.x, z.foot.z, b.foot.x, b.foot.z)) return true;
     }
     return false;
@@ -2624,7 +2624,7 @@
     const [ox, oy] = toScreen(mx, mz, W, H);
     let marks = [];
     for (const c of nearIn(cCells, mx, mz, R1, smBuf)) {
-      if (c.kind !== 'citizen') continue;
+      if (c.kind !== 'citizen' || c.mesh.visible) continue;   // 나나 동료 시야에 실제로 보이는 사람은 후각 표시 대신 실제 모습 (v183)
       const dx = c.foot.x - mx, dz = c.foot.z - mz, d = Math.hypot(dx, dz);
       if (d <= R0 || d > R1) continue;
       const type = c.police ? 'police' : c.attacker ? 'attacker' : c.guard ? 'guard' : 'citizen';
