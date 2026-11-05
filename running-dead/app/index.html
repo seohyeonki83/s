@@ -96,11 +96,12 @@
   #goal .g3 { margin-top: 14px; display: flex; justify-content: center; gap: 22px; font: 900 40px/1 var(--font); color: #d58cff; text-shadow: 0 0 10px rgba(180, 78, 230, 0.9), 0 2px 4px #000; }   /* 경찰서 수만큼 느낌표 (v214) */
   #goal .g1 { font: 600 14px/1 var(--font); color: rgba(255, 255, 255, 0.8); letter-spacing: 2px; }
   #goal .g2 { margin-top: 10px; padding: 0 16px; font: 900 34px/1.2 var(--font); color: #fff; text-shadow: 0 0 14px #b44ee6, 0 3px 8px rgba(0, 0, 0, 0.8); word-break: keep-all; }
-  #tut { position: absolute; inset: 0; z-index: 22; background: rgba(0, 0, 0, 0.62); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: calc(19vh + env(safe-area-inset-top, 0px)); box-sizing: border-box; touch-action: none; }   /* 처음 만난 적 소개 (v202) — 누르면 닫힘 */
+  #tut { position: absolute; inset: 0; z-index: 22; background: rgba(0, 0, 0, 0.45); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: calc(19vh + env(safe-area-inset-top, 0px)); box-sizing: border-box; touch-action: none; }   /* 처음 만난 적 소개 (v202) — 누르면 닫힘 */
   #tut .who { width: 110px; height: 110px; border-radius: 50%; box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.85), 0 8px 24px rgba(0, 0, 0, 0.6); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }
   #tut .bang { font: 900 120px/1 var(--font); color: #b44ee6; text-shadow: 0 0 18px rgba(180, 78, 230, 0.9); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }
   #tut .nm { margin-bottom: 26px; font: 900 40px/1 var(--font); text-shadow: 0 0 2px #000, 0 3px 10px rgba(0, 0, 0, 0.9); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }   /* 이름 (v204) */
   #tut .say { margin-top: 38px; padding: 0 24px; font: 800 24px/1.35 var(--font); color: #fff; text-align: center; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); word-break: keep-all; }
+  #tut .close { margin-top: 26px; padding: 12px 40px; border: 0; border-radius: 12px; background: rgba(255, 255, 255, 0.92); color: #15151c; font: 800 17px/1 var(--font); }   /* 닫기 (v216) */
   #tut .h { margin-top: 14px; font: 600 13px/1 var(--font); color: rgba(255, 255, 255, 0.65); }
   @keyframes tutpop { 0% { transform: scale(0.2); } 100% { transform: scale(1); } }
   .hold { position: absolute; z-index: 40; width: 96px; height: 96px; margin: -48px 0 0 -48px;   /* v215: 1.5배 */ border-radius: 50%; pointer-events: none;
@@ -175,7 +176,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v215</div>
+  <div id="ver">v216</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2462,7 +2463,7 @@
     level = 0; xp = 0; pendingLv = 0; lvOpen = false; victoryOn = false; hasVest = false;
     if (vestEl) { vestEl.remove(); vestEl = null; }
     for (const el of stage.querySelectorAll('#pick, #win, #tut, #goal')) el.remove();
-    goalShown = false; tutOpen = false; spawnFrames = 0; mmBang = false; tutQueue.length = 0; for (const k of Object.keys(tutSeen)) delete tutSeen[k];   // 튜토리얼도 판마다 처음부터 (v202)
+    goalShown = false; tutOpen = false; spawnFrames = 0; mmBang = false; camAnim = null; tutQueue.length = 0; for (const k of Object.keys(tutSeen)) delete tutSeen[k];   // 튜토리얼도 판마다 처음부터 (v202)
     drawLv();
     for (const k of cashes.slice()) removeCash(k);
     zaps.length = 0; pendingAward.length = 0; shownStars = 0;
@@ -3093,12 +3094,16 @@
     for (const b of bodies) {
       if (b.kind !== 'citizen' || !b.mesh.visible || b.offView) continue;
       const k = b.police ? 'police' : b.attacker ? 'attacker' : b.guard ? 'guard' : 'citizen';
-      if (!tutSeen[k]) { tutSeen[k] = true; tutQueue.push(k); }
+      if (!tutSeen[k]) { tutSeen[k] = true; tutQueue.push({ k, x: b.foot.x, z: b.foot.z }); }   // 처음 본 자리 (v216 — 카메라가 그리로 간다)
     }
-    if (!tutSeen.station && stations.some((S) => S.found)) { tutSeen.station = true; tutQueue.push('station'); }
+    const S = !tutSeen.station && stations.find((S) => S.found);
+    if (S) { tutSeen.station = true; tutQueue.push({ k: 'station', x: (S.x0 + S.x1) / 2, z: (S.z0 + S.z1) / 2 }); }
   }
   function showGoal() {                       // 시작 목표 — 위쪽에 크게 2.4초, 그동안 멈춰 있다
     goalShown = true; tutOpen = true; paused = true; stopInput();
+    const dim = document.createElement('div');   // 목표 뜰 때 바탕 어둡게 (v216)
+    Object.assign(dim.style, { position: 'absolute', inset: '0', zIndex: '21', background: 'rgba(0,0,0,0.5)', opacity: '0', transition: 'opacity 0.35s', pointerEvents: 'none' });
+    stage.appendChild(dim); dim.getBoundingClientRect(); dim.style.opacity = '1';
     const el = document.createElement('div');
     el.id = 'goal';
     el.innerHTML = '<div class="g1">목표</div><div class="g2">모든 경찰서를 파괴해라</div><div class="g3">' + stations.map(() => '<span>!</span>').join('') + '</div>';   // 경찰서 수만큼 느낌표 (v214)
@@ -3114,24 +3119,44 @@
         sp.style.visibility = 'hidden';
         return { f, x: mr.left - sr.left + ((S.x0 + S.x1) / 2 - MM.x0) * sw, y: mr.top - sr.top + Math.max(((S.z0 + S.z1) / 2 - MM.z0) * sh, 5) };
       });
-      el.classList.remove('on');
+      el.classList.remove('on'); dim.style.opacity = '0';
       requestAnimationFrame(() => flies.forEach(({ f, x, y }, i) => {
-        f.style.transition = `left 0.5s ease-in ${i * 0.06}s, top 0.5s ease-in ${i * 0.06}s, font-size 0.5s ease-in ${i * 0.06}s`;
-        f.style.left = x + 'px'; f.style.top = y + 'px'; f.style.fontSize = '8px';
+        f.style.transition = `left 0.5s ease-in ${i * 0.06}s, top 0.5s ease-in ${i * 0.06}s, font-size 0.5s ease-in ${i * 0.06}s, opacity 0.5s ease-in ${i * 0.06}s`;
+        f.style.left = x + 'px'; f.style.top = y + 'px'; f.style.fontSize = '8px'; f.style.opacity = '0';   // 날아가면서 투명해져 사라진다 (v216)
       }));
       setTimeout(() => { for (const { f } of flies) f.remove(); mmBang = true; updateMinimap(1); }, 500 + stations.length * 60 + 20);
     }, 2100);
-    setTimeout(() => { el.remove(); tutOpen = false; paused = false; last = 0; }, 2100 + 520 + stations.length * 60 + 60);
+    setTimeout(() => { el.remove(); dim.remove(); tutOpen = false; paused = false; last = 0; }, 2100 + 520 + stations.length * 60 + 60);
   }
-  function showTut(k) {
+  // 발견 연출 (v216): 멈춤 → 카메라가 발견한 쪽으로 (천천히 출발해서 천천히 섬) → 소개 창 → [닫기] 누르면 바로 닫히고 카메라가 나에게 돌아옴 (그동안도 멈춤) → 다시 움직임
+  let camAnim = null;
+  const PAN_T = 0.8;
+  function panCam(tx, tz, done) { camAnim = { fx: camOff.x, fz: camOff.y, tx, tz, t0: performance.now(), done }; }
+  function stepCamAnim(now) {
+    const a = camAnim, u = Math.min(1, (now - a.t0) / 1000 / PAN_T), e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;   // 가속 → 감속
+    camOff.set(a.fx + (a.tx - a.fx) * e, a.fz + (a.tz - a.fz) * e);
+    camVel.set(0, 0);
+    place(); draw(0); renderer.render(scene, camera);
+    if (u >= 1) { camAnim = null; if (a.done) a.done(); }
+  }
+  function showTut(item) {
     tutOpen = true; paused = true; stopInput();
-    const d = TUT[k], ov = document.createElement('div');
-    ov.id = 'tut';
-    ov.innerHTML = (d.name ? `<div class="nm" style="color:${d.col}">${d.name} 발견!!!</div>` : '') + (d.bang ? '<div class="bang">!</div>' : `<div class="who" style="background:${d.col}"></div>`) + `<div class="say">${d.say}</div><div class="h">화면을 꾹 누르세요</div>`;
-    stage.appendChild(ov);
-    const block = (e) => { e.stopPropagation(); e.preventDefault(); };
-    ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
-    holdToClose(ov, () => { ov.remove(); tutOpen = false; paused = false; last = 0; });   // 1초 꾹 누르면 닫힘 (v212)
+    const d = TUT[item.k];
+    panCam(item.x - me.foot.x, item.z - me.foot.z - 7.5, () => {   // 발견한 게 소개 창 아래(화면 가운데보다 조금 아래)에 보이게 카메라를 살짝 북쪽으로
+      const ov = document.createElement('div');
+      ov.id = 'tut';
+      ov.innerHTML = (d.name ? `<div class="nm" style="color:${d.col}">${d.name} 발견!!!</div>` : '') + (d.bang ? '<div class="bang">!</div>' : `<div class="who" style="background:${d.col}"></div>`) + `<div class="say">${d.say}</div><button class="close">닫기</button>`;
+      stage.appendChild(ov);
+      const block = (e) => { e.stopPropagation(); e.preventDefault(); };
+      ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
+      ov.addEventListener('pointerdown', (e) => {
+        block(e);
+        if (!e.target.closest('.close') || ov.dataset.done) return;
+        ov.dataset.done = '1';
+        ov.remove();                          // 닫기 → 바로 사라지고 카메라가 돌아온다 (돌아오는 동안 멈춤)
+        panCam(0, 0, () => { tutOpen = false; paused = false; last = 0; });
+      });
+    });
   }
   function uiTick() {                         // 매 프레임 (멈춰 있어도): 줄 서 있는 연출을 하나씩
     if (acqOpen || starAnim || lvOpen || victoryOn || tutOpen) return;
@@ -3222,6 +3247,7 @@
     const dt = last ? Math.min((now - last) / 1000, 0.05) : 0;
     last = now;
     if (!paused) stepWorld(dt);
+    else if (camAnim) stepCamAnim(now);       // 멈춘 채 카메라만 움직이는 연출 (v216)
     uiTick();
     requestAnimationFrame(frame);
   }
