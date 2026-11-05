@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v256</div>
+  <div id="ver">v257</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -286,7 +286,7 @@
   const STAR_AT = (() => { let t = 0, d = STAR_BASE; return Array.from({ length: 5 }, () => { t += d; d *= STAR_GROW; return Math.round(t); }); })();   // [5, 18, 49, 127, 322]
   const SORTIE_SENSE = 3, SORTIE_SENSE_T = 4;   // 경찰서 호출로 나온 경찰: 건물 밖으로 나오는 순간 인지거리·시야 3배 → 4초에 걸쳐 원래대로 (v158)
   const DROP_SENSE = 2, DROP_SENSE_T = 3;   // 경찰차에서 내린 경찰: 인지거리가 순간 2배 → 3초에 걸쳐 원래대로 (v114)
-  const DISPATCH_T = (n) => (30 - 5 * (n - 1)) / 1.15 / 1.15;   /* v239: 출동 빈도 15% 더 */   /* v179: 출동 빈도 15% 올림 (간격 ÷ 1.15) */ //   // 별 n개일 때 출동 간격 (초) — 30·25·20·15·10 (v118)
+  const DISPATCH_T = (n) => (30 - 5 * (n - 1)) / 1.15 / 1.15 / 1.1;   /* v257: 출동 빈도 10% 더 */   /* v239: 출동 빈도 15% 더 */   /* v179: 출동 빈도 15% 올림 (간격 ÷ 1.15) */ //   // 별 n개일 때 출동 간격 (초) — 30·25·20·15·10 (v118)
   const STATION_IN = 14, STATION_OUT = 2, STATION_FRONT = 1;   /* v162: 안 20 → 14 (30% 줄임) */   /* v157: 안 20 · 바깥 3 (둘레 2·앞마당 1), 다시 채우기 없음. 바깥 경찰 피해 합이 경찰 체력의 1/10을 넘을 때마다 호출 → 안에서 1~2명 출동 */ const STATION_OUT_MIN = 3; //   /* v147에 20% 줄임 (15·10·5 → 12·8·4) */ //   // 경찰서 안에 상주 · 둘레 배회 · 앞마당 배회(v115) — 출동하지 않는다. 안의 15명이 전부 감염되면 경찰서 파괴
   const AROUND_MIX = (i) => ['', 'guard', 'attacker', i % 2 ? 'attacker' : 'guard'];   // 시민 건물 i번 둘레에 흩어 두는 사람 — 일반 1 · 수비형·공격형 1~2 (v118에 전부 절반: 건물 3채 합쳐 일반 3 · 수비형 5 · 공격형 4)
   const PATROL_AT = [[-16 * 0.8, -4 * 0.8], [16 * 0.8, -4 * 0.8]];   /* v144·v145: 자리 20% 좁힘 (POS) */ //   // 동네마다 길거리 순찰 경찰 두 명의 자리 (동네 가운데 기준, 건물·시작 자리 피해서) — 동네 다섯 개 × 2 = 10명 (v134)
@@ -356,7 +356,7 @@
     { x: 0, z: -11, w: 14, d: 10, doors: ['s'], kinds: { a: 1, g: 1, n: 2 } },    // 대: 공격형 1 · 수비형 1 · 일반 2 (v118에 전부 절반)
     { x: -10, z: 8, w: 11, d: 8, doors: ['e'], kinds: { g: 1, n: 1, a: 1 } },   /* v143에 공격형 +1 */           // 중: 수비형 1 · 일반 1
     { x: 10, z: 8, w: 8, d: 6, doors: ['w'], kinds: { n: 1, g: 1 } },   /* v143에 수비형 +1 */                    // 소: 일반 1
-    { x: 0, z: -50, w: 14, d: 10, doors: ['s'], locks: ['e', 'w'], kinds: {}, station: true },   // v239: 동·서에 잠긴 문 (부수면 열린다)        // 경찰서 (동네 북쪽, v113 · v115에 더 북쪽으로) — 경찰은 판 깔 때 따로 넣는다
+    { x: 0, z: -50, w: 14, d: 10, doors: ['s'], locks: ['e', 'w', 'n'], kinds: {}, station: true },   // v257: 뒷문(북) 추가   // v239: 동·서에 잠긴 문 (부수면 열린다)        // 경찰서 (동네 북쪽, v113 · v115에 더 북쪽으로) — 경찰은 판 깔 때 따로 넣는다
   ].map((s, i) => ({ ...s, x: s.x * MAP * POS, z: s.z * MAP * POS, w: s.w * MAP, d: s.d * MAP, local: i }));   // 위치·크기 다 MAP배 (사람 수는 그대로)
   const START_BLOCK = 1;                      // 첫 마을 = 오른쪽 아래 (v230) — 경찰서 없이 건물 3개, 시작 자리, 성장 구역
   const BIG = { x: 0, z: -50 * MAP * POS, w: 16 * MAP, d: 12 * MAP, doors: ['s'], kinds: {}, big: true, local: 3 };   // v232: 첫 마을 경찰서 자리에 경찰서보다 큰 건물 — 안에 짭새 3 · 만두귀 2 · 좃밥 2 · 헬창 2
@@ -1280,7 +1280,8 @@
     const x = (Math.random() < 0.5 ? 1 : 2) * DISPATCH_MORE;   // 출동 인원 (v170에 30% 늘림) — 1.3명 또는 2.6명 → 소수점은 확률로 (평균 1.5 → 1.95명)
     const n = Math.floor(x) + (Math.random() < x % 1 ? 1 : 0);
     const D = S.doors[0], ox = D.cx + D.nx * 1.6, oz = D.cz + D.nz * 1.6;   // 그 경찰서 문 바로 밖
-    if (stars >= 2 && Math.random() < 0.5) addCar(ox + D.nx * 1.6, oz + D.nz * 1.6, Math.atan2(D.nz, D.nx), site, n);
+    const sd = Math.random() < 0.5 ? 1 : -1;   // v257: 경찰차는 정문이 아니라 경찰서 옆(동·서 중 하나)에서 나온다
+    if (stars >= 2 && Math.random() < 0.5) addCar(sd > 0 ? S.x1 + 2.6 : S.x0 - 2.6, (S.z0 + S.z1) / 2 + rand(-1.5, 1.5), sd > 0 ? 0 : Math.PI, site, n);
     else for (let i = 0; i < n; i++) {
       const k = (i - (n - 1) / 2) * 0.9;     // 둘이면 나란히
       addCitizen(ox + D.tx * k, oz + D.tz * k, null, 'police').calls.push(site.clone());
@@ -3204,7 +3205,7 @@
       if (!walls.includes(o.seg)) walls.push(o.seg);
       if (!B.walls.includes(o.seg)) B.walls.push(o.seg);
       const k = B.doors.indexOf(o.L); if (k >= 0) B.doors.splice(k, 1);
-      o.mesh.visible = true; o.dead = false; o.hp = o.maxHp = B.side ? POLICE_HP : OBJ_HP;   // 쪽문 체력 = 경찰과 같음 (v242), 경찰서 문 = 경찰의 5배
+      o.mesh.visible = true; o.dead = false; o.hp = o.maxHp = B.side ? POLICE_HP : OBJ_HP * 2 / 3;   // v257: 경찰서 문은 2/3 (경찰의 약 3.3배)   // 쪽문 체력 = 경찰과 같음 (v242), 경찰서 문 = 경찰의 5배
       o.off = false; if (o.fill) o.fill.visible = false; o.gap.visible = false; if (o.L.see) o.L.see.visible = false;
       if (!o.hpBar) addHpBar(o, hpFoeMat);
       o.hpBar.visible = false; o.hpDisp = o.hp;
@@ -3490,12 +3491,16 @@
         return { f, x: mr.left - sr.left + ((S.x0 + S.x1) / 2 - MM.x0) * sw, y: mr.top - sr.top + Math.max(((S.z0 + S.z1) / 2 - MM.z0) * sh, 5) };
       });
       el.classList.remove('on'); dim.style.transition = 'opacity 0.6s ease-in'; dim.style.opacity = '0';
-      requestAnimationFrame(() => flies.forEach(({ f, x, y }, i) => {
-        f.style.transition = `left 0.5s ease-in ${i * 0.06}s, top 0.5s ease-in ${i * 0.06}s, font-size 0.5s ease-in ${i * 0.06}s`;
-        f.style.left = x + 'px'; f.style.top = y + 'px'; f.style.fontSize = '8px';   // v217: 느낌표는 그대로 날아가 박힌다 (투명해지는 건 바탕)
-      }));
-      setTimeout(() => { for (const { f } of flies) f.remove(); mmBang = true; updateMinimap(1); }, 500 + stations.length * 60 + 20);
-      setTimeout(() => { el.remove(); dim.remove(); okBtn.remove(); tutOpen = false; paused = false; last = 0; }, 620 + stations.length * 60);
+      // v257: 느낌표가 스프링처럼 툭 커졌다가(0.4초) → 천천히 출발해 천천히 미니맵에 박힌다(1초, 하나씩 0.1초 차)
+      const POP = 400, FLY = 1000, GAP = 100;
+      requestAnimationFrame(() => flies.forEach(({ f }) => { f.style.transition = 'transform 0.4s cubic-bezier(.3,1.9,.5,1)'; f.style.transform = 'translate(-50%, -50%) scale(1.6)'; }));
+      setTimeout(() => flies.forEach(({ f, x, y }, i) => {
+        const d = (i * GAP / 1000) + 's', e = `${FLY / 1000}s cubic-bezier(.45,0,.25,1) ${d}`;
+        f.style.transition = `left ${e}, top ${e}, font-size ${e}, transform ${e}`;
+        f.style.left = x + 'px'; f.style.top = y + 'px'; f.style.fontSize = '8px'; f.style.transform = 'translate(-50%, -50%) scale(1)';
+      }), POP);
+      setTimeout(() => { for (const { f } of flies) f.remove(); mmBang = true; updateMinimap(1); }, POP + FLY + stations.length * GAP + 20);
+      setTimeout(() => { el.remove(); dim.remove(); okBtn.remove(); tutOpen = false; paused = false; last = 0; }, POP + FLY + stations.length * GAP + 120);
     });
   }
   // 발견 연출 (v216): 멈춤 → 카메라가 발견한 쪽으로 (천천히 출발해서 천천히 섬) → 소개 창 → [닫기] 누르면 바로 닫히고 카메라가 나에게 돌아옴 (그동안도 멈춤) → 다시 움직임
