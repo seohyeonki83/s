@@ -98,6 +98,7 @@
   #tut { position: absolute; inset: 0; z-index: 22; background: rgba(0, 0, 0, 0.62); display: flex; flex-direction: column; align-items: center; justify-content: center; touch-action: none; }   /* 처음 만난 적 소개 (v202) — 누르면 닫힘 */
   #tut .who { width: 110px; height: 110px; border-radius: 50%; box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.85), 0 8px 24px rgba(0, 0, 0, 0.6); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }
   #tut .bang { font: 900 120px/1 var(--font); color: #b44ee6; text-shadow: 0 0 18px rgba(180, 78, 230, 0.9); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }
+  #tut .nm { margin-bottom: 18px; font: 900 40px/1 var(--font); text-shadow: 0 0 2px #000, 0 3px 10px rgba(0, 0, 0, 0.9); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }   /* 이름 (v204) */
   #tut .say { margin-top: 22px; padding: 0 24px; font: 800 24px/1.35 var(--font); color: #fff; text-align: center; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); word-break: keep-all; }
   #tut .h { margin-top: 14px; font: 600 13px/1 var(--font); color: rgba(255, 255, 255, 0.65); }
   @keyframes tutpop { 0% { transform: scale(0.2); } 100% { transform: scale(1); } }
@@ -170,7 +171,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v203</div>
+  <div id="ver">v204</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3038,10 +3039,10 @@
   }
   // ── 튜토리얼 (v202) — 판을 시작하면 목표를 위쪽에 크게 띄웠다가 사라지고, 처음 만난 적·경찰서는 화면 가운데에 소개 (누르면 닫힘) ──
   const TUT = {
-    citizen: { col: '#ffcf33', say: '살점을 뜯어먹어 체력을 회복하세요' },
-    guard: { col: '#ff8c1a', say: '깝침' },
-    attacker: { col: '#c62828', say: '좀 침' },
-    police: { col: '#8e24aa', say: '권총 씀' },
+    citizen: { col: '#ffcf33', name: '좃밥', say: '살점을 뜯어먹어 체력을 회복하세요' },   // 이름 (v204) — 원 위에 뜬다
+    guard: { col: '#ff8c1a', name: '헬창', say: '깝침' },
+    attacker: { col: '#c62828', name: '만두귀', say: '좀 침' },
+    police: { col: '#8e24aa', name: '짭새', say: '권총 씀' },
     station: { bang: true, say: '경찰서 !! 깝치면 개털림' },
   };
   let goalShown = false, tutOpen = false, spawnFrames = 0;
@@ -3068,7 +3069,7 @@
     tutOpen = true; paused = true; stopInput();
     const d = TUT[k], ov = document.createElement('div');
     ov.id = 'tut';
-    ov.innerHTML = (d.bang ? '<div class="bang">!</div>' : `<div class="who" style="background:${d.col}"></div>`) + `<div class="say">${d.say}</div><div class="h">화면을 누르세요</div>`;
+    ov.innerHTML = (d.name ? `<div class="nm" style="color:${d.col}">${d.name}</div>` : '') + (d.bang ? '<div class="bang">!</div>' : `<div class="who" style="background:${d.col}"></div>`) + `<div class="say">${d.say}</div><div class="h">화면을 누르세요</div>`;
     stage.appendChild(ov);
     const block = (e) => { e.stopPropagation(); e.preventDefault(); };
     ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
