@@ -187,7 +187,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v240</div>
+  <div id="ver">v241</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3114,7 +3114,7 @@
       if (o.dead) continue;
       if (o.type === 'car' ? z.space : (z.space && z.space !== o.B)) continue;   // 차는 밖에서만, 문은 그 경찰서 밖이나 안에서
       const g = objGap(o, z);
-      if (g > OBJ_SEE || g >= bd) continue;
+      if (g > (z === me ? z.sense : OBJ_SEE) || g >= bd) continue;   // v241: 나는 다른 타겟과 똑같이 내 인지거리로 알아챈다 (동료만 1.5배 근접 거리)
       const [px, pz] = objPoint(o, z);
       if (blocked(z.foot.x, z.foot.z, px, pz)) continue;
       bd = g; best = o;
