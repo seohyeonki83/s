@@ -91,6 +91,16 @@
   #win .vs { margin-top: 14px; font: 700 15px/1 var(--font); color: #fff; opacity: 0; transition: opacity 0.4s 0.4s; }
   #win.on .vs { opacity: 0.9; }
   #win .bang { position: absolute; left: 50%; top: 45%; font: 900 26px/1 var(--font); color: #b44ee6; text-shadow: 0 0 8px rgba(180, 78, 230, 0.9); transform: translate(-50%, -50%); transition: transform 1.1s ease-out, opacity 1.1s ease-in; }
+  #goal { position: absolute; left: 0; right: 0; top: calc(15% + env(safe-area-inset-top, 0px)); z-index: 23; text-align: center; pointer-events: none; opacity: 0; transform: translateY(-12px) scale(0.9); transition: opacity 0.35s, transform 0.35s; }   /* 시작 목표 (v202) */
+  #goal.on { opacity: 1; transform: none; }
+  #goal .g1 { font: 600 14px/1 var(--font); color: rgba(255, 255, 255, 0.8); letter-spacing: 2px; }
+  #goal .g2 { margin-top: 10px; padding: 0 16px; font: 900 34px/1.2 var(--font); color: #fff; text-shadow: 0 0 14px #b44ee6, 0 3px 8px rgba(0, 0, 0, 0.8); word-break: keep-all; }
+  #tut { position: absolute; inset: 0; z-index: 22; background: rgba(0, 0, 0, 0.62); display: flex; flex-direction: column; align-items: center; justify-content: center; touch-action: none; }   /* 처음 만난 적 소개 (v202) — 누르면 닫힘 */
+  #tut .who { width: 110px; height: 110px; border-radius: 50%; box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.85), 0 8px 24px rgba(0, 0, 0, 0.6); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }
+  #tut .bang { font: 900 120px/1 var(--font); color: #b44ee6; text-shadow: 0 0 18px rgba(180, 78, 230, 0.9); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }
+  #tut .say { margin-top: 22px; padding: 0 24px; font: 800 24px/1.35 var(--font); color: #fff; text-align: center; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); word-break: keep-all; }
+  #tut .h { margin-top: 14px; font: 600 13px/1 var(--font); color: rgba(255, 255, 255, 0.65); }
+  @keyframes tutpop { 0% { transform: scale(0.2); } 100% { transform: scale(1); } }
   #smell { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }   /* 후각 표시 (v180) — 게임 화면 위, 다른 UI 아래 */
   #joy {
     position: absolute; left: 50%; bottom: calc(56px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; width: 124px; height: 124px; margin-left: -62px;
@@ -160,7 +170,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v201</div>
+  <div id="ver">v202</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2433,7 +2443,8 @@
     for (const k of Object.keys(up)) up[k] = 0;   // 레벨·능력치·방탄복 초기화 (v201)
     level = 0; xp = 0; pendingLv = 0; lvOpen = false; victoryOn = false; hasVest = false;
     if (vestEl) { vestEl.remove(); vestEl = null; }
-    for (const el of stage.querySelectorAll('#pick, #win')) el.remove();
+    for (const el of stage.querySelectorAll('#pick, #win, #tut, #goal')) el.remove();
+    goalShown = false; tutOpen = false; spawnFrames = 0; tutQueue.length = 0; for (const k of Object.keys(tutSeen)) delete tutSeen[k];   // 튜토리얼도 판마다 처음부터 (v202)
     drawLv();
     for (const k of cashes.slice()) removeCash(k);
     zaps.length = 0; pendingAward.length = 0; shownStars = 0;
@@ -2726,6 +2737,8 @@
     tickItems(dt);                            // 기술 다시 채우기 (v190)
     dispatchTick(dt);                         // 수배 별에 따라 경찰서에서 출동
     draw(dt);
+    checkTut();                               // 처음 만난 적 소개 (v202)
+    spawnFrames++;
     updateStars();
     updateMinimap(dt);
     updateCmd(dt);
@@ -3023,8 +3036,48 @@
       }, 190);
     }, 960);                                  // 크게 떠 있는 시간 0.32 → 0.96초 (v197에 3배)
   }
+  // ── 튜토리얼 (v202) — 판을 시작하면 목표를 위쪽에 크게 띄웠다가 사라지고, 처음 만난 적·경찰서는 화면 가운데에 소개 (누르면 닫힘) ──
+  const TUT = {
+    citizen: { col: '#ffcf33', say: '살점을 뜯어먹어 체력을 회복하세요' },
+    guard: { col: '#ff8c1a', say: '깝침' },
+    attacker: { col: '#c62828', say: '좀 침' },
+    police: { col: '#8e24aa', say: '권총 씀' },
+    station: { bang: true, say: '경찰서 !! 깝치면 개털림' },
+  };
+  let goalShown = false, tutOpen = false, spawnFrames = 0;
+  const tutSeen = {}, tutQueue = [];
+  function checkTut() {                       // 처음으로 시야에 들어온 종류 → 소개 줄 세우기
+    for (const b of bodies) {
+      if (b.kind !== 'citizen' || !b.mesh.visible || b.offView) continue;
+      const k = b.police ? 'police' : b.attacker ? 'attacker' : b.guard ? 'guard' : 'citizen';
+      if (!tutSeen[k]) { tutSeen[k] = true; tutQueue.push(k); }
+    }
+    if (!tutSeen.station && stations.some((S) => S.found)) { tutSeen.station = true; tutQueue.push('station'); }
+  }
+  function showGoal() {                       // 시작 목표 — 위쪽에 크게 2.4초, 그동안 멈춰 있다
+    goalShown = true; tutOpen = true; paused = true; stopInput();
+    const el = document.createElement('div');
+    el.id = 'goal';
+    el.innerHTML = '<div class="g1">목표</div><div class="g2">모든 경찰서를 파괴해라</div>';
+    stage.appendChild(el);
+    el.getBoundingClientRect(); el.classList.add('on');
+    setTimeout(() => el.classList.remove('on'), 2100);
+    setTimeout(() => { el.remove(); tutOpen = false; paused = false; last = 0; }, 2450);
+  }
+  function showTut(k) {
+    tutOpen = true; paused = true; stopInput();
+    const d = TUT[k], ov = document.createElement('div');
+    ov.id = 'tut';
+    ov.innerHTML = (d.bang ? '<div class="bang">!</div>' : `<div class="who" style="background:${d.col}"></div>`) + `<div class="say">${d.say}</div><div class="h">화면을 누르세요</div>`;
+    stage.appendChild(ov);
+    const block = (e) => { e.stopPropagation(); e.preventDefault(); };
+    ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
+    ov.addEventListener('pointerdown', (e) => { block(e); ov.remove(); tutOpen = false; paused = false; last = 0; });
+  }
   function uiTick() {                         // 매 프레임 (멈춰 있어도): 줄 서 있는 연출을 하나씩
-    if (acqOpen || starAnim || lvOpen || victoryOn) return;
+    if (acqOpen || starAnim || lvOpen || victoryOn || tutOpen) return;
+    if (!goalShown) { if (spawnFrames >= 3) showGoal(); return; }   // 판 시작 → 첫 장면을 몇 프레임 그린 뒤 목표 (v202)
+    if (tutQueue.length) { showTut(tutQueue.shift()); return; }
     if (stationDown && !victoryOn) { showVictory(); return; }   // 경찰서 다 파괴 → 승리 (v201)
     if (pendingAward.length) { showAward(pendingAward.shift()); return; }
     if (pendingLv > 0) { showLevelUp(); return; }
