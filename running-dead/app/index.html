@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v177</div>
+  <div id="ver">v178</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -213,7 +213,8 @@
   const CAR_MASS = 10;                    // 경찰차 무게 = 몸 10개 — 몸 하나를 칠 때마다 최고 속도의 1/10씩 느려진다 (10명이면 선다)
   const CAR_HIT_DMG = 50;                 // 최고 속도로 치면 데미지 50 — 속도에 비례, 서 있으면 0. 좀비·시민·경찰 모두 (v138)
   const KNOCK = 2.2, KNOCK_T = 0.6;       // 치인 몸은 차 속도의 2.2배로 튕겨 날아간다 (최대 0.6초, 점점 느려짐)
-  const PARKED_K = Math.sqrt(2 / 3);   // 서 있는 경찰차 부딪힘 = 넓이 2/3 (가로·세로 각 약 82%) — 달릴 때는 그대로 (v171)
+  const PARKED_K = Math.sqrt(2 / 3);   // 서 있는 경찰차 부딪힘 = 넓이 2/3 (가로·세로 각 약 82%) (v171)
+  const MOVING_K = Math.sqrt(1.5);    // 달리는 경찰차 부딪힘 = 넓이 1.5배 (가로·세로 각 약 122%) — 그림 크기는 그대로 (v178)
   const CAR_L = 2.8 * 0.8, CAR_W = 1.5 * 0.8;   /* v157에 20% 줄임 */ //   // 길이·폭 (유닛)
 
   // 동료 좀비가 나를 따르는 거리
@@ -1249,7 +1250,7 @@
       const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx;
       for (const b of bodies) {
         if (b.fixed || b.knockT > 0) continue;
-        const k = car.state === 'parked' ? PARKED_K : 1;   // 서 있으면 부딪힘이 작다 (v171)
+        const k = car.state === 'parked' ? PARKED_K : MOVING_K;   // 서 있으면 작고 (v171), 달리면 크다 (v178)
         const dx = b.foot.x - car.x, dz = b.foot.z - car.z, hu = CAR_L / 2 * k + b.r, hv = CAR_W / 2 * k + b.r;
         if (b.hitT > 0 && b.hitT < clock) b.hitT = 0;
         let u = dx * fx + dz * fz, v = dx * rx + dz * rz;
