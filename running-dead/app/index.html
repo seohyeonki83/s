@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v257</div>
+  <div id="ver">v258</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2716,7 +2716,7 @@
     const clear = (x, z, B, m) => Math.hypot(Math.max(B.x0 - x, 0, x - B.x1), Math.max(B.z0 - z, 0, z - B.z1)) >= m;   // 네모 B에서 m 넘게 떨어졌나
     for (let t = 0; t < 5000; t++) {
       const [ox, oz] = BLOCKS[START_BLOCK];   // v230: 늘 첫 마을(오른쪽 아래)에서 시작
-      const x = ox + rand(-15, 15), z = oz + rand(-24, 14);   // 그 마을 안 (북쪽 경찰서 쪽은 아래에서 걸러진다)
+      const x = ox + rand(0, 15), z = oz + rand(-24, 14);   // v258: 첫 마을 가운데보다 오른쪽(동쪽)에서만   // 그 마을 안 (북쪽 경찰서 쪽은 아래에서 걸러진다)
       if (x < MM.x0 + 6 || x > MM.x1 - 6 || z < MM.z0 + 6 || z > MM.z1 - 6) continue;   // 지도 경계에서 6칸 넘게 안쪽 (v175)
       if (!buildings.every((B) => clear(x, z, B, 1.5))) continue;
       if (!stations.every((S) => clear(x, z, S, START_COP_CLEAR))) continue;
