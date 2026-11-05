@@ -187,7 +187,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v229</div>
+  <div id="ver">v230</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -353,7 +353,8 @@
     { x: 10, z: 8, w: 8, d: 6, doors: ['w'], kinds: { n: 1, g: 1 } },   /* v143에 수비형 +1 */                    // 소: 일반 1
     { x: 0, z: -50, w: 14, d: 10, doors: ['s'], kinds: {}, station: true },        // 경찰서 (동네 북쪽, v113 · v115에 더 북쪽으로) — 경찰은 판 깔 때 따로 넣는다
   ].map((s, i) => ({ ...s, x: s.x * MAP * POS, z: s.z * MAP * POS, w: s.w * MAP, d: s.d * MAP, local: i }));   // 위치·크기 다 MAP배 (사람 수는 그대로)
-  const BUILDINGS = BLOCKS.flatMap(([ox, oz], k) => TOWN.map((s) => ({ ...s, x: s.x + ox, z: s.z + oz, block: k })));
+  const START_BLOCK = 1;                      // 첫 마을 = 오른쪽 아래 (v230) — 경찰서 없이 건물 3개, 시작 자리, 성장 구역
+  const BUILDINGS = BLOCKS.flatMap(([ox, oz], k) => TOWN.filter((s) => !(k === START_BLOCK && s.station)).map((s) => ({ ...s, x: s.x + ox, z: s.z + oz, block: k })));
   const DOOR = 4 * MAP;   // 문 폭 (유닛) — 문은 그 벽 한가운데. 여럿이 나란히 지나간다
   const WALL_SENSE = 1 / 4;   // 도망칠 때 벽도 좀비처럼 피한다 — 가장 가까운 벽이 인지거리의 이만큼 안에 들어오면 (구석에 몰리지 않게)
   const CORNER = 1.0;     // 패닉 중 건물 안 구석(두 벽 다 이 거리 안)에 몰리면 초패닉 — 좀비는 안 보고 문과 가까운 쪽으로 벽을 타고 돌아 문으로 나간다
@@ -1726,6 +1727,7 @@
   }
 
   function makeZombie(b) {
+    if (b.scr) scr.inf[b.scr]++;              // 성장 구역 스폰이 감염됨 (v230)
     b.kind = 'ally';
     b.state = '';
     b.mesh.material.color.setHex(COLOR.ally);
@@ -2495,6 +2497,9 @@
     for (const el of stage.querySelectorAll('#pick, #win, #tut, #goal')) el.remove();
     hiOff();
     goalShown = false; tutOpen = false; spawnFrames = 0; mmBang = false; camAnim = null; tutQueue.length = 0; for (const k of Object.keys(tutSeen)) delete tutSeen[k];   // 튜토리얼도 판마다 처음부터 (v202)
+    gameNo++;
+    if (gameNo > TUT_GAMES) { goalShown = true; mmBang = true; for (const k of ['citizen', 'guard', 'attacker', 'police', 'station']) tutSeen[k] = true; }   // v230: 앱을 켠 뒤 처음 두 판만 목표·발견 소개 (껐다 켜면 다시)
+    scr.st = 0; scr.on = true; scr.t = 0; scr.tick = 0; scr.list.length = 0; for (const k in scr.inf) scr.inf[k] = 0;
     drawLv();
     for (const k of cashes.slice()) removeCash(k);
     zaps.length = 0; pendingAward.length = 0; shownStars = 0;
@@ -2554,6 +2559,7 @@
       return c;
     };
     BLOCKS.forEach(([ox, oz], k) => {
+      if (k === START_BLOCK) return;          // 첫 마을은 성장 구역 스폰만 (v230)
       const homes = buildings.filter((B) => B.block === k && !B.station);
       const bag = [];
       for (const ch of GROUPS.join('')) bag.push(GROUP_TYPE[ch]);
@@ -2598,7 +2604,7 @@
         rings.push(ring);
       }
     });
-    for (const [ox, oz] of BLOCKS) for (const [px, pz] of PATROL_AT) {   // 길거리 순찰 경찰 — 동네마다 2명씩, 지도 전체 8명 (v191 마을 4개). 자기 자리 둘레만 배회하고 출동·추적은 안 한다 (v134)
+    for (const [ox, oz] of BLOCKS.filter((_, k) => k !== START_BLOCK)) for (const [px, pz] of PATROL_AT) {   // 길거리 순찰 경찰 — 동네마다 2명씩, 지도 전체 8명 (v191 마을 4개). 자기 자리 둘레만 배회하고 출동·추적은 안 한다 (v134)
       const area = { x0: ox + px - 4, z0: oz + pz - 4, x1: ox + px + 4, z1: oz + pz + 4 };
       const g = placeOut(area);
       if (!g) continue;
@@ -2625,7 +2631,10 @@
         S.members.push(c); c.lastHp = c.hp;
       }
     }
+    for (const B of buildings) B.safe = null;
     for (const S of stations) addSafe(S);     // 경찰서마다 금고 (v190)
+    const starter = buildings.filter((B) => B.block === START_BLOCK);
+    addSafe(starter[Math.floor(Math.random() * starter.length)]);   // 첫 마을 건물 3개 중 하나에 금고 (v230) — 거의 거저 얻는 아이템
     placeMe();
   }
   // 내 시작 자리 (v164): 마을 다섯 곳 중 아무 데나 (건물 밖, 벽에서 1.5칸 넘게).
@@ -2633,8 +2642,8 @@
   function placeMe() {
     const clear = (x, z, B, m) => Math.hypot(Math.max(B.x0 - x, 0, x - B.x1), Math.max(B.z0 - z, 0, z - B.z1)) >= m;   // 네모 B에서 m 넘게 떨어졌나
     for (let t = 0; t < 5000; t++) {
-      const [ox, oz] = BLOCKS[Math.floor(Math.random() * BLOCKS.length)];
-      const x = ox + rand(-19, 19), z = oz + rand(-38, 18);   // 그 마을 안 (북쪽 경찰서 쪽은 아래에서 걸러진다)
+      const [ox, oz] = BLOCKS[START_BLOCK];   // v230: 늘 첫 마을(오른쪽 아래)에서 시작
+      const x = ox + rand(-15, 15), z = oz + rand(-24, 14);   // 그 마을 안 (북쪽 경찰서 쪽은 아래에서 걸러진다)
       if (x < MM.x0 + 6 || x > MM.x1 - 6 || z < MM.z0 + 6 || z > MM.z1 - 6) continue;   // 지도 경계에서 6칸 넘게 안쪽 (v175)
       if (!buildings.every((B) => clear(x, z, B, 1.5))) continue;
       if (!stations.every((S) => clear(x, z, S, START_COP_CLEAR))) continue;
@@ -2792,6 +2801,7 @@
     dispatchTick(dt);                         // 수배 별에 따라 경찰서에서 출동
     draw(dt);
     checkTut();                               // 처음 만난 적 소개 (v202)
+    scrTick(dt);                              // 첫 마을 성장 구역 스폰 (v230)
     spawnFrames++;
     updateStars();
     updateMinimap(dt);
@@ -3004,7 +3014,7 @@
   const SAFE_HP = POLICE_HP * 1.5;
   const safeGeo = new THREE.PlaneGeometry(2.85, 2.85), safeInGeo = new THREE.PlaneGeometry(1.86, 1.86);   // v195: 금고 2배, v196: 1.5배 더 (원래의 3배)
   function addSafe(S) {
-    const m = 2.2, cz = (S.z0 + S.z1) / 2, spots = [[S.x0 + m, cz], [S.x1 - m, cz], [S.x0 + m, S.z1 - m], [S.x1 - m, S.z1 - m]];
+    const m = 2.2, cz = (S.z0 + S.z1) / 2, spots = S.station ? [[S.x0 + m, cz], [S.x1 - m, cz], [S.x0 + m, S.z1 - m], [S.x1 - m, S.z1 - m]] : [[(S.x0 + S.x1) / 2, cz]];   // 일반 건물(첫 마을)은 한가운데
     const [x, z] = spots[Math.floor(Math.random() * spots.length)];
     const b = addBody('safe', x, z);
     b.mesh.geometry = safeGeo; b.mesh.material.color.setHex(0x8a7a52);
@@ -3015,7 +3025,7 @@
     S.safe = b;
   }
   function nearSafe(z) {                      // 나랑 같은 공간, 인지거리 안의 안 부서진 금고
-    for (const S of stations) {
+    for (const S of buildings) {
       const b = S.safe;
       if (!b || b.dead || b.space !== z.space) continue;
       if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) <= z.sense) return b;
@@ -3134,6 +3144,64 @@
   };
   let goalShown = false, tutOpen = false, spawnFrames = 0, mmBang = false;
   const tutSeen = {}, tutQueue = [];
+  let gameNo = 0;                             // 앱을 켠 뒤 몇 번째 판인가 (저장 안 함 — 껐다 켜면 0)
+  const TUT_GAMES = 2;
+  // ── 성장 구역 (v230) — 첫 마을에서 노랑 → 주황 → 빨강 → 경찰 순으로 '가는 방향 앞'에 몰래 스폰해서 차례로 만나게 한다 ──
+  //   1단계: 움직이기 시작하면 좃밥 3 · 2단계: 노랑 2마리 감염 → 헬창 2 + 좃밥 1 · 3단계: 주황 2마리 감염 → 만두귀 2 · 4단계: 그 6초 뒤 짭새 1~2
+  //   아직 못 만난 애가 가는 방향에서 벗어나 있고 아무 좀비 시야에도 없으면 지우고 가는 방향 앞에 다시 깐다. 첫 마을을 벗어나면 끝
+  const scr = { st: 0, on: true, t: 0, tick: 0, list: [], inf: { n: 0, g: 0, a: 0, p: 0 }, hx: 0, hz: -1 };
+  const SCR_TYPE = { n: '', g: 'guard', a: 'attacker', p: 'police' };
+  function scrZone() { const [ox, oz] = BLOCKS[START_BLOCK]; return { x0: ox - 22, x1: ox + 30, z0: oz - 34, z1: oz + 30 }; }
+  function scrSpot() {                        // 가는 방향 앞, 내 시야 바로 밖 (방사형으로 퍼짐), 어떤 좀비에게도 안 보이는 자리
+    for (let t = 0; t < 60; t++) {
+      const wide = t < 30 ? 0.7 : 1.4, a = Math.atan2(scr.hz, scr.hx) + rand(-wide, wide), d = me.sense + rand(1.5, 5.5);
+      const x = me.foot.x + Math.cos(a) * d, z = me.foot.z + Math.sin(a) * d;
+      if (x < MM.x0 + 2 || x > MM.x1 - 2 || z < MM.z0 + 2 || z > MM.z1 - 2 || !freeSpot(x, z, null)) continue;
+      if (zombies.some((zb) => Math.hypot(zb.foot.x - x, zb.foot.z - z) < zb.sense + 0.8)) continue;
+      if (bodies.some((b) => Math.hypot(b.foot.x - x, b.foot.z - z) < 1.2)) continue;
+      return [x, z];
+    }
+    return null;
+  }
+  function scrSpawn(k) {
+    const sp = scrSpot();
+    if (!sp) return false;
+    const area = square(sp[0], sp[1]), c = addCitizen(sp[0], sp[1], area, SCR_TYPE[k]);
+    c.area = area; c.scr = k; c.met = false;
+    if (k === 'p') enterNormal(c);
+    scr.list.push(c);
+    return true;
+  }
+  function scrRemove(c) {                     // 아무도 못 보는 동안 몰래 지운다
+    for (const o of [c.mesh, c.icon, c.gauge, c.hpBar, c.tracer]) if (o) scene.remove(o);
+    const i = bodies.indexOf(c); if (i >= 0) bodies.splice(i, 1);
+    scr.list.splice(scr.list.indexOf(c), 1);
+  }
+  const scrWant = [];                         // 아직 못 깐 스폰 (자리가 없으면 다음 틱에 다시)
+  function scrTick(dt) {
+    if (!scr.on || !isZombie(me)) return;
+    const Z = scrZone();
+    if (me.foot.x < Z.x0 || me.foot.x > Z.x1 || me.foot.z < Z.z0 || me.foot.z > Z.z1) { scr.on = false; scrWant.length = 0; return; }   // 첫 마을을 벗어남 → 강제 스폰 끝
+    scr.t += dt;
+    const v = Math.hypot(me.vel.x, me.vel.y);
+    if (v > 0.5) { scr.hx = me.vel.x / v; scr.hz = me.vel.y / v; }
+    if ((scr.tick -= dt) > 0) return;
+    scr.tick = 0.25;
+    if (scr.st === 0 && (v > 0.5 || scr.t > 2)) { scrWant.push('n', 'n', 'n'); scr.st = 1; }
+    else if (scr.st === 1 && scr.inf.n >= 2) { scrWant.push('g', 'n', 'g'); scr.st = 2; }
+    else if (scr.st === 2 && scr.inf.g >= 2) { scrWant.push('a', 'a'); scr.st = 3; scr.t3 = scr.t; }
+    else if (scr.st === 3 && scr.t - scr.t3 > 6) { scrWant.push('p'); if (Math.random() < 0.5) scrWant.push('p'); scr.st = 4; }
+    while (scrWant.length && scrSpawn(scrWant[0])) scrWant.shift();
+    for (const c of scr.list.slice()) {
+      if (c.kind !== 'citizen' || !bodies.includes(c)) { scr.list.splice(scr.list.indexOf(c), 1); continue; }
+      if (c.met || seen(c, zombies)) { c.met = true; continue; }   // 한 번이라도 어떤 좀비 시야에 들어왔으면 그대로 둔다
+      if (v < 0.5) continue;
+      const dx = c.foot.x - me.foot.x, dz = c.foot.z - me.foot.z, d = Math.hypot(dx, dz);
+      const off = (dx * scr.hx + dz * scr.hz) / (d || 1) < Math.cos(75 * Math.PI / 180) || d > me.sense + 10;   // 가는 방향에서 75° 넘게 벗어났거나 너무 멀다
+      if (off && !zombies.some((zb) => Math.hypot(zb.foot.x - c.foot.x, zb.foot.z - c.foot.z) < zb.sense + 0.8)) { const k = c.scr; scrRemove(c); scrWant.push(k); }
+    }
+    while (scrWant.length && scrSpawn(scrWant[0])) scrWant.shift();
+  }
   // 발견 기준 = 내 시야만 (v224) — 동료 좀비 시야는 안 친다. 내 인지거리 안 + 벽에 안 가림 (닫힌 건물 안은 안 보인다)
   function iSee(b) {
     if (!isZombie(me) || (b.space && !b.space.open)) return false;
