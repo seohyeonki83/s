@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v258</div>
+  <div id="ver">v259</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2640,6 +2640,7 @@
         for (const [ch, n] of Object.entries(B.kinds)) for (let i = 0; i < n; i++) bag.push(GROUP_TYPE[ch]);
         for (const t of AROUND_MIX(B.local)) bag.push(t);
       }
+      { const ny = bag.filter((t) => t === '').length, add = Math.floor(ny * 0.1 + Math.random()); for (let i = 0; i < add; i++) bag.push(''); }   // v259: 노란 시민 10% 더 (첫 마을 빼고) — 소수점은 확률로
       for (let i = bag.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; }
       const groups = GROUPS.map((_, i) => {   // 시민 묶음 자리 — 원래 자리에서 살짝 흔든다
         const a = (i + rand(-0.4, 0.4)) / GROUPS.length * Math.PI * 2, r = GROUP_DIST * rand(0.8, 1.2);
