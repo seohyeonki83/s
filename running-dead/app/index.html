@@ -109,7 +109,7 @@
   <canvas id="view"></canvas>
   <canvas id="smell"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v181</div>
+  <div id="ver">v182</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2637,23 +2637,22 @@
         if (vy < 0) t = Math.min(t, (m - oy) / vy); if (vy > 0) t = Math.min(t, (H - m - oy) / vy);
         x = ox + vx * t; y = oy + vy * t;
       }
-      marks.push({ x, y, n: 1, type, by: { [type]: 1 } });
+      marks.push({ x, y, n: 1, type });
     }
     for (let merged = true; merged; ) {       // 같은 종류 원끼리 겹치면 가운데로 합친다 (인원 비율대로)
       merged = false;
       for (let i = 0; i < marks.length && !merged; i++) for (let j = i + 1; j < marks.length; j++) {
-        const a = marks[i], b = marks[j];   // 종류가 달라도 합친다 (v181) — 색은 가장 많은 종류 (같으면 경찰 > 공격형 > 수비형 > 일반)
+        const a = marks[i], b = marks[j];
+        if (a.type !== b.type) continue;
         if (Math.hypot(a.x - b.x, a.y - b.y) >= smellR(a.n) + smellR(b.n) + SMELL_GAP) continue;
-        const n = a.n + b.n, by = { ...a.by };
-        for (const [t, v] of Object.entries(b.by)) by[t] = (by[t] || 0) + v;
-        let type = a.type, best = -1;
-        for (const t of ['police', 'attacker', 'guard', 'citizen']) if ((by[t] || 0) > best) { best = by[t] || 0; type = t; }
-        marks[i] = { x: (a.x * a.n + b.x * b.n) / n, y: (a.y * a.n + b.y * b.n) / n, n, type, by };
+        const n = a.n + b.n;
+        marks[i] = { x: (a.x * a.n + b.x * b.n) / n, y: (a.y * a.n + b.y * b.n) / n, n, type: a.type };
         marks.splice(j, 1);
         merged = true;
         break;
       }
     }
+    marks.sort((a, b) => b.n - a.n);           // 큰 원부터 그려서 작은 원(다른 종류)이 위에 보이게 (v182)
     for (const k of marks) {
       const r = k.n >= SMELL_BANG ? 14 : smellR(k.n) + 2;   // 화면 밖으로 잘리지 않게 안쪽으로
       k.x = Math.max(r, Math.min(W - r, k.x)); k.y = Math.max(r, Math.min(H - r, k.y));
