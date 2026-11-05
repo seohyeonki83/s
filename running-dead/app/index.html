@@ -170,7 +170,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v202</div>
+  <div id="ver">v203</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2815,7 +2815,7 @@
     const ov = document.createElement('div');
     ov.id = 'pick';
     ov.innerHTML = `<div class="hd">LEVEL UP!</div><div class="sub">Lv ${level} → Lv ${level + 1} · 능력 하나를 고르세요</div><div class="cards">` +
-      keys.map((k) => `<div class="card" data-k="${k}"><div class="ic">${ABIL[k].icon}</div><div class="nm">${ABIL[k].name}</div><div class="ds">${ABIL[k].desc}</div><div class="vl">${ABIL[k].val(up[k])}</div></div>`).join('') +
+      keys.map((k) => `<div class="card" data-k="${k}"><div class="ic">${ABIL[k].icon}</div><div class="nm">${ABIL[k].name}</div><div class="ds">${ABIL[k].desc}</div></div>`).join('') +
       `</div><button class="ok">확인</button>`;
     stage.appendChild(ov);
     let chosen = null;
