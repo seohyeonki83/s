@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v170</div>
+  <div id="ver">v171</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -142,7 +142,7 @@
   // 카메라
   const PITCH = 50;       // 카메라가 내려다보는 각 (유니티 카메라 X = 50)
   const FOV = 40;         // 세로 시야각 (유니티와 같음)
-  const DIST = 77.175 * 0.8 * 0.75 * 0.8;   /* v142에 20% 더 당김 (46.3 → 37.0) */ //   // 카메라 ~ 나 거리 (유닛) — v26의 51.45에서 50% 뒤로, v122에 20% 당김, v140에 25% 더 당김 (약 46.3). 동료가 5명 넘으면 한 명마다 1%씩 뒤로 (armyK)
+  const DIST = 77.175 * 0.8 * 0.75 * 0.8 * 0.8;   /* v171에 20% 더 당김 (37.0 → 29.6) */ //   /* v142에 20% 더 당김 (46.3 → 37.0) */ //   // 카메라 ~ 나 거리 (유닛) — v26의 51.45에서 50% 뒤로, v122에 20% 당김, v140에 25% 더 당김 (약 46.3). 동료가 5명 넘으면 한 명마다 1%씩 뒤로 (armyK)
   const SCREEN_Y = 0.40;  // 내 자리 = 화면 위에서 40% (가운데보다 살짝 위 — 아래는 엄지 자리)
 
   // 나 (좀비) — 감염된 시민은 동료 좀비가 되어 손 뗀 나처럼 움직인다
@@ -213,6 +213,7 @@
   const CAR_MASS = 10;                    // 경찰차 무게 = 몸 10개 — 몸 하나를 칠 때마다 최고 속도의 1/10씩 느려진다 (10명이면 선다)
   const CAR_HIT_DMG = 50;                 // 최고 속도로 치면 데미지 50 — 속도에 비례, 서 있으면 0. 좀비·시민·경찰 모두 (v138)
   const KNOCK = 2.2, KNOCK_T = 0.6;       // 치인 몸은 차 속도의 2.2배로 튕겨 날아간다 (최대 0.6초, 점점 느려짐)
+  const PARKED_K = Math.sqrt(2 / 3);   // 서 있는 경찰차 부딪힘 = 넓이 2/3 (가로·세로 각 약 82%) — 달릴 때는 그대로 (v171)
   const CAR_L = 2.8 * 0.8, CAR_W = 1.5 * 0.8;   /* v157에 20% 줄임 */ //   // 길이·폭 (유닛)
 
   // 동료 좀비가 나를 따르는 거리
@@ -220,7 +221,7 @@
             // 근접 거리 (유닛) — 동료 좀비 자리 거리는 이 거리의 50~150%에서 매번 새로 뽑는다
   const DOMAIN = 9 * 1.1 * 1.1 * 0.8 * 0.9 * 0.8 * 1.2 * 0.8;   // v75·v76에 10%씩 올리고 v78에 20%, v80에 10%, v86에 20% 줄이고 v112에 20% 늘리고 v122에 20% 줄임 (약 6.02) — 공격 지배 거리도 이 배수라 같이 줄어든다. 동료 수에 따라 armyK배
   // 부대 크기 (v122) — 동료(감염시킨 좀비)가 5명 넘으면 한 명 늘 때마다 근접·지배·공격 지배 거리(명령 받는 범위·원이 밀리는 거리도)와 카메라 거리가 1%씩 커진다
-  const ARMY_FREE = 5, ARMY_STEP = 0.01;
+  const ARMY_FREE = 5, ARMY_STEP = 0.015;   // v171: 동료 한 명마다 1% → 1.5%
   let armyN = 0, armyK = 1;                   // 지금 동료 수, 배율 = 1 + (동료 수 − 5) × 1% (5명 이하면 1)
   const DOMAIN_FIGHT = DOMAIN * 1.3 * 1.2 * 1.2 * 1.2 / 0.8 * 0.85;   // '공격 중'인 동료의 지배 거리 — 때리던 걸 웬만하면 마무리하고 오게 (v79에 1.3배, v83·v84·v85에 20%씩 더, v86에 기본만 20% 줄이고 이건 그대로, v87에 15% 줄임 → 기본의 약 2.39배, 약 15.0)
   const ATTACK_HOLD = GUARD_CLOSE;    // '공격 중' = 근접 거리에 붙어 한 대라도 휘두른 뒤로, 상대가 이 거리(근접 + 0.5 = 2.2칸) 안에 있는 동안.
@@ -1068,6 +1069,7 @@
     for (const S of stations) if (!S.down && S.members && S.members.length && S.members.every((c) => c.kind !== 'citizen')) {   // 경찰서 고정 경찰(안·바깥·출동한 경찰 전부)이 다 감염됐다 → 그 경찰서 파괴 (v157)
       S.down = true;
       S.roof.material = stationDownMat;
+      reinforce();                            // 남은 경찰서 고정 인원 20% 늘림 (v171)
     }
     stationDown = stations.every((S) => S.down);
     if (!stars || stationDown) return;
@@ -1095,7 +1097,7 @@
   const cars = [];
   let carObs = [];                            // 길 찾기용 서 있는 경찰차 원 {x, z, r} — 사이로 몸이 못 지나갈 만큼 붙은 차들은 한 원으로 합친다 (v139)
   function updateCarObs() {
-    const cs = cars.filter((c) => c.state === 'parked').map((c) => ({ x: c.x, z: c.z, r: CAR_L / 2 + 0.15 }));
+    const cs = cars.filter((c) => c.state === 'parked').map((c) => ({ x: c.x, z: c.z, r: CAR_L / 2 * PARKED_K + 0.15 }));
     for (let merged = true; merged; ) {
       merged = false;
       for (let i = 0; i < cs.length && !merged; i++) for (let j = i + 1; j < cs.length; j++) {
@@ -1204,7 +1206,8 @@
       const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx;
       for (const b of bodies) {
         if (b.fixed || b.knockT > 0) continue;
-        const dx = b.foot.x - car.x, dz = b.foot.z - car.z, hu = CAR_L / 2 + b.r, hv = CAR_W / 2 + b.r;
+        const k = car.state === 'parked' ? PARKED_K : 1;   // 서 있으면 부딪힘이 작다 (v171)
+        const dx = b.foot.x - car.x, dz = b.foot.z - car.z, hu = CAR_L / 2 * k + b.r, hv = CAR_W / 2 * k + b.r;
         if (b.hitT > 0 && b.hitT < clock) b.hitT = 0;
         let u = dx * fx + dz * fz, v = dx * rx + dz * rz;
         if (Math.abs(u) >= hu || Math.abs(v) >= hv) continue;
@@ -2254,7 +2257,7 @@
       const cx = (S.x0 + S.x1) / 2;
       const ring = { x0: S.x0 - 5, z0: S.z0 - 5, x1: S.x1 + 5, z1: S.z1 + 5 };   // 둘레 (건물 안은 pickGoal이 뺀다)
       const front = { x0: cx - 6, z0: S.z1 + 1.5, x1: cx + 6, z1: S.z1 + 8 };    // 앞마당 = 문 앞(남쪽)
-      S.ringA = ring; S.frontA = front; S.outer = []; S.members = []; S.hurt = 0;
+      S.ringA = ring; S.frontA = front; S.outer = []; S.members = []; S.hurt = 0; S.inT = STATION_IN; S.outT = STATION_OUT_MIN; S.outMin = STATION_OUT_MIN;
       for (let i = 0; i < STATION_IN + STATION_OUT + STATION_FRONT; i++) {
         const inside = i < STATION_IN, area = inside ? S : i < STATION_IN + STATION_OUT ? ring : front;
         let g = pickGoal(area);
@@ -2296,6 +2299,24 @@
   //   호출마다 안의 경찰 1명이 (v160) 다친 경찰 자리로 뛰어나와 바깥 경찰이 된다. 안에 좀비가 있거나 안 인원이 3명 이하면 무시.
   //   싸움이 끝나 할 일이 없어진 바깥 경찰은 3명만 남기고 다시 안으로 들어간다.
   const CALL_HP = POLICE_HP / 10;
+  // 경찰서 하나가 부서질 때마다 남은 경찰서의 고정 인원(안·바깥)이 20%씩 늘어난다 (v171) — 소수점은 확률로 (평균 20%)
+  function reinforce() {
+    for (const S of stations) {
+      if (S.down || !S.members) continue;
+      const addIn = Math.floor(S.inT * 0.2 + Math.random()), addOut = Math.floor(S.outT * 0.2 + Math.random());
+      S.inT *= 1.2; S.outT *= 1.2;
+      S.outMin += addOut;
+      for (let i = 0; i < addIn + addOut; i++) {
+        const inside = i < addIn, area = inside ? S : S.ringA;
+        let g = pickGoal(area);
+        for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(area);
+        const c = addCitizen(g.x, g.y, area, 'police');
+        c.station = S; c.area = area; enterNormal(c);
+        (inside ? S.residents : S.outer).push(c);
+        S.members.push(c); c.lastHp = c.hp;
+      }
+    }
+  }
   function stationTick(S) {
     const alive = (c) => c.kind === 'citizen' && bodies.includes(c);
     S.outer = S.outer.filter(alive);
@@ -2325,8 +2346,8 @@
         c.calls.length = 0; c.calls.push(new THREE.Vector2(D.cx + D.nx * 2 + D.tx * a, D.cz + D.nz * 2 + D.tz * a));
       }
     }
-    if (S.outer.length > STATION_OUT_MIN) for (const c of S.outer.slice()) {   // 할 일 끝난 출동 경찰 → 안으로 (바깥 3명은 남긴다)
-      if (S.outer.length <= STATION_OUT_MIN) break;
+    if (S.outer.length > S.outMin) for (const c of S.outer.slice()) {   // 할 일 끝난 출동 경찰 → 안으로 (바깥 3명은 남긴다)
+      if (S.outer.length <= S.outMin) break;
       if (!c.sortie || c.calls.length || c.boostT > 0 || c.state === 'fight' || c.state === 'alert') continue;   // 늘어난 시야가 남아 있는 동안(4초)은 안 들어간다
       c.sortie = false;
       c.boosted = false;                      // 다음에 또 출동하면 다시 3배
