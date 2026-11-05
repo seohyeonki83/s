@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v165</div>
+  <div id="ver">v166</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1281,11 +1281,16 @@
     mmCtx.beginPath();
     for (const z of eyes) { if (!isZombie(z)) continue; const cx = X(z.foot.x), cz = Z(z.foot.z), r = z.sense * sx; mmCtx.moveTo(cx + r, cz); mmCtx.arc(cx, cz, r, 0, Math.PI * 2); }
     mmCtx.fill();
-    mmCtx.fillStyle = '#3a3a42';                                // 가 본 곳의 건물 (v140에 반투명 전 색으로)
-    for (const B of buildings) {
+    for (const B of buildings) {                                // 일반 건물 = 늘 표시 — 발견 전엔 흐린 회색, 발견하면 진하게 (v166, 경찰서처럼)
       if (B.station) continue;
-      const k = Math.floor(((B.z0 + B.z1) / 2 - MM.z0) / MM_CELL) * mmW + Math.floor(((B.x0 + B.x1) / 2 - MM.x0) / MM_CELL);
-      if (explored[k]) mmCtx.fillRect(X(B.x0), Z(B.z0), (B.x1 - B.x0) * sx, (B.z1 - B.z0) * sz);
+      if (!B.found) {                                          // 건물 자리(둘레 1칸 포함)를 한 칸이라도 가 봤으면 발견
+        const cx0 = Math.max(0, Math.floor((B.x0 - 1 - MM.x0) / MM_CELL)), cx1 = Math.min(mmW - 1, Math.floor((B.x1 + 1 - MM.x0) / MM_CELL));
+        const cz0 = Math.max(0, Math.floor((B.z0 - 1 - MM.z0) / MM_CELL)), cz1 = Math.min(mmH - 1, Math.floor((B.z1 + 1 - MM.z0) / MM_CELL));
+        for (let cz = cz0; cz <= cz1 && !B.found; cz++) for (let cx = cx0; cx <= cx1; cx++) if (explored[cz * mmW + cx]) { B.found = true; break; }
+      }
+      mmCtx.fillStyle = B.found ? '#3a3a42' : 'rgba(140, 140, 155, 0.3)';
+      mmCtx.fillRect(X(B.x0), Z(B.z0), (B.x1 - B.x0) * sx, (B.z1 - B.z0) * sz);
+      if (B.found) { mmCtx.lineWidth = 0.8 * mmDpr; mmCtx.strokeStyle = 'rgba(200, 200, 215, 0.55)'; mmCtx.strokeRect(X(B.x0), Z(B.z0), (B.x1 - B.x0) * sx, (B.z1 - B.z0) * sz); }
     }
     for (const S of stations) {                                 // 경찰서 = 늘 보라 — 발견 전엔 아주 흐리게, 부서지면 위에 X (v124)
       if (!S.found) {                                          // 경찰서 자리(둘레 1칸 포함)를 한 칸이라도 가 봤으면 발견
@@ -2145,7 +2150,8 @@
     for (const car of cars) scene.remove(car.g);
     cars.length = 0;
     carObs = [];
-    for (const S of stations) { S.down = false; S.found = false; S.roof.material = stationRoofMat; }   // 미니맵에서 다시 '발견 전'으로
+    for (const S of stations) { S.down = false; S.found = false; S.roof.material = stationRoofMat; }
+    for (const B of buildings) if (!B.station) B.found = false;   // 일반 건물도 다시 '발견 전'으로 (v166)   // 미니맵에서 다시 '발견 전'으로
     cmdReadyAt = 0;
     for (const r of rings) scene.remove(r);
     rings.length = 0;
