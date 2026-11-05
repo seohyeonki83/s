@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v245</div>
+  <div id="ver">v246</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -587,6 +587,8 @@
     return c;
   })();
   const bangTex = new THREE.CanvasTexture(bangCv); bangTex.colorSpace = THREE.SRGBColorSpace;
+  const gapMat = flatMat(0x8f8f8f);           // v246: 문 자리 = 뚫린 벽 (바닥색) — 지붕·벽·어둠 위에 그려 어디서든 보인다
+  function doorGap(D) { const m = flat(D.tx ? DOOR : WALL * 2.2, D.tz ? DOOR : WALL * 2.2, D.cx, D.cz, gapMat, -0.5025); m.visible = false; return m; }
   const roofMat = flatMat(0x202020), wallMat = flatMat(0x2b2b2b), doormatMat = flatMat(0xd9b45a);
   const stationRoofMat = flatMat(0x1c2747), stationDownMat = flatMat(0x3b1f1f);   // 경찰서 지붕 = 짙은 남색, 파괴되면 짙은 붉은색 (v113)
   for (const B of buildings) {
@@ -598,7 +600,7 @@
       B.bang.renderOrder = -0.507;            // 어둠 위 (어둠 속에서도 보인다)
       scene.add(B.bang);
     }   // 좀비가 아무도 안 들어간 건물 안 = 어둠 (시야 밖 바닥과 같은 색, 문 너머로도 안 보인다)
-    for (const D of B.doors) flat(D.tx ? DOOR : 0.35, D.tz ? DOOR : 0.35, D.cx + D.nx * 0.4, D.cz + D.nz * 0.4, doormatMat, -0.65);
+    for (const D of B.doors) { flat(D.tx ? DOOR : 0.35, D.tz ? DOOR : 0.35, D.cx + D.nx * 0.4, D.cz + D.nz * 0.4, doormatMat, -0.502); doorGap(D).visible = true; }   // v246: 발판을 지붕·벽·어둠 위로 + 문 자리 벽을 뚫어 보이게
   }
   for (const [ax, az, bx, bz] of walls) flat(Math.abs(bx - ax) + WALL, Math.abs(bz - az) + WALL, (ax + bx) / 2, (az + bz) / 2, wallMat, -0.505);   // 벽은 어둠 위에 그린다 — 시야 가장자리가 벽 모서리와 딱 맞게
   // 잠긴 문 (v239) — 문 자리를 막는 벽 한 토막 + 철문 그림. 좀비가 부수면(체력 = 경찰의 10배) 벽이 사라지고 드나드는 문이 된다
@@ -611,7 +613,7 @@
     const bar = new THREE.Mesh(new THREE.PlaneGeometry(L.nz ? DOOR * 0.8 : WALL * 0.8, L.nz ? WALL * 0.8 : DOOR * 0.8).rotateX(-Math.PI / 2), lockBarMat);
     bar.position.y = 0.001; bar.renderOrder = -0.503; mesh.add(bar);
     const fill = B.side ? flat(L.nz ? DOOR + WALL : WALL, L.nz ? WALL : DOOR + WALL, L.cx, L.cz, wallMat, -0.505) : null;   // 쪽문이 안 된 자리는 그냥 벽으로 보인다
-    L.obj = { kind: 'obj', type: 'door', B, L, seg, mesh, fill, foot: new THREE.Vector3(L.cx, 0, L.cz), hp: 0, maxHp: 0, dead: false, off: false };
+    L.obj = { kind: 'obj', type: 'door', B, L, seg, mesh, fill, gap: doorGap(L), foot: new THREE.Vector3(L.cx, 0, L.cz), hp: 0, maxHp: 0, dead: false, off: false };
     objs.push(L.obj);
   }
 
@@ -3151,7 +3153,7 @@
       if (i >= 0) walls.splice(i, 1);
       if (j >= 0) B.walls.splice(j, 1);
       if (!B.doors.includes(o.L)) B.doors.push(o.L);
-      o.mesh.visible = false;
+      o.mesh.visible = false; o.gap.visible = true;
       dust(o.L.cx, o.L.cz, 18, 1.4);
     } else {                                  // 경찰차: 폭발 + 연기 + 먼지 → 잔해만 남는다 (부딪힘 1/5)
       const c = o.car;
@@ -3172,7 +3174,7 @@
       if (!B.walls.includes(o.seg)) B.walls.push(o.seg);
       const k = B.doors.indexOf(o.L); if (k >= 0) B.doors.splice(k, 1);
       o.mesh.visible = true; o.dead = false; o.hp = o.maxHp = B.side ? POLICE_HP : OBJ_HP;   // 쪽문 체력 = 경찰과 같음 (v242), 경찰서 문 = 경찰의 5배
-      o.off = false; if (o.fill) o.fill.visible = false;
+      o.off = false; if (o.fill) o.fill.visible = false; o.gap.visible = false;
       if (!o.hpBar) addHpBar(o, hpFoeMat);
       o.hpBar.visible = false; o.hpDisp = o.hp;
     }
