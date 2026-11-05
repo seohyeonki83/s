@@ -109,7 +109,7 @@
   <canvas id="view"></canvas>
   <canvas id="smell"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v186</div>
+  <div id="ver">v187</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2609,6 +2609,7 @@
   //   15명 넘게 합쳐지면 크기가 고정된 느낌표로
   const SMELL_K = 1.5, SMELL_R = 7 * 0.8, SMELL_MAX = 3.5, SMELL_BANG = 15, SMELL_GAP = 26;   // 후각 거리 배율, 1배 원 반지름(px), 최대 배율, 느낌표 인원, 원 사이가 이만큼(px)보다 가까우면 합친다
   const smellEl = document.getElementById('smell'), smellCtx = smellEl.getContext('2d');
+  const SMELL_MERGE = 3;   // 합쳐지는 거리 배율 (v187에 3배)
   const smellCol = { citizen: '#ffcf33', guard: '#ff8c1a', attacker: '#c62828', police: '#8e24aa' };
   const smBuf = [], sV = new THREE.Vector3();
   const smellR = (n) => SMELL_R * (1 + (SMELL_MAX - 1) * (Math.min(n, 10) - 1) / 9);
@@ -2661,7 +2662,7 @@
       for (let i = 0; i < marks.length && !merged; i++) for (let j = i + 1; j < marks.length; j++) {
         const a = marks[i], b = marks[j];
         if (a.type !== b.type) continue;
-        if (Math.hypot(a.x - b.x, a.y - b.y) >= smellR(a.n) + smellR(b.n) + SMELL_GAP) continue;
+        if (Math.hypot(a.x - b.x, a.y - b.y) >= (smellR(a.n) + smellR(b.n) + SMELL_GAP) * SMELL_MERGE) continue;
         const n = a.n + b.n;
         marks[i] = { x: (a.x * a.n + b.x * b.n) / n, y: (a.y * a.n + b.y * b.n) / n, n, type: a.type };
         marks.splice(j, 1);
