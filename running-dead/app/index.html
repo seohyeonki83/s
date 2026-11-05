@@ -187,7 +187,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v228</div>
+  <div id="ver">v229</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1313,7 +1313,7 @@
         let zombie = false;                   // 경찰 시야 안에 좀비 (밖에 있는 좀비만 — 경찰차는 늘 밖)
         for (const z of zombies) if (isZombie(z) && !z.space && Math.hypot(z.foot.x - car.x, z.foot.z - car.z) <= car.sight) { zombie = true; break; }
         const goal = zombie ? null : carGoal(car);
-        if (zombie || !goal) { car.state = 'brake'; car.brakeT = CAR_BRAKE_DELAY; }   // 좀비를 봤다 (또는 좀비가 하나도 없다) → 선다
+        if (zombie || !goal) { car.state = 'brake'; car.brakeT = CAR_BRAKE_DELAY * rand(1, 2); }   // 좀비를 봤다 (또는 좀비가 하나도 없다) → 선다. 늦게 밟는 시간 = 원래~2배 사이 랜덤 (v229)
         else {
           const [tx, tz, k] = goal, d = Math.hypot(tx - car.x, tz - car.z);
           if (k >= 0 && d < 2.5) car.calls.splice(k, 1);   // 사건 자리에 닿았다 → 지우고 다음 곳으로 (서지 않는다)
@@ -1326,7 +1326,13 @@
         }
       }
       if (car.state === 'brake') {
-        if (car.brakeT > 0) car.brakeT -= dt;  // 살짝 늦게 밟고
+        if (car.brakeT > 0) {                 // 살짝 늦게 밟는 동안 — 속도는 그대로, 가장 가까운 (밖의) 좀비를 들이받는 쪽으로 최대한 꺾는다 (v229)
+          car.brakeT -= dt;
+          let t = null, bd = Infinity;
+          for (const z of zombies) if (isZombie(z) && !z.space) { const d = Math.hypot(z.foot.x - car.x, z.foot.z - car.z); if (d < bd) { bd = d; t = z; } }
+          const v = Math.hypot(car.vx, car.vz);
+          if (t && bd > 0.01 && v > 0.01) carSteer(car, (t.foot.x - car.x) / bd * v, (t.foot.z - car.z) / bd * v, CAR_ACCEL * dt);
+        }
         else carSteer(car, 0, 0, CAR_BRAKE * dt);   // 가던 방향 그대로 미끄러지며 선다
         if (Math.hypot(car.vx, car.vz) < 0.05) {   // 섰다 → 경찰이 내리고 차는 그 자리에 계속 서 있다
           car.vx = car.vz = 0;
@@ -2836,7 +2842,7 @@
   };
   const up = { brain: 0, meat: 0, arm: 0, bite: 0, skin: 0, leg: 0 };
   let level = 0, xp = 0, pendingLv = 0, lvOpen = false, hasVest = false, vestEl = null, victoryOn = false;
-  const needXp = (L) => 10 * Math.pow(2, L);   // 레벨 L → L+1 에 새로 필요한 수
+  const needXp = (L) => Math.round(10 * Math.pow(1.5, L));   // 레벨 L → L+1 에 새로 필요한 수 (v229: 2배씩 → 1.5배씩)
   const vestPct = (n) => Math.min(90, 30 + n * 10);
   const biteK = (n = up.bite) => Math.max(0, 1 - 0.05 * n);   // 감염 시간 배율 — 0이면 즉시 감염
   const myBiteLen = (n = up.bite) => INFECT / MY_INFECT * biteK(n);
