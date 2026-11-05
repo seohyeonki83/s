@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v262</div>
+  <div id="ver">v263</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2661,6 +2661,11 @@
           for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(B);
           addCitizen(g.x, g.y, B, bag.pop()).home = B;
         }
+        {                                     // v263: 건물마다 노란 시민 1명 더 (첫 마을 빼고)
+          let g = pickGoal(B);
+          for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(B);
+          addCitizen(g.x, g.y, B, '').home = B;
+        }
       }
       for (const B of homes) {                // 건물 둘레 6칸 (건물 안은 pickGoal이 뺀다)
         const ring = { x0: B.x0 - 6, z0: B.z0 - 6, x1: B.x1 + 6, z1: B.z1 + 6 };
@@ -3143,7 +3148,7 @@
   }
   // ── 부술 수 있는 사물 (v239): 경찰서 동·서 잠긴 문, 서 있는 경찰차. 체력 = 경찰의 10배.
   //   좀비(나·동료)는 다른 타겟이 하나도 없을 때만 인지거리 안 가장 가까운 사물을 때린다 (거리와 상관없이 맨 마지막 순위)
-  const OBJ_HP = POLICE_HP * 5;               // v240: 절반 (경찰의 5배)
+  const OBJ_HP = POLICE_HP * 5 * 0.7;         // v263: 경찰차·경찰서 문 = 경찰의 3.5배 (v240의 5배에서 70%)
   const OBJ_SEE = (MELEE - RADIUS) * 1.5;     // v240: 사물은 근접 공격 거리의 1.5배 안에 있어야 알아챈다
   function objPoint(o, z) {                   // 좀비가 서서 때릴 자리 (그 좀비 쪽)
     if (o.type === 'car') return [o.car.x, o.car.z];
@@ -3212,7 +3217,7 @@
       if (!walls.includes(o.seg)) walls.push(o.seg);
       if (!B.walls.includes(o.seg)) B.walls.push(o.seg);
       const k = B.doors.indexOf(o.L); if (k >= 0) B.doors.splice(k, 1);
-      o.mesh.visible = true; o.dead = false; o.hp = o.maxHp = B.side ? POLICE_HP : OBJ_HP * 2 / 3;   // v257: 경찰서 문은 2/3 (경찰의 약 3.3배)   // 쪽문 체력 = 경찰과 같음 (v242), 경찰서 문 = 경찰의 5배
+      o.mesh.visible = true; o.dead = false; o.hp = o.maxHp = B.side ? POLICE_HP : OBJ_HP;   // v263: 경찰서 문 = 경찰차와 같은 체력   // 쪽문 체력 = 경찰과 같음 (v242), 경찰서 문 = 경찰의 5배
       o.off = false; if (o.fill) o.fill.visible = false; o.gap.visible = false; if (o.L.see) o.L.see.visible = false;
       if (!o.hpBar) addHpBar(o, hpFoeMat);
       o.hpBar.visible = false; o.hpDisp = o.hp;
