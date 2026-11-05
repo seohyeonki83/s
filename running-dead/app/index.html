@@ -59,6 +59,38 @@
   #stars .lv { display: block; margin-top: 2px; min-height: 11px; font: 800 11px/1 var(--font); font-style: normal; color: #e2c2fb; }   /* 수배 단계 이름 (v194) */
   #stars .s.hit { animation: starhit 0.2s ease-out; }
   @keyframes starhit { 0% { transform: scale(1.9); } 60% { transform: scale(0.85); } 100% { transform: scale(1); } }
+  #lvbox { position: absolute; top: calc(26px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); pointer-events: none; z-index: 4; }   /* 레벨·경험치 (v201) */
+  #lvbox .lv { font: 800 15px/1 var(--font); color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
+  #lvbox .bar { margin-top: 4px; width: 84px; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.18); overflow: hidden; }
+  #lvbox .bar i { display: block; height: 100%; width: 0; background: #7fd4ff; transition: width 0.25s; }
+  #lvbox .xp { margin-top: 3px; font: 600 10px/1 var(--font); color: rgba(255, 255, 255, 0.7); }
+  #lvbox.up .lv { animation: lvup 0.6s ease-out; }
+  @keyframes lvup { 0% { transform: scale(1.8); color: #7fd4ff; } 100% { transform: scale(1); } }
+  #vest { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: 46px; height: 46px; border-radius: 12px; background: rgba(22, 22, 28, 0.85); border: 2px solid #8fa3b8;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; pointer-events: none; z-index: 4; }   /* 방탄복 (v201) — 패시브, 왼쪽 아래 */
+  #vest .ic { font-size: 20px; line-height: 1; }
+  #vest .pc { font: 700 10px/1 var(--font); margin-top: 2px; color: #cfe0f0; }
+  #pick { position: absolute; inset: 0; z-index: 22; background: rgba(0, 0, 0, 0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; touch-action: none; transition: opacity 0.3s; }   /* 레벨업 카드 고르기 (v201) */
+  #pick .hd { font: 900 28px/1 var(--font); color: #7fd4ff; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8); }
+  #pick .sub { margin-top: 6px; font: 600 13px/1 var(--font); color: rgba(255, 255, 255, 0.75); }
+  #pick .cards { display: flex; gap: 8px; margin-top: 18px; padding: 0 10px; }
+  #pick .card { width: 112px; min-height: 196px; box-sizing: border-box; padding: 12px 8px; border-radius: 14px; background: linear-gradient(#2b2b36, #1c1c24); border: 2px solid #4a4a5a; color: #fff; text-align: center; transition: transform 0.15s, border-color 0.15s, opacity 0.3s; }
+  #pick .card .ic { font-size: 34px; line-height: 1.1; }
+  #pick .card .nm { margin-top: 8px; font: 800 15px/1.15 var(--font); }
+  #pick .card .ds { margin-top: 8px; font: 500 11px/1.4 var(--font); color: rgba(255, 255, 255, 0.78); word-break: keep-all; }
+  #pick .card .vl { margin-top: 8px; font: 700 11px/1.35 var(--font); color: #7fd4ff; word-break: keep-all; }
+  #pick .card.on { border-color: #7fd4ff; transform: translateY(-8px) scale(1.04); box-shadow: 0 0 18px rgba(127, 212, 255, 0.45); }
+  #pick .card.gone { opacity: 0; transform: scale(0.8); }
+  #pick .card.win { transform: scale(1.18); border-color: #ffd34d; box-shadow: 0 0 28px rgba(255, 211, 77, 0.7); }
+  #pick .ok { margin-top: 22px; padding: 12px 38px; border: 0; border-radius: 12px; background: #7fd4ff; color: #10202a; font: 800 17px/1 var(--font); opacity: 0.35; transition: opacity 0.15s; }
+  #pick .ok.ready { opacity: 1; }
+  #win { position: absolute; inset: 0; z-index: 30; background: rgba(10, 4, 18, 0); display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; transition: background 0.5s; overflow: hidden; }   /* 승리 (v201) */
+  #win.on { background: rgba(10, 4, 18, 0.72); }
+  #win .vt { font: 900 56px/1 var(--font); letter-spacing: 3px; color: #e9c6ff; text-shadow: 0 0 18px #b44ee6, 0 0 40px #b44ee6; transform: scale(0.2); opacity: 0; transition: transform 0.5s cubic-bezier(.2,1.6,.4,1), opacity 0.3s; }
+  #win.on .vt { transform: scale(1); opacity: 1; }
+  #win .vs { margin-top: 14px; font: 700 15px/1 var(--font); color: #fff; opacity: 0; transition: opacity 0.4s 0.4s; }
+  #win.on .vs { opacity: 0.9; }
+  #win .bang { position: absolute; left: 50%; top: 45%; font: 900 26px/1 var(--font); color: #b44ee6; text-shadow: 0 0 8px rgba(180, 78, 230, 0.9); transform: translate(-50%, -50%); transition: transform 1.1s ease-out, opacity 1.1s ease-in; }
   #smell { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }   /* 후각 표시 (v180) — 게임 화면 위, 다른 UI 아래 */
   #joy {
     position: absolute; left: 50%; bottom: calc(56px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; width: 124px; height: 124px; margin-left: -62px;
@@ -126,8 +158,9 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <canvas id="smell"></canvas>
+  <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v200</div>
+  <div id="ver">v201</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -983,13 +1016,13 @@
     if (c.stunT > 0) { c.stunT -= dt; c.vel.set(0, 0); return; }   // 감전 (v190) — 2초 동안 아무것도 못 한다 (맞기는 한다)
     if (cashes.length && !c.noLure && c.state !== 'lured' && !c.lureAlert && c.state !== 'super' && (c.cashT = (c.cashT || 0) - dt) <= 0) {   // 돈다발 보기 (v190) — 인지거리 안이면 바로 유혹, 시야 안이면 먼저 경계
       c.cashT = TICK;
-      const s = seeCash(c, c.sight);
-      if (s) { if (s.d <= c.sense) enterLured(c); else { enterAlert(c); c.lureAlert = true; } }
+      const s = seeCash(c, c.sight * cashK());
+      if (s) { if (s.d <= c.sense * cashK()) enterLured(c); else { enterAlert(c); c.lureAlert = true; } }
     }
     if (c.state === 'lured') { luredStep(c, dt); return; }
     if (c.lureAlert) {                        // 돈다발 쪽을 보며 경계 — 끝나면 유혹 (그 사이 맞으면 풀린다)
       steer(c.vel, wantV.set(0, 0), ACCEL * dt);
-      if ((c.timer -= dt) <= 0) { c.lureAlert = false; if (seeCash(c, c.sight)) enterLured(c); else enterNormal(c); }
+      if ((c.timer -= dt) <= 0) { c.lureAlert = false; if (seeCash(c, c.sight * cashK())) enterLured(c); else enterNormal(c); }
       return;
     }
     if (c.state === 'fight') {               // 수비형: 제자리에서 맞서 싸운다 / 공격형: 쫓아가서 때린다 / 경찰: 제자리에서 쏜다
@@ -1125,7 +1158,7 @@
   function shoot(c, z) {
     c.shotT = 0;
     c.shotAt = z;
-    landHit(c, z, POLICE_DAMAGE);
+    landHit(c, z, z === me && hasVest ? POLICE_DAMAGE * (1 - vestPct(up.brain) / 100) : POLICE_DAMAGE);   // 방탄복 — 내 총알 피해 감소 (v201)
   }
 
   // 경찰 출동 — 사람이 감염될 때마다 (경찰이 감염돼도 센다):
@@ -1598,7 +1631,11 @@
 
   function startBite(z, t) {
     z.mode = 'bite';
-    z.biteT = z.biteLen = z === me ? INFECT / MY_INFECT : INFECT;   // 나는 더 빨리 감염시킨다
+    z.biteT = z.biteLen = (z === me ? INFECT / MY_INFECT : INFECT) * biteK();   // 나는 더 빨리 감염시킨다. 물어뜯기로 짧아진다 (v201)
+    if (z.biteLen <= 0.02) {                  // 물어뜯기를 많이 찍어 감염 시간이 0 → 즉시 감염, 회복 총량은 한 번에 (v201)
+      z.hp = Math.min(z.maxHp, z.hp + z.maxHp * zHeal(z) * (z === me ? INFECT / MY_INFECT : INFECT));
+      z.biteT = z.biteLen = 0.001;
+    }
     z.vel.set(0, 0);
     z.fixed = t.fixed = true;                // 무는 동안 둘 다 그 자리에 붙는다
     t.state = 'held';
@@ -1617,6 +1654,7 @@
     t.marked = false;
     if (ok) {                                 // 감염 성공 → 동료 좀비, 경찰 쪽엔 사건 하나 (경찰이 감염돼도)
       makeZombie(t);
+      gainXp();                               // 경험치 — 동료가 생길 때마다 (v201)
       callPolice(t.foot);
     } else if (t.police) enterFight(t, z, true);   // 경찰은 HP 0인 채 풀려나도 바로 다시 쏜다
     else {                                    // 포기 → HP 0인 채 풀려나서 놀람 없이 바로 패닉
@@ -1643,7 +1681,7 @@
     if (b.boostT > 0) { b.sense = b.boostSense; b.sight = b.boostSight; b.boostT = 0; }   // 출동 직후 늘어난 시야는 좀비가 되면 원래대로 (v158)
     b.sense = me && me.sense ? me.sense : b.sight;   // 동료 인지거리(= 시야) = 나와 똑같이 (v183 — 전엔 시민 때 자기 시야)
     b.speed = SPEED;
-    b.attack = ALLY_ATTACK;
+    b.attack = allyAttack();                  // 튼튼한 다리 반영 (v201)
     b.tick = Math.random() * ZOMBIE_TICK;
     b.pick = null;
     b.slotA = 0;                              // 내 주변에서 맡은 방향 칸의 가운데 (assignSlots가 정한다)
@@ -1656,7 +1694,7 @@
     b.outT = 0;                               // 지배 거리 밖에 있은 시간
     b.outLimit = 0;                           // 이번에 나갔을 때 복귀 명령까지 시간 (1~2초)
     b.recall = false;                         // 복귀 명령 중 — 지배 거리 안에 들어올 때까지 시민을 안 쫓는다
-    b.hp = b.maxHp = ALLY_HP;                  // 좀비가 되면 체력 100으로 꽉 찬다 → 체력바는 다시 깎일 때까지 안 보인다 (수비형·공격형이었으면 바 색만 바꾼다)
+    b.hp = b.maxHp = allyMaxHp();                  // 좀비가 되면 체력 100으로 꽉 찬다 → 체력바는 다시 깎일 때까지 안 보인다 (수비형·공격형이었으면 바 색만 바꾼다)
     if (b.hpBar) { b.hpFill.material = hpOurMat; b.hpDisp = b.hp; }
     else addHpBar(b, hpOurMat);
     b.atkT = 0;
@@ -1828,7 +1866,7 @@
     if (z.mode === 'bite') {
       if (input.x || input.y) endBite(z, false);   // 움직이면 감염 포기
       else if ((z.biteT -= dt) <= 0) endBite(z, true);
-      else z.hp = Math.min(z.maxHp, z.hp + z.maxHp * (z === me ? MY_BITE_HEAL : BITE_HEAL) * dt);   // 무는 중 체력 회복 (나는 1.3배)
+      else z.hp = Math.min(z.maxHp, z.hp + z.maxHp * zHeal(z) / Math.max(0.05, biteK()) * dt);   // 무는 중 체력 회복 — 고기 흡수율 반영, 물어뜯기로 짧아진 만큼 빨리 (회복 총량 그대로, v201)   // 무는 중 체력 회복 (나는 1.3배)
     }
     if (z.mode === 'pounce') {
       const t = z.target;
@@ -2391,7 +2429,12 @@
     camDist = DIST;
     explored.fill(0);                         // 미니맵 — 새 판은 다시 다 까맣게
     for (const it of items) it.el.remove();   // 기술·돈다발·연출 초기화 (v190)
-    items = []; safesBroken = 0; itemOrder = Math.random() < 0.5 ? ['taser', 'cash'] : ['cash', 'taser'];
+    items = []; safesBroken = 0; itemOrder = ['taser', 'cash', 'vest'].sort(() => Math.random() - 0.5);
+    for (const k of Object.keys(up)) up[k] = 0;   // 레벨·능력치·방탄복 초기화 (v201)
+    level = 0; xp = 0; pendingLv = 0; lvOpen = false; victoryOn = false; hasVest = false;
+    if (vestEl) { vestEl.remove(); vestEl = null; }
+    for (const el of stage.querySelectorAll('#pick, #win')) el.remove();
+    drawLv();
     for (const k of cashes.slice()) removeCash(k);
     zaps.length = 0; pendingAward.length = 0; shownStars = 0;
     for (const el of stage.querySelectorAll('#acq, .fly')) el.remove();
@@ -2659,7 +2702,7 @@
       if (b.lungeT >= 0) {                    // 때리는 모션 시간 — 붙는 순간 데미지
         const before = b.lungeT;
         b.lungeT += dt;
-        if (before < LUNGE_IN && b.lungeT >= LUNGE_IN && b.lungeVictim) { landHit(b, b.lungeVictim, b === me ? MY_DAMAGE : b.kind === 'ally' ? ALLY_DAMAGE : DAMAGE); b.lungeVictim = null; }
+        if (before < LUNGE_IN && b.lungeT >= LUNGE_IN && b.lungeVictim) { landHit(b, b.lungeVictim, isZombie(b) ? zDamage(b) : DAMAGE); b.lungeVictim = null; }   // 좀비 공격력 = 강한 팔 반영 (v201)
         if (b.lungeT >= LUNGE_IN + LUNGE_OUT) b.lungeT = -1;
       }
     }
@@ -2694,7 +2737,8 @@
   // ── 기술 (v190) — 경찰서 금고를 부수면 처음 두 번에 테이저건·현금이 하나씩 (순서 랜덤). 조이스틱 오른쪽 위부터 둘레로 버튼 (최대 3개) ──
   const ITEM = {
     taser: { max: 3, reload: 20, icon: '⚡', name: '테이저건', col: '#ffd34d' },   // 3발, 1발 20초 — 내 인지거리 안 적 1명 (위험도 높은 순 → 가까운 순) 4초 감전 (v195), 감전 중인 적은 다시 안 쏨 (v196)
-    cash: { max: 1, reload: 15, icon: '💵', name: '현금', col: '#43d17a' },       // 1번, 15초 — 내 둘레 1~2칸에 돈다발 3개 (v195)
+    cash: { max: 1, reload: 15, icon: '💵', name: '현금', col: '#43d17a' },       // 1번, 15초 — 내 둘레 1~2칸에 돈다발 (v201: 처음 1개 + 똑똑한 두뇌마다 1개)
+    vest: { icon: '🦺', name: '방탄복', passive: true },                         // 패시브 (v201) — 총알 피해 30% 감소, 똑똑한 두뇌마다 10% 더
   };
   const STUN_T = 4, CASH_N = 3, CASH_R = [1, 2], CASH_GET = 0.7;   // v195: 감전 2 → 4초, 돈다발 뿌리는 거리 2~4 → 1~2칸
   const SLOT_A = [45, 15, 75], SLOT_R = 125;   // 버튼 자리 = 조이스틱 가운데에서 이 각도(오른쪽 0°, 위 90°)·거리(px)
@@ -2704,6 +2748,100 @@
   const zaps = [];                            // 테이저 번쩍 {from:[x,z], to: 몸, t}
   const cashGeo = new THREE.PlaneGeometry(0.62, 0.36).rotateX(-Math.PI / 2), cashMat = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, depthWrite: false });
   const cashBandMat = new THREE.MeshBasicMaterial({ color: 0x1b7a43, transparent: true, depthWrite: false });
+  // ── 레벨·능력치 (v201) — 동료가 생길 때마다(누가 감염시켰든) 경험치 1. 레벨마다 새로 필요한 수 10 → 20 → 40 → 80 …
+  //   레벨이 오르면 일시정지 → 능력치 카드 3장 중 하나 고르고 확인 → 오르는 연출 → 다시 움직임. 수치는 다 처음 값 기준으로 같은 양씩 더해진다
+  const ABIL = {
+    brain: { icon: '🧠', name: '똑똑한 두뇌', desc: '도구를 더 잘 다룹니다. 테이저건·현금·방탄복이 모두 강해져요.',
+      val: (n) => `테이저 ${1 + n}→${2 + n}명 · 돈다발 ${1 + n}→${2 + n}개 · 유혹 거리 +${n * 10}→+${(n + 1) * 10}% · 방탄복 ${vestPct(n)}→${vestPct(n + 1)}%` },
+    meat: { icon: '🍖', name: '고기 흡수율', desc: '물어뜯는 동안 피를 더 많이 빨아들입니다. 나와 모든 좀비의 회복량이 늘어요.',
+      val: (n) => `내 회복 초당 ${(MY_BITE_HEAL * 100 + n * 3).toFixed(1)}→${(MY_BITE_HEAL * 100 + (n + 1) * 3).toFixed(1)}%` },
+    arm: { icon: '💪', name: '강한 팔', desc: '나와 모든 좀비가 더 세게 때립니다.',
+      val: (n) => `공격력 +${n * 5}→+${(n + 1) * 5}% (나 ${(MY_DAMAGE * (1 + n * 0.05)).toFixed(1)}→${(MY_DAMAGE * (1 + (n + 1) * 0.05)).toFixed(1)})` },
+    bite: { icon: '🦷', name: '물어뜯기', desc: '더 빨리 감염시킵니다. 짧아진 만큼 빨리 회복해서, 한 번 물 때 회복 총량은 그대로예요.',
+      val: (n) => `감염 시간 −${n * 5}→−${(n + 1) * 5}% (나 ${myBiteLen(n).toFixed(2)}→${myBiteLen(n + 1).toFixed(2)}초)` },
+    skin: { icon: '🛡️', name: '단단한 피부', desc: '나와 모든 좀비의 최대 체력이 늘고, 늘어난 만큼 바로 채워집니다.',
+      val: (n) => `최대 체력 +${n * 3}→+${(n + 1) * 3}% (나 ${Math.round(MY_HP * (1 + n * 0.03))}→${Math.round(MY_HP * (1 + (n + 1) * 0.03))})` },
+    leg: { icon: '🦵', name: '튼튼한 다리', desc: '나와 모든 좀비가 더 먼 곳에서 덮칠 수 있습니다.',
+      val: (n) => `습격 거리 +${n * 10}→+${(n + 1) * 10}% (나 ${(ATTACK * (1 + n * 0.1)).toFixed(2)}→${(ATTACK * (1 + (n + 1) * 0.1)).toFixed(2)}칸)` },
+  };
+  const up = { brain: 0, meat: 0, arm: 0, bite: 0, skin: 0, leg: 0 };
+  let level = 0, xp = 0, pendingLv = 0, lvOpen = false, hasVest = false, vestEl = null, victoryOn = false;
+  const needXp = (L) => 10 * Math.pow(2, L);   // 레벨 L → L+1 에 새로 필요한 수
+  const vestPct = (n) => Math.min(90, 30 + n * 10);
+  const biteK = (n = up.bite) => Math.max(0, 1 - 0.05 * n);   // 감염 시간 배율 — 0이면 즉시 감염
+  const myBiteLen = (n = up.bite) => INFECT / MY_INFECT * biteK(n);
+  const zDamage = (z) => (z === me ? MY_DAMAGE : ALLY_DAMAGE) * (1 + 0.05 * up.arm);
+  const zHeal = (z) => (z === me ? MY_BITE_HEAL : BITE_HEAL) + 0.03 * up.meat;   // 감염 시간 1배 기준 초당 회복 (최대 체력 대비)
+  const allyMaxHp = () => ALLY_HP * (1 + 0.03 * up.skin);
+  const allyAttack = () => ALLY_ATTACK * (1 + 0.1 * up.leg);
+  const cashK = () => 1 + 0.1 * up.brain;     // 사람들이 돈다발을 알아채는 거리 배율
+  function gainXp() {
+    xp++;
+    if (xp >= needXp(level + pendingLv)) { xp -= needXp(level + pendingLv); pendingLv++; }
+    drawLv();
+  }
+  function drawLv() {
+    const box = document.getElementById('lvbox');
+    box.querySelector('.lv').textContent = 'Lv ' + level;
+    const need = needXp(level + pendingLv);
+    box.querySelector('.bar i').style.width = Math.min(100, xp / need * 100) + '%';
+    box.querySelector('.xp').textContent = xp + ' / ' + need;
+  }
+  function applyUp(key) {                     // 능력치 하나 올리기 — 이미 있는 좀비에도 바로
+    up[key]++;
+    if (key === 'skin') for (const z of zombies.concat(isZombie(me) && !zombies.includes(me) ? [me] : [])) {
+      const d = (z === me ? MY_HP : ALLY_HP) * 0.03;
+      z.maxHp += d; z.hp = Math.min(z.maxHp, z.hp + d);
+    }
+    if (key === 'leg') for (const b of bodies) if (isZombie(b)) b.attack = b === me ? ATTACK * (1 + 0.1 * up.leg) : allyAttack();
+    if (key === 'brain' && vestEl) vestEl.querySelector('.pc').textContent = '-' + vestPct(up.brain) + '%';
+  }
+  function showLevelUp() {
+    lvOpen = true; paused = true; stopInput();
+    const keys = Object.keys(ABIL).sort(() => Math.random() - 0.5).slice(0, 3);
+    const ov = document.createElement('div');
+    ov.id = 'pick';
+    ov.innerHTML = `<div class="hd">LEVEL UP!</div><div class="sub">Lv ${level} → Lv ${level + 1} · 능력 하나를 고르세요</div><div class="cards">` +
+      keys.map((k) => `<div class="card" data-k="${k}"><div class="ic">${ABIL[k].icon}</div><div class="nm">${ABIL[k].name}</div><div class="ds">${ABIL[k].desc}</div><div class="vl">${ABIL[k].val(up[k])}</div></div>`).join('') +
+      `</div><button class="ok">확인</button>`;
+    stage.appendChild(ov);
+    let chosen = null;
+    const block = (e) => { e.stopPropagation(); e.preventDefault(); };
+    ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
+    ov.addEventListener('pointerdown', (e) => {
+      block(e);
+      if (ov.dataset.done) return;
+      const card = e.target.closest('.card'), ok = e.target.closest('.ok');
+      if (card) { chosen = card.dataset.k; for (const c of ov.querySelectorAll('.card')) c.classList.toggle('on', c === card); ov.querySelector('.ok').classList.add('ready'); return; }
+      if (!ok || !chosen) return;
+      ov.dataset.done = '1';
+      for (const c of ov.querySelectorAll('.card')) { c.classList.remove('on'); c.classList.add(c.dataset.k === chosen ? 'win' : 'gone'); }   // 고른 카드가 커지며 빛나고 나머지는 사라진다
+      ov.querySelector('.ok').style.opacity = '0';
+      applyUp(chosen);
+      pendingLv--; level++;
+      const box = document.getElementById('lvbox'); box.classList.remove('up'); box.getBoundingClientRect(); box.classList.add('up');
+      drawLv();
+      setTimeout(() => { ov.style.opacity = '0'; }, 550);
+      setTimeout(() => { ov.remove(); lvOpen = false; paused = false; last = 0; }, 850);
+    });
+  }
+  function showVictory() {                    // 경찰서 4곳 다 파괴 → VICTORY 약 3초 → 처음부터
+    victoryOn = true; paused = true; stopInput();
+    const ov = document.createElement('div');
+    ov.id = 'win';
+    ov.innerHTML = '<div class="vt">VICTORY</div><div class="vs">경찰서 ' + stations.length + '곳 전부 박살 · Lv ' + level + '</div>';
+    for (let i = 0; i < 18; i++) { const b = document.createElement('div'); b.className = 'bang'; b.textContent = '!'; ov.appendChild(b); }
+    stage.appendChild(ov);
+    ov.getBoundingClientRect();
+    ov.classList.add('on');
+    ov.querySelectorAll('.bang').forEach((b, i) => {   // 보라 느낌표가 사방으로 터진다
+      const a = i / 18 * Math.PI * 2 + Math.random() * 0.3, r = 140 + Math.random() * 120;
+      b.style.transform = `translate(calc(-50% + ${Math.cos(a) * r}px), calc(-50% + ${Math.sin(a) * r}px)) rotate(${(Math.random() - 0.5) * 80}deg)`;
+      b.style.opacity = '0';
+    });
+    setTimeout(() => { ov.style.transition = 'opacity 0.4s'; ov.style.opacity = '0'; }, 2600);
+    setTimeout(() => { ov.remove(); spawn(); paused = false; last = 0; }, 3000);
+  }
   const DANGER = (c) => c.police ? 3 : c.attacker ? 2 : c.guard ? 1 : 0;
   function slotPos(i) { const a = SLOT_A[i] * Math.PI / 180; return [Math.cos(a) * SLOT_R, Math.sin(a) * SLOT_R]; }
   function makeItemButton(kind, i) {
@@ -2739,18 +2877,19 @@
     if (!it || it.ammo <= 0 || !isZombie(me)) return;
     it.ammo--;
     if (kind === 'taser') {                   // 내 인지거리 안 적 1명 — 위험도 높은 순(경찰 > 공격형 > 수비형 > 일반), 같으면 가까운 순. 없으면 한 발 날린다
-      let best = null, bk = -1, bd = Infinity;
+      const cand = [];
       for (const c of bodies) {                // 누를 때 한 번이라 전체를 본다
         if (c.kind !== 'citizen' || c.space !== me.space || c.stunT > 0) continue;   // v196: 감전 중인 적은 안 쏜다 (풀리면 다시 쏠 수 있다)
         const d = Math.hypot(c.foot.x - me.foot.x, c.foot.z - me.foot.z);
         if (d > me.sense || blocked(me.foot.x, me.foot.z, c.foot.x, c.foot.z)) continue;
-        const k = DANGER(c);
-        if (k > bk || (k === bk && d < bd)) { best = c; bk = k; bd = d; }
+        cand.push({ c, k: DANGER(c), d });
       }
-      if (best) { best.stunT = STUN_T; best.vel.set(0, 0); zaps.push({ to: best, t: 0.45 }); }
-      else zaps.push({ to: null, t: 0.2 });
+      cand.sort((a, b) => b.k - a.k || a.d - b.d);
+      const hit = cand.slice(0, 1 + up.brain);  // 한 번에 맞히는 수 = 1 + 똑똑한 두뇌 (v201)
+      for (const { c } of hit) { c.stunT = STUN_T; c.vel.set(0, 0); zaps.push({ to: c, t: 0.45 }); }
+      if (!hit.length) zaps.push({ to: null, t: 0.2 });
     } else {                                  // 돈다발 3개를 내 둘레 2~4칸에 뿌린다 (나와 같은 공간)
-      for (let i = 0; i < CASH_N; i++) {
+      for (let i = 0; i < 1 + up.brain; i++) {   // 돈다발 수 = 1 + 똑똑한 두뇌 (v201)
         for (let t = 0; t < 30; t++) {
           const a = Math.random() * Math.PI * 2, r = CASH_R[0] + Math.random() * (CASH_R[1] - CASH_R[0]);
           const x = me.foot.x + Math.cos(a) * r, z = me.foot.z + Math.sin(a) * r;
@@ -2779,7 +2918,7 @@
   }
   function enterLured(c) { c.state = 'lured'; c.lureAlert = false; c.foe = null; c.locked = false; }
   function luredStep(c, dt) {                 // 유혹: 좀비는 안 보고 가장 가까운 돈다발로 달려간다. 닿으면 돈다발이 사라진다
-    const s = seeCash(c, c.sight);
+    const s = seeCash(c, c.sight * cashK());
     if (!s) { enterNormal(c); return; }      // 볼 수 있는 돈다발이 없으면 유혹 끝
     if (s.d < CASH_GET) { removeCash(s.k); return; }
     const sp = PANIC_SPEED * (c.police ? POLICE_PACE : 1) * (c.guard ? GUARD_PACE : 1);
@@ -2812,7 +2951,7 @@
     scene.remove(b.mesh); if (b.hpBar) scene.remove(b.hpBar);
     const i = bodies.indexOf(b); if (i >= 0) bodies.splice(i, 1);
     safesBroken++;
-    if (safesBroken <= 2) pendingAward.push(itemOrder[safesBroken - 1]);
+    if (safesBroken <= itemOrder.length) pendingAward.push(itemOrder[safesBroken - 1]);   // v201: 처음 3개 금고에서 하나씩, 마지막 금고는 없음
   }
   // 획득 연출: 일시정지 → 반투명 바탕 위에 큰 기술 그림 + 글자 → 화면을 누르면 바탕이 사라지고 그림이 버튼 자리로 날아가 박힘 → 다시 움직임
   function stopInput() { pid = null; joy.classList.remove('on'); knob.style.transform = 'translate(0px, 0px)'; move.set(0, 0); }
@@ -2828,7 +2967,13 @@
       block(e);
       if (ov.dataset.done) return;
       ov.dataset.done = '1';
-      const slot = items.length, it = { kind, ammo: d.max, t: 0, el: makeItemButton(kind, slot) };
+      let it = null;
+      if (d.passive) {                        // 방탄복: 왼쪽 아래에 박힌다 (누르는 버튼 아님)
+        vestEl = document.createElement('div'); vestEl.id = 'vest';
+        vestEl.innerHTML = `<span class="ic">${d.icon}</span><span class="pc">-${vestPct(up.brain)}%</span>`;
+        stage.appendChild(vestEl);
+        it = { el: vestEl, passive: true };
+      } else it = { kind, ammo: d.max, t: 0, el: makeItemButton(kind, items.length) };
       it.el.style.visibility = 'hidden';
       const big = ov.querySelector('.big'), br = big.getBoundingClientRect(), sr = stage.getBoundingClientRect(), tr = it.el.getBoundingClientRect();
       const fly = document.createElement('div');
@@ -2842,7 +2987,8 @@
       fly.style.left = (tr.left + tr.width / 2 - sr.left) + 'px'; fly.style.top = (tr.top + tr.height / 2 - sr.top) + 'px'; fly.style.fontSize = '18px';
       setTimeout(() => {
         fly.remove(); ov.remove();
-        items.push(it); it.el.style.visibility = ''; it.el.classList.add('pop'); refreshItems();
+        if (it.passive) hasVest = true; else items.push(it);
+        it.el.style.visibility = ''; it.el.classList.add('pop'); refreshItems();
         acqOpen = false; paused = false; last = 0;
       }, 470);
     });
@@ -2878,8 +3024,10 @@
     }, 960);                                  // 크게 떠 있는 시간 0.32 → 0.96초 (v197에 3배)
   }
   function uiTick() {                         // 매 프레임 (멈춰 있어도): 줄 서 있는 연출을 하나씩
-    if (acqOpen || starAnim) return;
+    if (acqOpen || starAnim || lvOpen || victoryOn) return;
+    if (stationDown && !victoryOn) { showVictory(); return; }   // 경찰서 다 파괴 → 승리 (v201)
     if (pendingAward.length) { showAward(pendingAward.shift()); return; }
+    if (pendingLv > 0) { showLevelUp(); return; }
     if (stars > shownStars) playStar();
   }
   // ── 후각 (v180) — 나만 가진다. 내 인지거리 밖 ~ 그 1.5배 안의 사람을 원으로 알려 준다 ──
