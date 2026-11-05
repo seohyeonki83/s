@@ -49,7 +49,7 @@
   .item.empty .core { opacity: 0.6; }
   .item.pop { animation: itempop 0.35s ease-out; }
   @keyframes itempop { 0% { transform: scale(1.6); } 100% { transform: scale(1); } }
-  #acq { position: absolute; inset: 0; z-index: 20; background: rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.25s; touch-action: none; }   /* 기술 획득 (v190) — 화면을 눌러야 닫힌다 */
+  #acq { position: absolute; inset: 0; z-index: 20; background: rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: calc(9% + env(safe-area-inset-top, 0px)); box-sizing: border-box; transition: opacity 0.25s; touch-action: none; }   /* 기술 획득 (v190) — 화면을 눌러야 닫힌다 */
   #acq .big { font-size: 96px; line-height: 1; }
   #acq .t { margin-top: 16px; font: 800 24px/1.2 var(--font); color: #fff; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8); }
   #acq .ds { margin: 18px 22px 0; max-width: 340px; padding: 14px 16px; border-radius: 12px; background: rgba(20, 20, 26, 0.75); color: #fff; font: 600 15px/1.5 var(--font); word-break: keep-all; }   /* 기술 자세한 설명 (v226) */
@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v264</div>
+  <div id="ver">v265</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2657,6 +2657,7 @@
         for (const t of AROUND_MIX(B.local)) bag.push(t);
       }
       { const ny = bag.filter((t) => t === '').length, add = Math.floor(ny * 0.1 + Math.random()); for (let i = 0; i < add; i++) bag.push(''); }   // v259: 노란 시민 10% 더 (첫 마을 빼고) — 소수점은 확률로
+      for (const t of ['', 'guard', 'attacker']) { const n = bag.filter((x) => x === t).length, add = Math.floor(n * 0.05 + Math.random()); for (let i = 0; i < add; i++) bag.push(t); }   // v265: 노랑·수비형·공격형 5% 더
       for (let i = bag.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; }
       const groups = GROUPS.map((_, i) => {   // 시민 묶음 자리 — 원래 자리에서 살짝 흔든다
         const a = (i + rand(-0.4, 0.4)) / GROUPS.length * Math.PI * 2, r = GROUP_DIST * rand(0.8, 1.2);
@@ -3302,6 +3303,13 @@
   function stopInput() { pid = null; joy.classList.remove('on'); knob.style.transform = 'translate(0px, 0px)'; move.set(0, 0); }
   // 꾹 눌러 닫기 (v212): 누르면 그 자리에 원 게이지가 뜨고 1초 동안 차오르면 done. 중간에 떼면 취소
   const HOLD_T = 1.0;
+  function tapOk(ov, label, done) {          // v265: 확인 버튼과 같은 동그란 버튼 (조이스틱 자리) — 한 번 누르면 done
+    const blockA = (e) => { e.stopPropagation(); e.preventDefault(); };
+    for (const ev of ['pointerdown', 'pointermove', 'pointerup']) ov.addEventListener(ev, blockA);
+    const b = document.createElement('button'); b.className = 'ok okBtn'; b.textContent = label;
+    ov.appendChild(b);
+    b.addEventListener('pointerdown', (e) => { blockA(e); b.style.visibility = 'hidden'; done(); });
+  }
   function holdToClose(ov, done) {
     let ring = null, t0 = 0, raf = 0, pidH = null, fired = false;
     const block = (e) => { e.stopPropagation(); e.preventDefault(); };
@@ -3332,9 +3340,9 @@
     acqOpen = true; paused = true; stopInput();
     const d = ITEM[kind], ov = document.createElement('div');
     ov.id = 'acq';
-    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name} 획득</div><div class="ds">${itemDesc(kind)}</div><div class="h">화면을 꾹 누르세요</div>`;   // 자세한 설명 (v226)
+    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name} 획득</div><div class="ds">${itemDesc(kind)}</div>`;   // 자세한 설명 (v226) — v265: 꾹 누르기 대신 [획득] 버튼
     stage.appendChild(ov);
-    holdToClose(ov, () => {                   // 1초 꾹 누르면 (v212)
+    tapOk(ov, '획득', () => {                 // v265: 조이스틱 자리 [획득] 버튼을 한 번 누르면
       if (ov.dataset.done) return;
       ov.dataset.done = '1';
       let it = null;
