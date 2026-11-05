@@ -187,7 +187,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v238</div>
+  <div id="ver">v239</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -281,7 +281,7 @@
   const STAR_AT = (() => { let t = 0, d = STAR_BASE; return Array.from({ length: 5 }, () => { t += d; d *= STAR_GROW; return Math.round(t); }); })();   // [5, 18, 49, 127, 322]
   const SORTIE_SENSE = 3, SORTIE_SENSE_T = 4;   // 경찰서 호출로 나온 경찰: 건물 밖으로 나오는 순간 인지거리·시야 3배 → 4초에 걸쳐 원래대로 (v158)
   const DROP_SENSE = 2, DROP_SENSE_T = 3;   // 경찰차에서 내린 경찰: 인지거리가 순간 2배 → 3초에 걸쳐 원래대로 (v114)
-  const DISPATCH_T = (n) => (30 - 5 * (n - 1)) / 1.15;   /* v179: 출동 빈도 15% 올림 (간격 ÷ 1.15) */ //   // 별 n개일 때 출동 간격 (초) — 30·25·20·15·10 (v118)
+  const DISPATCH_T = (n) => (30 - 5 * (n - 1)) / 1.15 / 1.15;   /* v239: 출동 빈도 15% 더 */   /* v179: 출동 빈도 15% 올림 (간격 ÷ 1.15) */ //   // 별 n개일 때 출동 간격 (초) — 30·25·20·15·10 (v118)
   const STATION_IN = 14, STATION_OUT = 2, STATION_FRONT = 1;   /* v162: 안 20 → 14 (30% 줄임) */   /* v157: 안 20 · 바깥 3 (둘레 2·앞마당 1), 다시 채우기 없음. 바깥 경찰 피해 합이 경찰 체력의 1/10을 넘을 때마다 호출 → 안에서 1~2명 출동 */ const STATION_OUT_MIN = 3; //   /* v147에 20% 줄임 (15·10·5 → 12·8·4) */ //   // 경찰서 안에 상주 · 둘레 배회 · 앞마당 배회(v115) — 출동하지 않는다. 안의 15명이 전부 감염되면 경찰서 파괴
   const AROUND_MIX = (i) => ['', 'guard', 'attacker', i % 2 ? 'attacker' : 'guard'];   // 시민 건물 i번 둘레에 흩어 두는 사람 — 일반 1 · 수비형·공격형 1~2 (v118에 전부 절반: 건물 3채 합쳐 일반 3 · 수비형 5 · 공격형 4)
   const PATROL_AT = [[-16 * 0.8, -4 * 0.8], [16 * 0.8, -4 * 0.8]];   /* v144·v145: 자리 20% 좁힘 (POS) */ //   // 동네마다 길거리 순찰 경찰 두 명의 자리 (동네 가운데 기준, 건물·시작 자리 피해서) — 동네 다섯 개 × 2 = 10명 (v134)
@@ -351,7 +351,7 @@
     { x: 0, z: -11, w: 14, d: 10, doors: ['s'], kinds: { a: 1, g: 1, n: 2 } },    // 대: 공격형 1 · 수비형 1 · 일반 2 (v118에 전부 절반)
     { x: -10, z: 8, w: 11, d: 8, doors: ['e'], kinds: { g: 1, n: 1, a: 1 } },   /* v143에 공격형 +1 */           // 중: 수비형 1 · 일반 1
     { x: 10, z: 8, w: 8, d: 6, doors: ['w'], kinds: { n: 1, g: 1 } },   /* v143에 수비형 +1 */                    // 소: 일반 1
-    { x: 0, z: -50, w: 14, d: 10, doors: ['s'], kinds: {}, station: true },        // 경찰서 (동네 북쪽, v113 · v115에 더 북쪽으로) — 경찰은 판 깔 때 따로 넣는다
+    { x: 0, z: -50, w: 14, d: 10, doors: ['s'], locks: ['e', 'w'], kinds: {}, station: true },   // v239: 동·서에 잠긴 문 (부수면 열린다)        // 경찰서 (동네 북쪽, v113 · v115에 더 북쪽으로) — 경찰은 판 깔 때 따로 넣는다
   ].map((s, i) => ({ ...s, x: s.x * MAP * POS, z: s.z * MAP * POS, w: s.w * MAP, d: s.d * MAP, local: i }));   // 위치·크기 다 MAP배 (사람 수는 그대로)
   const START_BLOCK = 1;                      // 첫 마을 = 오른쪽 아래 (v230) — 경찰서 없이 건물 3개, 시작 자리, 성장 구역
   const BIG = { x: 0, z: -50 * MAP * POS, w: 16 * MAP, d: 12 * MAP, doors: ['s'], kinds: {}, big: true, local: 3 };   // v232: 첫 마을 경찰서 자리에 경찰서보다 큰 건물 — 안에 짭새 3 · 만두귀 2 · 좃밥 2 · 헬창 2
@@ -540,6 +540,8 @@
   // ── 건물 — 벽 = 선분 (문 자리는 비운다). 바닥에 그리는 건 지붕(덮개)·벽·문 앞 발판 ──
   const buildings = BUILDINGS.map((s) => {
     const B = { x0: s.x - s.w / 2, z0: s.z - s.d / 2, x1: s.x + s.w / 2, z1: s.z + s.d / 2, kinds: s.kinds, station: !!s.station, big: !!s.big, local: s.local, block: s.block };
+    const side2 = (side) => { const nx = side === 'e' ? 1 : side === 'w' ? -1 : 0, nz = side === 's' ? 1 : side === 'n' ? -1 : 0; return { side, cx: nx > 0 ? B.x1 : nx < 0 ? B.x0 : s.x, cz: nz > 0 ? B.z1 : nz < 0 ? B.z0 : s.z, nx, nz, tx: -nz, tz: nx }; };
+    B.locks = (s.locks || []).map(side2);   // 잠긴 문 (v239)
     B.doors = s.doors.map((side) => {        // 문 = 그 벽 한가운데. n = 바깥쪽, t = 벽을 따라가는 쪽
       const nx = side === 'e' ? 1 : side === 'w' ? -1 : 0, nz = side === 's' ? 1 : side === 'n' ? -1 : 0;
       return { side, cx: nx > 0 ? B.x1 : nx < 0 ? B.x0 : s.x, cz: nz > 0 ? B.z1 : nz < 0 ? B.z0 : s.z, nx, nz, tx: -nz, tz: nx };
@@ -551,7 +553,7 @@
     const sides = { n: [B.x0, B.z0, B.x1, B.z0], s: [B.x0, B.z1, B.x1, B.z1], w: [B.x0, B.z0, B.x0, B.z1], e: [B.x1, B.z0, B.x1, B.z1] };
     const n0 = walls.length;
     for (const [side, [ax, az, bx, bz]] of Object.entries(sides)) {
-      const D = B.doors.find((o) => o.side === side), h = DOOR / 2;
+      const D = B.doors.find((o) => o.side === side) || B.locks.find((o) => o.side === side), h = DOOR / 2;   // 잠긴 문 자리도 일단 비우고 (아래에서 막는다)
       if (!D) walls.push([ax, az, bx, bz]);
       else if (az === bz) walls.push([ax, az, D.cx - h, az], [D.cx + h, az, bx, bz]);
       else walls.push([ax, az, ax, D.cz - h], [ax, D.cz + h, bx, bz]);
@@ -593,6 +595,18 @@
     for (const D of B.doors) flat(D.tx ? DOOR : 0.35, D.tz ? DOOR : 0.35, D.cx + D.nx * 0.4, D.cz + D.nz * 0.4, doormatMat, -0.65);
   }
   for (const [ax, az, bx, bz] of walls) flat(Math.abs(bx - ax) + WALL, Math.abs(bz - az) + WALL, (ax + bx) / 2, (az + bz) / 2, wallMat, -0.505);   // 벽은 어둠 위에 그린다 — 시야 가장자리가 벽 모서리와 딱 맞게
+  // 잠긴 문 (v239) — 문 자리를 막는 벽 한 토막 + 철문 그림. 좀비가 부수면(체력 = 경찰의 10배) 벽이 사라지고 드나드는 문이 된다
+  const lockMat = flatMat(0x6f7f9e), lockBarMat = flatMat(0x3c4660);
+  const objs = [];                            // 부술 수 있는 사물: 잠긴 문 · 서 있는 경찰차
+  for (const B of buildings) for (const L of B.locks) {
+    const h = DOOR / 2, seg = L.nz ? [L.cx - h, L.cz, L.cx + h, L.cz] : [L.cx, L.cz - h, L.cx, L.cz + h];
+    const along = L.nz ? [DOOR, WALL * 2.2] : [WALL * 2.2, DOOR];
+    const mesh = flat(along[0], along[1], L.cx, L.cz, lockMat, -0.504);
+    const bar = new THREE.Mesh(new THREE.PlaneGeometry(L.nz ? DOOR * 0.8 : WALL * 0.8, L.nz ? WALL * 0.8 : DOOR * 0.8).rotateX(-Math.PI / 2), lockBarMat);
+    bar.position.y = 0.001; bar.renderOrder = -0.503; mesh.add(bar);
+    L.obj = { kind: 'obj', type: 'door', B, L, seg, mesh, foot: new THREE.Vector3(L.cx, 0, L.cz), hp: 0, maxHp: 0, dead: false };
+    objs.push(L.obj);
+  }
 
   const spaceOf = (x, z) => buildings.find((B) => x > B.x0 && x < B.x1 && z > B.z0 && z < B.z1) || null;   // 이 자리가 들어 있는 건물 (밖이면 null)
   function freeSpot(x, z, space) {            // 그 공간(건물 하나 또는 밖) 안이면서 벽에서 0.6칸 넘게 떨어진 곳인가
@@ -1247,7 +1261,7 @@
   const cars = [];
   let carObs = [];                            // 길 찾기용 서 있는 경찰차 원 {x, z, r} — 사이로 몸이 못 지나갈 만큼 붙은 차들은 한 원으로 합친다 (v139)
   function updateCarObs() {
-    const cs = cars.filter((c) => c.state === 'parked').map((c) => ({ x: c.x, z: c.z, r: CAR_L / 2 * PARKED_K + 0.15 }));
+    const cs = cars.filter((c) => c.state === 'parked').map((c) => ({ x: c.x, z: c.z, r: CAR_L / 2 * PARKED_K * (c.wreck ? 0.2 : 1) + 0.15 }));   // 잔해는 1/5 (v239)
     for (let merged = true; merged; ) {
       merged = false;
       for (let i = 0; i < cs.length && !merged; i++) for (let j = i + 1; j < cs.length; j++) {
@@ -1336,6 +1350,8 @@
         if (Math.hypot(car.vx, car.vz) < 0.05) {   // 섰다 → 경찰이 내리고 차는 그 자리에 계속 서 있다
           car.vx = car.vz = 0;
           car.state = 'parked';
+          car.obj = { kind: 'obj', type: 'car', car, foot: new THREE.Vector3(car.x, 0, car.z), hp: OBJ_HP, maxHp: OBJ_HP, dead: false };   // 서 있는 경찰차는 부술 수 있다 (v239)
+          addHpBar(car.obj, hpFoeMat); objs.push(car.obj);
           updateCarObs();                     // 길 찾기에 이 차를 넣는다
           car.red.color.setHex(0x4a3a3a);
           car.blue.color.setHex(0x3a3f4a);
@@ -1365,7 +1381,7 @@
     for (let i = 0; i < cars.length; i++) for (let j = i + 1; j < cars.length; j++) {
       const A = cars[i], B = cars[j];
       if (Math.hypot(A.x - B.x, A.z - B.z) > CAR_L * 1.6) continue;
-      const kA = A.state === 'parked' ? PARKED_K : MOVING_K, kB = B.state === 'parked' ? PARKED_K : MOVING_K;
+      const kA = A.state === 'parked' ? PARKED_K * (A.wreck ? 0.2 : 1) : MOVING_K, kB = B.state === 'parked' ? PARKED_K * (B.wreck ? 0.2 : 1) : MOVING_K;
       const ax = [[Math.cos(A.h), Math.sin(A.h)], [-Math.sin(A.h), Math.cos(A.h)]], bx = [[Math.cos(B.h), Math.sin(B.h)], [-Math.sin(B.h), Math.cos(B.h)]];
       const ha = [CAR_L / 2 * kA, CAR_W / 2 * kA], hb = [CAR_L / 2 * kB, CAR_W / 2 * kB];
       const dx = B.x - A.x, dz = B.z - A.z;
@@ -1393,7 +1409,7 @@
       const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx;
       for (const b of bodies) {
         if (b.fixed || b.knockT > 0) continue;
-        const k = car.state === 'parked' ? PARKED_K : MOVING_K;   // 서 있으면 작고 (v171), 달리면 크다 (v178)
+        const k = car.state === 'parked' ? PARKED_K * (car.wreck ? 0.2 : 1) : MOVING_K;   // 잔해는 1/5 (v239)   // 서 있으면 작고 (v171), 달리면 크다 (v178)
         const dx = b.foot.x - car.x, dz = b.foot.z - car.z, hu = CAR_L / 2 * k + b.r, hv = CAR_W / 2 * k + b.r;
         if (b.hitT > 0 && b.hitT < clock) b.hitT = 0;
         let u = dx * fx + dz * fz, v = dx * rx + dz * rz;
@@ -1553,6 +1569,7 @@
   }
 
   function landHit(a, v, dmg = DAMAGE) {
+    if (v.kind === 'obj') { if (!v.dead) { v.hp = Math.max(0, v.hp - dmg); if (v.hp <= 0) breakObj(v); } return; }   // 잠긴 문·경찰차 (v239)
     if (v.dead || !(v.kind === 'citizen' || v.kind === 'safe' || isZombie(v)) || v.hp <= 0) return;
     v.hp = Math.max(0, v.hp - dmg);
     if (v.kind === 'safe') { if (v.hp <= 0) breakSafe(v); return; }   // 금고 (v190)
@@ -1964,9 +1981,9 @@
         else if (go && go.hp > 0) fight(z, go, dt);     // HP가 남았으면 가서 때린다
         else if (t && dashOk(z, t)) { z.mode = 'pounce'; z.target = t; z.pounceT = 1; t.marked = true; }
         else if (prey || t) { const q = prey || t; steer(z.vel, toward(z, q.foot.x, q.foot.z, z.speed * RAID), ACCEL * dt); }   // 습격: 타겟이 인지거리 안 → 습격 속도로 자동으로 달려간다 (방금 덮쳐서 못 닿은 시민이면 1초 동안은 덮치지 않고 다가간다)
-        else if (z === me) steer(z.vel, wantV.set(0, 0), ACCEL * dt);   // 나는 타겟이 없으면 살짝 미끄러지며 선다
+        else if (z === me) { const ob = nearObj(z); if (ob) fightObj(z, ob, dt); else steer(z.vel, wantV.set(0, 0), ACCEL * dt); }   // 나는 타겟이 없으면 살짝 미끄러지며 선다 — 부술 사물이 있으면 그걸 (v239: 우선순위 맨 끝)
         else if (z.cmd) cmdRun(z, z.cmd, dt);    // 명령 중: 보이는 타겟이 없으면 명령 방향으로 달린다
-        else allyIdle(z, dt);
+        else { const ob = nearObj(z); if (ob) fightObj(z, ob, dt); else allyIdle(z, dt); }   // 동료도 다른 타겟이 하나도 없을 때만 사물을 부순다 (v239)
       }
     }
     if (!z.engaging) z.attacking = false;     // 이번 걸음에 싸우지 않았다 (습격·감염·복귀·추적·배회) = 공격 중 아님
@@ -2516,6 +2533,7 @@
     lastIncident = null;
     for (const car of cars) scene.remove(car.g);
     cars.length = 0;
+    resetObjs();                              // 잠긴 문 다시 잠그고, 경찰차 사물·이펙트 지움 (v239)
     carObs = [];
     for (const S of stations) { S.down = false; S.found = false; S.roof.material = stationRoofMat; }
     for (const B of buildings) if (!B.station) B.found = false;   // 일반 건물도 다시 '발견 전'으로 (v166)   // 미니맵에서 다시 '발견 전'으로
@@ -2759,7 +2777,8 @@
     for (const z of zombies) if (z.pick && z.pick.kind === 'citizen' && z.pick.hp > 0) crowd.set(z.pick, (crowd.get(z.pick) || 0) + 1);
     const n = zombies.length - (isZombie(me) ? 1 : 0), k = 1 + Math.max(0, n - ARMY_FREE) * ARMY_STEP;   // 부대 크기 = 동료 수
     if (n !== armyN) { armyN = n; armyK = k; updateLegend(); }
-    camDist += (DIST * armyK - camDist) * Math.min(1, dt * 2);
+    const camK = 1 + Math.max(0, n - ARMY_FREE) * 0.009;   // v239: 카메라만 동료 한 명마다 0.9% (시야·영역은 그대로 1.25%)
+    camDist += (DIST * camK - camDist) * Math.min(1, dt * 2);
     const moving = me.vel.length() > 0.3;
     if (meMoving && !moving) for (const b of bodies) if (b.kind === 'ally') { freshSlot(b); b.phase = 'track'; }   // 내가 멈추면 동료는 자리를 새로 뽑고 그리로 간다
     meMoving = moving;
@@ -2813,6 +2832,7 @@
     dispatchTick(dt);                         // 수배 별에 따라 경찰서에서 출동
     draw(dt);
     checkTut();                               // 처음 만난 적 소개 (v202)
+    stepFx(dt); drawObjBars(dt);              // 사물 이펙트·체력바 (v239)
     scrTick(dt);                              // 첫 마을 성장 구역 스폰 (v230)
     spawnFrames++;
     updateStars();
@@ -2849,17 +2869,17 @@
   // ── 레벨·능력치 (v201) — 동료가 생길 때마다(누가 감염시켰든) 경험치 1. 레벨마다 새로 필요한 수 10 → 20 → 40 → 80 …
   //   레벨이 오르면 일시정지 → 능력치 카드 3장 중 하나 고르고 확인 → 오르는 연출 → 다시 움직임. 수치는 다 처음 값 기준으로 같은 양씩 더해진다
   const ABIL = {
-    brain: { icon: '🧠', name: '똑똑한 두뇌', desc: '인간의 도구를 잘 다룸',
+    brain: { icon: '🧠', name: '똑똑한 두뇌', desc: '나에게만 — 인간의 도구를 잘 다룸',
       val: (n) => `테이저 ${1 + n}→${2 + n}명 · 유혹 거리 +${n * 20}→+${(n + 1) * 20}% · 유혹 버팀 ${4 + n}→${5 + n}대 · 방탄복 ${vestPct(n)}→${vestPct(n + 1)}%` },
-    meat: { icon: '🍖', name: '고기 흡수율', desc: '물어뜯을 때 회복량 증가',
+    meat: { icon: '🍖', name: '고기 흡수율', desc: '나와 동료들의 물어뜯을 때 회복량 증가',
       val: (n) => `내 회복 초당 ${(MY_BITE_HEAL * 100 + n * 3).toFixed(1)}→${(MY_BITE_HEAL * 100 + (n + 1) * 3).toFixed(1)}%` },
-    arm: { icon: '💪', name: '강한 팔', desc: '모든 좀비 공격력 증가',
+    arm: { icon: '💪', name: '강한 팔', desc: '나와 동료들의 공격력 증가',
       val: (n) => `공격력 +${n * 5}→+${(n + 1) * 5}% (나 ${(MY_DAMAGE * (1 + n * 0.05)).toFixed(1)}→${(MY_DAMAGE * (1 + (n + 1) * 0.05)).toFixed(1)})` },
-    bite: { icon: '🦷', name: '물어뜯기', desc: '감염시키는 속도 증가',
+    bite: { icon: '🦷', name: '물어뜯기', desc: '나와 동료들의 감염시키는 속도 증가',
       val: (n) => `감염 시간 −${n * 5}→−${(n + 1) * 5}% (나 ${myBiteLen(n).toFixed(2)}→${myBiteLen(n + 1).toFixed(2)}초)` },
-    skin: { icon: '🛡️', name: '단단한 피부', desc: '모든 좀비 체력 증가',
+    skin: { icon: '🛡️', name: '단단한 피부', desc: '나와 동료들의 체력 증가',
       val: (n) => `최대 체력 +${n * 3}→+${(n + 1) * 3}% (나 ${Math.round(MY_HP * (1 + n * 0.03))}→${Math.round(MY_HP * (1 + (n + 1) * 0.03))})` },
-    leg: { icon: '🦵', name: '튼튼한 다리', desc: '모든 좀비 습격 거리 증가',
+    leg: { icon: '🦵', name: '튼튼한 다리', desc: '나와 동료들의 습격 거리 증가',
       val: (n) => `습격 거리 +${n * 10}→+${(n + 1) * 10}% (나 ${(ATTACK * (1 + n * 0.1)).toFixed(2)}→${(ATTACK * (1 + (n + 1) * 0.1)).toFixed(2)}칸)` },
   };
   const up = { brain: 0, meat: 0, arm: 0, bite: 0, skin: 0, leg: 0 };
@@ -3055,7 +3075,8 @@
     b.mesh.geometry = safeGeo; b.mesh.material.color.setHex(0x8a7a52);
     const inner = new THREE.Mesh(safeInGeo, new THREE.MeshBasicMaterial({ color: 0x3a3d46, transparent: true, depthTest: false, depthWrite: false }));
     inner.position.z = 0.001; inner.renderOrder = b.mesh.renderOrder; b.mesh.add(inner);
-    b.fixed = true; b.r = 1.5; b.halfH = 1.425; b.hp = b.maxHp = SAFE_HP;   // 부딪힘(콜라이더) 반지름도 같이 커진다 b.station = S;
+    b.mesh.scale.setScalar(0.7);              // v239: 그림만 70% (부딪힘 r 1.5는 그대로)
+    b.fixed = true; b.r = 1.5; b.halfH = 1.425 * 0.7; b.hp = b.maxHp = SAFE_HP;   // 부딪힘(콜라이더) 반지름도 같이 커진다 b.station = S;
     addHpBar(b, hpFoeMat);
     S.safe = b;
   }
@@ -3066,6 +3087,125 @@
       if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) <= z.sense) return b;
     }
     return null;
+  }
+  // ── 부술 수 있는 사물 (v239): 경찰서 동·서 잠긴 문, 서 있는 경찰차. 체력 = 경찰의 10배.
+  //   좀비(나·동료)는 다른 타겟이 하나도 없을 때만 인지거리 안 가장 가까운 사물을 때린다 (거리와 상관없이 맨 마지막 순위)
+  const OBJ_HP = POLICE_HP * 10;
+  function objPoint(o, z) {                   // 좀비가 서서 때릴 자리 (그 좀비 쪽)
+    if (o.type === 'car') return [o.car.x, o.car.z];
+    const L = o.L, sgn = z.space === o.B ? -1 : 1;
+    return [L.cx + L.nx * 0.6 * sgn, L.cz + L.nz * 0.6 * sgn];
+  }
+  function objGap(o, z) {                     // 좀비 몸 가운데에서 사물 겉면까지
+    if (o.type === 'car') {
+      const c = o.car, fx = Math.cos(c.h), fz = Math.sin(c.h), dx = z.foot.x - c.x, dz = z.foot.z - c.z;
+      const u = Math.abs(dx * fx + dz * fz) - CAR_L / 2, v = Math.abs(-dx * fz + dz * fx) - CAR_W / 2;
+      return Math.hypot(Math.max(u, 0), Math.max(v, 0));
+    }
+    const p = nearestOn(o.seg, z.foot.x, z.foot.z);
+    return Math.hypot(z.foot.x - p.x, z.foot.z - p.y);
+  }
+  function nearObj(z) {
+    let best = null, bd = Infinity;
+    for (const o of objs) {
+      if (o.dead) continue;
+      if (o.type === 'car' ? z.space : (z.space && z.space !== o.B)) continue;   // 차는 밖에서만, 문은 그 경찰서 밖이나 안에서
+      const g = objGap(o, z);
+      if (g > z.sense || g >= bd) continue;
+      const [px, pz] = objPoint(o, z);
+      if (blocked(z.foot.x, z.foot.z, px, pz)) continue;
+      bd = g; best = o;
+    }
+    return best;
+  }
+  function fightObj(z, o, dt) {
+    z.engaging = null;
+    if (objGap(o, z) > MELEE - RADIUS) { const [px, pz] = objPoint(o, z); steer(z.vel, toward(z, px, pz, z.speed), ACCEL * dt); return; }
+    steer(z.vel, wantV.set(0, 0), ACCEL * dt);
+    if (z.atkT <= 0) { strike(z, o); z.atkT = HIT_EVERY; z.attacking = true; }
+  }
+  function breakObj(o) {
+    o.dead = true;
+    if (o.hpBar) o.hpBar.visible = false;
+    if (o.type === 'door') {                  // 문: 먼지만 — 벽 토막이 사라져 드나드는 문이 된다
+      const B = o.B, i = walls.indexOf(o.seg), j = B.walls.indexOf(o.seg);
+      if (i >= 0) walls.splice(i, 1);
+      if (j >= 0) B.walls.splice(j, 1);
+      if (!B.doors.includes(o.L)) B.doors.push(o.L);
+      o.mesh.visible = false;
+      dust(o.L.cx, o.L.cz, 18, 1.4);
+    } else {                                  // 경찰차: 폭발 + 연기 + 먼지 → 잔해만 남는다 (부딪힘 1/5)
+      const c = o.car;
+      c.wreck = true;
+      c.g.children[0].material.color.setHex(0x26221f); c.g.children[1].material.color.setHex(0x151515);
+      c.red.color.setHex(0x1c1c1c); c.blue.color.setHex(0x1c1c1c);
+      c.g.scale.set(0.8, 1, 0.8);
+      boom(c.x, c.z); dust(c.x, c.z, 14, 2);
+      updateCarObs();
+    }
+  }
+  function resetObjs() {                      // 새 판: 문은 다시 잠기고, 경찰차 사물은 지운다
+    for (let i = objs.length - 1; i >= 0; i--) {
+      const o = objs[i];
+      if (o.type === 'car') { if (o.hpBar) scene.remove(o.hpBar); objs.splice(i, 1); continue; }
+      const B = o.B;
+      if (!walls.includes(o.seg)) walls.push(o.seg);
+      if (!B.walls.includes(o.seg)) B.walls.push(o.seg);
+      const k = B.doors.indexOf(o.L); if (k >= 0) B.doors.splice(k, 1);
+      o.mesh.visible = true; o.dead = false; o.hp = o.maxHp = OBJ_HP;
+      if (!o.hpBar) addHpBar(o, hpFoeMat);
+      o.hpBar.visible = false; o.hpDisp = o.hp;
+    }
+    for (const f of fx) scene.remove(f.s);
+    fx.length = 0;
+  }
+  function drawObjBars(dt) {                  // 깎인 사물만 체력바
+    for (const o of objs) {
+      if (!o.hpBar) continue;
+      o.hpBar.visible = !o.dead && o.hp < o.maxHp;
+      if (!o.hpBar.visible) continue;
+      o.hpDisp += (o.hp - o.hpDisp) * Math.min(1, dt * 12);
+      o.hpFill.scale.x = Math.max(0.001, o.hpDisp / o.maxHp);
+      o.hpBar.position.set(o.foot.x, 0, o.foot.z).addScaledVector(UP, 1.6);
+    }
+  }
+  // 이펙트 (v239): 먼지(회색 덩이가 퍼지며 옅어짐) · 폭발(노랑·주황 번쩍) · 연기(검은 덩이가 피어오름)
+  const fxTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.5, 'rgba(255,255,255,0.6)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+  })();
+  const fx = [];
+  function puff(x, y, z, color, s0, s1, life, vx, vy, vz, op, delay = 0) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: fxTex, color, transparent: true, depthTest: false, depthWrite: false, opacity: 0 }));
+    s.renderOrder = 5; s.position.set(x, y, z); s.scale.setScalar(s0);
+    scene.add(s);
+    fx.push({ s, t: -delay, life, s0, s1, vx, vy, vz, op });
+  }
+  function dust(x, z, n, spread) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, sp = rand(1, 2.6) * spread;
+      puff(x + Math.cos(a) * 0.3, 0.3, z + Math.sin(a) * 0.3, 0x9b958a, rand(0.5, 0.8), rand(1.6, 2.4), rand(0.7, 1.1), Math.cos(a) * sp, rand(0.2, 0.6), Math.sin(a) * sp, rand(0.5, 0.75), rand(0, 0.08));
+    }
+  }
+  function boom(x, z) {
+    puff(x, 0.6, z, 0xfff3b0, 0.6, 5, 0.35, 0, 0, 0, 1);
+    for (let i = 0; i < 7; i++) { const a = Math.random() * Math.PI * 2, sp = rand(1, 3); puff(x, 0.5, z, i % 2 ? 0xff7a1a : 0xffc23a, 0.6, rand(2, 3.2), rand(0.35, 0.55), Math.cos(a) * sp, rand(0.5, 1.5), Math.sin(a) * sp, 0.95, rand(0, 0.1)); }
+    for (let i = 0; i < 12; i++) { const a = Math.random() * Math.PI * 2, sp = rand(0.2, 0.8); puff(x + rand(-0.6, 0.6), 0.8, z + rand(-0.6, 0.6), 0x2e2e2e, rand(0.8, 1.2), rand(2.4, 3.6), rand(1.6, 2.6), Math.cos(a) * sp, rand(0.8, 1.6), Math.sin(a) * sp, rand(0.55, 0.8), rand(0.1, 0.6)); }
+  }
+  function stepFx(dt) {
+    for (let i = fx.length - 1; i >= 0; i--) {
+      const f = fx[i]; f.t += dt;
+      if (f.t < 0) continue;
+      const u = Math.min(1, f.t / f.life), e = 1 - (1 - u) * (1 - u);
+      f.s.scale.setScalar(f.s0 + (f.s1 - f.s0) * e);
+      f.s.position.x += f.vx * dt; f.s.position.y += f.vy * dt; f.s.position.z += f.vz * dt;
+      f.vx *= 1 - Math.min(1, dt * 2.5); f.vz *= 1 - Math.min(1, dt * 2.5);
+      f.s.material.opacity = f.op * (u < 0.15 ? u / 0.15 : 1 - (u - 0.15) / 0.85);
+      if (u >= 1) { scene.remove(f.s); f.s.material.dispose(); fx.splice(i, 1); }
+    }
   }
   function breakSafe(b) {
     b.dead = true;
