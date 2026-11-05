@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v172</div>
+  <div id="ver">v173</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1831,7 +1831,7 @@
   let visFrame = 0;
   const kept = [];
   function drawVision(eyes) {
-    if ((visFrame++ & 1) && !visDirty) return;   // 시야 어둠은 두 프레임에 한 번만 다시 그린다 (v172) — 그 사이 움직임은 0.1칸도 안 된다
+    // v173: 두 프레임에 한 번 그리기는 뺐다 — 어둠 가장자리가 덜그덕거렸다. 시야 어둠은 다시 매 프레임
     visDirty = false;
     let n = 0;
     kept.length = 0;
