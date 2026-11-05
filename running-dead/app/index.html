@@ -187,7 +187,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v241</div>
+  <div id="ver">v242</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -541,7 +541,8 @@
   const buildings = BUILDINGS.map((s) => {
     const B = { x0: s.x - s.w / 2, z0: s.z - s.d / 2, x1: s.x + s.w / 2, z1: s.z + s.d / 2, kinds: s.kinds, station: !!s.station, big: !!s.big, local: s.local, block: s.block };
     const side2 = (side) => { const nx = side === 'e' ? 1 : side === 'w' ? -1 : 0, nz = side === 's' ? 1 : side === 'n' ? -1 : 0; return { side, cx: nx > 0 ? B.x1 : nx < 0 ? B.x0 : s.x, cz: nz > 0 ? B.z1 : nz < 0 ? B.z0 : s.z, nx, nz, tx: -nz, tz: nx }; };
-    B.locks = (s.locks || []).map(side2);   // 잠긴 문 (v239)
+    B.side = !s.locks;                      // v242: 경찰서가 아닌 건물 = 정문 말고 다른 벽 중 하나에 판마다 랜덤으로 쪽문 (잠김)
+    B.locks = (s.locks || ['n', 'e', 's', 'w'].filter((d) => !s.doors.includes(d))).map(side2);   // 잠긴 문 (v239) — 쪽문 후보는 정문 없는 벽 전부, 판마다 하나만 문이 되고 나머지는 벽
     B.doors = s.doors.map((side) => {        // 문 = 그 벽 한가운데. n = 바깥쪽, t = 벽을 따라가는 쪽
       const nx = side === 'e' ? 1 : side === 'w' ? -1 : 0, nz = side === 's' ? 1 : side === 'n' ? -1 : 0;
       return { side, cx: nx > 0 ? B.x1 : nx < 0 ? B.x0 : s.x, cz: nz > 0 ? B.z1 : nz < 0 ? B.z0 : s.z, nx, nz, tx: -nz, tz: nx };
@@ -604,7 +605,8 @@
     const mesh = flat(along[0], along[1], L.cx, L.cz, lockMat, -0.504);
     const bar = new THREE.Mesh(new THREE.PlaneGeometry(L.nz ? DOOR * 0.8 : WALL * 0.8, L.nz ? WALL * 0.8 : DOOR * 0.8).rotateX(-Math.PI / 2), lockBarMat);
     bar.position.y = 0.001; bar.renderOrder = -0.503; mesh.add(bar);
-    L.obj = { kind: 'obj', type: 'door', B, L, seg, mesh, foot: new THREE.Vector3(L.cx, 0, L.cz), hp: 0, maxHp: 0, dead: false };
+    const fill = B.side ? flat(L.nz ? DOOR + WALL : WALL, L.nz ? WALL : DOOR + WALL, L.cx, L.cz, wallMat, -0.505) : null;   // 쪽문이 안 된 자리는 그냥 벽으로 보인다
+    L.obj = { kind: 'obj', type: 'door', B, L, seg, mesh, fill, foot: new THREE.Vector3(L.cx, 0, L.cz), hp: 0, maxHp: 0, dead: false, off: false };
     objs.push(L.obj);
   }
 
@@ -3111,7 +3113,7 @@
   function nearObj(z) {
     let best = null, bd = Infinity;
     for (const o of objs) {
-      if (o.dead) continue;
+      if (o.dead || o.off) continue;
       if (o.type === 'car' ? z.space : (z.space && z.space !== o.B)) continue;   // 차는 밖에서만, 문은 그 경찰서 밖이나 안에서
       const g = objGap(o, z);
       if (g > (z === me ? z.sense : OBJ_SEE) || g >= bd) continue;   // v241: 나는 다른 타겟과 똑같이 내 인지거리로 알아챈다 (동료만 1.5배 근접 거리)
@@ -3155,9 +3157,14 @@
       if (!walls.includes(o.seg)) walls.push(o.seg);
       if (!B.walls.includes(o.seg)) B.walls.push(o.seg);
       const k = B.doors.indexOf(o.L); if (k >= 0) B.doors.splice(k, 1);
-      o.mesh.visible = true; o.dead = false; o.hp = o.maxHp = OBJ_HP;
+      o.mesh.visible = true; o.dead = false; o.hp = o.maxHp = B.side ? POLICE_HP : OBJ_HP;   // 쪽문 체력 = 경찰과 같음 (v242), 경찰서 문 = 경찰의 5배
+      o.off = false; if (o.fill) o.fill.visible = false;
       if (!o.hpBar) addHpBar(o, hpFoeMat);
       o.hpBar.visible = false; o.hpDisp = o.hp;
+    }
+    for (const B of buildings) if (B.side) {   // v242: 건물마다 쪽문 자리 하나만 랜덤으로 — 나머지 후보는 벽 (부술 수도 없다)
+      const on = B.locks[Math.floor(Math.random() * B.locks.length)];
+      for (const L of B.locks) if (L !== on) { L.obj.off = true; L.obj.mesh.visible = false; L.obj.fill.visible = true; }
     }
     for (const f of fx) scene.remove(f.s);
     fx.length = 0;
