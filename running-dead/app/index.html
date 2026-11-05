@@ -97,13 +97,12 @@
   #goal .g3 { margin-top: 14px; display: flex; justify-content: center; gap: 22px; font: 900 40px/1 var(--font); color: #d58cff; text-shadow: 0 0 10px rgba(180, 78, 230, 0.9), 0 2px 4px #000; }   /* 경찰서 수만큼 느낌표 (v214) */
   #goal .g1 { font: 600 14px/1 var(--font); color: rgba(255, 255, 255, 0.8); letter-spacing: 2px; }
   #goal .g2 { margin-top: 10px; padding: 0 16px; font: 900 34px/1.2 var(--font); color: #fff; text-shadow: 0 0 14px #b44ee6, 0 3px 8px rgba(0, 0, 0, 0.8); word-break: keep-all; }
-  #tut { position: absolute; inset: 0; z-index: 22; background: rgba(0, 0, 0, 0.45); display: flex; flex-direction: column; align-items: center; box-sizing: border-box; touch-action: none; }   /* 처음 만난 적 소개 (v202) — 누르면 닫힘 */
-  #tut .who { width: 86px; height: 86px; border-radius: 50%; box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.85), 0 8px 24px rgba(0, 0, 0, 0.6); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }
-  #tut .bang { font: 900 92px/1 var(--font); color: #b44ee6; text-shadow: 0 0 18px rgba(180, 78, 230, 0.9); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }
-  #tut .nm { margin-bottom: 18px; font: 900 36px/1 var(--font); text-shadow: 0 0 2px #000, 0 3px 10px rgba(0, 0, 0, 0.9); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }   /* 이름 (v204) */
-  #tut .say { margin-top: 22px; padding: 0 24px; font: 800 24px/1.35 var(--font); color: #fff; text-align: center; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); word-break: keep-all; }
-  #tut .tb { position: absolute; left: 0; right: 0; top: calc(7% + env(safe-area-inset-top, 0px)); display: flex; flex-direction: column; align-items: center; }   /* v219: 소개는 위쪽, 대상은 화면 가운데 */
-  #tut .close { position: absolute; left: 50%; top: 61%; transform: translateX(-50%); padding: 12px 40px; border: 0; border-radius: 12px; background: rgba(255, 255, 255, 0.92); color: #15151c; font: 800 17px/1 var(--font); }   /* 닫기 (v216) */
+  #tut { position: absolute; inset: 0; z-index: 22; box-sizing: border-box; touch-action: none; }   /* 처음 만난 적 소개 (v202) — v220: 바탕은 .dim 캔버스 (대상 자리만 뚫려 있다) */
+  #tut .dim { position: absolute; inset: 0; width: 100%; height: 100%; animation: tutdim 0.25s ease-out both; }
+  @keyframes tutdim { from { opacity: 0; } }
+  #tut .nm { position: absolute; left: 0; right: 0; text-align: center; font: 900 36px/1 var(--font); text-shadow: 0 0 2px #000, 0 3px 10px rgba(0, 0, 0, 0.9); animation: tutpop 0.35s cubic-bezier(.2,1.6,.4,1); }   /* 이름 (v204) */
+  #tut .say { position: absolute; left: 0; right: 0; padding: 0 24px; font: 800 24px/1.35 var(--font); color: #fff; text-align: center; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); word-break: keep-all; }
+  #tut .close { position: absolute; left: 50%; transform: translateX(-50%); padding: 12px 40px; border: 0; border-radius: 12px; background: rgba(255, 255, 255, 0.92); color: #15151c; font: 800 17px/1 var(--font); }   /* 닫기 (v216) */
   #tut .h { margin-top: 14px; font: 600 13px/1 var(--font); color: rgba(255, 255, 255, 0.65); }
   @keyframes tutpop { 0% { transform: scale(0.2); } 100% { transform: scale(1); } }
   .hold { position: absolute; z-index: 40; width: 96px; height: 96px; margin: -48px 0 0 -48px;   /* v215: 1.5배 */ border-radius: 50%; pointer-events: none;
@@ -178,7 +177,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v219</div>
+  <div id="ver">v220</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -553,6 +552,19 @@
     scene.add(m);
     return m;
   }
+  const BANG_W = 1.2, BANG_H = 2.4, LABEL_DZ = 2.2;   // 경찰서 지붕 가운데 느낌표 판 크기 (유닛), 그때 '경찰서' 글씨는 이만큼 남쪽(화면 아래)으로 (v220)
+  let bangFill = 1;                           // 느낌표 글자가 판 높이에서 차지하는 비율
+  const bangCv = (() => {                     // 화면 가장자리 경찰서 표시와 같은 보라 느낌표 + 검은 테두리
+    const c = document.createElement('canvas'); c.width = 128; c.height = 256;
+    const g = c.getContext('2d');
+    g.font = '900 220px system-ui, -apple-system, "Segoe UI", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.lineJoin = 'round';
+    const m = g.measureText('!'), y = 128 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;   // 글자를 판 한가운데에
+    g.lineWidth = 20; g.strokeStyle = 'rgba(0, 0, 0, 0.85)'; g.strokeText('!', 64, y);
+    g.fillStyle = '#b44ee6'; g.fillText('!', 64, y);
+    bangFill = Math.min(1, (m.actualBoundingBoxAscent + m.actualBoundingBoxDescent + 20) / 256);
+    return c;
+  })();
+  const bangTex = new THREE.CanvasTexture(bangCv); bangTex.colorSpace = THREE.SRGBColorSpace;
   const roofMat = flatMat(0x202020), wallMat = flatMat(0x2b2b2b), doormatMat = flatMat(0xd9b45a);
   const stationRoofMat = flatMat(0x1c2747), stationDownMat = flatMat(0x3b1f1f);   // 경찰서 지붕 = 짙은 남색, 파괴되면 짙은 붉은색 (v113)
   for (const B of buildings) {
@@ -566,6 +578,11 @@
       B.label.position.set((B.x0 + B.x1) / 2, 0.06, (B.z0 + B.z1) / 2);
       B.label.renderOrder = -0.508;
       scene.add(B.label);
+      B.bang = new THREE.Mesh(new THREE.PlaneGeometry(BANG_W, BANG_H), new THREE.MeshBasicMaterial({ map: bangTex, transparent: true, depthTest: false, depthWrite: false }));   // 지붕 가운데 느낌표 (v220) — 안 부서진 동안 늘 있고, 지붕이 열리면 같이 사라진다
+      B.bang.quaternion.copy(camera.quaternion);
+      B.bang.position.set((B.x0 + B.x1) / 2, 0.06, (B.z0 + B.z1) / 2);
+      B.bang.renderOrder = -0.507;            // 어둠 위 (어둠 속에서도 보인다)
+      scene.add(B.bang);
     }   // 좀비가 아무도 안 들어간 건물 안 = 어둠 (시야 밖 바닥과 같은 색, 문 너머로도 안 보인다)
     for (const D of B.doors) flat(D.tx ? DOOR : 0.35, D.tz ? DOOR : 0.35, D.cx + D.nx * 0.4, D.cz + D.nz * 0.4, doormatMat, -0.65);
   }
@@ -2150,6 +2167,7 @@
       B.open = eyes.some((z) => z.space === B);
       B.roof.visible = !B.open;
       if (B.label) B.label.visible = !B.open;
+      if (B.bang) { B.bang.visible = !B.open && !B.down; B.label.position.z = B.bang.position.z + (B.down ? 0 : LABEL_DZ); }   // 느낌표가 있는 동안 글씨는 그 밑에, 파괴되면 느낌표는 사라지고 글씨는 가운데로 (v220)
     }
     updateViewRect();
     drawVision(eyes);
@@ -3088,7 +3106,7 @@
     guard: { col: '#ff8c1a', name: '헬창', say: '깝침' },
     attacker: { col: '#c62828', name: '만두귀', say: '좀 침' },
     police: { col: '#8e24aa', name: '짭새', say: '권법 씀' },
-    station: { bang: true, say: '경찰서 !! 깝치면 개털림' },
+    station: { say: '경찰서 !! 깝치면 개털림' },   // v220: 경찰서는 지붕 가운데 느낌표가 대상
   };
   let goalShown = false, tutOpen = false, spawnFrames = 0, mmBang = false;
   const tutSeen = {}, tutQueue = [];
@@ -3099,7 +3117,7 @@
       if (!tutSeen[k]) { tutSeen[k] = true; tutQueue.push({ k, x: b.foot.x, z: b.foot.z, b }); }   // 처음 본 자리 (v216 — 카메라가 그리로 간다)
     }
     const S = !tutSeen.station && stations.find((S) => S.found);
-    if (S) { tutSeen.station = true; tutQueue.push({ k: 'station', x: (S.x0 + S.x1) / 2, z: (S.z0 + S.z1) / 2 }); }
+    if (S) { tutSeen.station = true; tutQueue.push({ k: 'station', x: (S.x0 + S.x1) / 2, z: (S.z0 + S.z1) / 2, S }); }
   }
   function showGoal() {                       // 시작 목표 — 위쪽에 크게, [확인]을 누를 때까지 멈춰 있다 (v218)
     goalShown = true; tutOpen = true; paused = true; stopInput();
@@ -3155,16 +3173,44 @@
     place(); draw(0); renderer.render(scene, camera);
     if (u >= 1) { camAnim = null; if (a.done) a.done(); }
   }
+  const tV = new THREE.Vector3(), tQ = new THREE.Vector3(), RIGHT = new THREE.Vector3(1, 0, 0);   // 카메라는 고개만 숙였으니 화면 오른쪽 = 세상 +x
+  function toStage(v) {                       // 세상 점 → 무대 위 화면 자리 (px)
+    tV.copy(v).project(camera);
+    const r = canvas.getBoundingClientRect(), s = stage.getBoundingClientRect();
+    return [r.left - s.left + (tV.x + 1) / 2 * r.width, r.top - s.top + (1 - tV.y) / 2 * r.height];
+  }
   function showTut(item) {
     tutOpen = true; paused = true; stopInput();
-    const d = TUT[item.k];
-    const b = item.b, h = b ? (b.halfH || RADIUS) : 0;              // 사람은 원 한가운데, 경찰서는 바닥 한가운데
-    const o = centerOn((b ? b.foot.x : item.x) + UP.x * h, UP.y * h, (b ? b.foot.z : item.z) + UP.z * h);
-    panCam(o.x, o.z, () => {   // 발견한 게 화면 정가운데 오게 (v219)
+    const d = TUT[item.k], b = item.b, S = item.S;
+    const P = S ? S.bang.position.clone()     // 경찰서 = 지붕 가운데 느낌표, 사람 = 그 원 한가운데
+      : new THREE.Vector3(b ? b.foot.x : item.x, 0, b ? b.foot.z : item.z).addScaledVector(UP, b ? (b.halfH || RADIUS) : RADIUS);
+    const o = centerOn(P.x, P.y, P.z);
+    panCam(o.x, o.z, () => {   // 발견한 게 화면 정가운데 → 바탕이 어두워지는데 대상만 그 위로 밝게 남는다 (v220)
+      const [cx, cy] = toStage(P);
+      const hw = toStage(tQ.copy(P).addScaledVector(RIGHT, S ? BANG_W / 2 : RADIUS))[0] - cx;   // 대상의 화면 반너비·반높이 (px)
+      const hh = cy - toStage(tQ.copy(P).addScaledVector(UP, S ? BANG_H / 2 : RADIUS))[1];
       const ov = document.createElement('div');
       ov.id = 'tut';
-      ov.innerHTML = '<div class="tb">' + (d.name ? `<div class="nm" style="color:${d.col}">${d.name} 발견!!!</div>` : '') + (d.bang ? '<div class="bang">!</div>' : `<div class="who" style="background:${d.col}"></div>`) + `<div class="say">${d.say}</div></div><button class="close">닫기</button>`;   // 위: 소개 / 가운데: 진짜 대상 / 아래: 닫기 (v219)
+      ov.innerHTML = '<canvas class="dim"></canvas>' + (d.name ? `<div class="nm" style="color:${d.col}">${d.name} 발견!!!</div>` : '') + `<div class="say">${d.say}</div><button class="close">닫기</button>`;   // 팝업 속 원(사람) 아이콘은 뺐다 — 진짜 대상이 그 자리
       stage.appendChild(ov);
+      const W = ov.clientWidth, H = ov.clientHeight, k = Math.min(window.devicePixelRatio || 1, 2);
+      const dc = ov.querySelector('.dim'), g = dc.getContext('2d');
+      dc.width = Math.round(W * k); dc.height = Math.round(H * k);
+      g.scale(k, k);
+      g.fillStyle = 'rgba(0, 0, 0, 0.45)'; g.fillRect(0, 0, W, H);   // 어두운 바탕 (전과 같은 진하기)
+      g.globalCompositeOperation = 'destination-out';                  // 대상 모양대로 뚫는다 → 그 자리는 안 어두워져 바탕 위로 올라온 것처럼 보인다
+      if (S) g.drawImage(bangCv, cx - hw, cy - hh, hw * 2, hh * 2);
+      else { g.fillStyle = '#000'; g.beginPath(); g.arc(cx, cy, hw + 0.5, 0, Math.PI * 2); g.fill(); }   // 불투명으로 칠해야 끝까지 뚫린다
+      const gh = S ? hh * bangFill : hh;      // 글자는 판보다 작다 — 실제 보이는 높이 기준으로 띄운다
+      const nm = ov.querySelector('.nm'), say = ov.querySelector('.say'), btn = ov.querySelector('.close');
+      if (S) {                                // 경찰서: 설명은 느낌표 위 (아래엔 지붕 '경찰서' 글씨가 있다), 닫기는 그 글씨 밑
+        say.style.bottom = (H - (cy - gh - 26)) + 'px';
+        btn.style.top = Math.max(cy + gh + 38, toStage(tQ.set(P.x, 0.06, P.z + LABEL_DZ + 0.9))[1] + 22) + 'px';
+      } else {                                // 사람: 이름은 원 위, 설명은 원 아래, 닫기는 그 밑
+        if (nm) nm.style.bottom = (H - (cy - gh - 26)) + 'px';
+        say.style.top = (cy + gh + 38) + 'px';
+        btn.style.top = (cy + gh + 38 + say.offsetHeight + 26) + 'px';
+      }
       const block = (e) => { e.stopPropagation(); e.preventDefault(); };
       ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
       ov.addEventListener('pointerdown', (e) => {
