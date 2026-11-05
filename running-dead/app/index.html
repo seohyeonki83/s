@@ -187,7 +187,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v227</div>
+  <div id="ver">v228</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2802,20 +2802,15 @@
     vest: { icon: '🦺', name: '방탄복', passive: true },                         // 패시브 (v201) — 총알 피해 30% 감소, 똑똑한 두뇌마다 10% 더
   };
   const STUN_T = 4, CASH_N = 3, CASH_R = [1, 2], CASH_GET = 0.7;   // v195: 감전 2 → 4초, 돈다발 뿌리는 거리 2~4 → 1~2칸
-  function itemDesc(kind) {                   // 획득할 때 뜨는 자세한 설명 + 똑똑한 두뇌가 오르면 어떻게 바뀌나 (v226). n = 지금 두뇌 레벨
-    const n = up.brain, d = ITEM[kind];
-    const lines = {
-      taser: [`누르면 내 인지거리 안의 적에게 전기를 쏜다`, `맞은 적은 ${STUN_T}초 동안 감전 — 꼼짝 못 하고 공격도 못 한다 (때리기는 된다)`, `위험한 적부터 맞힌다: 짭새 → 만두귀 → 헬창 → 좃밥, 같으면 가까운 순`, `이미 감전 중인 적은 건너뛴다`, `${d.max}발까지 모아 두고, 한 발 다시 차는 데 ${d.reload}초`],
-      cash: [`누르면 내 둘레 ${CASH_R[0]}~${CASH_R[1]}칸에 돈다발을 뿌린다`, `돈다발을 본 사람은 정신이 팔려 그쪽으로 달려간다`, `달려가는 동안엔 맞아도 정신 안 차린다 — 보이는 돈다발이 다 없어져야 풀린다`, `달려가는 사람은 무게가 나의 1.5배라 잘 안 밀린다`, `사람이 돈다발에 닿으면 주워 가서 사라진다`, `${d.max}번 쓰고, 다시 차는 데 ${d.reload}초`],
-      vest: [`늘 입고 있다 — 누를 필요 없다`, `경찰 총알 피해를 ${vestPct(n)}% 줄인다`, `왼쪽 아래에 지금 줄여 주는 양이 보인다`],
+  function itemDesc(kind) {                   // 획득할 때 뜨는 설명 (v228: 사용자가 정한 문구 그대로)
+    const t = {
+      vest: ['총알 데미지를 감소시킵니다.', '똑똑한 두뇌가 오르면 총알 데미지 감소율이 올라갑니다.'],
+      taser: ['대상을 감전시킵니다.', '똑똑한 두뇌가 올라가면 감전 대상이 늘어납니다.'],
+      cash: ['인간들이 정신 못 차립니다.', '똑똑한 두뇌 강화 시 더 많은 돈을 뿌리고 더 많은 인간들이 몰려듭니다.'],
     }[kind];
-    const upLine = {
-      taser: `한 발에 맞히는 적 <b>1 + 레벨당 1명</b> (지금 ${1 + n}명 → 다음 ${2 + n}명)`,
-      cash: `뿌리는 돈다발 <b>1 + 레벨당 1개</b> (지금 ${1 + n}개 → 다음 ${2 + n}개)<br>사람들이 알아채는 거리 <b>레벨당 +10%</b> (지금 +${n * 10}% → 다음 +${(n + 1) * 10}%)`,
-      vest: `총알 피해 감소 <b>레벨당 +10%, 최대 90%</b> (지금 ${vestPct(n)}% → 다음 ${vestPct(n + 1)}%)`,
-    }[kind];
-    return `<ul>${lines.map((l) => `<li>${l}</li>`).join('')}</ul><div class="up">🧠 똑똑한 두뇌가 오르면<br>${upLine}</div>`;
+    return `<div>${t[0]}</div><div class="up">🧠 ${t[1]}</div>`;
   }
+
   const SLOT_A = [45, 15, 75], SLOT_R = 125;   // 버튼 자리 = 조이스틱 가운데에서 이 각도(오른쪽 0°, 위 90°)·거리(px)
   let items = [], itemOrder = [], safesBroken = 0, paused = false, acqOpen = false, starAnim = false, shownStars = 0;
   const pendingAward = [];
