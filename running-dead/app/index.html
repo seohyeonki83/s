@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v163</div>
+  <div id="ver">v164</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -204,7 +204,7 @@
   const STATION_IN = 14, STATION_OUT = 2, STATION_FRONT = 1;   /* v162: 안 20 → 14 (30% 줄임) */   /* v157: 안 20 · 바깥 3 (둘레 2·앞마당 1), 다시 채우기 없음. 바깥 경찰 피해 합이 경찰 체력의 1/10을 넘을 때마다 호출 → 안에서 1~2명 출동 */ const STATION_OUT_MIN = 3; //   /* v147에 20% 줄임 (15·10·5 → 12·8·4) */ //   // 경찰서 안에 상주 · 둘레 배회 · 앞마당 배회(v115) — 출동하지 않는다. 안의 15명이 전부 감염되면 경찰서 파괴
   const AROUND_MIX = (i) => ['', 'guard', 'attacker', i % 2 ? 'attacker' : 'guard'];   // 시민 건물 i번 둘레에 흩어 두는 사람 — 일반 1 · 수비형·공격형 1~2 (v118에 전부 절반: 건물 3채 합쳐 일반 3 · 수비형 5 · 공격형 4)
   const PATROL_AT = [[-16 * 0.8, -4 * 0.8], [16 * 0.8, -4 * 0.8]];   /* v144·v145: 자리 20% 좁힘 (POS) */ //   // 동네마다 길거리 순찰 경찰 두 명의 자리 (동네 가운데 기준, 건물·시작 자리 피해서) — 동네 다섯 개 × 2 = 10명 (v134)
-  const SAFE_R = 10;                // 판을 깔 때 내 시작 자리 둘레 이만큼 안(건물 밖)에는 아무도 안 둔다 (v115)
+  const START_COP_CLEAR = 15;       // 내 시작 자리 (v164) — 마을 안 아무 데나(건물 밖). 경찰·경찰서는 이만큼 안에 없고, 시민(일반·수비형·공격형)은 내 인지거리 밖이면 가까워도 된다
   // 경찰차 — 네모(앞이 있다). 좀비를 보기(경찰 시야) 전엔 서지 않는다: 사건 자리들을 가까운 곳부터 차례로 돌고, 더 없으면 주인공 쪽으로 (v116).
   //   좀비를 보면 바로 서서 양옆 문으로 경찰이 내리고, 그 뒤엔 그 자리에 계속 서 있다. 시야는 안 가리지만 몸은 막는다 (부딪히면 밀려난다)
   const CAR_SPEED = MY_SPEED * 1.5; // 내 속도의 1.5배 (v113에 3배 → v116에 절반)
@@ -253,7 +253,7 @@
   // 시험 판 — 시민 묶음 = 활동 영역 하나에 다섯 명. 처음 내 자리를 둘러싼 원 위에 북쪽부터 시계 방향으로 고르게 놓는다
   const AREA = 7 * MAP;   // 활동 영역 한 변 (유닛)
   const GROUP_DIST = 24 * MAP * POS;   // 묶음 가운데 ~ 처음 내 자리 거리 (이웃 영역 사이 최소 약 4.5칸)
-  const GROUPS = ['nn', 'gn', 'nna', 'an', 'gn', 'nn', 'gn', 'nna', 'an', 'ga'];   /* v155: 일반 +2 (18 → 20) */ //   /* v152: 일반 +2 (동네마다 12 → 14). v153: 일반 +4 (14 → 18) */ //   /* v143: 일반 +2 · 수비형 +1 · 공격형 +1 (빈 묶음 채움). v146: 공격형 1 → 일반 (동네마다 일반 11→12, 공격형 12→11) */ //   // 묶음 구성 — n 일반 · g 수비형 · a 공격형 ('' = 빈 묶음, 안 깐다). v118에 전부 절반: 일반 6 → 3 · 수비형 5 → 3 · 공격형 8 → 4
+  const GROUPS = ['nn', 'gnn', 'nna', 'ann', 'gnn', 'nn', 'gnn', 'nna', 'an', 'ga'];   /* v164: 일반 +4 (마을마다 20 → 24) */ //   /* v155: 일반 +2 (18 → 20) */ //   /* v152: 일반 +2 (동네마다 12 → 14). v153: 일반 +4 (14 → 18) */ //   /* v143: 일반 +2 · 수비형 +1 · 공격형 +1 (빈 묶음 채움). v146: 공격형 1 → 일반 (동네마다 일반 11→12, 공격형 12→11) */ //   // 묶음 구성 — n 일반 · g 수비형 · a 공격형 ('' = 빈 묶음, 안 깐다). v118에 전부 절반: 일반 6 → 3 · 수비형 5 → 3 · 공격형 8 → 4
   const GROUP_TYPE = { n: '', g: 'guard', a: 'attacker' };
 
   // 건물 — 벽으로 둘러싼 네모, 문으로만 드나든다. 안에서는 밖을, 밖에서는 안을 못 본다.
@@ -2166,10 +2166,10 @@
     me.attack = ATTACK;
     me.tick = 0;
     me.pick = null;
-    const placeOut = (area) => {            // 영역 안 빈 자리 — 내 시작 자리에서 SAFE_R 밖, 다른 사람과 1.2칸 넘게 (못 찾으면 null)
+    me.foot.set(1e5, 0, 1e5);                // 사람들을 다 깐 다음에 내 자리를 고른다 (v164) — 그동안은 지도 밖에
+    const placeOut = (area) => {            // 영역 안 빈 자리 — 다른 사람과 1.2칸 넘게 (못 찾으면 null)
       for (let t = 0; t < 80; t++) {
         const g = pickGoal(area);
-        if (Math.hypot(g.x - me.foot.x, g.y - me.foot.z) < SAFE_R) continue;
         if (bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2)) continue;
         return g;
       }
@@ -2232,6 +2232,30 @@
         S.members.push(c); c.lastHp = c.hp;
       }
     }
+    placeMe();
+  }
+  // 내 시작 자리 (v164): 마을 다섯 곳 중 아무 데나 (건물 밖, 벽에서 1.5칸 넘게).
+  //   경찰서·경찰은 START_COP_CLEAR(15칸) 안에 없어야 하고, 밖에 있는 시민(일반·수비형·공격형)은 내 인지거리 밖이면 된다
+  function placeMe() {
+    const clear = (x, z, B, m) => Math.hypot(Math.max(B.x0 - x, 0, x - B.x1), Math.max(B.z0 - z, 0, z - B.z1)) >= m;   // 네모 B에서 m 넘게 떨어졌나
+    for (let t = 0; t < 5000; t++) {
+      const [ox, oz] = BLOCKS[Math.floor(Math.random() * BLOCKS.length)];
+      const x = ox + rand(-19, 19), z = oz + rand(-38, 18);   // 그 마을 안 (북쪽 경찰서 쪽은 아래에서 걸러진다)
+      if (x < MM.x0 + 2 || x > MM.x1 - 2 || z < MM.z0 + 2 || z > MM.z1 - 2) continue;   // 지도(미니맵) 밖 X
+      if (!buildings.every((B) => clear(x, z, B, 1.5))) continue;
+      if (!stations.every((S) => clear(x, z, S, START_COP_CLEAR))) continue;
+      let ok = true;
+      for (const b of bodies) {
+        if (b === me || b.kind !== 'citizen') continue;
+        const d = Math.hypot(b.foot.x - x, b.foot.z - z);
+        if (b.police ? d < START_COP_CLEAR : (!b.space && d < me.sense)) { ok = false; break; }
+      }
+      if (!ok) continue;
+      me.foot.set(x, 0, z);
+      me.space = null;
+      return;
+    }
+    me.foot.set(0, 0, 0); me.space = spaceOf(0, 0);   // 못 찾으면 (거의 없음) 예전 자리
   }
   // 경찰서 호출 (v157) — 바깥 경찰(처음 3명 + 출동해 나온 경찰)이 잃은 피를 다 더해서 경찰 체력의 1/10을 넘을 때마다 한 번.
   //   호출마다 안의 경찰 1명이 (v160) 다친 경찰 자리로 뛰어나와 바깥 경찰이 된다. 안에 좀비가 있거나 안 인원이 3명 이하면 무시.
