@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v267</div>
+  <div id="ver">v268</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -865,7 +865,7 @@
     c.marked = false;                    // 좀비가 덮치는 중 → 머리 위 !!!
     c.arrow = new THREE.Mesh(arrowGeo, arrowMat);
     c.arrow.position.z = 0.01;           // 원 바로 앞 (카메라 쪽)
-    c.mesh.add(c.arrow);
+    // v268: 원 안 화살표는 안 붙인다 (완전히 뺐다)
     c.icon = new THREE.Sprite(new THREE.SpriteMaterial({ map: ICONS['?'], transparent: true, depthTest: false, depthWrite: false }));
     c.icon.renderOrder = UI;
     c.icon.visible = false;
