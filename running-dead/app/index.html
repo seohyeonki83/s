@@ -127,7 +127,7 @@
   <canvas id="view"></canvas>
   <canvas id="smell"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v196</div>
+  <div id="ver">v197</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2875,7 +2875,7 @@
         shownStars = idx + 1; drawStars(); const el = starSlots()[idx]; el.classList.remove('hit'); el.getBoundingClientRect(); el.classList.add('hit');
         starAnim = false;
       }, 190);
-    }, 320);
+    }, 960);                                  // 크게 떠 있는 시간 0.32 → 0.96초 (v197에 3배)
   }
   function uiTick() {                         // 매 프레임 (멈춰 있어도): 줄 서 있는 연출을 하나씩
     if (acqOpen || starAnim) return;
