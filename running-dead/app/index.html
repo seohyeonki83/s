@@ -102,6 +102,9 @@
   #tut .say { margin-top: 38px; padding: 0 24px; font: 800 24px/1.35 var(--font); color: #fff; text-align: center; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8); word-break: keep-all; }
   #tut .h { margin-top: 14px; font: 600 13px/1 var(--font); color: rgba(255, 255, 255, 0.65); }
   @keyframes tutpop { 0% { transform: scale(0.2); } 100% { transform: scale(1); } }
+  .hold { position: absolute; z-index: 40; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; pointer-events: none;
+    background: conic-gradient(#ffffff calc(var(--p) * 1%), rgba(255, 255, 255, 0.18) 0); box-shadow: 0 0 12px rgba(0, 0, 0, 0.5); }   /* 꾹 누르기 원 게이지 (v212) */
+  .hold::after { content: ''; position: absolute; inset: 7px; border-radius: 50%; background: rgba(20, 20, 26, 0.85); }
   #smell { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }   /* 후각 표시 (v180) — 게임 화면 위, 다른 UI 아래 */
   #joy {
     position: absolute; left: 50%; bottom: calc(56px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; width: 124px; height: 124px; margin-left: -62px;
@@ -171,7 +174,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v211</div>
+  <div id="ver">v212</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2969,16 +2972,41 @@
   }
   // 획득 연출: 일시정지 → 반투명 바탕 위에 큰 기술 그림 + 글자 → 화면을 누르면 바탕이 사라지고 그림이 버튼 자리로 날아가 박힘 → 다시 움직임
   function stopInput() { pid = null; joy.classList.remove('on'); knob.style.transform = 'translate(0px, 0px)'; move.set(0, 0); }
+  // 꾹 눌러 닫기 (v212): 누르면 그 자리에 원 게이지가 뜨고 1초 동안 차오르면 done. 중간에 떼면 취소
+  const HOLD_T = 1.0;
+  function holdToClose(ov, done) {
+    let ring = null, t0 = 0, raf = 0, pidH = null, fired = false;
+    const block = (e) => { e.stopPropagation(); e.preventDefault(); };
+    const cancel = () => { if (ring) ring.remove(); ring = null; pidH = null; cancelAnimationFrame(raf); };
+    const tick = () => {
+      if (!ring || fired) return;
+      const p = Math.min(1, (performance.now() - t0) / 1000 / HOLD_T);
+      ring.style.setProperty('--p', Math.round(p * 100));
+      if (p >= 1) { fired = true; ring.remove(); ring = null; done(); return; }
+      raf = requestAnimationFrame(tick);
+    };
+    ov.addEventListener('pointerdown', (e) => {
+      block(e);
+      if (fired || pidH !== null) return;
+      pidH = e.pointerId;
+      try { ov.setPointerCapture(pidH); } catch (_) {}
+      const sr = stage.getBoundingClientRect();
+      ring = document.createElement('div'); ring.className = 'hold';
+      ring.style.left = (e.clientX - sr.left) + 'px'; ring.style.top = (e.clientY - sr.top) + 'px'; ring.style.setProperty('--p', 0);
+      stage.appendChild(ring);
+      t0 = performance.now();
+      raf = requestAnimationFrame(tick);
+    });
+    ov.addEventListener('pointermove', block);
+    for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) ov.addEventListener(ev, (e) => { block(e); if (e.pointerId === pidH && !fired) cancel(); });
+  }
   function showAward(kind) {
     acqOpen = true; paused = true; stopInput();
     const d = ITEM[kind], ov = document.createElement('div');
     ov.id = 'acq';
-    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name} 획득</div><div class="h">화면을 누르세요</div>`;
+    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name} 획득</div><div class="h">화면을 꾹 누르세요</div>`;
     stage.appendChild(ov);
-    const block = (e) => { e.stopPropagation(); e.preventDefault(); };
-    ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
-    ov.addEventListener('pointerdown', (e) => {
-      block(e);
+    holdToClose(ov, () => {                   // 1초 꾹 누르면 (v212)
       if (ov.dataset.done) return;
       ov.dataset.done = '1';
       let it = null;
@@ -3069,11 +3097,11 @@
     tutOpen = true; paused = true; stopInput();
     const d = TUT[k], ov = document.createElement('div');
     ov.id = 'tut';
-    ov.innerHTML = (d.name ? `<div class="nm" style="color:${d.col}">${d.name} 발견!!!</div>` : '') + (d.bang ? '<div class="bang">!</div>' : `<div class="who" style="background:${d.col}"></div>`) + `<div class="say">${d.say}</div><div class="h">화면을 누르세요</div>`;
+    ov.innerHTML = (d.name ? `<div class="nm" style="color:${d.col}">${d.name} 발견!!!</div>` : '') + (d.bang ? '<div class="bang">!</div>' : `<div class="who" style="background:${d.col}"></div>`) + `<div class="say">${d.say}</div><div class="h">화면을 꾹 누르세요</div>`;
     stage.appendChild(ov);
     const block = (e) => { e.stopPropagation(); e.preventDefault(); };
     ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
-    ov.addEventListener('pointerdown', (e) => { block(e); ov.remove(); tutOpen = false; paused = false; last = 0; });
+    holdToClose(ov, () => { ov.remove(); tutOpen = false; paused = false; last = 0; });   // 1초 꾹 누르면 닫힘 (v212)
   }
   function uiTick() {                         // 매 프레임 (멈춰 있어도): 줄 서 있는 연출을 하나씩
     if (acqOpen || starAnim || lvOpen || victoryOn || tutOpen) return;
