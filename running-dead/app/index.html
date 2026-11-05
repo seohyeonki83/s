@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v253</div>
+  <div id="ver">v254</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1237,9 +1237,8 @@
     {                                         // v252: 총구 불꽃(노랑, 아주 잠깐, UI 빼고 맨 위) + 반동(뒤로 팍 밀렸다가 천천히 제자리)
       const dx = z.foot.x - c.foot.x, dz = z.foot.z - c.foot.z, d = Math.hypot(dx, dz) || 1, ux = dx / d, uz = dz / d;
       const mx = c.foot.x + ux * RADIUS * 0.95, mz = c.foot.z + uz * RADIUS * 0.95;   // v253: 경찰 몸 테두리에 딱 붙여서
-      const f1 = puff(mx, 0, mz, 0xffc400, 1.8, 3.0, 0.09, 0, 0, 0, 1);   // v253: 크기 2배
-      const f2 = puff(mx, 0, mz, 0xfff6c0, 0.9, 1.6, 0.07, 0, 0, 0, 1);
-      for (const f of [f1, f2]) { f.s.position.addScaledVector(UP, RADIUS); f.s.renderOrder = UI - 0.5; f.s.material.opacity = 1; f.peak = true; }
+      const f1 = puff(mx, 0, mz, 0xfff23a, 1.0, 1.0, 0.07, 0, 0, 0, 1);   // v254: 뿌연 번짐 없이 아주 밝은 노란 원이 딱 깜빡 (크기 2/3)
+      f1.s.material.map = flashTex; f1.s.position.addScaledVector(UP, RADIUS); f1.s.renderOrder = UI - 0.5; f1.s.material.opacity = 1; f1.peak = true; f1.blink = true;
       c.recoilT = 0; c.recoilX = -ux; c.recoilZ = -uz;
     }
     landHit(c, z, z === me && hasVest ? POLICE_DAMAGE * (1 - vestPct(up.brain) / 100) : POLICE_DAMAGE);   // 방탄복 — 내 총알 피해 감소 (v201)
@@ -3234,6 +3233,7 @@
     g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
     return new THREE.CanvasTexture(c);
   })();
+  const flashTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.beginPath(); g.arc(32, 32, 30, 0, Math.PI * 2); g.fill(); return new THREE.CanvasTexture(c); })();   // 테두리 또렷한 원 (v254 총구 불꽃)
   const fx = [];
   function puff(x, y, z, color, s0, s1, life, vx, vy, vz, op, delay = 0) {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: fxTex, color, transparent: true, depthTest: false, depthWrite: false, opacity: 0 }));
@@ -3262,7 +3262,7 @@
       f.s.scale.setScalar(f.s0 + (f.s1 - f.s0) * e);
       f.s.position.x += f.vx * dt; f.s.position.y += f.vy * dt; f.s.position.z += f.vz * dt;
       f.vx *= 1 - Math.min(1, dt * 2.5); f.vz *= 1 - Math.min(1, dt * 2.5);
-      f.s.material.opacity = f.peak ? f.op * (1 - u) : f.op * (u < 0.15 ? u / 0.15 : 1 - (u - 0.15) / 0.85);   // 총구 불꽃은 처음부터 가장 밝게 (v252)
+      f.s.material.opacity = f.blink ? f.op : f.peak ? f.op * (1 - u) : f.op * (u < 0.15 ? u / 0.15 : 1 - (u - 0.15) / 0.85);   // 총구 불꽃은 처음부터 가장 밝게 (v252)
       if (u >= 1) { scene.remove(f.s); f.s.material.dispose(); fx.splice(i, 1); }
     }
   }
