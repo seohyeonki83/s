@@ -56,6 +56,7 @@
   .fly { position: absolute; z-index: 21; pointer-events: none; line-height: 1; transform: translate(-50%, -50%); }
   #stars .s { display: inline-block; width: 0.62em; font-weight: 900; text-align: center; font-size: 22px; }   /* v193: 수배 단계 = 보라 느낌표 */
   #stars .s.off { opacity: 0.3; }
+  #stars .lv { display: block; margin-top: 2px; min-height: 11px; font: 800 11px/1 var(--font); font-style: normal; color: #e2c2fb; }   /* 수배 단계 이름 (v194) */
   #stars .s.hit { animation: starhit 0.2s ease-out; }
   @keyframes starhit { 0% { transform: scale(1.9); } 60% { transform: scale(0.85); } 100% { transform: scale(1); } }
   #smell { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }   /* 후각 표시 (v180) — 게임 화면 위, 다른 UI 아래 */
@@ -126,7 +127,7 @@
   <canvas id="view"></canvas>
   <canvas id="smell"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v193</div>
+  <div id="ver">v194</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1444,9 +1445,13 @@
   }
 
   function updateStars() {}                   // v190: 별은 연출이 끝난 만큼만 채운다 (drawStars)
-  function drawStars() {                      // 위 가운데: 수배 별 — 하나씩 따로 (연출이 박히는 자리)
-    if (starsEl.children.length !== STAR_MAX) starsEl.innerHTML = '<span class="s">!</span>'.repeat(STAR_MAX);   // v193: 별 → 느낌표
-    for (let i = 0; i < STAR_MAX; i++) starsEl.children[i].classList.toggle('off', i >= shownStars);
+  const LEVEL_NAME = ['수상함', '난리남', '개판', '계엄', '데프콘'];   // 수배 단계 이름 (v194) — 느낌표 아래 작게
+  const starSlots = () => starsEl.querySelectorAll('.s');
+  function drawStars() {                      // 위 가운데: 수배 느낌표 — 하나씩 따로 (연출이 박히는 자리) + 아래에 지금 단계 이름
+    if (starSlots().length !== STAR_MAX) starsEl.innerHTML = '<span class="s">!</span>'.repeat(STAR_MAX) + '<i class="lv"></i>';   // v193: 별 → 느낌표
+    const sl = starSlots();
+    for (let i = 0; i < STAR_MAX; i++) sl[i].classList.toggle('off', i >= shownStars);
+    starsEl.querySelector('.lv').textContent = shownStars ? LEVEL_NAME[shownStars - 1] : '';
   }
   const starsEl = document.getElementById('stars');
   let starsShown = '';
@@ -2849,14 +2854,23 @@
     fly.className = 'fly'; fly.textContent = '!'; fly.style.fontWeight = '900';
     Object.assign(fly.style, { left: '50%', top: '16%', fontSize: '10px', color: '#b44ee6', textShadow: '0 2px 8px rgba(0,0,0,0.7)', transition: 'font-size 0.15s ease-out' });
     stage.appendChild(fly);
-    fly.getBoundingClientRect(); fly.style.fontSize = '64px';
+    const tag = document.createElement('div');   // 단계 이름 — 느낌표 아래에 같이 크게 떴다가, 위쪽 느낌표 아래 자리로 작게 박힌다 (v194)
+    tag.className = 'fly'; tag.textContent = LEVEL_NAME[idx];
+    Object.assign(tag.style, { left: '50%', top: 'calc(16% + 48px)', fontSize: '8px', fontWeight: '800', color: '#e2c2fb', textShadow: '0 2px 6px rgba(0,0,0,0.8)', whiteSpace: 'nowrap', transition: 'font-size 0.15s ease-out' });
+    stage.appendChild(tag);
+    fly.getBoundingClientRect(); fly.style.fontSize = '64px'; tag.style.fontSize = '24px';
     setTimeout(() => {
-      const slot = starsEl.children[idx], r = slot.getBoundingClientRect();
+      const slot = starSlots()[idx], r = slot.getBoundingClientRect();
+      const lvEl = starsEl.querySelector('.lv'); lvEl.style.visibility = 'hidden'; lvEl.textContent = LEVEL_NAME[idx];   // 이름이 박힐 자리
+      const lr = lvEl.getBoundingClientRect();
+      tag.style.transition = 'left 0.18s ease-in, top 0.18s ease-in, font-size 0.18s ease-in';
+      tag.style.left = (lr.left + lr.width / 2 - sr.left) + 'px'; tag.style.top = (lr.top + lr.height / 2 - sr.top) + 'px'; tag.style.fontSize = '11px';
       fly.style.transition = 'left 0.18s ease-in, top 0.18s ease-in, font-size 0.18s ease-in';
       fly.style.left = (r.left + r.width / 2 - sr.left) + 'px'; fly.style.top = (r.top + r.height / 2 - sr.top) + 'px'; fly.style.fontSize = '19px';
       setTimeout(() => {
         fly.remove();
-        shownStars = idx + 1; drawStars(); const el = starsEl.children[idx]; el.classList.remove('hit'); el.getBoundingClientRect(); el.classList.add('hit');
+        tag.remove(); starsEl.querySelector('.lv').style.visibility = '';
+        shownStars = idx + 1; drawStars(); const el = starSlots()[idx]; el.classList.remove('hit'); el.getBoundingClientRect(); el.classList.add('hit');
         starAnim = false;
       }, 190);
     }, 320);
