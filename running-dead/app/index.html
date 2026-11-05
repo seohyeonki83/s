@@ -41,6 +41,7 @@
   }
   #stage { position: fixed; inset: 0; overflow: hidden; touch-action: none; }   /* 받은 화면 전체를 게임으로 — 아래 빈 띠가 안 남게 (v128) */
   #view { display: block; width: 100%; height: 100%; }
+  #smell { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }   /* 후각 표시 (v180) — 게임 화면 위, 다른 UI 아래 */
   #joy {
     position: absolute; left: 50%; bottom: calc(56px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; width: 124px; height: 124px; margin-left: -62px;
     border: 2px solid var(--joy-ring); border-radius: 50%; background: var(--joy-fill); pointer-events: none;
@@ -106,8 +107,9 @@
 
 <div id="stage">
   <canvas id="view"></canvas>
+  <canvas id="smell"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v179</div>
+  <div id="ver">v180</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2597,7 +2599,73 @@
     updateMinimap(dt);
     updateCmd(dt);
     place();
+    updateSmell();
     renderer.render(scene, camera);
+  }
+
+  // ── 후각 (v180) — 나만 가진다. 내 인지거리 밖 ~ 그 1.5배 안의 사람을 원으로 알려 준다 ──
+  //   원 자리 = 그 사람 쪽 방향으로 내 인지거리 테두리 위 (화면 밖이면 화면 가장자리에 걸친다)
+  //   원 색 = 종류, 크기 = 인원 (1명 1배 ~ 10명 3.5배, 그 위로는 안 커진다). 같은 종류 원끼리 겹치면 가운데 한 원으로 합친다
+  //   15명 넘게 합쳐지면 크기가 고정된 느낌표로
+  const SMELL_K = 1.5, SMELL_R = 7, SMELL_MAX = 3.5, SMELL_BANG = 15, SMELL_GAP = 26;   // 후각 거리 배율, 1배 원 반지름(px), 최대 배율, 느낌표 인원, 원 사이가 이만큼(px)보다 가까우면 합친다
+  const smellEl = document.getElementById('smell'), smellCtx = smellEl.getContext('2d');
+  const smellCol = { citizen: '#ffcf33', guard: '#ff8c1a', attacker: '#c62828', police: '#8e24aa' };
+  const smBuf = [], sV = new THREE.Vector3();
+  const smellR = (n) => SMELL_R * (1 + (SMELL_MAX - 1) * (Math.min(n, 10) - 1) / 9);
+  function toScreen(x, z, W, H) { sV.set(x, 0, z).project(camera); return [(sV.x + 1) / 2 * W, (1 - sV.y) / 2 * H]; }
+  function updateSmell() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2), W = smellEl.clientWidth, H = smellEl.clientHeight;
+    if (smellEl.width !== Math.round(W * dpr) || smellEl.height !== Math.round(H * dpr)) { smellEl.width = Math.round(W * dpr); smellEl.height = Math.round(H * dpr); }
+    smellCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    smellCtx.clearRect(0, 0, W, H);
+    if (!isZombie(me) || !W) return;
+    const R0 = me.sense, R1 = me.sense * SMELL_K, mx = me.foot.x, mz = me.foot.z;
+    camera.updateMatrixWorld();
+    const [ox, oy] = toScreen(mx, mz, W, H);
+    let marks = [];
+    for (const c of nearIn(cCells, mx, mz, R1, smBuf)) {
+      if (c.kind !== 'citizen') continue;
+      const dx = c.foot.x - mx, dz = c.foot.z - mz, d = Math.hypot(dx, dz);
+      if (d <= R0 || d > R1) continue;
+      const type = c.police ? 'police' : c.attacker ? 'attacker' : c.guard ? 'guard' : 'citizen';
+      let [x, y] = toScreen(mx + dx / d * R0, mz + dz / d * R0, W, H);   // 인지거리 테두리 위 그 방향
+      const m = smellR(1) + 4;
+      if (x < m || x > W - m || y < m || y > H - m) {   // 화면 밖 → 나에서 그쪽으로 그은 선이 화면 가장자리에 닿는 곳
+        const vx = x - ox, vy = y - oy;
+        let t = 1;
+        if (vx < 0) t = Math.min(t, (m - ox) / vx); if (vx > 0) t = Math.min(t, (W - m - ox) / vx);
+        if (vy < 0) t = Math.min(t, (m - oy) / vy); if (vy > 0) t = Math.min(t, (H - m - oy) / vy);
+        x = ox + vx * t; y = oy + vy * t;
+      }
+      marks.push({ x, y, n: 1, type });
+    }
+    for (let merged = true; merged; ) {       // 같은 종류 원끼리 겹치면 가운데로 합친다 (인원 비율대로)
+      merged = false;
+      for (let i = 0; i < marks.length && !merged; i++) for (let j = i + 1; j < marks.length; j++) {
+        const a = marks[i], b = marks[j];
+        if (a.type !== b.type) continue;
+        if (Math.hypot(a.x - b.x, a.y - b.y) >= smellR(a.n) + smellR(b.n) + SMELL_GAP) continue;
+        const n = a.n + b.n;
+        marks[i] = { x: (a.x * a.n + b.x * b.n) / n, y: (a.y * a.n + b.y * b.n) / n, n, type: a.type };
+        marks.splice(j, 1);
+        merged = true;
+        break;
+      }
+    }
+    for (const k of marks) {
+      const r = k.n >= SMELL_BANG ? 14 : smellR(k.n) + 2;   // 화면 밖으로 잘리지 않게 안쪽으로
+      k.x = Math.max(r, Math.min(W - r, k.x)); k.y = Math.max(r, Math.min(H - r, k.y));
+      if (k.n >= SMELL_BANG) {                // 15명 넘게 = 느낌표 (크기 고정)
+        smellCtx.font = '900 26px ' + getComputedStyle(document.body).fontFamily;
+        smellCtx.textAlign = 'center'; smellCtx.textBaseline = 'middle';
+        smellCtx.lineWidth = 4; smellCtx.strokeStyle = 'rgba(0, 0, 0, 0.85)'; smellCtx.strokeText('!', k.x, k.y);
+        smellCtx.fillStyle = smellCol[k.type]; smellCtx.fillText('!', k.x, k.y);
+        continue;
+      }
+      smellCtx.beginPath(); smellCtx.arc(k.x, k.y, smellR(k.n), 0, Math.PI * 2);
+      smellCtx.fillStyle = smellCol[k.type]; smellCtx.globalAlpha = 0.85; smellCtx.fill(); smellCtx.globalAlpha = 1;
+      smellCtx.lineWidth = 1.5; smellCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; smellCtx.stroke();
+    }
   }
 
   let last = 0;
