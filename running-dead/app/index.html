@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v249</div>
+  <div id="ver">v250</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -612,7 +612,7 @@
   }
   for (const [ax, az, bx, bz] of walls) flat(Math.abs(bx - ax) + WALL, Math.abs(bz - az) + WALL, (ax + bx) / 2, (az + bz) / 2, wallMat, -0.505);   // 벽은 어둠 위에 그린다 — 시야 가장자리가 벽 모서리와 딱 맞게
   // 잠긴 문 (v239) — 문 자리를 막는 벽 한 토막 + 철문 그림. 좀비가 부수면(체력 = 경찰의 10배) 벽이 사라지고 드나드는 문이 된다
-  const lockMat = flatMat(0x6f7f9e), lockBarMat = flatMat(0x3c4660);
+  const lockMat = flatMat(0x111111), lockBarMat = flatMat(0x111111);   // v250: 잠긴 문도 밝은 철문 대신 검은 실루엣 (문틀과 같은 색)
   const objs = [];                            // 부술 수 있는 사물: 잠긴 문 · 서 있는 경찰차
   for (const B of buildings) for (const L of B.locks) {
     const h = DOOR / 2, seg = L.nz ? [L.cx - h, L.cz, L.cx + h, L.cz] : [L.cx, L.cz - h, L.cx, L.cz + h];
