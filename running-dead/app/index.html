@@ -176,7 +176,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v223</div>
+  <div id="ver">v224</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3101,13 +3101,25 @@
   };
   let goalShown = false, tutOpen = false, spawnFrames = 0, mmBang = false;
   const tutSeen = {}, tutQueue = [];
-  function checkTut() {                       // 처음으로 시야에 들어온 종류 → 소개 줄 세우기
+  // 발견 기준 = 내 시야만 (v224) — 동료 좀비 시야는 안 친다. 내 인지거리 안 + 벽에 안 가림 (닫힌 건물 안은 안 보인다)
+  function iSee(b) {
+    if (!isZombie(me) || (b.space && !b.space.open)) return false;
+    return Math.hypot(b.foot.x - me.foot.x, b.foot.z - me.foot.z) <= me.sense && !blocked(me.foot.x, me.foot.z, b.foot.x, b.foot.z);
+  }
+  function iSeeStation(S) {                   // 경찰서 = 바깥 벽에서 나와 가장 가까운 점이 내 인지거리 안 + 다른 건물 벽에 안 가림
+    if (!isZombie(me)) return false;
+    const e = WALL / 2 + 0.05, mx = me.foot.x, mz = me.foot.z;
+    const px = Math.max(S.x0 - e, Math.min(S.x1 + e, mx)), pz = Math.max(S.z0 - e, Math.min(S.z1 + e, mz));
+    return Math.hypot(px - mx, pz - mz) <= me.sense && !blocked(mx, mz, px, pz);
+  }
+  function checkTut() {                       // 처음으로 내 시야에 들어온 종류 → 소개 줄 세우기
     for (const b of bodies) {
-      if (b.kind !== 'citizen' || !b.mesh.visible || b.offView) continue;
+      if (b.kind !== 'citizen') continue;
       const k = b.police ? 'police' : b.attacker ? 'attacker' : b.guard ? 'guard' : 'citizen';
-      if (!tutSeen[k]) { tutSeen[k] = true; tutQueue.push({ k, x: b.foot.x, z: b.foot.z, b }); }   // 처음 본 자리 (v216 — 카메라가 그리로 간다)
+      if (tutSeen[k] || !iSee(b)) continue;
+      tutSeen[k] = true; tutQueue.push({ k, x: b.foot.x, z: b.foot.z, b });   // 처음 본 자리 (v216 — 카메라가 그리로 간다)
     }
-    const S = !tutSeen.station && stations.find((S) => S.found);
+    const S = !tutSeen.station && stations.find((S) => !S.down && iSeeStation(S));   // 미니맵 '찾음'(동료 시야 포함)과는 따로 — 내가 봐야 발견 (v224)
     if (S) { tutSeen.station = true; tutQueue.push({ k: 'station', x: (S.x0 + S.x1) / 2, z: (S.z0 + S.z1) / 2, S }); }
   }
   function showGoal() {                       // 시작 목표 — 위쪽에 크게, [확인]을 누를 때까지 멈춰 있다 (v218)
