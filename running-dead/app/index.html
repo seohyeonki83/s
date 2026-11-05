@@ -127,7 +127,7 @@
   <canvas id="view"></canvas>
   <canvas id="smell"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v197</div>
+  <div id="ver">v198</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2423,7 +2423,7 @@
     addHpBar(me, hpOurMat);
     me.hpBar.scale.set(1.2, 3, 1);   // v136에 가로 20% 늘림   // v76에 1.5배 더 두껍게 (늘 떠 있다)                    // 내 체력바는 두 배 두껍고, 다른 바·표시보다 늘 위에 그린다 (섞여도 보이게)
     for (const m of me.hpBar.children) m.renderOrder += UI_ME - UI;   // 내 체력바 = 내 UI 층 (다른 UI보다 위)
-    me.sense = SIGHT * rand(0.9, 1.1);       // 좀비 인지거리 = 시민의 시야
+    me.sense = SIGHT;                        // 좀비 인지거리 = 시야 기준 7.2로 고정 (v198 — 전엔 판마다 ±10%). 동료도 이 값
     me.speed = MY_SPEED;                     // 이동 속도 (동료와 같다)
     me.attack = ATTACK;
     me.tick = 0;
