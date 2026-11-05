@@ -1,0 +1,2334 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>러닝데드 이동 테스트</title>
+<style>
+  /* 한 화면짜리 테스트 — 캔버스가 화면을 꽉 채우고, 누른 자리에만 조이스틱이 뜬다 (궁수의 전설식) */
+  :root {
+    --ground: #999999;                     /* 유니티 테스트 바닥 (0.6 회색) */
+    --joy-fill: rgba(255, 255, 255, 0.16);
+    --joy-ring: rgba(255, 255, 255, 0.7);
+    --knob: rgba(255, 255, 255, 0.92);
+    --label: rgba(0, 0, 0, 0.38);
+    --near: #7fd4ff;                       /* 근접 거리 원 */
+    --domain: #4d7cff;                     /* 지배 거리 원 (실선) */
+    --fight: #ff7a59;                      /* 공격 지배 거리 원 (점선) */
+    --btn-bg: rgba(20, 22, 26, 0.5);
+    --btn-fg: #ffffff;
+    --note-bg: rgba(20, 22, 26, 0.82);
+    --note-fg: #ffffff;
+    --font: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+  html { box-sizing: border-box; height: 100%; overflow: hidden; }
+  body {
+    height: 100%; margin: 0; overflow: hidden;
+    background: #1f1f23; font-family: var(--font);   /* 게임 밖으로 보이는 데가 있어도 어둡게 (v128) */
+    touch-action: none; overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+  }
+  #stage { position: fixed; inset: 0; overflow: hidden; touch-action: none; }   /* 받은 화면 전체를 게임으로 — 아래 빈 띠가 안 남게 (v128) */
+  #view { display: block; width: 100%; height: 100%; }
+  #joy {
+    position: absolute; left: 50%; bottom: calc(56px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; width: 124px; height: 124px; margin-left: -62px;
+    border: 2px solid var(--joy-ring); border-radius: 50%; background: var(--joy-fill); pointer-events: none;
+    opacity: 0.55; transition: opacity 0.12s;   /* 화면 아래 가운데 고정 — 안 만질 땐 흐리게 (v96) */
+  }
+  #joy.on { opacity: 1; }
+  #knob {
+    position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px;
+    border-radius: 50%; background: var(--knob);
+  }
+  #ver {
+    position: absolute; top: calc(8px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));   /* 전체 화면일 때 노치·상태 표시줄 아래로 (v127) */
+    font: 600 12px/1 var(--font); color: rgba(255, 255, 255, 0.6); pointer-events: none;   /* 시야 밖이 어두워서 밝은 글씨 */
+  }
+  #stars {   /* 수배 별 + 다음 출동까지 (v113) */
+    position: absolute; top: calc(6px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none;
+    font: 700 19px/1 var(--font); color: #ffd34d; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); white-space: nowrap;
+  }
+  #stars i { display: block; margin-top: 4px; font: 600 11px/1 var(--font); font-style: normal; color: rgba(255, 255, 255, 0.75); }
+  #minimap {   /* 미니맵 (v123) — 지도 전체. 못 가 본 곳은 까맣게, 가 본 곳은 흐리게, 지금 보이는 곳은 밝게. 경찰서(보라)·나(빨강)만 표시 */
+    position: absolute; top: calc(6px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px));   /* '처음부터' 버튼이 있던 자리로 (v130) */
+    width: 85px; height: 91px; border-radius: 5px; outline: 1px solid rgba(255, 255, 255, 0.25);   /* 크기는 지도 비율에 맞춰 스크립트가 정한다 */
+    background: #24242a; pointer-events: none;   /* 못 가 본 곳 — v129에 반투명으로 했다가 밝은 바닥 위에서 가 본 곳과 구분이 안 돼서 v140에 다시 불투명 (v125 색) */
+  }
+  #legend {
+    position: absolute; top: calc(50px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));   /* 위 가운데 수배 별과 안 겹치게 (v113) */
+    display: flex; align-items: center; gap: 5px;
+    font: 600 12px/1 var(--font); color: rgba(255, 255, 255, 0.75); pointer-events: none;   /* 어둠 위라 밝은 글씨 */
+  }
+  #legend i { display: inline-block; width: 16px; height: 3px; border-radius: 2px; }
+  #legend .near { background: var(--near); }
+  #legend .domain { background: var(--domain); }
+  #legend .fight { height: 0; border-top: 3px dashed var(--fight); border-radius: 0; }
+  #legend .gap { margin-left: 6px; }
+  #reset {   /* 오른쪽 아래 (v130) */
+    position: absolute; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+    padding: 7px 11px; border: 0; border-radius: 8px;
+    background: var(--btn-bg); color: var(--btn-fg); font: 600 13px/1 var(--font);
+    touch-action: manipulation; cursor: pointer;
+  }
+  #cmd {   /* 명령 컨트롤키 — 이동 조이스틱의 오른쪽 위에 붙은 작은 조이스틱. 엄지 하나로 둘 다 닿게 (v100)
+              이동 조이스틱 가운데(아래 가운데, 바닥에서 118px)에서 오른쪽 92px · 위 92px = 이 키 가운데 → 두 원 사이 30px */
+    position: absolute; left: calc(50% + 54px); bottom: calc(172px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box; width: 76px; height: 76px;
+    border: 2px solid var(--joy-ring); border-radius: 50%; background: var(--joy-fill);
+    opacity: 0.55; transition: opacity 0.12s; touch-action: none; cursor: pointer;
+  }
+  #cmd.on { opacity: 1; }
+  #cmd::after {   /* 명령 쿨타임 — 남은 만큼 어둡게 덮고, 다 차면 걷힌다 (v102) */
+    content: ''; position: absolute; inset: -2px; border-radius: 50%; pointer-events: none;
+    background: conic-gradient(rgba(10, 10, 12, 0.62) calc(var(--cd, 0) * 360deg), transparent 0);
+  }
+  #cmdKnob {
+    position: absolute; left: 50%; top: 50%; width: 32px; height: 32px; margin: -16px 0 0 -16px;
+    border-radius: 50%; background: var(--knob); pointer-events: none;
+  }
+  #note {
+    position: absolute; top: 40%; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+    padding: 12px 14px; border-radius: 10px; background: var(--note-bg); color: var(--note-fg);
+    font: 600 15px/1.5 var(--font); text-align: center; word-break: keep-all;
+  }
+</style>
+
+<div id="stage">
+  <canvas id="view"></canvas>
+  <div id="joy"><div id="knob"></div></div>
+  <div id="ver">v160</div>
+  <div id="stars"></div>
+  <canvas id="minimap"></canvas>
+  <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
+  <div id="note" hidden></div>
+</div>
+<button id="reset" type="button">처음부터</button>
+<div id="cmd" role="button" aria-label="명령 컨트롤키"><div id="cmdKnob"></div></div>
+
+<script>
+  // 폰에서 하얀 화면만 보이지 않게 — 불러오기 실패·실행 오류를 화면 가운데에 글로 띄운다
+  (function () {
+    var note = document.getElementById('note');
+    var LOAD_FAIL = '3D 도구를 못 불러왔어. 인터넷 연결을 확인하고 새로고침해 줘.';
+    function show(text) { note.textContent = text; note.hidden = false; }
+    window.addEventListener('error', function (e) {
+      if (e.target && e.target.tagName === 'SCRIPT') { show(LOAD_FAIL); return; }
+      var m = e.message || '';
+      if (m.indexOf('ResizeObserver') >= 0) return;   // 브라우저가 내는 무해한 경고
+      show('오류: ' + (m || '알 수 없음'));
+    }, true);
+    window.addEventListener('unhandledrejection', function (e) {
+      show('오류: ' + ((e.reason && e.reason.message) || e.reason));
+    });
+    setTimeout(function () { if (!window.__rdReady) show(LOAD_FAIL); }, 10000);
+  })();
+</script>
+
+<script type="module">
+  import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js';
+
+  // ── 값 — 감으로 바꿀 것들은 전부 여기 ──
+  // 카메라
+  const PITCH = 50;       // 카메라가 내려다보는 각 (유니티 카메라 X = 50)
+  const FOV = 40;         // 세로 시야각 (유니티와 같음)
+  const DIST = 77.175 * 0.8 * 0.75 * 0.8;   /* v142에 20% 더 당김 (46.3 → 37.0) */ //   // 카메라 ~ 나 거리 (유닛) — v26의 51.45에서 50% 뒤로, v122에 20% 당김, v140에 25% 더 당김 (약 46.3). 동료가 5명 넘으면 한 명마다 1%씩 뒤로 (armyK)
+  const SCREEN_Y = 0.40;  // 내 자리 = 화면 위에서 40% (가운데보다 살짝 위 — 아래는 엄지 자리)
+
+  // 나 (좀비) — 감염된 시민은 동료 좀비가 되어 손 뗀 나처럼 움직인다
+  const RADIUS = 0.5;     // 원 반지름 — 나·시민 전부 (지름 1유닛 = 유니티 큐브 한 변)
+  const MAP = 0.85;   /* 크기 배율 — 건물 크기·문 폭·활동 영역 크기 */ const POS = 0.8;   /* v145: 자리(점)만 20% 좁힘 — 건물·묶음·동네·순찰 위치. 크기는 그대로 */ //       // 맵 좌표 배율 — 건물 위치·크기·문 폭, 시민 묶음 위치·활동 영역, 경찰 출발 거리에 곱한다 (v82: v81에 이속을 15% 줄인 만큼 맵도 15% 좁힘. 캐릭터 크기·거리 능력치는 그대로)
+  const SPEED_BASE = 2.45 * 0.85; // 속도 기준 (유닛/초) — 모든 이동 속도(나·동료·시민·경찰)가 이걸로 정해진다. v81에 15% 줄임
+  const MY_SPEED = SPEED_BASE * 1.44 * 1.2 * 0.9;   // 조종하는 나
+  const SPEED = MY_SPEED; // 동료 좀비 이동 속도 = 나와 같게 (v68 — 전엔 SPEED_BASE × 1.2 × 1.1)
+  const JOY_R = 60;       // 조이스틱 반지름 (px) — 손잡이 가운데는 이 안에서만 움직인다
+  const DEAD = 8;         // 누른 자리에서 이만큼(px)은 끌어야 출발
+  const ATTACK = 3.24;    // 내 덮침 거리 — 타겟이 이 안에 있어야 덮칠 수 있다 (빨간 테두리)
+  const ALLY_ATTACK = ATTACK * 0.9;   // 동료 좀비 덮침 거리 = 나의 90%
+  const RAID = 1;         // 덮침 거리 밖 타겟에게 자동으로 달려갈 때 = 이동 속도 그대로 (v73에 되돌림)
+  const POUNCE = 6 * 0.7 * 0.7 * 0.7 * 1.3; // 습격(덮치기) 속도 = 자기 이동 속도의 6배에서 v65에 30%, v73에 30%씩 두 번 더 줄이고 v74에 30% 올림 (약 2.68배), 상대를 쫓아간다
+  const INFECT = 2.8 / 0.8;   // 감염 시간 (초) — 동료 기준, v70에 감염 속도 20% 느리게 (3.5초) — 이만큼 물고 버티면 감염 (물린 시민 머리 위 게이지)
+  const MY_INFECT = 2.5 / 1.2;  // 내 감염 속도 — v71에 동료의 2.5배, v95에 감염 시간 20% 늘림 (1.4초 → 1.68초)
+  const BITE_HEAL = 0.03;   // v95에 초당 3%로 — 동료
+  const MY_BITE_HEAL = BITE_HEAL * 1.3 * 1.1 * 1.1;   /* v149에 10% 올림 (초당 3.9% → 4.29%), v155에 10% 더 (→ 4.72%) */ //   // 내 흡혈 = 동료의 1.3배 (초당 3.9%, v120)
+  // 무는 동안 초당 최대 체력의 이만큼 회복 — 나·동료 전부 (v70)
+
+  // 싸움 — 수비형·공격형 시민·나·동료 좀비 같음. HP가 남은 시민은 바로 못 덮치고, 때려서 0을 만든 뒤 덮친다
+  const HP_MAX = 100;     // 체력 — 동료 좀비 (회복 없음)
+  const MY_HP = HP_MAX * 2 * 1.5 * 1.3 * 0.7 * 0.75 * 0.85 * 1.3;   // v75에 25%, v76에 15% 줄이고 v93에 30% 늘림 (약 226)
+  const ALLY_HP = HP_MAX * 0.9;   // 동료 좀비 체력 — v77에 10% 줄임 (90)
+  const MY_START_HP = 0.2;   /* v149에 두 배 (10% → 20%) */ //   // 시작할 때 내 체력 = 최대의 10% (v76)
+    // v70에 30% 줄임 (273) —   // 체력 — 조종하는 나 = 동료의 2배에서 v64에 150%, v65에 30% 더 (390, 회복 없음)
+  const GUARD_HP = 200;   // 체력 — 수비형·공격형 시민
+  const DAMAGE = 20 / 2 * 0.7;  // 공격력 — v66에 모든 캐릭터 절반, v71에 30% 더 줄임 (7)
+  const MY_DAMAGE = DAMAGE * 3 * 2 * 1.15;   // 내 공격력 = 3배 (v64), v67에 그 두 배, v120에 15% 더 (약 48.3)
+  const HIT_EVERY = 1 / 1.3;   // 공격 간격 (초) — v71에 공속 30% 올림 (약 0.77초)
+  const MELEE = 1.7;      // 근접 공격 거리 (원 중심끼리, 유닛) — v97에 1.0 → 1.7
+  const LUNGE = 0.35;     // 때릴 때 상대 쪽으로 살짝 붙는 거리 (유닛, 그림만)
+  const LUNGE_IN = 0.1;   // 붙는 시간 (초) — 붙는 순간 데미지가 들어간다
+  const LUNGE_OUT = 0.15; // 제자리로 돌아오는 시간 (초)
+  const GUARD_REACT = 0.3;   // 수비형·공격형·경찰이 싸우기 시작해서 처음 때리기까지 (초)
+  const GUARD_CLOSE = MELEE + 0.5;   // v97: 근접 거리 + 0.5 (전엔 1.0 + 0.5 = 1.5) — 근접 거리보다 늘 넉넉하게
+    // 수비형은 이 거리 안에서 자기를 노리는 좀비하고만 싸운다 — 밖에서 노리는 좀비는 빼고, 아무도 없으면 도망간다
+                             // 공격형은 때리던 상대가 이 밖으로 멀어지면 고정을 풀고 다시 가장 가까운 좀비를 쫓는다
+
+  // 경찰 — 공격형과 같은데(경계 뒤 패닉 대신 덤빔) 그 자리에서 총을 쏘고, HP 0이 돼도 계속 쏜다.
+  //   북쪽 경찰서에서 나온다 — 수배 별이 있으면 출동 간격마다 한 번 (아래 STAR·출동 값, v113)
+  const POLICE_HP = 300 * 0.7 * 0.8;   /* v147에 20% 줄임 (210 → 168) */ //      // 체력 — v63에 30% 줄임 (210)
+  const POLICE_DAMAGE = 50 / 2 * 0.7;   // 공격력 — v64에 50, v66에 절반, v71에 30% 줄임 (17.5). 사거리 = 자기 시야 (공격 간격·첫 공격까지 시간은 공격형과 같음)
+  const POLICE_PACE = 1.1 * 1.3;    // 경찰 이동 속도 = 시민의 이만큼 배 (출동해서 뛰기·걷기·배회 다) — v51에 1.1배, v56에 30% 더
+  const POLICE_ALERT = 1 / 3;       // 경찰 경계 시간 = 시민 경계 시간(ALERT_TIME)의 이만큼 — 좀비를 보고 더 빨리 쏘기 시작한다
+  const ARRIVE = 1.0;               // 사건 자리에 이만큼 다가가면 도착
+  const SHOT_FLASH = 0.15;          // 쏠 때 경찰 → 좀비로 노란 선이 번쩍이는 시간 (초)
+
+  // 수배 별·출동 (v113) — 감염된 사람 수(시민·경찰)에 따라 별이 붙는다: v135부터 늘어나는 양이 2.5배씩 — 5명 1개, 18명 2개, 49명 3개, 127명 4개, 322명 5개(최대). 별이 생기면 경찰서에서 출동 간격마다 한 번 출동한다.
+  //   출동 간격 = 별 1개 30초, 별 하나 늘 때마다 5초씩 짧게 (5개면 10초 — v118에 전부 5초씩 줄임). 한 번 출동 = 경찰 1~2명이 걸어서,
+  //   별 2개부터는 50% 확률로 경찰차 한 대(1~2명 탑승). 가는 곳 = 마지막 사건(감염) 자리. 경찰서가 파괴되면 더는 안 나온다.
+  const STAR_MAX = 5;
+  const STAR_BASE = 5, STAR_GROW = 2.5;   // 별 사이에 더 필요한 감염 수가 2.5배씩 늘어난다: +5, +12.5, +31, +78, +195 (v135)
+  const STAR_AT = (() => { let t = 0, d = STAR_BASE; return Array.from({ length: 5 }, () => { t += d; d *= STAR_GROW; return Math.round(t); }); })();   // [5, 18, 49, 127, 322]
+  const SORTIE_SENSE = 3, SORTIE_SENSE_T = 4;   // 경찰서 호출로 나온 경찰: 건물 밖으로 나오는 순간 인지거리·시야 3배 → 4초에 걸쳐 원래대로 (v158)
+  const DROP_SENSE = 2, DROP_SENSE_T = 3;   // 경찰차에서 내린 경찰: 인지거리가 순간 2배 → 3초에 걸쳐 원래대로 (v114)
+  const DISPATCH_T = (n) => 30 - 5 * (n - 1);   // 별 n개일 때 출동 간격 (초) — 30·25·20·15·10 (v118)
+  const STATION_IN = 20, STATION_OUT = 2, STATION_FRONT = 1;   /* v157: 안 20 · 바깥 3 (둘레 2·앞마당 1), 다시 채우기 없음. 바깥 경찰 피해 합이 경찰 체력의 1/10을 넘을 때마다 호출 → 안에서 1~2명 출동 */ const STATION_OUT_MIN = 3; //   /* v147에 20% 줄임 (15·10·5 → 12·8·4) */ //   // 경찰서 안에 상주 · 둘레 배회 · 앞마당 배회(v115) — 출동하지 않는다. 안의 15명이 전부 감염되면 경찰서 파괴
+  const AROUND_MIX = (i) => ['', 'guard', 'attacker', i % 2 ? 'attacker' : 'guard'];   // 시민 건물 i번 둘레에 흩어 두는 사람 — 일반 1 · 수비형·공격형 1~2 (v118에 전부 절반: 건물 3채 합쳐 일반 3 · 수비형 5 · 공격형 4)
+  const PATROL_AT = [[-16 * 0.8, -4 * 0.8], [16 * 0.8, -4 * 0.8]];   /* v144·v145: 자리 20% 좁힘 (POS) */ //   // 동네마다 길거리 순찰 경찰 두 명의 자리 (동네 가운데 기준, 건물·시작 자리 피해서) — 동네 다섯 개 × 2 = 10명 (v134)
+  const SAFE_R = 10;                // 판을 깔 때 내 시작 자리 둘레 이만큼 안(건물 밖)에는 아무도 안 둔다 (v115)
+  // 경찰차 — 네모(앞이 있다). 좀비를 보기(경찰 시야) 전엔 서지 않는다: 사건 자리들을 가까운 곳부터 차례로 돌고, 더 없으면 주인공 쪽으로 (v116).
+  //   좀비를 보면 바로 서서 양옆 문으로 경찰이 내리고, 그 뒤엔 그 자리에 계속 서 있다. 시야는 안 가리지만 몸은 막는다 (부딪히면 밀려난다)
+  const CAR_SPEED = MY_SPEED * 1.5; // 내 속도의 1.5배 (v113에 3배 → v116에 절반)
+  const CAR_ACCEL = 14, CAR_BRAKE = 8;    // 가속·감속 (유닛/초²) — v137: 서기로 하면 마지막 방향으로 미끄러지듯 천천히 선다 (전엔 감속 24)
+  const CAR_BRAKE_DELAY = 0.2;            // 서기로 한 뒤 이만큼은 속도 그대로 (살짝 늦게 밟는다)
+  const CAR_MASS = 10;                    // 경찰차 무게 = 몸 10개 — 몸 하나를 칠 때마다 최고 속도의 1/10씩 느려진다 (10명이면 선다)
+  const CAR_HIT_DMG = 50;                 // 최고 속도로 치면 데미지 50 — 속도에 비례, 서 있으면 0. 좀비·시민·경찰 모두 (v138)
+  const KNOCK = 2.2, KNOCK_T = 0.6;       // 치인 몸은 차 속도의 2.2배로 튕겨 날아간다 (최대 0.6초, 점점 느려짐)
+  const CAR_L = 2.8 * 0.8, CAR_W = 1.5 * 0.8;   /* v157에 20% 줄임 */ //   // 길이·폭 (유닛)
+
+  // 동료 좀비가 나를 따르는 거리
+  const NEAR = 3.24 * 1.15 * 1.1 * 0.8 * 0.8;   /* v151에 20% 더 줄임 (3.28 → 2.62) */ //   // v75에 15%, v76에 10% 올리고 v122에 20% 줄임 (약 3.28) — 동료 수에 따라 armyK배
+            // 근접 거리 (유닛) — 동료 좀비 자리 거리는 이 거리의 50~150%에서 매번 새로 뽑는다
+  const DOMAIN = 9 * 1.1 * 1.1 * 0.8 * 0.9 * 0.8 * 1.2 * 0.8;   // v75·v76에 10%씩 올리고 v78에 20%, v80에 10%, v86에 20% 줄이고 v112에 20% 늘리고 v122에 20% 줄임 (약 6.02) — 공격 지배 거리도 이 배수라 같이 줄어든다. 동료 수에 따라 armyK배
+  // 부대 크기 (v122) — 동료(감염시킨 좀비)가 5명 넘으면 한 명 늘 때마다 근접·지배·공격 지배 거리(명령 받는 범위·원이 밀리는 거리도)와 카메라 거리가 1%씩 커진다
+  const ARMY_FREE = 5, ARMY_STEP = 0.01;
+  let armyN = 0, armyK = 1;                   // 지금 동료 수, 배율 = 1 + (동료 수 − 5) × 1% (5명 이하면 1)
+  const DOMAIN_FIGHT = DOMAIN * 1.3 * 1.2 * 1.2 * 1.2 / 0.8 * 0.85;   // '공격 중'인 동료의 지배 거리 — 때리던 걸 웬만하면 마무리하고 오게 (v79에 1.3배, v83·v84·v85에 20%씩 더, v86에 기본만 20% 줄이고 이건 그대로, v87에 15% 줄임 → 기본의 약 2.39배, 약 15.0)
+  const ATTACK_HOLD = GUARD_CLOSE;    // '공격 중' = 근접 거리에 붙어 한 대라도 휘두른 뒤로, 상대가 이 거리(근접 + 0.5 = 2.2칸) 안에 있는 동안.
+                                      //   상대가 이 밖으로 벌어지거나(도망) 싸움을 그만두면(상대 HP 0 → 습격, 상대가 사라짐, 복귀 명령) 풀린다.
+                                      //   맞는 건 상관없다 — 다가가는 중·추적 중·떨어져서 맞기만 하는 중은 공격 중이 아니다
+             // 지배 거리 (유닛) — 시민을 쫓다 이 밖에 1~2초 넘게 있으면 복귀 명령
+  const ALLY_WALK = SPEED / 4; // 동료 좀비 배회 속도 = 이동 속도의 1/4
+  const WANDER_R = 1.0;        // 자리에 도착한 뒤 그 근처를 배회하는 거리 (유닛)
+  const SLOT_SPREAD = 0.8;     // 자리 방향 = 맡은 방향 칸 폭의 80% 안 (옆 동료 칸과 안 겹치게)
+  const RECALL_DELAY = [1, 2]; // 지배 거리 밖에 이만큼(초) 넘게 있으면 복귀 명령 — 나갈 때마다 이 사이에서 뽑는다
+
+  // 시민 (애니는 유니티로 옮긴 뒤 — 여기선 행동만)
+  const PANIC_SPEED = SPEED_BASE * 0.9 * 0.8 * 0.9; // 패닉 = 속도 기준의 90%에서 v48에 20%, v55에 10% 더 내림 (적 이동 속도는 전부 이 값에서 나온다 — 일반·배회·공격형 추격·경찰)
+  const WALK_SPEED = PANIC_SPEED / 2;   // 일반 = 패닉의 절반 — 활동 영역 밖에서 돌아갈 때
+  const CIT_WANDER = WALK_SPEED / 3;    // 배회 = 일반 속도의 1/3 — 활동 영역 안을 돌아다닐 때
+  const SENSE = 3.6;      // 인지거리 기준 (유닛) — 시민마다 ±10%
+  const SIGHT = SENSE * 2;              // 시야 기준 = 인지거리 2배 — 시민마다 ±10%. 좀비(나 포함)의 인지거리도 이 값
+  const ALERT_TIME = [1.4, 2.1];   // 경계가 이만큼 이어지면 패닉
+  const PANIC_TIME = [2.352, 3.92];   // 패닉 시간 — 좀비를 볼 때마다 처음부터
+  const REST_TIME = [2, 3];     // 멈춤 (헐떡임)
+  const IDLE_TIME = [1, 3];     // 일반: 한 자리에 서 있는 시간
+  const NOTICE = 0.6;     // 놀람 = 패닉에 들어갈 때 머리 위 ! 를 띄우는 시간 (멈칫 없이 바로 뛴다)
+  const TICK = 0.1;       // 주변 감지 간격 (초) — 시민·경찰 전부. v92에 0.2 → 0.1
+  const ZOMBIE_TICK = TICK; // 좀비(나·동료)가 타겟을 다시 고르는 간격 (초) — v91에 0.1, v92부터 모두 같은 틱
+  const LOOK = 1.5;       // 도망 방향 = 이만큼(초) 미리 뛰어 보고 고른다
+  const DIRS = 32;        // 미리 뛰어 볼 방향 수
+
+  const ACCEL = 20;       // 가감속 (유닛/초²) — 시민·나 같음. 나·동료 0.16초, 패닉 시민 0.07초쯤에 최고 속도
+
+  // 시험 판 — 시민 묶음 = 활동 영역 하나에 다섯 명. 처음 내 자리를 둘러싼 원 위에 북쪽부터 시계 방향으로 고르게 놓는다
+  const AREA = 7 * MAP;   // 활동 영역 한 변 (유닛)
+  const GROUP_DIST = 24 * MAP * POS;   // 묶음 가운데 ~ 처음 내 자리 거리 (이웃 영역 사이 최소 약 4.5칸)
+  const GROUPS = ['nn', 'gn', 'nna', 'an', 'gn', 'nn', 'gn', 'nna', 'an', 'ga'];   /* v155: 일반 +2 (18 → 20) */ //   /* v152: 일반 +2 (동네마다 12 → 14). v153: 일반 +4 (14 → 18) */ //   /* v143: 일반 +2 · 수비형 +1 · 공격형 +1 (빈 묶음 채움). v146: 공격형 1 → 일반 (동네마다 일반 11→12, 공격형 12→11) */ //   // 묶음 구성 — n 일반 · g 수비형 · a 공격형 ('' = 빈 묶음, 안 깐다). v118에 전부 절반: 일반 6 → 3 · 수비형 5 → 3 · 공격형 8 → 4
+  const GROUP_TYPE = { n: '', g: 'guard', a: 'attacker' };
+
+  // 건물 — 벽으로 둘러싼 네모, 문으로만 드나든다. 안에서는 밖을, 밖에서는 안을 못 본다.
+  //   화면엔 내가 있는 공간만 보인다 — 밖에 있으면 건물은 지붕으로 덮여 안이 안 보이고, 건물 안에 들어가면 그 건물만 지붕이 열리고 밖은 어둡게 가린다 (동료 좀비가 어디 있든 상관없다).
+  //   안 사람들의 활동 영역 = 건물 안 — 문 밖으로 나가면 풀린다
+  //   x·z = 가운데, w = 가로(동서), d = 세로(남북), doors = 문이 난 벽(n 북·e 동·s 남·w 서 — 벽마다 하나, 여러 벽 가능), kinds = 사람 수 (a 공격형 · g 수비형 · n 일반)
+  // 지도 = 동네 다섯 개 (v121) — v126부터 위 줄 2개 · 아래 줄 3개 (위 줄은 아래 줄 사이에 엇갈려 놓여 지도가 정사각형에 가깝다).
+  //   동네마다 지금까지의 한 판이 그대로: 시민 건물 3채·시민 묶음 10개·경찰서 1개(동네 북쪽). 그래서 밀집도는 그대로, 넓이·건물·시민·경찰서는 다섯 배
+  const BLOCK_X = 48 * 0.8, BLOCK_Z = 77 * 0.8;   /* v144·v145: 자리 20% 좁힘 (POS) */ //   // 동네 사이 간격 (유닛) — v125에 거의 붙게: 동네 하나가 동서 약 47 · 남북 약 75라 그보다 조금만 더 (v121엔 84·84)
+  const BLOCKS = [[0, 0], [-BLOCK_X / 2, -BLOCK_Z], [BLOCK_X / 2, -BLOCK_Z], [-BLOCK_X, 0], [BLOCK_X, 0]];   // 아래 가운데(시작) · 위 왼쪽 · 위 오른쪽 · 아래 왼쪽 · 아래 오른쪽
+  const TOWN = [       // 동네 하나 (가운데 = 그 동네 시작 자리)
+    { x: 0, z: -11, w: 14, d: 10, doors: ['s'], kinds: { a: 1, g: 1, n: 2 } },    // 대: 공격형 1 · 수비형 1 · 일반 2 (v118에 전부 절반)
+    { x: -10, z: 8, w: 11, d: 8, doors: ['e'], kinds: { g: 1, n: 1, a: 1 } },   /* v143에 공격형 +1 */           // 중: 수비형 1 · 일반 1
+    { x: 10, z: 8, w: 8, d: 6, doors: ['w'], kinds: { n: 1, g: 1 } },   /* v143에 수비형 +1 */                    // 소: 일반 1
+    { x: 0, z: -50, w: 14, d: 10, doors: ['s'], kinds: {}, station: true },        // 경찰서 (동네 북쪽, v113 · v115에 더 북쪽으로) — 경찰은 판 깔 때 따로 넣는다
+  ].map((s, i) => ({ ...s, x: s.x * MAP * POS, z: s.z * MAP * POS, w: s.w * MAP, d: s.d * MAP, local: i }));   // 위치·크기 다 MAP배 (사람 수는 그대로)
+  const BUILDINGS = BLOCKS.flatMap(([ox, oz], k) => TOWN.map((s) => ({ ...s, x: s.x + ox, z: s.z + oz, block: k })));
+  const DOOR = 4 * MAP;   // 문 폭 (유닛) — 문은 그 벽 한가운데. 여럿이 나란히 지나간다
+  const WALL_SENSE = 1 / 4;   // 도망칠 때 벽도 좀비처럼 피한다 — 가장 가까운 벽이 인지거리의 이만큼 안에 들어오면 (구석에 몰리지 않게)
+  const CORNER = 1.0;     // 패닉 중 건물 안 구석(두 벽 다 이 거리 안)에 몰리면 초패닉 — 좀비는 안 보고 문과 가까운 쪽으로 벽을 타고 돌아 문으로 나간다
+  const WALL = 0.25;      // 벽 두께 (그림만 — 부딪힘은 벽 한가운데 선에서 몸 반지름만큼)
+
+  const BODY = 0.4 * 2 / 3 * 1.5;   // 부딪힘 반지름 (원보다 작게 — 붙어 서면 겹쳐 보인다). v51에 1/3 줄임, v88에 1.5배 (0.4). 나도 같다 (미는 힘 MY_FORCE는 그대로)
+  const WEIGHT = 3;       // 무게 — 밀고 들어간 쪽은 막히고, 밀린 쪽은 1일 때(예전)의 1/WEIGHT만큼만 밀려난다
+  const MY_BODY = BODY;       // 내 부딪힘 반지름 (v52에 절반 → v61에 다른 몸과 같게 되돌림)
+  const MY_FORCE = 8;         // 내 미는 힘 = 다른 몸의 8배 (v52 2배 → v61 2배 더 → v90 2배 더) — 내가 밀면 상대가 그만큼 더 비켜나고, 남이 밀면 나는 그만큼 덜 밀린다
+  const BITE_GAP = RADIUS;   // 물 때 두 원 중심 거리 = 반지름 → 반쯤 겹친다
+  const SPLIT = 1.5;      // 물기가 끝나고 둘이 떨어지는 속도 (유닛/초)
+  const ICON_H = 0.55;    // 머리 위 ? ! !!! 높이 (유닛)
+  const COLOR = { me: 0x3366f2, citizen: 0xffcf33, guard: 0xff8c1a, attacker: 0xc62828, police: 0x8e24aa, ally: 0x8aa4f5, dead: 0x555555 };   // 나 = 유니티 큐브 파랑, 시민 = 노랑, 수비형 = 주황, 공격형 = 진한 빨강, 경찰 = 보라, 동료 좀비 = 연한 파랑
+
+  // 그리는 층 (v132) — 바닥·벽·어둠·경찰차·캐릭터 < 모든 UI(체력바·머리 위 표시) < 내 UI(내 체력바·감염 시계·조준 테두리·명령 화살표)
+  const UI = 10, UI_ME = 20;
+  const GROUND = 400;     // 바닥 크기 (유닛) — 나를 1칸 단위로 따라다닌다
+  const p = PITCH * Math.PI / 180;
+  const SIN_P = Math.sin(p);
+  const UP = new THREE.Vector3(0, Math.cos(p), -Math.sin(p));   // 화면 위쪽 (세상 기준)
+  const BACK = new THREE.Vector3(0, Math.sin(p), Math.cos(p));  // 나 → 카메라
+  const TOP = (() => {    // 화면 위쪽 끝이 바닥에 닿는 곳 = 나보다 이만큼 북쪽 (경찰이 안 보이게 출발할 자리)
+    const h = RADIUS * Math.cos(p) + DIST * Math.sin(p), back = DIST * Math.cos(p) - RADIUS * Math.sin(p);   // 카메라 높이, 나보다 남쪽으로 떨어진 거리
+    const a = Math.atan(2 * SCREEN_Y * Math.tan(FOV / 2 * Math.PI / 180));                                 // 화면 위쪽 끝 = 카메라 정면보다 이만큼 위
+    return h / Math.tan(p - a) - back;
+  })();
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  const stage = document.getElementById('stage');
+  const canvas = document.getElementById('view');
+  const joy = document.getElementById('joy');
+  const knob = document.getElementById('knob');
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, stencil: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x999999);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 500);
+  camera.rotation.set(-p, 0, 0);
+
+  // 바닥 = 1유닛 격자 (유니티 Grid.png와 같은 방식: 칸마다 위·왼쪽 변에 선, 폰에서 보이게 조금 진하게)
+  function gridTexture() {
+    const c = document.createElement('canvas');
+    c.width = c.height = 128;
+    const g = c.getContext('2d');
+    g.fillStyle = '#999999';
+    g.fillRect(0, 0, 128, 128);
+    g.fillStyle = '#7a7a7a';
+    g.fillRect(0, 0, 128, 4);
+    g.fillRect(0, 0, 4, 128);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(GROUND, GROUND);
+    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return t;
+  }
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(GROUND, GROUND), new THREE.MeshBasicMaterial({ map: gridTexture() }));
+  ground.rotation.x = -Math.PI / 2;
+  scene.add(ground);
+
+  // ── 그림 재료 ──
+  const circleGeo = new THREE.CircleGeometry(RADIUS, 48);
+  const tracerGeo = new THREE.PlaneGeometry(1, 0.1).rotateX(-Math.PI / 2);   // 경찰 총알 선 = 바닥과 나란한 가는 띠 (+x로 길이 1 — 쏠 때마다 늘리고 돌린다)
+
+  // 시민 원 안의 작은 화살표 = 움직이는 방향 (+x를 가리키게 만들고 돌려서 쓴다)
+  const arrowGeo = (() => {
+    const s = new THREE.Shape();
+    s.moveTo(0.26, 0);
+    s.lineTo(0.04, 0.17);
+    s.lineTo(0.04, 0.06);
+    s.lineTo(-0.24, 0.06);
+    s.lineTo(-0.24, -0.06);
+    s.lineTo(0.04, -0.06);
+    s.lineTo(0.04, -0.17);
+    s.closePath();
+    return new THREE.ShapeGeometry(s);
+  })();
+  const arrowMat = new THREE.MeshBasicMaterial({ color: 0x4d3b00, transparent: true, opacity: 0.85, depthTest: false, depthWrite: false });
+
+  // 지금 손을 떼면 덮칠 시민 = 빨간 테두리 (한 명만 — 그때마다 그 시민 원에 붙인다)
+  const aimRing = new THREE.Mesh(new THREE.RingGeometry(RADIUS - 0.03, RADIUS + 0.1, 48), new THREE.MeshBasicMaterial({ color: 0xff2a2a, transparent: true, depthTest: false, depthWrite: false }));
+  aimRing.position.z = 0.005;            // 원 바로 앞, 화살표 뒤
+  aimRing.renderOrder = UI_ME + 4;       // 내 UI — 다른 몸·UI보다 늘 위 (v132)
+  aimRing.visible = false;
+
+  // 거리 표시 = 나를 따라다니는 바닥 원 — 지배(파란 실선)·공격 지배(주황 점선). 어둠 위에 그려서 시야 밖에서도 보인다
+  function groundRing(r, color, opacity, dashes = 0) {   // dashes > 0 → 그만큼 토막 낸 점선
+    const w = 0.16, g = new THREE.Group(), n = dashes || 1, seg = Math.PI * 2 / n;
+    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthTest: false, depthWrite: false });
+    for (let i = 0; i < n; i++) {
+      const m = new THREE.Mesh(new THREE.RingGeometry(r - w / 2, r + w / 2, dashes ? 6 : 128, 1, i * seg, dashes ? seg * 0.55 : seg), mat);
+      m.renderOrder = -0.45;                   // 어둠(-0.52)·벽 위, 캐릭터 밑
+      g.add(m);
+    }
+    g.rotation.x = -Math.PI / 2;
+    scene.add(g);
+    return g;
+  }
+  const nearRing = groundRing(NEAR, 0x7fd4ff, 0.85);
+  const domainRing = groundRing(DOMAIN, 0x4d7cff, 0.9);
+  const fightRing = groundRing(DOMAIN_FIGHT, 0xff7a59, 0.9, 72);
+  const SHOW_NEAR = false;    // 근접 영역 원 (하늘색) — v123에 숨김 (다시 보려면 true)
+  const SHOW_DOMAIN = false;  // 지배 영역 원 (파랑) — v123에 숨김
+  const SHOW_FIGHT = false;   // 공격 지배 원 (주황 점선) — v123에 숨김
+  nearRing.visible = SHOW_NEAR;
+  domainRing.visible = SHOW_DOMAIN;
+  fightRing.visible = SHOW_FIGHT;
+  function updateLegend() {   // 왼쪽 위 설명 = 동료 수 + 보이는 원 (부대 크기만큼 커진 값)
+    const items = [[SHOW_NEAR, 'near', `근접 ${(NEAR * armyK).toFixed(1)}`], [SHOW_DOMAIN, 'domain', `지배 ${(DOMAIN * armyK).toFixed(1)}`], [SHOW_FIGHT, 'fight', `공격 지배 ${(DOMAIN_FIGHT * armyK).toFixed(1)}`]].filter((x) => x[0]);
+    const legend = document.getElementById('legend');
+    const army = `<span>동료 ${armyN}${armyK > 1 ? ` (+${Math.round((armyK - 1) * 100)}%)` : ''}</span>`;
+    legend.innerHTML = army + items.map(([, c, t]) => `<i class="${c} gap"></i><span>${t}</span>`).join('');
+    legend.style.display = items.length ? '' : 'none';
+  }
+  updateLegend();
+
+  // 감염 게이지 = 물린 시민 머리 위 막대, 다 차면 감염
+  const GAUGE_W = 1.2, GAUGE_H = 0.2, GAUGE_PAD = 0.04;
+  const BAR_STEP = GAUGE_H + 0.06;   // 체력바 위에 감염 게이지를 쌓을 때 한 칸 높이
+  const gaugeTrackGeo = new THREE.PlaneGeometry(GAUGE_W, GAUGE_H);
+  const gaugeFillGeo = new THREE.PlaneGeometry(GAUGE_W - GAUGE_PAD * 2, GAUGE_H - GAUGE_PAD * 2).translate((GAUGE_W - GAUGE_PAD * 2) / 2, 0, 0);   // 왼쪽 끝 기준으로 늘어난다
+  const gaugeTrackMat = new THREE.MeshBasicMaterial({ color: 0x1c1c1e, transparent: true, opacity: 0.7, depthTest: false, depthWrite: false });
+  const gaugeFillMat = new THREE.MeshBasicMaterial({ color: 0x4d7cff, transparent: true, depthTest: false, depthWrite: false });
+  // 감염 게이지 = 물린 시민 머리 위 둥근 시계 (v131) — 12시부터 시계 방향으로 차오른다. 체력바가 떠 있으면 그 위에
+  const CLOCK_R = 0.55, CLOCK_N = 64;
+  const CLOCK_ME = 1.2;                  // 내 감염 시계 크기 배율 (v136에 20% 키움)   // 반지름 0.55 = 지름이 예전 막대 길이쯤
+  const clockBackGeo = new THREE.CircleGeometry(CLOCK_R + 0.06, 48);
+  const clockFillGeos = Array.from({ length: CLOCK_N + 1 }, (_, k) => new THREE.CircleGeometry(CLOCK_R, Math.max(1, k), Math.PI / 2 - (k / CLOCK_N) * Math.PI * 2, (k / CLOCK_N) * Math.PI * 2));
+
+  // 체력바 = 감염 게이지와 같은 모양, 체력이 깎여 있는 동안 머리 위에 뜬다 — 꽉 차 있으면 안 보인다, 0이면 빈 바 (시민 빨강, 좀비 초록. 나도 같다)
+  const hpFoeMat = new THREE.MeshBasicMaterial({ color: 0xff4d4d, transparent: true, depthTest: false, depthWrite: false });
+  const hpOurMat = new THREE.MeshBasicMaterial({ color: 0x43d17a, transparent: true, depthTest: false, depthWrite: false });
+  function addHpBar(b, mat) {
+    b.hpBar = new THREE.Group();
+    b.hpBar.quaternion.copy(camera.quaternion);
+    const track = new THREE.Mesh(gaugeTrackGeo, gaugeTrackMat);
+    track.renderOrder = UI;
+    b.hpFill = new THREE.Mesh(gaugeFillGeo, mat);
+    b.hpFill.position.set(-(GAUGE_W - GAUGE_PAD * 2) / 2, 0, 0.001);
+    b.hpFill.renderOrder = UI + 1;
+    b.hpBar.add(track, b.hpFill);
+    b.hpBar.visible = false;
+    scene.add(b.hpBar);
+    b.hpDisp = b.hp;                          // 화면에 보이는 체력 — 실제 체력 쪽으로 빠르게 줄어든다
+  }
+
+  // 활동 영역 테두리 = 바닥의 옅은 노란 네모
+  const ringGeo = (() => {
+    const h = AREA / 2, w = 0.08, s = new THREE.Shape(), hole = new THREE.Path();
+    s.moveTo(-h, -h); s.lineTo(h, -h); s.lineTo(h, h); s.lineTo(-h, h); s.closePath();
+    hole.moveTo(-h + w, -h + w); hole.lineTo(-h + w, h - w); hole.lineTo(h - w, h - w); hole.lineTo(h - w, -h + w); hole.closePath();
+    s.holes.push(hole);
+    return new THREE.ShapeGeometry(s);
+  })();
+  const ringMat = new THREE.MeshBasicMaterial({ color: COLOR.citizen, transparent: true, opacity: 0.45, depthWrite: false });
+
+  // 머리 위 표시: ? = 경계, ! = 놀람, !! = 초패닉, !!! = 덮치는 중
+  function iconTexture(ch, count, fill) {
+    const c = document.createElement('canvas');
+    c.width = 256;
+    c.height = 128;
+    const g = c.getContext('2d');
+    g.font = '900 100px system-ui, -apple-system, "Segoe UI", sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.lineJoin = 'round';
+    g.lineWidth = 16;
+    g.strokeStyle = '#1c1c1e';
+    g.fillStyle = fill;
+    const xs = Array.from({ length: count }, (_, i) => 128 + (i - (count - 1) / 2) * 42);
+    for (const x of xs) g.strokeText(ch, x, 70);
+    for (const x of xs) g.fillText(ch, x, 70);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }
+  const ICONS = { '?': iconTexture('?', 1, '#ffffff'), '!': iconTexture('!', 1, '#ff3b2f'), '!!': iconTexture('!', 2, '#ff3b2f'), '!!!': iconTexture('!', 3, '#ff3b2f') };
+
+  // ── 건물 — 벽 = 선분 (문 자리는 비운다). 바닥에 그리는 건 지붕(덮개)·벽·문 앞 발판 ──
+  const buildings = BUILDINGS.map((s) => {
+    const B = { x0: s.x - s.w / 2, z0: s.z - s.d / 2, x1: s.x + s.w / 2, z1: s.z + s.d / 2, kinds: s.kinds, station: !!s.station, local: s.local, block: s.block };
+    B.doors = s.doors.map((side) => {        // 문 = 그 벽 한가운데. n = 바깥쪽, t = 벽을 따라가는 쪽
+      const nx = side === 'e' ? 1 : side === 'w' ? -1 : 0, nz = side === 's' ? 1 : side === 'n' ? -1 : 0;
+      return { side, cx: nx > 0 ? B.x1 : nx < 0 ? B.x0 : s.x, cz: nz > 0 ? B.z1 : nz < 0 ? B.z0 : s.z, nx, nz, tx: -nz, tz: nx };
+    });
+    return B;
+  });
+  const walls = [];                           // [ax, az, bx, bz]
+  for (const B of buildings) {
+    const sides = { n: [B.x0, B.z0, B.x1, B.z0], s: [B.x0, B.z1, B.x1, B.z1], w: [B.x0, B.z0, B.x0, B.z1], e: [B.x1, B.z0, B.x1, B.z1] };
+    const n0 = walls.length;
+    for (const [side, [ax, az, bx, bz]] of Object.entries(sides)) {
+      const D = B.doors.find((o) => o.side === side), h = DOOR / 2;
+      if (!D) walls.push([ax, az, bx, bz]);
+      else if (az === bz) walls.push([ax, az, D.cx - h, az], [D.cx + h, az, bx, bz]);
+      else walls.push([ax, az, ax, D.cz - h], [ax, D.cz + h, bx, bz]);
+    }
+    B.walls = walls.slice(n0);                // 이 건물 벽만 — 부딪힘 볼 때 먼 건물은 건너뛰게 (v121)
+  }
+  const flatMat = (color) => new THREE.MeshBasicMaterial({ color, transparent: true, depthTest: false, depthWrite: false });
+  function flat(w, d, x, z, mat, order) {    // 바닥에 눕힌 네모 (원들 밑에 깔린다)
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2), mat);
+    m.position.set(x, 0.03, z);
+    m.renderOrder = order;
+    scene.add(m);
+    return m;
+  }
+  const roofMat = flatMat(0x202020), wallMat = flatMat(0x2b2b2b), doormatMat = flatMat(0xd9b45a);
+  const stationRoofMat = flatMat(0x1c2747), stationDownMat = flatMat(0x3b1f1f);   // 경찰서 지붕 = 짙은 남색, 파괴되면 짙은 붉은색 (v113)
+  for (const B of buildings) {
+    B.roof = flat(B.x1 - B.x0 - WALL, B.z1 - B.z0 - WALL, (B.x0 + B.x1) / 2, (B.z0 + B.z1) / 2, B.station ? stationRoofMat : roofMat, -0.51);
+    if (B.station) {                          // 지붕 위 '경찰서' 글씨 — 어둠 속에서도 어딘지 보이게
+      const c = document.createElement('canvas'); c.width = 256; c.height = 128;
+      const g = c.getContext('2d'); g.font = '800 64px system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillStyle = 'rgba(160, 185, 255, 0.85)'; g.fillText('경찰서', 128, 68);
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+      B.label = new THREE.Mesh(new THREE.PlaneGeometry(6, 3).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthTest: false, depthWrite: false }));
+      B.label.position.set((B.x0 + B.x1) / 2, 0.06, (B.z0 + B.z1) / 2);
+      B.label.renderOrder = -0.508;
+      scene.add(B.label);
+    }   // 좀비가 아무도 안 들어간 건물 안 = 어둠 (시야 밖 바닥과 같은 색, 문 너머로도 안 보인다)
+    for (const D of B.doors) flat(D.tx ? DOOR : 0.35, D.tz ? DOOR : 0.35, D.cx + D.nx * 0.4, D.cz + D.nz * 0.4, doormatMat, -0.65);
+  }
+  for (const [ax, az, bx, bz] of walls) flat(Math.abs(bx - ax) + WALL, Math.abs(bz - az) + WALL, (ax + bx) / 2, (az + bz) / 2, wallMat, -0.505);   // 벽은 어둠 위에 그린다 — 시야 가장자리가 벽 모서리와 딱 맞게
+
+  const spaceOf = (x, z) => buildings.find((B) => x > B.x0 && x < B.x1 && z > B.z0 && z < B.z1) || null;   // 이 자리가 들어 있는 건물 (밖이면 null)
+  function freeSpot(x, z, space) {            // 그 공간(건물 하나 또는 밖) 안이면서 벽에서 0.6칸 넘게 떨어진 곳인가
+    if (space) return x > space.x0 + 0.6 && x < space.x1 - 0.6 && z > space.z0 + 0.6 && z < space.z1 - 0.6;
+    return buildings.every((B) => x <= B.x0 - 0.6 || x >= B.x1 + 0.6 || z <= B.z0 - 0.6 || z >= B.z1 + 0.6);
+  }
+
+  // 벽 부딪힘: 이번 걸음에 벽 선을 넘었으면(문 자리 말고) 걸음 전 자리로 되돌리고, 벽에 몸 반지름보다 가까우면 밀어낸다
+  function crosses(px, pz, qx, qz, [ax, az, bx, bz]) {
+    if (az === bz) {
+      if ((pz - az) * (qz - az) >= 0) return false;
+      const x = px + (qx - px) * (az - pz) / (qz - pz);
+      return x >= Math.min(ax, bx) && x <= Math.max(ax, bx);
+    }
+    if ((px - ax) * (qx - ax) >= 0) return false;
+    const z = pz + (qz - pz) * (ax - px) / (qx - px);
+    return z >= Math.min(az, bz) && z <= Math.max(az, bz);
+  }
+  const wallPt = new THREE.Vector2();
+  function nearestOn([ax, az, bx, bz], x, z) {   // 벽 선분 위에서 (x, z)에 가장 가까운 점
+    const ex = bx - ax, ez = bz - az, t = Math.max(0, Math.min(1, ((x - ax) * ex + (z - az) * ez) / (ex * ex + ez * ez)));
+    return wallPt.set(ax + ex * t, az + ez * t);
+  }
+  const nearW = [];
+  function wallCollide(b) {
+    const m = b.r + 0.5;                      // 걸음 전·후 자리를 감싼 네모에 걸치는 건물 벽만 본다 (지도가 커져서, v121)
+    const x0 = Math.min(b.px, b.foot.x) - m, x1 = Math.max(b.px, b.foot.x) + m, z0 = Math.min(b.pz, b.foot.z) - m, z1 = Math.max(b.pz, b.foot.z) + m;
+    nearW.length = 0;
+    for (const B of buildings) if (x1 >= B.x0 && x0 <= B.x1 && z1 >= B.z0 && z0 <= B.z1) for (const w of B.walls) nearW.push(w);
+    if (!nearW.length) return;
+    if (nearW.some((w) => crosses(b.px, b.pz, b.foot.x, b.foot.z, w))) { b.foot.x = b.px; b.foot.z = b.pz; }
+    for (const w of nearW) {
+      const { x: cx, y: cz } = nearestOn(w, b.foot.x, b.foot.z);
+      let dx = b.foot.x - cx, dz = b.foot.z - cz, d = Math.hypot(dx, dz);
+      if (d >= b.r) continue;
+      if (d < 1e-6) { dx = b.px - cx; dz = b.pz - cz; d = Math.hypot(dx, dz); if (d < 1e-6) continue; }   // 벽 선 위면 걸음 전 자리 쪽으로
+      b.foot.x = cx + dx / d * b.r;
+      b.foot.z = cz + dz / d * b.r;
+    }
+  }
+
+  function nearWall(c, range) {               // 가장 가까운 벽의 가장 가까운 점 — range 안일 때만, 도망칠 때 좀비처럼 피할 자리 (움직이지 않는다)
+    let best = range, hit = null;
+    for (const w of walls) {
+      const p = nearestOn(w, c.foot.x, c.foot.z), d = Math.hypot(c.foot.x - p.x, c.foot.z - p.y);
+      if (d <= best) { best = d; hit = [p.x, p.y]; }
+    }
+    return hit && { foot: new THREE.Vector3(hit[0], 0, hit[1]), speed: 0 };
+  }
+
+  function wallRay(x, z, dx, dz, max, list = walls) {   // 이 방향으로 가다 벽에 닿기까지 거리 (안 닿으면 max)
+    let best = max;
+    for (const [ax, az, bx, bz] of list) {
+      const ex = bx - ax, ez = bz - az, den = dx * ez - dz * ex;
+      if (Math.abs(den) < 1e-9) continue;
+      const t = ((ax - x) * ez - (az - z) * ex) / den, s = ((ax - x) * dz - (az - z) * dx) / den;
+      if (t > 0 && t < best && s >= 0 && s <= 1) best = t;
+    }
+    return best;
+  }
+
+  // 길 찾기: 목적지가 다른 공간(건물 안·밖)이면 문을 거쳐 가고, 밖에서 가는 길을 건물이 막으면 그 건물 모서리를 돌아간다.
+  //   건물 안은 막힌 데가 없어서 똑바로 간다. 돌려주는 건 이번 걸음에 향할 자리 (걸음마다 새로 구한다)
+  const wp = new THREE.Vector2();
+  const LANE = 1.2;                           // 문 앞뒤로 이만큼 = 문을 지나는 길
+  const GAP = BODY / 2;                       // 가는 길이 벽에 이만큼 가까우면 막힌 걸로 본다
+  function via(b, tx, tz) {
+    const from = b.space, to = spaceOf(tx, tz);
+    if (from !== to) {
+      const B = from || to;
+      let D = B.doors[0], best = Infinity;    // 쓸 문 = 지금 자리 → 문 → 목적지가 가장 짧은 문
+      for (const o of B.doors) { const l = Math.hypot(o.cx - b.foot.x, o.cz - b.foot.z) + Math.hypot(tx - o.cx, tz - o.cz); if (l < best) { best = l; D = o; } }
+      const rx = b.foot.x - D.cx, rz = b.foot.z - D.cz, along = rx * D.tx + rz * D.tz;
+      const a = Math.max(-(DOOR / 2 - BODY - 0.1), Math.min(DOOR / 2 - BODY - 0.1, along));   // 문 폭 안에서 지금 자리와 나란한 곳 — 여럿이 나란히 지나가게
+      const lx = D.cx + D.tx * a, lz = D.cz + D.tz * a;
+      if (Math.abs(along) < DOOR / 2 - BODY / 2 && Math.abs(rx * D.nx + rz * D.nz) < LANE) {   // 문을 지나는 중 → 똑바로 건너편으로
+        const s = from ? LANE : -LANE;
+        return wp.set(lx + D.nx * s, lz + D.nz * s);
+      }
+      if (from) return wp.set(lx - D.nx, lz - D.nz);   // 안 → 문 안쪽 앞
+      tx = lx + D.nx; tz = lz + D.nz;                    // 밖 → 문 바깥 앞
+    }
+    return from ? wp.set(tx, tz) : around(b.foot.x, b.foot.z, tx, tz);
+  }
+  function segRect(px, pz, qx, qz, B, pad) { // 선분 p→q가 건물(사방 pad만큼 넓혀서)에 처음 닿는 비율 0~1 (안 닿으면 Infinity)
+    let t0 = 0, t1 = 1;
+    const dx = qx - px, dz = qz - pz;
+    const clip = (k, q) => {
+      if (Math.abs(k) < 1e-9) return q >= 0;
+      const r = q / k;
+      if (k < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
+      return true;
+    };
+    return clip(-dx, px - (B.x0 - pad)) && clip(dx, B.x1 + pad - px) && clip(-dz, pz - (B.z0 - pad)) && clip(dz, B.z1 + pad - pz) ? t0 : Infinity;
+  }
+  function around(px, pz, tx, tz, pad = GAP, m = BODY + 0.3) {   // pad = 건물을 이만큼 넓혀서 막힘을 본다, m = 모서리에서 띄우는 거리 (경찰차는 크게)
+    let hit = null, first = Infinity;
+    for (const B of buildings) {
+      if (px > B.x0 - pad && px < B.x1 + pad && pz > B.z0 - pad && pz < B.z1 + pad) {   // 그 건물 문을 지나는 중이면 빼고
+        for (const D of B.doors) {             // 문 틈에 걸쳐 있으면 먼저 문 앞으로 똑바로 나간다 — 비스듬히 가다 문설주에 걸리지 않게 (v157)
+          const rx = px - D.cx, rz = pz - D.cz, al = rx * D.tx + rz * D.tz, no = rx * D.nx + rz * D.nz;
+          if (Math.abs(al) < DOOR / 2 && no > -0.1 && no < LANE - 0.2) {
+            const a = Math.max(-(DOOR / 2 - BODY - 0.1), Math.min(DOOR / 2 - BODY - 0.1, al));
+            return wp.set(D.cx + D.tx * a + D.nx * LANE, D.cz + D.tz * a + D.nz * LANE);
+          }
+        }
+        continue;
+      }
+      const t = segRect(px, pz, tx, tz, B, pad);
+      if (t < first) { first = t; hit = B; }
+    }
+    // 서 있는 경찰차 (v139) — 차(붙어 선 차들은 한 덩어리)를 원으로 보고 옆으로 돌아간다. 이미 원 안(차에 붙어 있음)이면 원을 따라 목적지 쪽으로 돈다
+    const L = Math.hypot(tx - px, tz - pz) || 1e-6, ux = (tx - px) / L, uz = (tz - pz) / L;
+    let cHit = null, cT = Infinity;
+    for (const O of carObs) {
+      const R = O.r + Math.max(pad, BODY) + 0.45;   // 돌아갈 원 = 차 원 + 몸 반지름 + 여유 — 모서리를 긁지 않게
+      const cx = O.x - px, cz = O.z - pz, dc = Math.hypot(cx, cz);
+      const along = cx * ux + cz * uz, perp = -cx * uz + cz * ux;   // 차 가운데의 앞쪽 거리, 옆으로 떨어진 거리(부호)
+      const a0 = Math.max(0, Math.min(L, along));
+      if (Math.hypot(px + ux * a0 - O.x, pz + uz * a0 - O.z) >= O.r + Math.max(pad, BODY)) continue;   // 가는 길이 차 무더기에 안 닿는다
+      if (dc < R || Math.hypot(tx - O.x, tz - O.z) < R) {   // 차에 붙어 있거나 목적지가 차 바로 옆 → 원을 따라 목적지 쪽으로 돈다 (붙어 있으면 바깥으로 먼저)
+        const ap = Math.atan2(-cz, -cx), at = Math.atan2(tz - O.z, tx - O.x);
+        let dA = at - ap; dA = Math.atan2(Math.sin(dA), Math.cos(dA));
+        const a = ap + Math.sign(dA || 1) * Math.min(Math.abs(dA), dc < R ? 0.25 : 0.9);
+        return wp.set(O.x + Math.cos(a) * (R + 0.5), O.z + Math.sin(a) * (R + 0.5));
+      }
+      if (along <= 0 || Math.abs(perp) >= R) continue;
+      const t = along - Math.sqrt(R * R - perp * perp);
+      if (t < cT) { cT = t; cHit = { O, perp, R }; }
+    }
+    if (cHit && (!hit || cT < first * L)) {   // 차가 먼저 막는다 → 차 옆(원 둘레에서 길과 수직인 쪽)으로
+      const s = cHit.perp >= 0 ? 1 : -1;
+      return wp.set(cHit.O.x + uz * s * (cHit.R + 0.3), cHit.O.z - ux * s * (cHit.R + 0.3));
+    }
+    if (!hit) return wp.set(tx, tz);
+    // 지금 자리·그 건물 모서리 넷(벽에서 띄운 곳)·목적지를 벽을 안 지나는 선분으로만 이어서 가장 짧은 길을 구하고, 그 길의 다음 자리를 돌려준다
+    const pts = [[px, pz], [hit.x0 - m, hit.z0 - m], [hit.x1 + m, hit.z0 - m], [hit.x1 + m, hit.z1 + m], [hit.x0 - m, hit.z1 + m], [tx, tz]];
+    const n = pts.length, dist = Array(n).fill(Infinity), prev = Array(n).fill(-1), done = Array(n).fill(false);
+    dist[0] = 0;
+    for (;;) {
+      let u = -1;
+      for (let i = 0; i < n; i++) if (!done[i] && dist[i] < Infinity && (u < 0 || dist[i] < dist[u])) u = i;
+      if (u < 0 || u === n - 1) break;
+      done[u] = true;
+      for (let v = 0; v < n; v++) {
+        if (done[v] || segRect(pts[u][0], pts[u][1], pts[v][0], pts[v][1], hit, pad) < Infinity) continue;
+        const d = dist[u] + Math.hypot(pts[v][0] - pts[u][0], pts[v][1] - pts[u][1]);
+        if (d < dist[v]) { dist[v] = d; prev[v] = u; }
+      }
+    }
+    if (dist[n - 1] === Infinity) return wp.set(tx, tz);
+    const path = [];
+    for (let v = n - 1; v > 0; v = prev[v]) path.unshift(v);
+    for (const v of path) if (v === n - 1 || Math.hypot(pts[v][0] - px, pts[v][1] - pz) > 0.5) return wp.set(pts[v][0], pts[v][1]);   // 이미 닿은 모서리는 건너뛴다
+    return wp.set(tx, tz);
+  }
+  function toward(b, tx, tz, speed) {        // 목적지 쪽으로 원하는 속도 (길 찾기를 거쳐서)
+    const w = via(b, tx, tz), dx = w.x - b.foot.x, dz = w.y - b.foot.z, d = Math.hypot(dx, dz) || 1;
+    return wantV.set(dx / d * speed, dz / d * speed);
+  }
+
+  // ── 캐릭터 — 나·동료 좀비·시민 전부 한 목록에서 부딪힌다 ──
+  const bodies = [];
+  const zombies = [];                         // 이번 걸음의 좀비(나·동료) — 감지할 때 bodies 전부를 안 돌게 (v121)
+  const rings = [];
+  let me = null;
+  const isZombie = (b) => (b.kind === 'me' || b.kind === 'ally') && !b.dead;
+  const note = document.getElementById('note');
+  const dying = [];                           // 이번 걸음에 HP가 0이 된 좀비 (걸음 끝에 처리)
+
+  function addBody(kind, x, z) {
+    const mesh = new THREE.Mesh(circleGeo, new THREE.MeshBasicMaterial({ color: COLOR[kind], transparent: true, depthTest: false, depthWrite: false }));
+    mesh.quaternion.copy(camera.quaternion);   // 늘 카메라를 정면으로 본다 — 겹치면 앞에 선 쪽이 위에 그려진다
+    scene.add(mesh);
+    const b = { kind, mesh, foot: new THREE.Vector3(x, 0, z), vel: new THREE.Vector2(), fixed: false, split: null, splitT: 0, hp: 0, maxHp: 0, atkT: 0, lungeT: -1 };
+    b.px = x; b.pz = z;                       // 걸음 전 자리 (벽을 넘었는지 볼 때)
+    b.r = BODY;                               // 부딪힘 반지름 (나만 MY_BODY)
+    b.force = 1;                              // 미는 힘 (나만 MY_FORCE)
+    b.space = spaceOf(x, z);                  // 들어 있는 건물 (밖이면 null) — 같은 공간끼리만 서로 본다
+    bodies.push(b);
+    return b;
+  }
+
+  function addCitizen(x, z, area, type) {
+    const c = addBody('citizen', x, z);
+    c.area = area;
+    c.guard = type === 'guard';          // 수비형: HP가 있고, 맞으면 때린 좀비와 싸운다
+    c.attacker = type === 'attacker';    // 공격형: 수비형과 같은데, 좀비를 보면 패닉 대신 다가와서 때린다
+    c.police = type === 'police';        // 경찰: 공격형과 같은데, 그 자리에서 쏜다 — HP 0이 돼도 계속 쏜다
+    if (type) {
+      c.mesh.material.color.setHex(COLOR[type]);
+      c.hp = c.maxHp = c.police ? POLICE_HP : GUARD_HP;
+      addHpBar(c, hpFoeMat);
+    }
+    if (c.police) {                      // 쏠 때 번쩍이는 노란 선 (원 밑에 깔린다)
+      c.tracer = new THREE.Mesh(tracerGeo, new THREE.MeshBasicMaterial({ color: 0xffe14d, transparent: true, depthTest: false, depthWrite: false }));
+      c.tracer.renderOrder = -0.5;
+      c.tracer.visible = false;
+      scene.add(c.tracer);
+      c.shotT = -1;                      // 쏜 뒤 지난 시간 (-1 = 선 없음)
+      c.calls = [];                      // 들를 사건 자리 — 가장 가까운 곳부터 차례로
+      c.heading = null;                  // 지금 가는 사건 자리
+      c.onDuty = false;                  // 첫 출동이 끝나면(도착하거나 싸움을 시작하면) true — 그 뒤로 나는 사건을 전부 받는다
+    }
+    c.sense = SENSE * rand(0.9, 1.1);
+    c.sight = SIGHT * rand(0.9, 1.1);
+    c.flee = new THREE.Vector2();
+    c.lastSeen = new THREE.Vector3();
+    c.lastSeenSpeed = SPEED;
+    c.tick = Math.random() * TICK;       // 감지하는 순간을 시민마다 흩어 둔다
+    c.marked = false;                    // 좀비가 덮치는 중 → 머리 위 !!!
+    c.arrow = new THREE.Mesh(arrowGeo, arrowMat);
+    c.arrow.position.z = 0.01;           // 원 바로 앞 (카메라 쪽)
+    c.mesh.add(c.arrow);
+    c.icon = new THREE.Sprite(new THREE.SpriteMaterial({ map: ICONS['?'], transparent: true, depthTest: false, depthWrite: false }));
+    c.icon.renderOrder = UI;
+    c.icon.visible = false;
+    scene.add(c.icon);
+    c.iconKind = '';
+    c.iconT = 0;
+    c.gauge = new THREE.Group();         // 감염 게이지 = 둥근 시계 (물리는 동안만 보인다, v131)
+    c.gauge.quaternion.copy(camera.quaternion);
+    const track = c.gaugeTrack = new THREE.Mesh(clockBackGeo, gaugeTrackMat);
+    track.renderOrder = UI_ME + 2;       // 감염 시계는 내가 물 때만 뜨는 내 UI — 다른 UI보다 위, 내 체력바보다도 위 (v132)
+    c.gaugeFill = new THREE.Mesh(clockFillGeos[0], gaugeFillMat);
+    c.gaugeFill.position.set(0, 0, 0.001);
+    c.gaugeFill.renderOrder = UI_ME + 3;
+    c.gauge.add(track, c.gaugeFill);
+    c.gauge.visible = false;
+    scene.add(c.gauge);
+    enterNormal(c);
+    return c;
+  }
+
+  // ── 시민 상태: 일반 → 경계 → 패닉 → 멈춤 → 일반 (공격형은 HP가 남아 있으면, 경찰은 늘 패닉 대신 싸움) ──
+  const inArea = (c) => c.foot.x >= c.area.x0 && c.foot.x <= c.area.x1 && c.foot.z >= c.area.z0 && c.foot.z <= c.area.z1;
+  function pickGoal(a) {                      // 영역 안 아무 곳 — 밖 영역이면 건물 근처는 빼고
+    let g;
+    for (let n = 0; n < 20; n++) {
+      g = new THREE.Vector2(rand(a.x0 + 0.6, a.x1 - 0.6), rand(a.z0 + 0.6, a.z1 - 0.6));
+      if (a.doors || freeSpot(g.x, g.y, null)) break;
+    }
+    return g;
+  }
+  const square = (x, z) => ({ x0: x - AREA / 2, z0: z - AREA / 2, x1: x + AREA / 2, z1: z + AREA / 2 });
+  const areaAround = (x, z) => spaceOf(x, z) || square(x, z);   // 그 자리 둘레 네모 — 건물 안이면 그 건물
+
+  function enterNormal(c) {
+    c.state = 'normal';
+    if ((c.police && !c.station && !c.post) || c.freed) c.area = areaAround(c.foot.x, c.foot.z);   // 순찰 경찰(post)도 늘 자기 순찰 자리로 (v134)   // 경찰서 경찰은 늘 자기 영역(경찰서 안·둘레)으로 돌아간다   // 경찰·건물에서 빠져나온 시민은 정해진 영역이 없다 — 일반으로 돌아간 그 자리 근처를 배회
+    c.goal = inArea(c) ? null : pickGoal(c.area);   // 영역 밖이면 바로 걸어서 돌아간다
+    c.back = !!c.goal;                              // 돌아가는 길은 일반 속도, 영역 안 배회는 그 1/3
+    c.timer = rand(...IDLE_TIME);
+  }
+  function enterAlert(c) { c.state = 'alert'; c.timer = rand(...ALERT_TIME) * (c.police ? POLICE_ALERT : 1); }
+  function enterPanic(c, spots, quiet) {
+    c.state = 'panic';
+    c.panicLen = rand(...PANIC_TIME);
+    c.timer = c.panicLen;
+    c.notice = quiet ? 0 : NOTICE;     // 감염 실패 뒤엔 놀람 없이 바로 패닉
+    c.flee.copy(fleeDir(c, spots || [{ foot: c.lastSeen, speed: c.lastSeenSpeed }]));
+  }
+  function enterRest(c) { c.state = 'rest'; c.timer = rand(...REST_TIME); }
+  // 싸움 시작: 수비형은 맞았을 때 (첫 상대 = 때린 좀비), 공격형·경찰은 좀비를 봤을 때도 (z가 없으면 첫 걸음에 가장 가까운 좀비를 뽑는다)
+  function enterFight(c, z, quiet) {
+    if (c.police && !c.station && !c.post) {   // 경찰 (경찰서·순찰 경찰은 출동 안 함): 가던 사건 자리는 싸움으로 끝낸 셈 — 싸움이 끝나면 다음 사건 자리로. 이제부터 새 사건도 받는다 (경찰서 경찰은 출동 안 함)
+      if (c.heading) { c.calls.splice(c.calls.indexOf(c.heading), 1); c.heading = null; }
+      c.onDuty = true;
+    }
+    c.state = 'fight';
+    c.foe = z || null;
+    c.chaseR = 0;
+    if (z) c.spot = null;
+    c.locked = false;                  // 공격형: 근접 거리에 붙어 때리기 시작하면 true (그 상대로 고정)
+    c.atkT = GUARD_REACT;
+    c.notice = quiet ? 0 : NOTICE;     // 좀비를 보고 덤빌 땐 패닉처럼 머리 위 ! (맞아서 시작하면 없음)
+  }
+  const charges = (c) => c.police || (c.attacker && c.hp > 0);   // 패닉 대신 덤빈다 — 공격형은 HP 0이면 일반 시민처럼 도망, 경찰은 늘
+  const sees = (c, z) => z && isZombie(z) && z.space === c.space;   // 살아 있는 좀비이고 같은 공간(같은 건물 안, 또는 둘 다 밖)에 있다
+
+  // 틱마다 주변을 본다. 좀비 = 나 + 동료 좀비 전부. 같은 공간(같은 건물 안, 또는 둘 다 밖)에 있는 좀비만 보인다
+  function sense(c) {
+    const reach = c.state === 'panic' ? c.sight : c.sense;   // 패닉 중엔 인지거리가 시야만큼 늘어난다
+    const seen = [];
+    let near = Infinity, nearZ = null;
+    for (const z of zombies) {
+      if (!isZombie(z) || z.space !== c.space) continue;
+      const d = Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
+      if (d > c.sight) continue;
+      if (d < near) { near = d; nearZ = z; c.lastSeen.copy(z.foot); c.lastSeenSpeed = z.speed; }
+      if (d <= reach) seen.push(z);
+    }
+    if (c.state === 'panic') {
+      if (cornered(c)) { enterSuper(c); return; }   // 구석에 몰렸다 → 초패닉
+      if (seen.length) { c.timer = c.panicLen; c.flee.copy(fleeDir(c, seen)); }   // 볼 때마다 패닉 시간 처음부터
+      else if (nearWall(c, c.sense * WALL_SENSE)) c.flee.copy(fleeDir(c, [{ foot: c.lastSeen, speed: c.lastSeenSpeed }]));   // 벽에 다가가면 마지막에 본 좀비와 그 벽을 피해 다시 고른다 (패닉 시간은 그대로)
+    } else if (seen.length) {
+      if (charges(c)) enterFight(c, nearZ);  // 공격형: 가장 가까운 좀비에게 덤빈다
+      else enterPanic(c, seen);
+    }
+    else if (near <= c.sight) { if (c.state !== 'alert') { enterAlert(c); if (c.police) { c.spot = nearZ; c.spotR = c.sight; } } }   // 경찰은 경계할 때 본 좀비를 기억한다 (시야가 줄어들어도 그걸 쫓게, v159)
+    else if (c.state === 'alert') enterNormal(c);
+  }
+
+  // 도망 방향 = 미리 뛰어 보기. 방향마다 LOOK초 뛰어 본다고 치고(벽에 막히면 거기서 멈춘다), 좀비는 전부 자기 속도로 똑바로 쫓아온다고 친다.
+  // 그동안 좀비가 가장 가까이 붙는 거리가 제일 넉넉한 방향을 고른다 (가까운 좀비일수록 점수를 크게 깎는다).
+  // 건물 안에선 문 쪽으로 뚫린 방향만 멀리 뛸 수 있다 — 그쪽이 좋으면 우연히 문 밖으로 빠져나간다.
+  // 가장 가까운 벽이 인지거리의 1/4 안이면 그 벽(의 가장 가까운 점)도 안 움직이는 좀비로 치고 피한다 — 구석에 몰리지 않고 사방으로 튄다
+  const fleeV = new THREE.Vector2();
+  function fleeDir(c, spots) {
+    const wall = nearWall(c, c.sense * WALL_SENSE);
+    if (wall) spots = [...spots, wall];
+    const sp = c.vel.length();
+    let best = -Infinity, bx = 1, bz = 0;
+    for (let k = 0; k < DIRS; k++) {
+      const a = (k / DIRS) * Math.PI * 2, dx = Math.cos(a), dz = Math.sin(a);
+      const room = wallRay(c.foot.x, c.foot.z, dx, dz, PANIC_SPEED * LOOK + BODY) - BODY;   // 이 방향으로 벽까지 뛸 수 있는 거리
+      let worst = Infinity;
+      for (const z of spots) {
+        for (let s = 1; s <= 4; s++) {
+          const t = LOOK * s / 4, run = Math.max(0, Math.min(PANIC_SPEED * t, room));
+          const m = Math.hypot(z.foot.x - c.foot.x - dx * run, z.foot.z - c.foot.z - dz * run) - z.speed * t;
+          if (m < worst) worst = m;
+        }
+      }
+      if (sp > 0.1) worst += 0.1 * (dx * c.vel.x + dz * c.vel.y) / sp;   // 뛰던 방향에 아주 조금 더 — 왔다 갔다 방지
+      worst += Math.random() * 1e-3;                                       // 딱 같으면 아무 쪽이나
+      if (worst > best) { best = worst; bx = dx; bz = dz; }
+    }
+    return fleeV.set(bx, bz);
+  }
+
+  // ── 초패닉 — 건물 안에서 패닉 중 구석에 몰리면 들어간다. 좀비가 어디 있든 안 보고, 문까지 벽을 따라 도는 길이 짧은 쪽으로 벽을 타고 돌아
+  //    문으로 나간다. 문 밖으로 나가면 보통 패닉으로 돌아간다 (그 뒤로는 활동 영역 제한이 풀린 시민) ──
+  const cornered = (c) => {
+    const B = c.space;
+    return !!B && Math.min(c.foot.x - B.x0, B.x1 - c.foot.x) < CORNER && Math.min(c.foot.z - B.z0, B.z1 - c.foot.z) < CORNER;
+  };
+  // 벽 따라 한 바퀴 = 벽에서 0.6칸 안쪽 네모의 둘레. 자리는 북서 모서리에서 시계 방향(북 → 동 → 남 → 서)으로 잰 거리 u로 나타낸다
+  const rimOf = (B) => ({ x0: B.x0 + 0.6, z0: B.z0 + 0.6, x1: B.x1 - 0.6, z1: B.z1 - 0.6 });
+  function rimU(R, x, z) {                    // 둘레에서 (x, z)에 가장 가까운 자리의 u
+    const W = R.x1 - R.x0, H = R.z1 - R.z0;
+    x = Math.max(R.x0, Math.min(R.x1, x)); z = Math.max(R.z0, Math.min(R.z1, z));
+    const n = z - R.z0, e = R.x1 - x, s = R.z1 - z, w = x - R.x0, k = Math.min(n, e, s, w);
+    return k === n ? x - R.x0 : k === e ? W + (z - R.z0) : k === s ? W + H + (R.x1 - x) : 2 * W + H + (R.z1 - z);
+  }
+  function rimAt(R, u) {                      // u → 둘레 위 자리
+    const W = R.x1 - R.x0, H = R.z1 - R.z0, L = 2 * (W + H);
+    u = ((u % L) + L) % L;
+    if (u < W) return [R.x0 + u, R.z0];
+    if (u < W + H) return [R.x1, R.z0 + (u - W)];
+    if (u < 2 * W + H) return [R.x1 - (u - W - H), R.z1];
+    return [R.x0, R.z1 - (u - 2 * W - H)];
+  }
+  function enterSuper(c) {
+    const B = c.space, R = rimOf(B), L = 2 * (R.x1 - R.x0 + R.z1 - R.z0);
+    c.door = B.doors.reduce((a, o) => Math.hypot(o.cx - c.foot.x, o.cz - c.foot.z) < Math.hypot(a.cx - c.foot.x, a.cz - c.foot.z) ? o : a);   // 가장 가까운 문
+    const cw = (rimU(R, c.door.cx, c.door.cz) - rimU(R, c.foot.x, c.foot.z) + L) % L;   // 시계 방향으로 돌면 문까지 둘레 거리
+    c.spin = cw <= L / 2 ? 1 : -1;            // 짧은 쪽으로 돈다
+    c.state = 'super';
+    c.notice = 0;
+  }
+  function superPanic(c) {
+    const B = c.space;
+    if (!B) { enterPanic(c, null, true); c.tick = 0; return; }   // 문 밖으로 나왔다 → 보통 패닉 (마지막에 본 좀비를 피해)
+    const R = rimOf(B), W = R.x1 - R.x0, H = R.z1 - R.z0, L = 2 * (W + H), D = c.door;
+    const up = rimU(R, c.foot.x, c.foot.z), ud = rimU(R, D.cx, D.cz);
+    const left = (c.spin > 0 ? ud - up : up - ud) + L * 2;   // 문까지 남은 둘레 거리
+    const rest = left % L;
+    if (rest < 0.8) { toward(c, D.cx + D.nx * 1.5, D.cz + D.nz * 1.5, PANIC_SPEED); return; }   // 문 앞 → 똑바로 밖으로
+    let step = rest;                          // 다음 모서리까지 (문이 더 가까우면 문 자리까지)
+    for (const cu of [0, W, W + H, 2 * W + H]) {
+      const d = ((c.spin > 0 ? cu - up : up - cu) + L * 2) % L;
+      if (d > 0.05 && d < step) step = d;
+    }
+    const [tx, tz] = rimAt(R, up + c.spin * (step + 0.05));
+    const dx = tx - c.foot.x, dz = tz - c.foot.z, d = Math.hypot(dx, dz) || 1;
+    wantV.set(dx / d * PANIC_SPEED, dz / d * PANIC_SPEED);
+  }
+
+  // 속도를 원하는 속도 쪽으로 step만큼만 바꾼다 = 가감속
+  function steer(v, want, step) {
+    const dx = want.x - v.x, dz = want.y - v.y, d = Math.hypot(dx, dz);
+    if (d <= step) v.copy(want);
+    else { v.x += dx / d * step; v.y += dz / d * step; }
+  }
+
+  const wantV = new THREE.Vector2();
+  function knockStep(b, dt) {                 // 차에 치여 날아가는 중 — 그 방향으로 튕겨 가다가 점점 느려져 멈춘다 (v137)
+    b.vel.set(b.knockVX, b.knockVZ);
+    const f = Math.exp(-4 * dt);
+    b.knockVX *= f; b.knockVZ *= f;
+    b.knockT -= dt;
+    if (b.knockT <= 0 || Math.hypot(b.knockVX, b.knockVZ) < 0.3) {
+      b.knockT = 0;
+      b.vel.set(0, 0);
+      if (b.knockDie) { b.knockDie = false; dying.push(b); }   // 멈췄는데 죽었다 → 사라진다
+      else if (b.kind === 'citizen' && b.maxHp > 0 && b.hp <= 0 && !b.police && b.state !== 'panic' && b.state !== 'held') {   // 체력이 다한 수비형·공격형 → 놀라서 도망 (때려서 0이 됐을 때와 같다)
+        b.lastSeen.copy(b.foot); enterPanic(b, null, true); b.tick = 0;
+      }
+    }
+  }
+  const GUARD_PACE = 0.8;      // 수비형 이동 속도 배율 (v150에 20% 내림) — 걷기·배회·패닉·초패닉 전부
+  function updateCitizen(c, dt) {
+    if (c.boostT > 0) {                      // 경찰서에서 출동해 막 나온 경찰: 3배로 늘어난 인지거리·시야가 4초에 걸쳐 원래대로 (v158)
+      c.boostT = Math.max(0, c.boostT - dt);
+      const k = 1 + (SORTIE_SENSE - 1) * c.boostT / SORTIE_SENSE_T;
+      c.sense = c.boostSense * k;
+      c.sight = c.boostSight * k;
+    }
+    if (c.knockT > 0) { knockStep(c, dt); return; }
+    if (c.dropT > 0) {                       // 경찰차에서 막 내린 경찰: 늘어난 인지거리가 3초에 걸쳐 원래대로 (v114)
+      c.dropT = Math.max(0, c.dropT - dt);
+      c.sense = c.baseSense * (1 + (DROP_SENSE - 1) * c.dropT / DROP_SENSE_T);
+    }
+    if (c.state === 'held') { c.vel.set(0, 0); return; }   // 물리는 중엔 꼼짝 못 한다
+    if (c.state === 'fight') {               // 수비형: 제자리에서 맞서 싸운다 / 공격형: 쫓아가서 때린다 / 경찰: 제자리에서 쏜다
+      if (c.police) policeFight(c, dt); else if (c.attacker) attackerFight(c, dt); else guardFight(c, dt);
+      return;
+    }
+    if (c.state === 'super') {               // 초패닉: 주변을 안 보고 벽을 타고 문으로
+      wantV.set(0, 0);
+      superPanic(c);
+      if (c.guard) wantV.multiplyScalar(GUARD_PACE);
+      steer(c.vel, wantV, ACCEL * dt);
+      return;
+    }
+    if ((c.tick -= dt) <= 0) { c.tick += TICK; sense(c); }
+
+    wantV.set(0, 0);
+    if (c.state === 'alert') {
+      if ((c.timer -= dt) <= 0) { if (charges(c)) enterFight(c, null); else enterPanic(c); }   // 경계가 끝나면 공격형은 패닉 대신 덤빈다
+    } else if (c.state === 'panic') {
+      if (c.notice > 0) c.notice -= dt;
+      wantV.copy(c.flee).multiplyScalar(PANIC_SPEED);
+      if ((c.timer -= dt) <= 0) enterRest(c);
+    } else if (c.state === 'rest') {
+      if ((c.timer -= dt) <= 0) enterNormal(c);
+    } else if (c.police && c.calls.length) {                 // 경찰 출동: 배회하지 않고 들를 사건 자리 중 가장 가까운 곳으로 뛰어간다
+      let k = 0, d = Infinity;
+      c.calls.forEach((s, i) => { const e = Math.hypot(s.x - c.foot.x, s.y - c.foot.z); if (e < d) { d = e; k = i; } });
+      const s = c.heading = c.calls[k];
+      if (d < ARRIVE) {                                      // 도착 → 목록에서 지우고, 이제부터 새 사건도 받는다
+        c.calls.splice(k, 1);
+        c.heading = null;
+        if (!c.station) c.onDuty = true;                    // 경찰서 경찰(호출로 나온)은 사건을 안 받는다
+        if (!c.calls.length) enterNormal(c);                 // 더 들를 곳이 없으면 그 근처를 배회
+      } else toward(c, s.x, s.y, Math.min(PANIC_SPEED * POLICE_PACE, d * 3));   // 건물 안이면 문으로 들어간다
+    } else if (c.police && !c.station && !c.post && isZombie(me)) {     // 들를 사건 자리가 더 없는 경찰은 주인공(나)을 쫓는다 — 보이면 경계 → 싸움 (v89). 경찰서 경찰은 제자리 배회
+      toward(c, me.foot.x, me.foot.z, PANIC_SPEED * POLICE_PACE);
+    } else if (c.goal) {                                     // 일반: 영역 안 한 곳으로 걷기
+      const d = Math.hypot(c.goal.x - c.foot.x, c.goal.y - c.foot.z);
+      if (d < 0.1) { c.goal = null; c.back = false; c.timer = rand(...IDLE_TIME); }
+      else toward(c, c.goal.x, c.goal.y, Math.min((c.back ? WALK_SPEED : CIT_WANDER) * (c.police ? POLICE_PACE : 1), d * 3));
+    } else if ((c.timer -= dt) <= 0) c.goal = pickGoal(c.area);   // 일반: 서 있다가 다음 곳으로
+    if (c.guard) wantV.multiplyScalar(GUARD_PACE);   // 수비형은 모든 이동이 20% 느리다 (v150)
+    steer(c.vel, wantV, ACCEL * dt);
+  }
+
+  // ── 싸움 ──
+  // 수비형 (처음 맞으면 싸움 시작): 상대를 한 놈 정하면 그놈하고만 싸운다 — 다른 좀비가 같이 때려도 상대를 안 바꾼다.
+  //   첫 상대 = 처음 때린 좀비. 그놈이 멀어지거나(1.5칸 밖) 나를 그만 노리면(딴 데로 가거나, 멈추고 움직이면) 그때만 새로 고른다
+  //   = 아주 가까이(1.5칸 안)에서 나를 공격 대상으로 잡고 있는 좀비들 중 가장 가까운 놈. 그런 좀비가 하나도 없으면 놀람 없이 도망간다.
+  //   쫓지는 않고 그 자리에 서서, 상대가 근접 거리에 들어오면 1초마다 때린다.
+  function guardFight(c, dt) {
+    steer(c.vel, wantV.set(0, 0), ACCEL * dt);
+    if (c.atkT > 0) c.atkT -= dt;
+    const gap = (z) => Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
+    const holds = (z) => z && isZombie(z) && z.engaging === c && gap(z) <= GUARD_CLOSE;   // 아직 상대가 될 수 있나
+    if (!holds(c.foe)) {
+      c.foe = null;
+      let best = Infinity;
+      for (const z of bodies) if (holds(z) && gap(z) < best) { best = gap(z); c.foe = z; }
+    }
+    if (!c.foe) {
+      enterPanic(c, null, true);
+      c.tick = 0;                             // 곧바로 주변을 보고 도망 방향을 정한다
+      return;
+    }
+    if (gap(c.foe) <= MELEE && c.atkT <= 0) { strike(c, c.foe); c.atkT = HIT_EVERY; }
+  }
+
+  // 공격형 (좀비를 보면 패닉 대신 싸움 시작, 먼저 맞아도 싸움 시작):
+  //   쫓는 중엔 좀비가 타겟을 뽑듯이 틱마다 시야 안 가장 가까운 좀비를 새로 뽑아서 그놈한테 다가간다(시민 뛰는 속도).
+  //   근접 거리에 붙으면 그 상대로 고정하고 1초마다 때린다 — 수비형처럼 더 가까운 좀비가 와도 안 바꾼다.
+  //   그 상대가 도망가거나 멀어지면(1.5칸 밖) 또는 죽으면 다시 쫓는 중 → 가장 가까운 좀비. 시야 안에 좀비가 없으면 일반으로 돌아간다.
+  //   HP가 0이 되면 놀람 없이 도망간다 (landHit) — 그 뒤로는 좀비를 봐도 일반 시민처럼 도망간다.
+  function attackerFight(c, dt) {
+    if (c.atkT > 0) c.atkT -= dt;
+    if (c.notice > 0) c.notice -= dt;
+    const tick = (c.tick -= dt) <= 0;
+    if (tick) c.tick += TICK;
+    let pick = tick || !sees(c, c.foe);         // 쫓는 중: 틱마다 다시 뽑는다 (상대가 죽었거나 아직 없거나 안 보이면 바로)
+    if (c.locked) {
+      const z = c.foe;
+      if (sees(c, z) && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= GUARD_CLOSE) pick = false;   // 때리는 중: 상대 고정
+      else { c.locked = false; pick = true; }    // 도망가거나 멀어지면(1.5칸 밖)·죽으면 고정을 풀고 바로 다시 뽑는다
+    }
+    if (pick) c.foe = nearestZombie(c, c.sight);
+    if (!c.foe) { enterNormal(c); return; }
+    const z = c.foe, d = Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
+    if (d > MELEE) { steer(c.vel, toward(c, z.foot.x, z.foot.z, PANIC_SPEED), ACCEL * dt); return; }
+    c.locked = true;                            // 근접 거리에 붙었다 = 때리기 시작 → 이 상대로 고정
+    steer(c.vel, wantV.set(0, 0), ACCEL * dt);
+    if (c.atkT <= 0) { strike(c, z); c.atkT = HIT_EVERY; }
+  }
+
+  // 경찰 (공격형과 같다 — 좀비를 보면 경계 뒤 패닉 대신 싸움, 먼저 맞아도 싸움. 싸우는 동안 인지거리 = 시야):
+  //   사거리 안이면 그 자리에 서서 쏜다 — 사거리 = 자기 원래(1배) 시야, 1초마다, 공격력 2배. 붙어 있어도 쏜다. 늘어난 시야로 본 좀비는 사거리까지 달려간다 (v159).
+  //   틱마다 시야 안 가장 가까운 좀비를 새로 뽑아서 쏜다 — 고정 없이 계속 바뀐다.
+  //   HP가 0이 돼도 도망가지 않고 계속 쏜다 (덮칠 수는 있다). 시야 안에 좀비가 없으면 싸움 끝 → 다음 사건 자리로, 없으면 배회.
+  function policeFight(c, dt) {
+    if (c.atkT > 0) c.atkT -= dt;
+    if (c.notice > 0) c.notice -= dt;
+    const tick = (c.tick -= dt) <= 0;
+    if (tick) c.tick += TICK;
+    const range = c.boostT > 0 ? c.boostSight : c.sight;   // 사거리 = 원래(1배) 시야 (v159)
+    const far = (z) => Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
+    if (tick || !sees(c, c.foe)) {          // 틱마다 다시 뽑는다 (상대가 죽었거나 아직 없거나 안 보이면 바로)
+      const inRange = nearestZombie(c, range);
+      if (inRange) { c.foe = inRange; c.chaseR = 0; }   // 사거리 안에 좀비가 있으면 가장 가까운 걸 쏜다
+      else {                                 // 늘어난 시야로 본 좀비 (v159): 처음 본 거리보다 멀어지지 않는 한, 시야가 줄어도 사거리에 들 때까지 쫓아간다
+        if (!sees(c, c.foe) && sees(c, c.spot)) { c.foe = c.spot; c.chaseR = c.spotR; }   // 경계할 때 본 좀비
+        if (!(sees(c, c.foe) && far(c.foe) <= (c.chaseR || c.sight))) { c.foe = nearestZombie(c, c.sight); c.chaseR = 0; }
+        if (c.foe && !c.chaseR) c.chaseR = Math.max(c.sight, far(c.foe));
+      }
+      c.spot = null;
+    }
+    if (!c.foe) { c.chaseR = 0; steer(c.vel, wantV.set(0, 0), ACCEL * dt); enterNormal(c); return; }
+    const z = c.foe, d = far(z);
+    if (d > range) { steer(c.vel, toward(c, z.foot.x, z.foot.z, PANIC_SPEED * POLICE_PACE), ACCEL * dt); return; }   // 사거리 밖 → 달려간다
+    steer(c.vel, wantV.set(0, 0), ACCEL * dt);
+    if (c.atkT <= 0) { shoot(c, z); c.atkT = HIT_EVERY; }
+  }
+
+  function nearestZombie(c, range) {
+    let best = null, bd = range;
+    for (const z of zombies) {
+      if (!sees(c, z)) continue;
+      const d = Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
+      if (d <= bd) { bd = d; best = z; }
+    }
+    return best;
+  }
+
+  // 쏘기: 붙는 모션 없이 바로 맞는다 — 경찰 → 좀비로 노란 선이 잠깐 번쩍
+  function shoot(c, z) {
+    c.shotT = 0;
+    c.shotAt = z;
+    landHit(c, z, POLICE_DAMAGE);
+  }
+
+  // 경찰 출동 — 사람이 감염될 때마다 (경찰이 감염돼도 센다):
+  //   첫 출동이 끝난 경찰(도착했거나 싸움을 시작한)은 사건이 날 때마다 그 자리를 목록에 넣고 다 같이 출발한다 — 가장 가까운 곳부터 차례로 들른다.
+  //   새 경찰은 북쪽 경찰서에서 나온다 — 감염마다 수배 별이 오르고, 별이 있으면 출동 간격마다 걸어서 1~2명 또는 경찰차 (v113, 위 STAR·CAR 값).
+  //   경찰서 안 상주 경찰이 전부 감염되면 경찰서 파괴 → 더는 안 나온다.
+  let deaths = 0, stars = 0, dispatchT = 0, stationDown = false, lastIncident = null;   // 감염 수, 수배 별, 출동 시계, 경찰서 전부 파괴, 마지막 사건 자리
+  const stations = buildings.filter((B) => B.station);   // 경찰서 다섯 곳 (v121) — B.residents = 안에 상주하는 경찰, B.down = 파괴됨
+  function callPolice(spot) {                 // 사람이 감염될 때마다 (경찰도) — 출동 끝낸 경찰에게 사건 알림, 별 올리기
+    for (const b of bodies) if (b.kind === 'citizen' && b.onDuty) b.calls.push(new THREE.Vector2(spot.x, spot.z));
+    for (const car of cars) if (car.state === 'drive') car.calls.push(new THREE.Vector2(spot.x, spot.z));   // 달리는 경찰차도 새 사건 자리를 받는다 (v116)
+    lastIncident = new THREE.Vector2(spot.x, spot.z);
+    deaths++;
+    stars = Math.min(STAR_MAX, STAR_AT.filter((n) => deaths >= n).length);
+  }
+  function dispatchTick(dt) {                 // 걸음마다: 별이 있으면 출동 간격마다 한 번 — 사건 자리에서 가장 가까운 (안 부서진) 경찰서 한 곳에서만 (v121)
+    for (const S of stations) if (!S.down && S.members) stationTick(S);
+    for (const S of stations) if (!S.down && S.members && S.members.length && S.members.every((c) => c.kind !== 'citizen')) {   // 경찰서 고정 경찰(안·바깥·출동한 경찰 전부)이 다 감염됐다 → 그 경찰서 파괴 (v157)
+      S.down = true;
+      S.roof.material = stationDownMat;
+    }
+    stationDown = stations.every((S) => S.down);
+    if (!stars || stationDown) return;
+    dispatchT += dt;
+    if (dispatchT < DISPATCH_T(stars)) return;
+    dispatchT = 0;
+    const site = lastIncident ? lastIncident.clone() : new THREE.Vector2(me.foot.x, me.foot.z);
+    let S = null, best = Infinity;
+    for (const B of stations) {
+      if (B.down) continue;
+      const d = Math.hypot((B.x0 + B.x1) / 2 - site.x, (B.z0 + B.z1) / 2 - site.y);
+      if (d < best) { best = d; S = B; }
+    }
+    const n = Math.random() < 0.5 ? 1 : 2;
+    const D = S.doors[0], ox = D.cx + D.nx * 1.6, oz = D.cz + D.nz * 1.6;   // 그 경찰서 문 바로 밖
+    if (stars >= 2 && Math.random() < 0.5) addCar(ox + D.nx * 1.6, oz + D.nz * 1.6, Math.atan2(D.nz, D.nx), site, n);
+    else for (let i = 0; i < n; i++) {
+      const k = (i - (n - 1) / 2) * 0.9;     // 둘이면 나란히
+      addCitizen(ox + D.tx * k, oz + D.tz * k, null, 'police').calls.push(site.clone());
+    }
+  }
+
+  // ── 경찰차 (v113) ──
+  const cars = [];
+  let carObs = [];                            // 길 찾기용 서 있는 경찰차 원 {x, z, r} — 사이로 몸이 못 지나갈 만큼 붙은 차들은 한 원으로 합친다 (v139)
+  function updateCarObs() {
+    const cs = cars.filter((c) => c.state === 'parked').map((c) => ({ x: c.x, z: c.z, r: CAR_L / 2 + 0.15 }));
+    for (let merged = true; merged; ) {
+      merged = false;
+      for (let i = 0; i < cs.length && !merged; i++) for (let j = i + 1; j < cs.length; j++) {
+        const a = cs[i], b = cs[j], d = Math.hypot(a.x - b.x, a.z - b.z);
+        if (d >= a.r + b.r + 2 * BODY + 0.2) continue;
+        if (d + b.r <= a.r) { cs.splice(j, 1); merged = true; break; }          // b가 a 안에
+        if (d + a.r <= b.r) { cs[i] = b; cs.splice(j, 1); merged = true; break; } // a가 b 안에
+        const r = (d + a.r + b.r) / 2, t = (r - a.r) / d;                         // 둘을 감싸는 원
+        cs[i] = { x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t, r };
+        cs.splice(j, 1); merged = true; break;
+      }
+    }
+    carObs = cs;
+  }
+  const carGeo = new THREE.PlaneGeometry(CAR_L, CAR_W).rotateX(-Math.PI / 2);          // 몸통 (+x가 앞)
+  const glassGeo = new THREE.PlaneGeometry(0.45, CAR_W * 0.78).rotateX(-Math.PI / 2);  // 앞 유리
+  const lampGeo = new THREE.PlaneGeometry(0.34, 0.5).rotateX(-Math.PI / 2);            // 지붕 경광등 (빨강·파랑)
+  const carMat = (color, order) => new THREE.MeshBasicMaterial({ color, transparent: true, depthTest: false, depthWrite: false });
+  function addCar(x, z, h, site, n) {
+    const g = new THREE.Group(), red = carMat(0xff3b30), blue = carMat(0x2f6bff);
+    const body = new THREE.Mesh(carGeo, carMat(0x24305a)); body.renderOrder = -0.45;
+    const glass = new THREE.Mesh(glassGeo, carMat(0xa9bde8)); glass.position.x = CAR_L / 2 - 0.6; glass.renderOrder = -0.44;
+    const l1 = new THREE.Mesh(lampGeo, red); l1.position.set(-0.15, 0, -0.27); l1.renderOrder = -0.44;
+    const l2 = new THREE.Mesh(lampGeo, blue); l2.position.set(-0.15, 0, 0.27); l2.renderOrder = -0.44;
+    g.add(body, glass, l1, l2);
+    scene.add(g);
+    cars.push({ g, red, blue, x, z, vx: 0, vz: 0, h, calls: [site], n, state: 'drive', flashT: 0, sight: SIGHT * 0.7 * rand(0.8, 1.2), foot: new THREE.Vector3(x, 0, z) });   // calls = 들를 사건 자리 (새 감염도 여기 붙는다)
+  }
+  function carGoal(car) {                     // 지금 갈 곳 = 들를 사건 자리 중 가장 가까운 곳 (k = 그 번호), 없으면 주인공 (k = -1). 건물 안이면 그 문 앞 밖
+    let tx, tz, k = -1, best = Infinity;
+    car.calls.forEach((s, i) => { const d = Math.hypot(s.x - car.x, s.y - car.z); if (d < best) { best = d; k = i; } });
+    if (k >= 0) { tx = car.calls[k].x; tz = car.calls[k].y; }
+    else { const z = isZombie(me) ? me : bodies.find(isZombie); if (!z) return null; tx = z.foot.x; tz = z.foot.z; }   // 내가 죽었으면 아무 좀비나
+    const B = spaceOf(tx, tz);
+    if (B) {
+      const D = B.doors.reduce((a, o) => Math.hypot(o.cx - car.x, o.cz - car.z) < Math.hypot(a.cx - car.x, a.cz - car.z) ? o : a);
+      tx = D.cx + D.nx * 2.6; tz = D.cz + D.nz * 2.6;
+    }
+    return [tx, tz, k];
+  }
+  function unload(car) {                      // 양옆 문으로 1~2명 내린다 — 한 명이면 아무 쪽이나
+    const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx, off = CAR_W / 2 + BODY + 0.25;
+    const sides = car.n >= 2 ? [1, -1] : [Math.random() < 0.5 ? 1 : -1];
+    for (const sd of sides) {
+      const c = addCitizen(car.x + rx * off * sd, car.z + rz * off * sd, null, 'police');
+      for (const s of car.calls) c.calls.push(s.clone());   // 차가 아직 못 들른 사건 자리 (없으면 내린 뒤 주인공을 쫓는다)
+      c.baseSense = c.sense;                  // 내리는 순간 인지거리 2배 → 3초에 걸쳐 원래대로
+      c.dropT = DROP_SENSE_T;
+      c.sense = c.baseSense * DROP_SENSE;
+      c.tick = 0;                             // 바로 둘러본다
+    }
+  }
+  function updateCars(dt) {
+    for (const car of cars) {
+      if (car.state === 'parked') continue;
+      car.flashT += dt;
+      const on = Math.floor(car.flashT / 0.25) % 2 === 0;   // 경광등 번쩍
+      car.red.color.setHex(on ? 0xff3b30 : 0x5a1a17);
+      car.blue.color.setHex(on ? 0x1d2a55 : 0x2f6bff);
+      if (car.state === 'drive') {
+        let zombie = false;                   // 경찰 시야 안에 좀비 (밖에 있는 좀비만 — 경찰차는 늘 밖)
+        for (const z of zombies) if (isZombie(z) && !z.space && Math.hypot(z.foot.x - car.x, z.foot.z - car.z) <= car.sight) { zombie = true; break; }
+        const goal = zombie ? null : carGoal(car);
+        if (zombie || !goal) { car.state = 'brake'; car.brakeT = CAR_BRAKE_DELAY; }   // 좀비를 봤다 (또는 좀비가 하나도 없다) → 선다
+        else {
+          const [tx, tz, k] = goal, d = Math.hypot(tx - car.x, tz - car.z);
+          if (k >= 0 && d < 2.5) car.calls.splice(k, 1);   // 사건 자리에 닿았다 → 지우고 다음 곳으로 (서지 않는다)
+          else if (k < 0 && d < 1.5) carSteer(car, 0, 0, CAR_BRAKE * dt);   // 주인공이 건물 안이라 문 앞까지 왔다 → 문 앞에서 기다린다 (내리지는 않는다)
+          else {
+            const w = around(car.x, car.z, tx, tz, CAR_W / 2 + 0.6, CAR_L / 2 + 1.3);   // 건물은 넉넉히 돌아간다
+            const dx = w.x - car.x, dz = w.y - car.z, l = Math.hypot(dx, dz) || 1;
+            carSteer(car, dx / l * CAR_SPEED, dz / l * CAR_SPEED, CAR_ACCEL * dt);
+          }
+        }
+      }
+      if (car.state === 'brake') {
+        if (car.brakeT > 0) car.brakeT -= dt;  // 살짝 늦게 밟고
+        else carSteer(car, 0, 0, CAR_BRAKE * dt);   // 가던 방향 그대로 미끄러지며 선다
+        if (Math.hypot(car.vx, car.vz) < 0.05) {   // 섰다 → 경찰이 내리고 차는 그 자리에 계속 서 있다
+          car.vx = car.vz = 0;
+          car.state = 'parked';
+          updateCarObs();                     // 길 찾기에 이 차를 넣는다
+          car.red.color.setHex(0x4a3a3a);
+          car.blue.color.setHex(0x3a3f4a);
+          unload(car);
+        }
+      }
+      car.x += car.vx * dt;
+      car.z += car.vz * dt;
+      for (const B of buildings) {            // 혹시 건물에 파고들면 가장 가까운 벽 밖으로
+        const m = CAR_W / 2 + 0.2;
+        if (car.x <= B.x0 - m || car.x >= B.x1 + m || car.z <= B.z0 - m || car.z >= B.z1 + m) continue;
+        const l = car.x - (B.x0 - m), r = B.x1 + m - car.x, u = car.z - (B.z0 - m), w = B.z1 + m - car.z, k = Math.min(l, r, u, w);
+        if (k === l) car.x = B.x0 - m; else if (k === r) car.x = B.x1 + m; else if (k === u) car.z = B.z0 - m; else car.z = B.z1 + m;
+      }
+      if (Math.hypot(car.vx, car.vz) > 0.3) car.h = Math.atan2(car.vz, car.vx);   // 앞 = 가는 쪽
+    }
+  }
+  function carSteer(car, wx, wz, step) {
+    const dx = wx - car.vx, dz = wz - car.vz, d = Math.hypot(dx, dz);
+    if (d <= step) { car.vx = wx; car.vz = wz; } else { car.vx += dx / d * step; car.vz += dz / d * step; }
+  }
+  function carCollide() {                     // 경찰차 몸 = 네모 — 겹친 몸은 가장 가까운 변 밖으로. 달리던 차에 치이면 튕겨 날아가고(좀비는 데미지), 차는 그만큼 느려진다 (v137)
+    for (const car of cars) {
+      const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx;
+      for (const b of bodies) {
+        if (b.fixed || b.knockT > 0) continue;
+        const dx = b.foot.x - car.x, dz = b.foot.z - car.z, hu = CAR_L / 2 + b.r, hv = CAR_W / 2 + b.r;
+        if (b.hitT > 0 && b.hitT < clock) b.hitT = 0;
+        let u = dx * fx + dz * fz, v = dx * rx + dz * rz;
+        if (Math.abs(u) >= hu || Math.abs(v) >= hv) continue;
+        const sp = Math.hypot(car.vx, car.vz);
+        if (sp > 0.8 && !b.hitT) {            // 치였다 (한 번 치인 몸은 1초 동안은 다시 안 치인다 — 밀려나기만)
+          b.hitT = clock + 1;
+          const nl = Math.hypot(dx, dz) || 1;
+          let kx = car.vx / sp * 0.7 + dx / nl * 0.3, kz = car.vz / sp * 0.7 + dz / nl * 0.3;   // 차가 가던 쪽 + 살짝 옆으로
+          const kl = Math.hypot(kx, kz) || 1;
+          b.knockVX = kx / kl * sp * KNOCK;
+          b.knockVZ = kz / kl * sp * KNOCK;
+          b.knockT = KNOCK_T;
+          const dmg = CAR_HIT_DMG * sp / CAR_SPEED;   // 모두 데미지 (v138 — 시민·경찰도)
+          if (isZombie(b)) { b.hp = Math.max(0, b.hp - dmg); if (b.hp <= 0) b.knockDie = true; }   // 좀비는 죽으면 날아가서 멈춘 뒤에 사라진다
+          else if (b.hp > 0) b.hp = Math.max(0, b.hp - dmg);   // 시민·경찰은 체력이 깎인다 (0이 되면 덮칠 수 있게 된다)
+          const ns = Math.max(0, sp - CAR_SPEED / CAR_MASS);   // 차는 몸 하나 무게만큼 느려진다
+          car.vx *= ns / sp; car.vz *= ns / sp;
+        }
+        if (hu - Math.abs(u) < hv - Math.abs(v)) u = (u < 0 ? -1 : 1) * hu; else v = (v < 0 ? -1 : 1) * hv;
+        b.foot.x = car.x + u * fx + v * rx;
+        b.foot.z = car.z + u * fz + v * rz;
+      }
+    }
+  }
+  function drawCars(eyes) {                   // 좀비 시야 안에 있을 때만 보인다 (벽 너머는 안 보임)
+    for (const car of cars) {
+      let vis = false;
+      for (const z of eyes) {
+        if (Math.hypot(car.x - z.foot.x, car.z - z.foot.z) > z.sense + CAR_L / 2) continue;
+        if (!sightWalls.some((w) => crosses(z.foot.x, z.foot.z, car.x, car.z, w))) { vis = true; break; }
+      }
+      car.g.visible = vis;
+      car.g.position.set(car.x, 0.05, car.z);
+      car.g.rotation.y = -car.h;
+    }
+  }
+  // ── 미니맵 (v123) — 스타크래프트처럼: 못 가 본 곳 = 까맣게, 가 본 곳 = 흐린 회색(건물도 보임), 지금 좀비 시야 안 = 밝게. 경찰서는 늘 보라, 나는 빨간 점 ──
+  const MM = { x0: Math.min(...BLOCKS.map((b) => b[0])) - 26 * 0.8, x1: Math.max(...BLOCKS.map((b) => b[0])) + 26 * 0.8, z0: Math.min(...BLOCKS.map((b) => b[1])) - 55 * 0.8, z1: Math.max(...BLOCKS.map((b) => b[1])) + 26 * 0.8 };   // v144에 맵과 같이 여유도 20% 줄임   // 지도 전체 (동네 다섯 개 + 여유)
+  const MM_S = Math.min(128 * 2 / 3 / (MM.x1 - MM.x0), 136 * 2 / 3 / (MM.z1 - MM.z0));   // 미니맵 배율 (화면 px / 유닛) — 가로세로 같은 비율로 (v125, v126), v129에 3분의 2 크기 (약 85×91)
+  const MM_CW = Math.round((MM.x1 - MM.x0) * MM_S), MM_CH = Math.round((MM.z1 - MM.z0) * MM_S);
+  const MM_CELL = 2;                          // 가 본 곳 기록 칸 (유닛)
+  const mmW = Math.ceil((MM.x1 - MM.x0) / MM_CELL), mmH = Math.ceil((MM.z1 - MM.z0) / MM_CELL);
+  const explored = new Uint8Array(mmW * mmH); // 1 = 한 번이라도 좀비 시야에 들어온 칸
+  const mmFog = document.createElement('canvas');
+  mmFog.width = mmW; mmFog.height = mmH;
+  const mmFogCtx = mmFog.getContext('2d'), mmImg = mmFogCtx.createImageData(mmW, mmH);
+  const mmEl = document.getElementById('minimap'), mmCtx = mmEl.getContext('2d');
+  const mmDpr = Math.min(window.devicePixelRatio || 1, 3);
+  mmEl.style.width = MM_CW + 'px'; mmEl.style.height = MM_CH + 'px';
+  mmEl.width = Math.round(MM_CW * mmDpr); mmEl.height = Math.round(MM_CH * mmDpr);
+  let mmT = 0, mmDirty = true;
+  function exploreAround(x, z, R) {           // 이 둘레 R 안의 칸을 '가 본 곳'으로
+    const cx0 = Math.max(0, Math.floor((x - R - MM.x0) / MM_CELL)), cx1 = Math.min(mmW - 1, Math.floor((x + R - MM.x0) / MM_CELL));
+    const cz0 = Math.max(0, Math.floor((z - R - MM.z0) / MM_CELL)), cz1 = Math.min(mmH - 1, Math.floor((z + R - MM.z0) / MM_CELL));
+    for (let cz = cz0; cz <= cz1; cz++) for (let cx = cx0; cx <= cx1; cx++) {
+      const px = MM.x0 + (cx + 0.5) * MM_CELL - x, pz = MM.z0 + (cz + 0.5) * MM_CELL - z, k = cz * mmW + cx;
+      if (!explored[k] && px * px + pz * pz <= R * R) { explored[k] = 1; mmDirty = true; }
+    }
+  }
+  function updateMinimap(dt) {                // 0.1초마다
+    if ((mmT -= dt) > 0) return;
+    mmT = 0.1;
+    const eyes = isZombie(me) ? zombies : zombies.concat([me]);
+    for (const z of eyes) exploreAround(z.foot.x, z.foot.z, z.sense);
+    if (mmDirty) {                            // 가 본 곳 그림을 다시 만든다
+      const d = mmImg.data;
+      for (let i = 0; i < explored.length; i++) { const o = i * 4; d[o] = 104; d[o + 1] = 104; d[o + 2] = 112; d[o + 3] = explored[i] ? 255 : 0;   /* 가 본 곳 — v140에 다시 불투명 */ }
+      mmFogCtx.putImageData(mmImg, 0, 0);
+      mmDirty = false;
+    }
+    const W = mmEl.width, H = mmEl.height, sx = W / (MM.x1 - MM.x0), sz = H / (MM.z1 - MM.z0);
+    const X = (x) => (x - MM.x0) * sx, Z = (z) => (z - MM.z0) * sz;
+    mmCtx.clearRect(0, 0, W, H);
+    mmCtx.imageSmoothingEnabled = true;
+    mmCtx.drawImage(mmFog, 0, 0, W, H);                         // 가 본 곳
+    mmCtx.fillStyle = 'rgba(232, 232, 240, 0.9)';              // 지금 보이는 곳 (v140에 반투명 전 색으로)
+    mmCtx.beginPath();
+    for (const z of eyes) { if (!isZombie(z)) continue; const cx = X(z.foot.x), cz = Z(z.foot.z), r = z.sense * sx; mmCtx.moveTo(cx + r, cz); mmCtx.arc(cx, cz, r, 0, Math.PI * 2); }
+    mmCtx.fill();
+    mmCtx.fillStyle = '#3a3a42';                                // 가 본 곳의 건물 (v140에 반투명 전 색으로)
+    for (const B of buildings) {
+      if (B.station) continue;
+      const k = Math.floor(((B.z0 + B.z1) / 2 - MM.z0) / MM_CELL) * mmW + Math.floor(((B.x0 + B.x1) / 2 - MM.x0) / MM_CELL);
+      if (explored[k]) mmCtx.fillRect(X(B.x0), Z(B.z0), (B.x1 - B.x0) * sx, (B.z1 - B.z0) * sz);
+    }
+    for (const S of stations) {                                 // 경찰서 = 늘 보라 — 발견 전엔 아주 흐리게, 부서지면 위에 X (v124)
+      if (!S.found) {                                          // 경찰서 자리(둘레 1칸 포함)를 한 칸이라도 가 봤으면 발견
+        const cx0 = Math.max(0, Math.floor((S.x0 - 1 - MM.x0) / MM_CELL)), cx1 = Math.min(mmW - 1, Math.floor((S.x1 + 1 - MM.x0) / MM_CELL));
+        const cz0 = Math.max(0, Math.floor((S.z0 - 1 - MM.z0) / MM_CELL)), cz1 = Math.min(mmH - 1, Math.floor((S.z1 + 1 - MM.z0) / MM_CELL));
+        for (let cz = cz0; cz <= cz1 && !S.found; cz++) for (let cx = cx0; cx <= cx1; cx++) if (explored[cz * mmW + cx]) { S.found = true; break; }
+      }
+      const found = S.found || S.down, x = X(S.x0), y = Z(S.z0), w = (S.x1 - S.x0) * sx, h = (S.z1 - S.z0) * sz;
+      mmCtx.fillStyle = found ? '#b44ee6' : 'rgba(180, 78, 230, 0.28)';
+      mmCtx.fillRect(x, y, w, h);
+      if (S.down) {                                            // 부서진 경찰서 = 흰 X
+        const e = 1.2 * mmDpr;
+        mmCtx.beginPath();
+        mmCtx.moveTo(x - e, y - e); mmCtx.lineTo(x + w + e, y + h + e);
+        mmCtx.moveTo(x + w + e, y - e); mmCtx.lineTo(x - e, y + h + e);
+        mmCtx.lineWidth = 1.4 * mmDpr; mmCtx.strokeStyle = '#ffffff'; mmCtx.lineCap = 'round';
+        mmCtx.stroke();
+      }
+    }
+    const r = 2.2 * mmDpr;                                       // 나 = 빨간 점 (미니맵이 작아져서 조금 작게)
+    mmCtx.beginPath(); mmCtx.arc(X(me.foot.x), Z(me.foot.z), r, 0, Math.PI * 2);
+    mmCtx.fillStyle = '#ff3b30'; mmCtx.fill();
+    mmCtx.lineWidth = 1 * mmDpr; mmCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; mmCtx.stroke();
+  }
+
+  function updateStars() {                    // 위 가운데: 수배 별만 (v123 — 감염 수·출동 시간·경찰서 수는 뺌)
+    const html = '★'.repeat(stars) + '<span style="opacity:.3">' + '★'.repeat(STAR_MAX - stars) + '</span>';
+    if (html !== starsShown) { starsShown = html; starsEl.innerHTML = html; }
+  }
+  const starsEl = document.getElementById('stars');
+  let starsShown = '';
+
+  // 때리기: 상대 쪽으로 살짝 붙었다 제자리로 돌아오는 모션을 시작한다. 데미지는 붙는 순간(0.1초 뒤)에 들어간다.
+  function strike(a, v) {
+    const dx = v.foot.x - a.foot.x, dz = v.foot.z - a.foot.z, d = Math.hypot(dx, dz) || 1;
+    a.lungeT = 0;
+    a.lungeX = dx / d;
+    a.lungeZ = dz / d;
+    a.lungeVictim = v;
+  }
+
+  function landHit(a, v, dmg = DAMAGE) {
+    if (v.dead || !(v.kind === 'citizen' || isZombie(v)) || v.hp <= 0) return;
+    v.hp = Math.max(0, v.hp - dmg);
+    if (v.kind === 'citizen') {
+      if (v.state === 'held') return;
+      if (v.hp <= 0 && !v.police) {           // HP 0 → 놀람 없이 패닉, 이제 덮칠 수 있다 (경찰은 덮칠 수만 있고 계속 싸운다)
+        v.lastSeen.copy(a.foot);
+        v.lastSeenSpeed = a.speed;
+        enterPanic(v, null, true);
+        v.tick = 0;
+      } else if (v.state !== 'fight') enterFight(v, a, true);   // 처음 맞으면 맞서 싸운다 — 첫 상대는 때린 좀비
+    } else if (v.hp <= 0) dying.push(v);
+  }
+
+  // HP 0이 된 좀비: 동료는 사라지고, 나는 '죽었어'를 띄우고 멈춘다
+  function killZombie(z) {
+    if (z.dead) return;
+    z.dead = true;
+    const t = z.target;
+    if (t) {                                  // 덮치거나 무는 중이었으면 그 시민을 풀어 준다
+      t.marked = false;
+      t.fixed = false;
+      if (t.state === 'held') {
+        if (t.police) enterFight(t, null, true);   // 경찰은 풀려나면 바로 다시 쏜다
+        else { t.lastSeen.copy(z.foot); t.lastSeenSpeed = z.speed; enterPanic(t, null, true); }
+      }
+    }
+    z.target = null;
+    z.fixed = false;
+    z.vel.set(0, 0);
+    z.aim = null;
+    z.engaging = null;
+    unclaim(z);
+    if (z === me) {                           // 내 체력바는 빈 채로 남는다
+      me.mode = 'dead';
+      me.mesh.material.color.setHex(COLOR.dead);
+      note.textContent = "죽었어 — 오른쪽 위 '처음부터'를 눌러";
+      note.hidden = false;
+      return;
+    }
+    scene.remove(z.mesh);
+    z.mesh.material.dispose();
+    if (z.icon) { scene.remove(z.icon); z.icon.material.dispose(); }
+    if (z.gauge) scene.remove(z.gauge);
+    if (z.hpBar) scene.remove(z.hpBar);
+    bodies.splice(bodies.indexOf(z), 1);
+    assignSlots();
+  }
+
+  // 좀비가 HP 있는 시민을 노리면: 근접 거리까지 달려가서 1초마다 때린다 (HP가 0이 되면 그다음은 덮치기)
+  function fight(z, c, dt) {
+    z.engaging = c;                           // 수비형은 이걸 보고 '누가 나를 노리나'를 안다
+    const d = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z);
+    if (d > ATTACK_HOLD) z.attacking = false; // 상대가 1.5칸 밖 = 공격 중 아님 (다가가는 중)
+    if (d > MELEE) { steer(z.vel, toward(z, c.foot.x, c.foot.z, z.speed), ACCEL * dt); return; }
+    steer(z.vel, wantV.set(0, 0), ACCEL * dt);
+    if (z.atkT <= 0) { strike(z, c); z.atkT = HIT_EVERY; z.attacking = true; }   // 휘두르는 순간부터 공격 중
+  }
+
+  // ── 좀비: 손가락을 대면 이동만. 떼면 인지거리 안 타겟에게 달려가고, 덮침 거리에 들어오면 덮친다 ──
+  // 동료 좀비 = 늘 손을 뗀 나와 같다 (이동 속도·덮침 거리는 나보다 낮다). 거기에 더해
+  //   평소엔 내가 움직이는 동안 내 주변 자기 자리를 실시간으로 따라오고, 내가 멈추면 자리를 새로 뽑아(맡은 방향 칸 안에서 랜덤)
+  //   그리로 간 다음 그 근처를 배회한다.
+  //   시민을 쫓을 땐 지배 거리 밖까지도 나간다. 밖에 1~2초 넘게 있으면 복귀 명령 — 안에 들어올 때까지 어떤 시민도 안 쫓는다 (감염 중이면 끝까지 물고 나서).
+  //   단, 덮침 거리 안에 덮칠 수 있는 시민(HP 0)이 있으면 복귀 명령·싸움·찜보다 그걸 먼저 덮친다 (덮치기부터 감염까지 한 덩어리).
+  const NO_INPUT = new THREE.Vector2();
+
+  const inDomain = (b) => Math.hypot(b.foot.x - areaX(), b.foot.z - areaZ()) <= (b.attacking ? DOMAIN_FIGHT : DOMAIN) * (b.cmd ? b.cmd.mul : 1) * armyK;   // 공격 중이면 지배 거리가 늘어난다. 명령 중이면 (기본·공격 둘 다) 7초 동안 3배
+  // 덮치는 중(marked)인 시민은 아무도 안 노린다. 동료가 쫓기 시작해 찜한 시민은 다른 동료가 안 노린다 (나는 상관없이 노린다).
+  // HP가 남은 시민(수비형)은 찜이 없다 — 여럿이 같이 때린다. 다른 공간(건물 안·밖)에 있는 시민은 안 보인다.
+  const huntable = (z, b) => b && b.kind === 'citizen' && !b.marked && b.space === z.space && (z === me || b.hp > 0 || !b.chaser || b.chaser === z);
+
+  // 동료 좀비 찜: 쫓기 시작하면 그 시민에 내 이름을 걸고, 그만 쫓으면 푼다
+  function claimPrey(z, c) {
+    if (z.claim === c) return;
+    unclaim(z);
+    z.claim = c;
+    c.chaser = z;
+  }
+  function unclaim(z) {
+    if (z.claim && z.claim.chaser === z) z.claim.chaser = null;
+    z.claim = null;
+  }
+
+  // 한 시민에 붙는 좀비는 3명까지 (v148) — 이미 다른 좀비 3명이 붙어 있으면 그다음 가까운 시민을 노린다. 다른 타겟이 없을 때만 그래도 붙는다
+  const CROWD_MAX = 3;
+  const crowd = new Map();
+  function nearestCitizen(z, range) {
+    let best = null, bd = range, any = null, ad = range;
+    for (const b of bodies) {
+      if (!huntable(z, b)) continue;           // 다른 좀비가 노리는 중이면 건너뛴다
+      if (!inSight(z, b)) continue;            // 명령 중인 동료는 좁아진 인지 범위(1.8칸 원 + 명령 방향 부채꼴) 안만 본다
+      const d = Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z);
+      if (d > ad && d > bd) continue;
+      if (d <= ad) { ad = d; any = b; }
+      if (d <= bd && (z === me || b.hp <= 0 || (crowd.get(b) || 0) < CROWD_MAX)) { bd = d; best = b; }   // 나는 3명 제한 없이 늘 가장 가까운 시민 (v154)
+    }
+    return best || any;
+  }
+
+  // 동료가 지금 바로 덮칠 수 있는 시민 = 같은 공간, HP 0, 아무도 안 덮치는 중, 덮침 거리 안 — 그중 가장 가까운 시민.
+  // 이게 있으면 무조건 먼저 덮친다 — 복귀 명령·싸움·다른 동료의 찜보다 앞 (덮치기부터 감염까지를 한 덩어리로 친다)
+  function pounceable(z) {
+    let best = null, bd = z.attack;
+    for (const b of bodies) {
+      if (b.kind !== 'citizen' || b.marked || b.hp > 0 || b.space !== z.space) continue;
+      if (!inSight(z, b)) continue;            // 명령 중엔 보이는 시민만 덮친다
+      const d = Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z);
+      if (d <= bd && dashOk(z, b)) { bd = d; best = b; }
+    }
+    return best;
+  }
+
+  // 덮쳐도 되나: 덮치는 동안은 다른 몸을 통과해서(벽만 막힌다) 거의 늘 0.2초 안에 닿는다.
+  // 그래도 1초 안에 못 닿은 시민은(벽 모서리 등) 1초 동안 다시 안 덮친다 — 막혀서 제자리 덮치기를 되풀이하지 않게
+  const dashOk = (z, t) => !(z.skip === t && z.skipT > 0);
+
+  function stopPounce(z) {
+    z.target.marked = false;
+    z.target = null;
+    z.mode = 'free';
+    const s = z.vel.length();
+    if (s > z.speed) z.vel.multiplyScalar(z.speed / s);   // 덮치다 멈추면 평소 속도로 돌아온다
+  }
+
+  function startBite(z, t) {
+    z.mode = 'bite';
+    z.biteT = z.biteLen = z === me ? INFECT / MY_INFECT : INFECT;   // 나는 더 빨리 감염시킨다
+    z.vel.set(0, 0);
+    z.fixed = t.fixed = true;                // 무는 동안 둘 다 그 자리에 붙는다
+    t.state = 'held';
+    t.biter = z;                              // 게이지는 무는 쪽의 남은 시간으로 찬다
+    t.vel.set(0, 0);
+    const dx = z.foot.x - t.foot.x, dz = z.foot.z - t.foot.z, d = Math.hypot(dx, dz) || 1;
+    z.foot.set(t.foot.x + dx / d * BITE_GAP, 0, t.foot.z + dz / d * BITE_GAP);   // 반쯤 겹친 자리
+  }
+
+  function endBite(z, ok) {
+    const t = z.target;
+    z.mode = 'free';
+    z.target = null;
+    z.fixed = t.fixed = false;
+    t.marked = false;
+    if (ok) {                                 // 감염 성공 → 동료 좀비, 경찰 쪽엔 사건 하나 (경찰이 감염돼도)
+      makeZombie(t);
+      callPolice(t.foot);
+    } else if (t.police) enterFight(t, z, true);   // 경찰은 HP 0인 채 풀려나도 바로 다시 쏜다
+    else {                                    // 포기 → HP 0인 채 풀려나서 놀람 없이 바로 패닉
+      t.lastSeen.copy(z.foot);
+      t.lastSeenSpeed = z.speed;
+      enterPanic(t, null, true);
+      t.tick = 0;                             // 곧바로 주변을 다시 보고 방향을 고친다
+    }
+    z.split = t; t.split = z;                 // 둘이 천천히 떨어진다
+    z.splitT = t.splitT = 0.4;
+  }
+
+  function makeZombie(b) {
+    b.kind = 'ally';
+    b.state = '';
+    b.mesh.material.color.setHex(COLOR.ally);
+    b.mesh.remove(b.arrow);
+    b.icon.visible = false;
+    b.gauge.visible = false;
+    if (b.tracer) { scene.remove(b.tracer); b.tracer.material.dispose(); b.tracer = null; }
+    b.vel.set(0, 0);
+    b.mode = 'free';                          // free = 조작·대기, pounce = 덮치러 가는 중, bite = 무는 중
+    b.target = null;
+    if (b.boostT > 0) { b.sense = b.boostSense; b.sight = b.boostSight; b.boostT = 0; }   // 출동 직후 늘어난 시야는 좀비가 되면 원래대로 (v158)
+    b.sense = b.sight;                        // 좀비 인지거리 = 시민 때 자기 시야
+    b.speed = SPEED;
+    b.attack = ALLY_ATTACK;
+    b.tick = Math.random() * ZOMBIE_TICK;
+    b.pick = null;
+    b.slotA = 0;                              // 내 주변에서 맡은 방향 칸의 가운데 (assignSlots가 정한다)
+    b.slotOff = 0;                            // 지금 자리 방향 = 칸 가운데에서 이만큼 비켜서
+    b.slotK = rand(0.5, 1.5);                 // 지금 자리 거리 = 근접 거리(부대 크기만큼 커진) × 이 값 (±50%)
+    b.phase = 'track';                        // track = 자기 자리를 따라가는 중, wander = 자리에 도착해서 배회 중
+    b.home = new THREE.Vector2();             // 배회 중심 (도착한 자리)
+    b.goal = null;                            // 배회할 곳
+    b.timer = rand(...IDLE_TIME);
+    b.outT = 0;                               // 지배 거리 밖에 있은 시간
+    b.outLimit = 0;                           // 이번에 나갔을 때 복귀 명령까지 시간 (1~2초)
+    b.recall = false;                         // 복귀 명령 중 — 지배 거리 안에 들어올 때까지 시민을 안 쫓는다
+    b.hp = b.maxHp = ALLY_HP;                  // 좀비가 되면 체력 100으로 꽉 찬다 → 체력바는 다시 깎일 때까지 안 보인다 (수비형·공격형이었으면 바 색만 바꾼다)
+    if (b.hpBar) { b.hpFill.material = hpOurMat; b.hpDisp = b.hp; }
+    else addHpBar(b, hpOurMat);
+    b.atkT = 0;
+    b.foe = null;
+    assignSlots();
+  }
+
+  // 동료 좀비 방향 칸 = 나를 중심으로 360도를 동료 수만큼 나눈 칸 하나씩 (화면 기준 고정 — 내가 방향을 틀어도 안 돈다).
+  // 동료가 늘면 지금 서 있는 방향 순서대로 다시 나눈다 (서로 가로지르지 않게).
+  let allyN = 0;
+  let meMoving = false;                       // 내가 움직이는 중 (멈추는 순간 동료들이 자리를 새로 뽑는다)
+  // ── 내 영역 중심 — 근접 영역(동료 자리)·지배 영역(복귀 경계)은 나를 중심으로 하되, 내가 움직이는 방향으로 중심이 밀린다 (v110) ──
+  //   두 원은 중심을 같이 쓰고, 최대 근접 영역 반지름의 절반(약 2.05칸)까지만 밀린다 → 나는 늘 두 원 안. 공격 지배 거리·명령 받는 범위도 이 중심.
+  //   움직이면 그 방향 최대 자리까지 2.5초, 멈추면 나에게로 7초 (가속·감속, 출렁임 없음). 돌아오다 다시 움직이면 바로 그 방향으로.
+  const AREA_SHIFT = NEAR / 2;         // 최대로 밀리는 거리 = 근접 영역 반지름의 절반 (약 2.05칸) — 두 원 다 이만큼 (v111)
+  const AREA_GO = 4.74 / 2.5;          // 움직일 때 스프링 세기 — 2.5초에 거의 다(95%) 밀린다
+  const AREA_BACK = 4.74 / 7;          // 멈췄을 때 — 7초에 거의 다 돌아온다
+  const areaOff = new THREE.Vector2(), areaVel = new THREE.Vector2();   // 나 → 영역 중심, 그 움직이는 속도
+  let areaMoving = false;              // 영역 중심이 아직 움직이는 중 (동료가 자리를 계속 따라가게)
+  const areaX = () => me.foot.x + areaOff.x, areaZ = () => me.foot.z + areaOff.y;
+  function updateArea(dt) {
+    const v = me.vel, sp = Math.hypot(v.x, v.y), go = sp > 0.3 && me.mode !== 'dead';
+    const shift = AREA_SHIFT * armyK;         // 근접 영역이 커진 만큼 더 밀린다 (v122)
+    const tx = go ? v.x / sp * shift : 0, tz = go ? v.y / sp * shift : 0, w = go ? AREA_GO : AREA_BACK;
+    areaVel.x += (w * w * (tx - areaOff.x) - 2 * w * areaVel.x) * dt;   // 임계 감쇠 스프링 (카메라와 같은 방식)
+    areaVel.y += (w * w * (tz - areaOff.y) - 2 * w * areaVel.y) * dt;
+    areaOff.x += areaVel.x * dt;
+    areaOff.y += areaVel.y * dt;
+    const l = areaOff.length();
+    if (l > shift) areaOff.multiplyScalar(shift / l);   // 반지름의 절반을 넘지 않게
+    areaMoving = areaVel.length() > 0.05;
+  }
+
+  function assignSlots() {
+    const allies = bodies.filter((b) => b.kind === 'ally');
+    const n = allyN = allies.length;
+    if (!n) return;
+    const now = allies.map((b) => Math.atan2(b.foot.z - areaZ(), b.foot.x - areaX()));   // 영역 중심 기준 방향
+    const order = allies.map((_, i) => i).sort((i, j) => now[i] - now[j]);
+    let sx = 0, sy = 0;                       // 지금 자리에서 가장 덜 움직이게 돌리는 각
+    order.forEach((i, k) => { const off = now[i] - (k / n) * Math.PI * 2; sx += Math.cos(off); sy += Math.sin(off); });
+    const base = Math.atan2(sy, sx);
+    const half = Math.PI / n * SLOT_SPREAD;   // 칸이 좁아졌으면 지금 자리도 칸 안으로
+    order.forEach((i, k) => {
+      const b = allies[i];
+      b.slotA = base + (k / n) * Math.PI * 2;
+      b.slotOff = Math.max(-half, Math.min(half, b.slotOff));
+    });
+  }
+
+  // 새 자리 = 맡은 방향 칸 안 아무 방향 + 근접 거리 ±50% 아무 거리 (내가 멈출 때, 복귀 명령 때)
+  function freshSlot(z) {
+    z.slotOff = (Math.random() * 2 - 1) * Math.PI / Math.max(1, allyN) * SLOT_SPREAD;
+    z.slotK = rand(0.5, 1.5);
+  }
+
+  // 자리 = 내 위치 + 자리 방향으로 자리 거리만큼 (나와 같이 움직인다).
+  // 나와 같은 공간 안으로 당긴다 — 내가 건물 안이면 그 건물 안(벽에서 0.7칸), 밖이면 건물 밖(벽에서 0.7칸)
+  const slotV = new THREE.Vector2();
+  function slotOf(z) {
+    const r = z.slotK * NEAR * armyK;          // 자리 거리 — 부대가 커지면 같이 넓어진다 (v122)
+    let x = areaX() + Math.cos(z.slotA + z.slotOff) * r, y = areaZ() + Math.sin(z.slotA + z.slotOff) * r;   // 영역 중심 둘레 (v110)
+    const B = me.space, m = 0.7;
+    if (B) { x = Math.max(B.x0 + m, Math.min(B.x1 - m, x)); y = Math.max(B.z0 + m, Math.min(B.z1 - m, y)); }
+    else for (const C of buildings) {
+      if (x <= C.x0 - m || x >= C.x1 + m || y <= C.z0 - m || y >= C.z1 + m) continue;
+      if (x > C.x0 && x < C.x1 && y > C.z0 && y < C.z1) {   // 근접 영역이 건물 안까지 걸치면 그 자리는 건물 안 — 동료가 문으로 들어간다 (v148)
+        x = Math.max(C.x0 + m, Math.min(C.x1 - m, x)); y = Math.max(C.z0 + m, Math.min(C.z1 - m, y));
+        break;
+      }
+      const l = x - (C.x0 - m), r = C.x1 + m - x, u = y - (C.z0 - m), w = C.z1 + m - y, k = Math.min(l, r, u, w);   // 가장 가까운 벽 바깥으로
+      if (k === l) x = C.x0 - m; else if (k === r) x = C.x1 + m; else if (k === u) y = C.z0 - m; else y = C.z1 + m;
+    }
+    if (!B) for (const O of carObs) {         // 서 있는 경찰차 위에 자리가 걸리면 차 밖으로 (v139)
+      const dx = x - O.x, dz = y - O.z, d = Math.hypot(dx, dz), R = O.r + BODY + 0.6;   // 길 찾기가 돌아가는 원보다 살짝 밖
+      if (d >= R) continue;
+      if (d > 1e-6) { x = O.x + dx / d * R; y = O.z + dz / d * R; } else x = O.x + R;
+    }
+    return slotV.set(x, y);
+  }
+
+  // 동료 좀비가 지배 거리 밖에 1~2초 넘게 있으면 복귀 명령. 지배 거리 안에 들어오면 풀린다.
+  function recallCheck(z, dt) {
+    if (z.mode === 'pounce' || z.mode === 'bite') { z.outT = 0; return; }   // 습격·감염 중엔 지배 거리를 안 본다 — 끝난 뒤부터 다시 잰다 (그 전에 받은 복귀 명령은 그대로)
+    if (inDomain(z)) { z.outT = 0; z.recall = false; return; }
+    if (z.outT === 0) z.outLimit = rand(...RECALL_DELAY);
+    z.outT += dt;
+    if (!z.recall && z.outT >= z.outLimit) {
+      z.recall = true;
+      z.cmd = null;                           // 복귀 명령을 받으면 수행 중이던 명령은 끝난다 (v102)
+      z.cmdWall = null;
+      freshSlot(z);                           // 돌아갈 자리도 새로 뽑는다 — 들어온 뒤 타겟이 없으면 그 자리까지 온다
+      z.phase = 'track';
+    }
+  }
+
+  // 복귀 명령 중: 어떤 시민도 안 보고 자기 자리로 간다
+  function goSlot(z, dt) {
+    const s = slotOf(z);
+    steer(z.vel, toward(z, s.x, s.y, z.speed), ACCEL * dt);
+  }
+
+  // 타겟이 없는 동료 좀비
+  //   추적: 내가 움직이는 동안, 그리고 내가 멈춘 뒤 새 자리에 닿을 때까지 — 자기 자리를 실시간으로 따라간다
+  //         (내 움직임 + 자리 쪽으로. 뛰던 속도 그대로, 닿기 직전에만 살짝 줄인다)
+  //   배회: 새 자리에 닿으면 그 근처를 천천히 걷다 서기를 반복한다. 내가 다시 움직이면 추적.
+  function allyIdle(z, dt) {
+    if (meMoving || areaMoving) z.phase = 'track';   // 나나 영역 중심이 움직이는 동안은 자리를 따라간다
+    if (z.phase === 'track') {
+      const sl = slotOf(z), dx = sl.x - z.foot.x, dz = sl.y - z.foot.z, d = Math.hypot(dx, dz);
+      const w = via(z, sl.x, sl.y);
+      if (w.x !== sl.x || w.y !== sl.y) {     // 벽이 가로막으면(다른 공간·건물 너머) 길 찾기대로 간다 — 내 움직임은 안 보탠다
+        steer(z.vel, toward(z, sl.x, sl.y, z.speed), ACCEL * dt);
+        return;
+      }
+      const toSlot = Math.min(z.speed, d * 3);
+      const walk = d > 0.05 ? toSlot / d : 0;
+      const mv = me.mode === 'free' ? me.vel : NO_INPUT;   // 내가 덮치러 튀어 나가는 건 따라 하지 않는다
+      wantV.set(mv.x + dx * walk, mv.y + dz * walk);
+      const s = wantV.length();
+      if (s > z.speed) wantV.multiplyScalar(z.speed / s);
+      steer(z.vel, wantV, ACCEL * dt);
+      if (!meMoving && !areaMoving && d < 0.3) {   // 새 자리에 도착 (영역 중심도 멈췄다) → 배회
+        z.phase = 'wander';
+        z.home.set(z.foot.x, z.foot.z);
+        z.goal = null;
+        z.timer = rand(...IDLE_TIME);
+      }
+      return;
+    }
+    if (z.goal) {                             // 배회: 도착한 자리 근처 한 곳으로 천천히 걸어간다
+      const gx = z.goal.x - z.foot.x, gz = z.goal.y - z.foot.z, g = Math.hypot(gx, gz);
+      if (g < 0.1) { z.goal = null; z.timer = rand(...IDLE_TIME); steer(z.vel, wantV.set(0, 0), ACCEL * dt); }
+      else { const s = Math.min(ALLY_WALK, g * 3); steer(z.vel, wantV.set(gx / g * s, gz / g * s), ACCEL * dt); }
+    } else {                                  // 배회: 서 있다가 근처 다음 곳을 고른다
+      steer(z.vel, wantV.set(0, 0), ACCEL * dt);
+      if ((z.timer -= dt) <= 0) {
+        const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * WANDER_R;
+        const gx = z.home.x + Math.cos(a) * r, gz = z.home.y + Math.sin(a) * r;
+        if (freeSpot(gx, gz, z.space)) z.goal = new THREE.Vector2(gx, gz);
+        else z.timer = rand(...IDLE_TIME);    // 벽 너머·벽 바로 옆이면 이번엔 그대로 서 있는다
+      }
+    }
+  }
+
+  function updateZombie(z, dt) {
+    if (z.knockT > 0) { knockStep(z, dt); return; }
+    const commanding = z === me && cmdPid !== null;   // 명령키를 누르고 있는 동안 주인공은 가만히 선다 — 이동·사냥 안 함 (v107. 하던 습격·감염은 마저 한다)
+    const touching = z === me && pid !== null && !commanding;   // 손가락을 대고 있다 (조종하는 나만)
+    const input = z === me && !commanding ? move : NO_INPUT;
+    const aimed = z.aim;                         // 지난 걸음에 빨간 테두리를 띄운 시민
+    z.aim = null;
+    z.engaging = null;                           // 이번 걸음에 HP 있는 시민을 공격 대상으로 잡으면 fight()가 다시 채운다
+    if (z !== me) cmdTick(z);                    // 명령 시간이 다 됐으면 풀고, 아니면 지배 거리 배율·부채꼴 각도 갱신
+    if (z.atkT > 0) z.atkT -= dt;
+    if (z.skipT > 0) z.skipT -= dt;
+    if ((z.tick -= dt) <= 0) {                   // 시민처럼 틱마다 타겟을 새로 뽑는다 = 인지거리 안 가장 가까운 시민 (때리던 상대도 더 가까운 시민이 있으면 바뀐다)
+      z.tick += ZOMBIE_TICK;
+      const old = z.pick;
+      if (old && crowd.has(old)) crowd.set(old, crowd.get(old) - 1);   // 내 몫을 빼고 다시 고른다
+      z.pick = nearestCitizen(z, z.sense);
+      if (z.pick && z.pick.hp > 0) crowd.set(z.pick, (crowd.get(z.pick) || 0) + 1);
+    }
+    if (z !== me) recallCheck(z, dt);            // 감염 중에도 시간은 센다 — 물기는 끝까지, 끝나면 바로 복귀
+    const p = z.pick;
+    const ready = huntable(z, p) && Math.hypot(p.foot.x - z.foot.x, p.foot.z - z.foot.z) <= z.attack ? p : null;   // 덮치기 가능 = 타겟이 덮침 거리 안
+    let jump = null;                             // 동료가 무조건 먼저 덮칠 시민 (아래에서 정한다)
+    if (z.mode === 'bite') {
+      if (input.x || input.y) endBite(z, false);   // 움직이면 감염 포기
+      else if ((z.biteT -= dt) <= 0) endBite(z, true);
+      else z.hp = Math.min(z.maxHp, z.hp + z.maxHp * (z === me ? MY_BITE_HEAL : BITE_HEAL) * dt);   // 무는 중 체력 회복 (나는 1.3배)
+    }
+    if (z.mode === 'pounce') {
+      const t = z.target;
+      const dx = t.foot.x - z.foot.x, dz = t.foot.z - z.foot.z, d = Math.hypot(dx, dz);
+      if (touching) stopPounce(z);              // 손가락을 대면 그만
+      else if ((z.pounceT -= dt) <= 0) { z.skip = t; z.skipT = 1; stopPounce(z); }   // 1초 안에 못 닿았다(막혔다) → 이 시민은 1초 동안 다시 안 덮친다
+      else if (d - BITE_GAP <= z.speed * POUNCE * dt + 0.02) startBite(z, t);   // 이번 걸음에 닿으면 바로 문다 (도망치는 상대도 놓치지 않게)
+      else z.vel.set(dx / d * z.speed * POUNCE, dz / d * z.speed * POUNCE);   // 덮치기는 가감속 없이 확 튀어 나간다
+    }
+    if (z.mode === 'free') {
+      if (touching) {
+        steer(z.vel, wantV.set(input.x * z.speed, input.y * z.speed), ACCEL * dt);   // 조이스틱 오른쪽 = 바닥 오른쪽, 아래 = 카메라 쪽
+        z.aim = ready;                             // 지금 손을 떼면 덮칠 시민 → 빨간 테두리
+      } else if (commanding) {
+        steer(z.vel, wantV.set(0, 0), ACCEL * dt);   // 명령 중: 그냥 선다 (아이들)
+      } else if (z !== me && (jump = pounceable(z))) {   // 동료: 덮칠 수 있으면 무조건 먼저 (복귀 명령 중이어도)
+        unclaim(z);
+        z.phase = 'track';
+        z.mode = 'pounce'; z.target = jump; z.pounceT = 1; jump.marked = true;
+      } else if (z !== me && z.recall) {
+        unclaim(z);
+        goSlot(z, dt);                             // 복귀 명령 — 지배 거리 안에 들어올 때까지 유혹 무시
+      } else {
+        const t = aimed && aimed.kind === 'citizen' && !aimed.marked && aimed.space === z.space ? aimed : ready;   // 테두리가 떠 있던 시민은 무조건 노린다 (문 밖으로 나가 버렸으면 빼고)
+        const prey = huntable(z, p) ? p : null;
+        const go = t || prey;
+        if (z !== me) {
+          if (go) z.phase = 'track';               // 동료 좀비: 사냥이 끝나면 자기 자리로 간 다음 배회
+          if (prey && !t && prey.hp <= 0) claimPrey(z, prey); else unclaim(z);   // HP 0 시민을 쫓는 동안 찜 (덮치면 marked가 대신한다)
+        }
+        if (go && go.hp > 0) fight(z, go, dt);     // HP가 남았으면 가서 때린다
+        else if (t && dashOk(z, t)) { z.mode = 'pounce'; z.target = t; z.pounceT = 1; t.marked = true; }
+        else if (prey || t) { const q = prey || t; steer(z.vel, toward(z, q.foot.x, q.foot.z, z.speed * RAID), ACCEL * dt); }   // 습격: 타겟이 인지거리 안 → 습격 속도로 자동으로 달려간다 (방금 덮쳐서 못 닿은 시민이면 1초 동안은 덮치지 않고 다가간다)
+        else if (z === me) steer(z.vel, wantV.set(0, 0), ACCEL * dt);   // 나는 타겟이 없으면 살짝 미끄러지며 선다
+        else if (z.cmd) cmdRun(z, z.cmd, dt);    // 명령 중: 보이는 타겟이 없으면 명령 방향으로 달린다
+        else allyIdle(z, dt);
+      }
+    }
+    if (!z.engaging) z.attacking = false;     // 이번 걸음에 싸우지 않았다 (습격·감염·복귀·추적·배회) = 공격 중 아님
+  }
+
+  // 겹친 둘을 떼어 놓는다. 무는 중인 둘은 꿈쩍 않고, 부딪힌 쪽만 밀려난다.
+  // 무게: 밀고 들어간 쪽(상대 쪽으로 움직이던 쪽)이 거의 다 물러나고, 밀린 쪽은 조금만 밀려난다. 둘 다 같은 빠르기로 마주 오면 반반.
+  // 미는 힘(force): 센 쪽이 밀면 상대가 그만큼 더 비켜나고, 약한 쪽이 밀면 센 쪽은 그만큼 덜 밀린다 (나만 MY_FORCE배)
+  // 덮치는 중인 좀비는 다른 몸을 통과한다 (벽은 그대로 막힌다)
+  const byX = [];
+  function collide(dt) {
+    const give = 0.5 / WEIGHT;                 // 밀린 쪽이 비켜 주는 몫 (WEIGHT 1 = 반반 = 예전) — 힘이 같을 때
+    byX.length = 0;                            // x 순서로 늘어놓고, x 차이가 몸 두 개 폭보다 크면 그 뒤는 안 본다 (지도가 커져서, v121)
+    for (const b of bodies) byX.push(b);
+    byX.sort((p, q) => p.foot.x - q.foot.x);
+    const reach = MY_BODY + BODY + 0.05;
+    for (let i = 0; i < byX.length; i++) {
+      const a = byX[i];
+      for (let j = i + 1; j < byX.length; j++) {
+        const b = byX[j];
+        if (b.foot.x - a.foot.x > reach) break;
+        if (a.fixed && b.fixed) continue;
+        if (a.target === b || b.target === a) continue;   // 덮치는 중·무는 중엔 둘이 겹친다
+        if (a.mode === 'pounce' || b.mode === 'pounce') continue;   // 덮치는 동안은 아무 몸이나 통과
+        const dx = b.foot.x - a.foot.x, dz = b.foot.z - a.foot.z, d = Math.hypot(dx, dz), min = a.r + b.r;
+        if (d >= min) continue;
+        const nx = d > 1e-6 ? dx / d : 1, nz = d > 1e-6 ? dz / d : 0;
+        let push = min - d;
+        if (a.split === b) push = Math.min(push, SPLIT * dt);   // 물기가 끝난 둘은 천천히 떨어진다
+        let ka = 0.5;                            // a가 물러나는 몫 (나머지는 b)
+        if (a.fixed) ka = 0;
+        else if (b.fixed) ka = 1;
+        else {
+          const pa = Math.max(0, a.vel.x * nx + a.vel.y * nz), pb = Math.max(0, -(b.vel.x * nx + b.vel.y * nz));   // 서로 상대 쪽으로 움직이던 빠르기
+          const yb = Math.min(1, give * a.force / b.force), ya = Math.min(1, give * b.force / a.force);   // a가 밀 때 b가 비켜나는 몫, b가 밀 때 a가 비켜나는 몫
+          if (pa + pb > 1e-6) ka = (pa * (1 - yb) + pb * ya) / (pa + pb);
+        }
+        const kb = 1 - ka;
+        a.foot.x -= nx * push * ka;
+        a.foot.z -= nz * push * ka;
+        b.foot.x += nx * push * kb;
+        b.foot.z += nz * push * kb;
+      }
+    }
+  }
+
+  // ── 시야 — 좀비마다 자기 인지거리만큼 둥글게 보이고, 벽에 가린 곳은 안 보인다. 모든 좀비 시야를 합쳐서 보여 준다.
+  //    시야 밖은 어둡게 덮고, 거기 있는 시민·경찰은 안 그린다. 지붕이 덮인 건물(좀비가 없는 건물) 안 사람도 안 보인다 ──
+  const FOG = 0.85 * 0.8;   /* v141에 20% 옅게 (0.85 → 0.68) */ //            // 시야 밖 어둠 진하기 (1 = 완전 검정)
+  const VIEW_RAYS = 120;       // 시야 둘레를 이만큼 나눠 벽까지 거리를 잰다 (벽 끝 모서리 쪽은 따로 더 쏜다)
+  const MAX_TRI = 60000;
+  const visGeo = new THREE.BufferGeometry();
+  const visPos = new Float32Array(MAX_TRI * 9);
+  visGeo.setAttribute('position', new THREE.BufferAttribute(visPos, 3));
+  const visMask = new THREE.Mesh(visGeo, new THREE.MeshBasicMaterial({   // 시야 자리에 스텐실 1을 찍는다 (색은 안 칠한다)
+    colorWrite: false, depthWrite: false, depthTest: false, side: THREE.DoubleSide,
+    stencilWrite: true, stencilRef: 1, stencilFunc: THREE.AlwaysStencilFunc, stencilZPass: THREE.ReplaceStencilOp,
+  }));
+  visMask.frustumCulled = false;
+  visMask.renderOrder = -5;
+  scene.add(visMask);
+  const fog = new THREE.Mesh(new THREE.PlaneGeometry(GROUND, GROUND).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({   // 스텐실 1이 아닌 곳만 어둡게
+    color: 0x0b0b0d, transparent: true, opacity: FOG, depthWrite: false, depthTest: false,
+    stencilWrite: true, stencilRef: 1, stencilFunc: THREE.NotEqualStencilFunc, stencilFail: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp, stencilZPass: THREE.KeepStencilOp,
+  }));
+  fog.renderOrder = -0.52;     // 바닥·지붕·벽 위, 캐릭터 밑
+  fog.frustumCulled = false;
+  scene.add(fog);
+  // 시야를 막는 벽 = 건물마다 벽 두께까지 친 바깥 네모와 안쪽 네모 (문도 시야는 막는다 — 밖에서 안, 안에서 밖이 안 보인다)
+  const sightWalls = [], sightCorners = [];
+  for (const B of buildings) for (const k of [WALL / 2, -WALL / 2]) {
+    const x0 = B.x0 - k, x1 = B.x1 + k, z0 = B.z0 - k, z1 = B.z1 + k;
+    sightWalls.push([x0, z0, x1, z0], [x1, z0, x1, z1], [x0, z1, x1, z1], [x0, z0, x0, z1]);
+    sightCorners.push([x0, z0], [x1, z0], [x1, z1], [x0, z1]);
+  }
+  const rayAngles = [];
+  function drawVision(eyes) {
+    let n = 0;
+    for (const z of eyes) {
+      const x = z.foot.x, y = z.foot.z, R = z.sense;
+      const near = sightWalls.filter(([ax, az, bx, bz]) => Math.max(ax, bx) >= x - R && Math.min(ax, bx) <= x + R && Math.max(az, bz) >= y - R && Math.min(az, bz) <= y + R);   // 시야 안에 걸치는 벽만 (지도가 커져서, v121)
+      rayAngles.length = 0;
+      for (let k = 0; k < VIEW_RAYS; k++) rayAngles.push(k / VIEW_RAYS * Math.PI * 2);
+      for (const [ex, ez] of sightCorners) {      // 벽 끝을 스치는 방향 — 가장자리가 반듯하게
+        if (Math.hypot(ex - x, ez - y) > R + 0.5) continue;
+        const a = (Math.atan2(ez - y, ex - x) + Math.PI * 2) % (Math.PI * 2);   // 0~2π로 맞춰야 순서대로 이어진다
+        rayAngles.push(a - 1e-4, a + 1e-4);
+      }
+      rayAngles.sort((a, b) => a - b);
+      let px = 0, pz = 0, fx = 0, fz = 0;
+      for (let i = 0; i <= rayAngles.length; i++) {
+        let qx, qz;
+        if (i < rayAngles.length) {
+          const a = rayAngles[i], dx = Math.cos(a), dz = Math.sin(a), hit = wallRay(x, y, dx, dz, R, near);
+          const d = hit;
+          qx = x + dx * d; qz = y + dz * d;
+        } else { qx = fx; qz = fz; }
+        if (i === 0) { fx = qx; fz = qz; }
+        else if (n < MAX_TRI) {
+          const o = n * 9;
+          visPos[o] = x; visPos[o + 1] = 0.04; visPos[o + 2] = y;
+          visPos[o + 3] = px; visPos[o + 4] = 0.04; visPos[o + 5] = pz;
+          visPos[o + 6] = qx; visPos[o + 7] = 0.04; visPos[o + 8] = qz;
+          n++;
+        }
+        px = qx; pz = qz;
+      }
+    }
+    visGeo.attributes.position.needsUpdate = true;
+    visGeo.setDrawRange(0, n * 3);
+    fog.position.set(Math.round(me.foot.x), 0.04, Math.round(me.foot.z));
+  }
+  function seen(b, eyes) {                    // 좀비 하나라도 인지거리 안에서 벽에 안 가리고 보고 있나 (지붕 덮인 건물 안이면 안 보인다)
+    if (b.space && !b.space.open) return false;
+    for (const z of eyes) {
+      if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) > z.sense + RADIUS) continue;
+      if (!sightWalls.some((w) => crosses(z.foot.x, z.foot.z, b.foot.x, b.foot.z, w))) return true;
+    }
+    return false;
+  }
+
+  function draw(dt) {
+    const eyes = bodies.filter((b) => isZombie(b) || b === me);   // 시야 = 나 + 동료 좀비 전부 (내가 죽어도 마지막 자리 시야는 남는다)
+    for (const B of buildings) {              // 좀비가 하나라도 들어간 건물만 지붕이 열린다
+      B.open = eyes.some((z) => z.space === B);
+      B.roof.visible = !B.open;
+      if (B.label) B.label.visible = !B.open;
+    }
+    drawVision(eyes);
+    drawCars(eyes);
+    for (const b of bodies) {
+      const hide = !(b === me || isZombie(b) || seen(b, eyes));   // 시민·경찰은 좀비 시야 안에 있을 때만 보인다
+      b.mesh.visible = !hide;
+      b.mesh.position.copy(b.foot).addScaledVector(UP, RADIUS);   // 원 아랫끝이 바닥에 닿는다
+      if (b.knockT > 0) b.mesh.position.y += Math.sin(Math.PI * (1 - b.knockT / KNOCK_T)) * 0.9;   // 치여 날아갈 때 살짝 떠오른다
+      if (b.lungeT >= 0) {                    // 때리는 모션: 상대 쪽으로 빠르게 붙었다가 돌아온다 (그림만)
+        const k = b.lungeT < LUNGE_IN ? b.lungeT / LUNGE_IN : Math.max(0, 1 - (b.lungeT - LUNGE_IN) / LUNGE_OUT);
+        b.mesh.position.x += b.lungeX * LUNGE * k;
+        b.mesh.position.z += b.lungeZ * LUNGE * k;
+      }
+      let barUp = false;                      // 체력바가 떠 있으면 ? ! !!!를 그 위로
+      if (b.hpBar) {
+        b.hpDisp += (b.hp - b.hpDisp) * Math.min(1, dt * 12);   // 깎이는 게 보이게 빠르게 따라 줄어든다
+        barUp = b === me || b.hp < b.maxHp;   // 내 바는 늘 떠 있다               // 깎여 있으면 뜬다 (회복이 없어서 한 번 뜨면 계속) — HP 0이면 빈 바, 꽉 차 있으면 안 보인다
+        b.hpBar.visible = barUp && !hide;
+        if (barUp) {
+          b.hpBar.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + 0.22 + (b === me ? GAUGE_H : 0));   // 내 바는 두 배 두꺼워서 아래 끝이 같게 조금 올린다
+          b.hpFill.scale.x = Math.max(0.001, b.hpDisp / b.maxHp);
+        }
+      }
+      if (b.kind !== 'citizen') continue;
+      if (b.tracer) {                         // 경찰이 쏜 노란 선 — 두 원 가운데를 잇고, 흐려지며 사라진다
+        b.tracer.visible = b.shotT >= 0 && !hide;
+        if (b.shotT >= 0) {
+          const t = b.shotAt.foot, dx = t.x - b.foot.x, dz = t.z - b.foot.z;
+          b.tracer.position.set(b.foot.x + dx / 2, 0, b.foot.z + dz / 2).addScaledVector(UP, RADIUS);
+          b.tracer.rotation.y = -Math.atan2(dz, dx);
+          b.tracer.scale.x = Math.hypot(dx, dz) || 1e-3;
+          b.tracer.material.opacity = 1 - b.shotT / SHOT_FLASH;
+          if ((b.shotT += dt) >= SHOT_FLASH) b.shotT = -1;
+        }
+      }
+      b.arrow.visible = b.vel.length() > 0.15;
+      b.arrow.rotation.z = Math.atan2(-b.vel.y * SIN_P, b.vel.x);   // 바닥 위 방향 → 화면 위 방향
+      const gauged = b.state === 'held' && !!b.biter;   // 감염 시계 — 내가 물 때는 크게(내 UI 층), 동료가 물 때는 절반 크기로 (v133)
+      b.gauge.visible = gauged && !hide;
+      if (gauged) {                           // 둥근 시계 — 체력바 자리 위로 (물 때는 내 굵은 체력바도 바로 옆에 있어서 늘 그 위로 띄운다)
+        const mine = b.biter === me, k = mine ? CLOCK_ME : CLOCK_ME * 2 / 3;   // 내 시계 1.2배, 동료 시계는 내 것의 3분의 2 (v136)
+        b.gauge.scale.setScalar(k);
+        b.gaugeTrack.renderOrder = (mine ? UI_ME : UI) + 2;   // 내 것은 내 UI 층, 동료 것은 보통 UI 층
+        b.gaugeFill.renderOrder = (mine ? UI_ME : UI) + 3;
+        b.gauge.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + 0.22 + GAUGE_H / 2 + (mine ? 0.2 : 0.08) + (CLOCK_R + 0.06) * k);
+        const f = Math.min(1, Math.max(0, 1 - b.biter.biteT / b.biter.biteLen));
+        b.gaugeFill.geometry = clockFillGeos[Math.round(f * CLOCK_N)];
+      }
+      const kind = b.state === 'super' ? '!!' : b.state === 'alert' ? '?' : (b.state === 'panic' || b.state === 'fight') && b.notice > 0 ? '!' : '';   // 덮칠 때 뜨던 !!!는 뺐다 (v131)
+      if (kind !== b.iconKind) {
+        b.iconKind = kind;
+        b.iconT = 0;
+        if (kind) b.icon.material.map = ICONS[kind];
+      }
+      b.icon.visible = kind !== '' && !hide;
+      if (!kind) continue;
+      b.iconT += dt;
+      const k = Math.min(1, b.iconT / 0.12), s = ICON_H * (0.6 + 0.4 * (1 - (1 - k) * (1 - k)));   // 뜰 때 살짝 튀어나온다
+      b.icon.scale.set(s * 2, s, 1);
+      b.icon.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + ICON_H * 0.6 + (barUp ? 0.35 : 0) + (gauged ? (CLOCK_R * 2 + 0.25) * (b.biter === me ? CLOCK_ME : CLOCK_ME * 2 / 3) : 0));   // 체력바·게이지가 있으면 그 위로
+    }
+    if (me.aim) { me.aim.mesh.add(aimRing); aimRing.visible = true; }
+    else aimRing.visible = false;
+  }
+
+  function place() {
+    camera.position.copy(me.foot).addScaledVector(UP, RADIUS).addScaledVector(BACK, camDist);   // 카메라는 나를 정면으로 겨눈다 (때리는 모션엔 안 흔들린다). 거리는 부대 크기만큼 (v122)
+    nearRing.scale.setScalar(armyK);          // 영역 원도 부대 크기만큼
+    domainRing.scale.setScalar(armyK);
+    fightRing.scale.setScalar(armyK);
+    camera.position.x += camOff.x;            // 명령 컨트롤키를 누르는 동안 화살표 방향으로 살짝 옮겨 간다
+    camera.position.z += camOff.y;
+    ground.position.set(Math.round(me.foot.x), 0, Math.round(me.foot.z));  // 1칸 단위로만 옮겨서 격자는 제자리
+    nearRing.position.set(areaX(), 0.012, areaZ());   // 영역 원은 영역 중심에 (숨겨져 있다)
+    domainRing.position.set(areaX(), 0.012, areaZ());
+    fightRing.position.set(areaX(), 0.012, areaZ());
+  }
+
+  function resize() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.setViewOffset(w, h, 0, (0.5 - SCREEN_Y) * h, w, h);   // 화면을 아래로 밀어 내가 위에서 40% 자리에 오게
+  }
+
+  // ── 조이스틱: 화면 아래 가운데에 늘 떠 있다. 화면 아무 데나 누르고 끌면 누른 자리 기준 방향으로 움직인다 (v96) ──
+  let pid = null, bx = 0, by = 0;
+  const move = new THREE.Vector2();     // 조이스틱 방향 (길이 1, 멈추면 0)
+  function local(e) { const r = stage.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+
+  let fsTried = false;                        // 처음 화면을 누를 때 한 번 전체 화면을 청한다 — 되는 브라우저(안드로이드·PC)만. 아이폰은 '홈 화면에 추가'한 앱으로 (v127)
+  function tryFullscreen() {
+    if (fsTried) return;
+    fsTried = true;
+    const standalone = window.matchMedia && window.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
+    const el = document.documentElement, req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (standalone || !req || document.fullscreenElement || !(document.fullscreenEnabled || document.webkitFullscreenEnabled)) return;
+    try { const p = req.call(el, { navigationUI: 'hide' }); if (p && p.catch) p.catch(() => {}); } catch (_) {}
+  }
+  stage.addEventListener('pointerdown', (e) => {
+    tryFullscreen();
+    if (pid !== null) return;
+    pid = e.pointerId;
+    try { stage.setPointerCapture(pid); } catch (_) {}
+    [bx, by] = local(e);
+    knob.style.transform = 'translate(0px, 0px)';   // 조이스틱은 아래 가운데에 고정 — 화면 아무 데나 누르고 끌면 그 방향으로 손잡이가 움직인다 (v96)
+    joy.classList.add('on');
+    move.set(0, 0);
+    e.preventDefault();
+  });
+  stage.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== pid) return;
+    const [x, y] = local(e);
+    const dx = x - bx, dy = y - by, len = Math.hypot(dx, dy);
+    const k = len > JOY_R ? JOY_R / len : 1;
+    knob.style.transform = `translate(${dx * k}px, ${dy * k}px)`;
+    if (len > DEAD) move.set(dx / len, dy / len); else move.set(0, 0);   // 방향만 본다 — 속도는 늘 같음
+  });
+  function release(e) {
+    if (e.pointerId !== pid) return;
+    pid = null;
+    joy.classList.remove('on');
+    knob.style.transform = 'translate(0px, 0px)';
+    move.set(0, 0);
+  }
+  stage.addEventListener('pointerup', release);
+  stage.addEventListener('pointercancel', release);
+  stage.addEventListener('lostpointercapture', release);
+  document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
+  // ── 명령 컨트롤키 (이동 조이스틱 오른쪽 위의 작은 조이스틱): 누르고 있는 동안 내 발밑에 방향 화살표가 뜨고, 손가락을 돌리면 같이 돈다.
+  //    카메라는 화살표 방향으로 살짝 옮겨 가고, 놓으면 화살표가 사라지고 카메라가 돌아온다. 이동 조이스틱과 같이 쓸 수 있다 (v98) ──
+  const CMD_R = 24;          // 손잡이가 움직이는 반지름 (px)
+  const CMD_DEAD = 6;        // 가운데에서 이만큼(px)은 벗어나야 방향이 바뀐다 — 가운데를 누르면 지난 방향 그대로
+  const CMD_PEEK = 4;        // 카메라가 화살표 방향으로 옮겨 가는 거리 (유닛)
+  const CMD_PEEK_T = 1.4;    // 카메라가 옮겨 가는 데 걸리는 시간 (초, 95%쯤 도착) — v101에 0.7초, v105에 두 배 느리게
+  const CMD_W = 4.74 / CMD_PEEK_T;   // 카메라 스프링 세기 — 임계 감쇠라 천천히 출발(가속)해서 천천히 선다(감속), 출렁임 없음
+  const CMD_W_BACK = CMD_W / 2;      // 손 뗀 뒤(명령 후) 돌아올 때는 갈 때보다 두 배 느리게 — 2.8초쯤 (v103, v105)
+  const cmdEl = document.getElementById('cmd'), cmdKnob = document.getElementById('cmdKnob');
+  const SHOW_CMD = false;    // 명령 컨트롤키 — v109에 숨김 (코드는 그대로 둠). 다시 쓰려면 true
+  cmdEl.style.display = SHOW_CMD ? '' : 'none';
+  const cmdDir = new THREE.Vector2(0, -1);   // 화살표 방향 (바닥 기준: x 동쪽, y = z 남쪽) — 처음엔 위(북)
+  const CMD_TIME = 7;        // 명령 수행 시간 (초) — 손 뗀 순간부터 세서, 받은 동료 모두 같은 때 끝난다
+  const CMD_COOL = 2.5;      // 명령 쿨타임 (초) — 손 뗀 순간부터. 그동안 키가 어둡게 덮여 있고 눌리지 않는다
+  const CMD_NEAR = 1.8;      // 명령 중 동료의 주변 인지거리 — 바로 붙은 적만 안다
+  const CMD_ARC = 30;        // 명령 방향 부채꼴의 처음 각도 (도) — 7초에 걸쳐 고르게 펴져 360도가 된다. 길이 = 원래 인지거리
+  const CMD_RANGE = DOMAIN * 2;   // 명령을 받아들이는 범위 = 나에게서 지배 거리의 2배 (v108, 약 12.5칸)
+  const CMD_DOMAIN = 3;      // 명령 중 동료의 지배 거리 배율 (기본·공격 둘 다) — 7초 내내 3배, 7초가 지나는 즉시 1배 (v104에 2 → 3, v106에 서서히 → 즉시)
+  let clock = 0;             // 판 시간 (초)
+  let cmdReadyAt = 0;        // 이때부터 다시 명령할 수 있다
+  let cmdCdShown = -1;       // 키에 그려 둔 쿨타임 (같으면 다시 안 그린다)
+  const camOff = new THREE.Vector2();        // 카메라가 지금 옮겨 가 있는 만큼 (x, z)
+  const camVel = new THREE.Vector2();        // 그 옮겨 가는 속도 (가속·감속용)
+  let cmdPid = null;
+  const cmdArrow = (() => {                  // 바닥에 눕힌 흰 화살표 — 주인공(원 가운데)을 중심으로 360도 돈다. 원 바로 밖에서 시작해 3칸쯤까지 (+x를 가리키게 만들고 돌려서 쓴다)
+    const a = new THREE.Shape();
+    a.moveTo(0.75, -0.14); a.lineTo(2.3, -0.14); a.lineTo(2.3, -0.45); a.lineTo(3.1, 0); a.lineTo(2.3, 0.45); a.lineTo(2.3, 0.14); a.lineTo(0.75, 0.14); a.closePath();
+    const m = new THREE.Mesh(new THREE.ShapeGeometry(a).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, depthTest: false, depthWrite: false }));
+    m.renderOrder = UI_ME + 6;               // 내 UI — 맨 위 (v132, 전엔 캐릭터 밑)
+    m.visible = false;
+    scene.add(m);
+    return m;
+  })();
+  function cmdAim(e) {                        // 손가락 자리 → 손잡이·화살표 방향 (키 가운데 기준)
+    const r = cmdEl.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2), len = Math.hypot(dx, dy);
+    const k = len > CMD_R ? CMD_R / len : 1;
+    cmdKnob.style.transform = `translate(${dx * k}px, ${dy * k}px)`;
+    if (len > CMD_DEAD) {                     // 바닥이 비스듬히 보이는 만큼 세로를 늘려서 — 화면에 보이는 화살표가 손가락 방향과 똑같이 가리키게
+      const gz = dy / SIN_P, l = Math.hypot(dx, gz);
+      cmdDir.set(dx / l, gz / l);
+    }
+  }
+  cmdEl.addEventListener('pointerdown', (e) => {
+    if (cmdPid !== null || clock < cmdReadyAt) return;   // 쿨타임 중엔 안 눌린다
+    cmdPid = e.pointerId;
+    try { cmdEl.setPointerCapture(cmdPid); } catch (_) {}
+    cmdEl.classList.add('on');
+    cmdAim(e);
+    e.preventDefault();
+    e.stopPropagation();
+  });
+  cmdEl.addEventListener('pointermove', (e) => { if (e.pointerId === cmdPid) cmdAim(e); });
+  function cmdRelease(e, fire) {
+    if (e.pointerId !== cmdPid) return;
+    cmdPid = null;
+    cmdEl.classList.remove('on');
+    cmdKnob.style.transform = 'translate(0px, 0px)';
+    if (fire) issueCommand();                 // 손 뗀 순간 = 명령 (터치가 취소된 거면 안 낸다)
+  }
+  cmdEl.addEventListener('pointerup', (e) => cmdRelease(e, true));
+  cmdEl.addEventListener('pointercancel', (e) => cmdRelease(e, false));
+  cmdEl.addEventListener('lostpointercapture', (e) => cmdRelease(e, false));
+
+  // ── 명령: 손 뗀 순간 나에게서 지배 거리의 2배(약 12.5칸) 안에 있는 동료가 받는다 (v102, v108) ──
+  //   7초 동안 — 주변 인지거리는 1.8칸으로 줄고(붙은 적만 안다), 명령 방향 부채꼴(길이 = 원래 인지거리)이 더해진다 (둘의 합집합).
+  //   부채꼴은 명령 방향에 고정, 처음 30도에서 7초에 걸쳐 고르게 펴져 360도(원래 원)가 된다.
+  //   보이는 타겟이 없으면 명령 방향으로 달리고(벽에 막히면 벽을 따라), 보이면 평소처럼 쫓는다(습격·싸움·감염).
+  //   지배 거리(기본·공격 둘 다)는 7초 내내 3배, 끝나는 즉시 1배. 그래도 밖에 오래 있어서 복귀 명령을 받으면 명령은 끝난다.
+  //   습격·감염 중이던 동료는 끝내고 남은 시간만 따른다 (끝나는 때는 다 같다). 새 명령을 받으면 바로 새 명령으로. 명령 쿨타임 2.5초.
+  function issueCommand() {
+    const cosHalf = Math.cos(CMD_ARC * Math.PI / 360);
+    for (const z of bodies) {
+      if (z.kind !== 'ally' || z.dead) continue;
+      if (Math.hypot(z.foot.x - areaX(), z.foot.z - areaZ()) > CMD_RANGE * armyK) continue;   // 명령 받는 범위(지배 거리의 2배) 밖 동료는 안 받는다
+      z.cmd = { dx: cmdDir.x, dz: cmdDir.y, t0: clock, mul: CMD_DOMAIN, cosHalf };
+      z.cmdWall = null;
+      z.recall = false;
+      z.outT = 0;
+      z.tick = 0;                             // 바로 다시 둘러본다 — 좁아진 인지 범위로
+    }
+    cmdReadyAt = clock + CMD_COOL;
+  }
+  function cmdTick(z) {                       // 걸음마다 (동료): 명령이 끝났으면 풀고, 아니면 지금 배율·부채꼴 각도를 갱신
+    const c = z.cmd;
+    if (!c) return;
+    const e = clock - c.t0;
+    if (e >= CMD_TIME) { z.cmd = null; z.cmdWall = null; freshSlot(z); z.phase = 'track'; return; }   // 끝 → 평소처럼 내 주변 자리로
+    c.mul = CMD_DOMAIN;                       // 7초 동안 그대로 — 끝나면 위에서 명령을 풀어 바로 1배
+    c.cosHalf = Math.cos((CMD_ARC + (360 - CMD_ARC) * e / CMD_TIME) * Math.PI / 360);
+  }
+  function inSight(z, b) {                    // b가 z의 인지 범위 안인가 — 평소엔 인지거리 원, 명령 중엔 1.8칸 원 + 명령 방향 부채꼴
+    const dx = b.foot.x - z.foot.x, dz = b.foot.z - z.foot.z, d = Math.hypot(dx, dz), c = z.cmd;
+    if (d > z.sense) return false;
+    if (!c || d <= CMD_NEAR) return true;
+    return dx * c.dx + dz * c.dz >= d * c.cosHalf;   // 명령 방향과 이루는 각이 부채꼴 반각 안
+  }
+  function wallHit(x, z, dx, dz, max) {      // 이 방향으로 max 안에 처음 닿는 벽 (없으면 null)
+    let best = max, hit = null;
+    for (const w of walls) {
+      const [ax, az, bx, bz] = w, ex = bx - ax, ez = bz - az, den = dx * ez - dz * ex;
+      if (Math.abs(den) < 1e-9) continue;
+      const t = ((ax - x) * ez - (az - z) * ex) / den, s = ((ax - x) * dz - (az - z) * dx) / den;
+      if (t > 0 && t < best && s >= 0 && s <= 1) { best = t; hit = w; }
+    }
+    return hit;
+  }
+  function cmdRun(z, c, dt) {                 // 명령 방향으로 달린다 — 벽에 막히면 벽을 따라 (명령 방향에 가까운 쪽, 정면이면 벽 끝이 가까운 쪽)
+    let wx = c.dx, wz = c.dz;
+    const look = z.r + 0.35;
+    const hit = wallHit(z.foot.x, z.foot.z, wx, wz, look);
+    if (hit) {
+      const [ax, az, bx, bz] = hit, L = Math.hypot(bx - ax, bz - az), tx = (bx - ax) / L, tz = (bz - az) / L;
+      if (z.cmdWall !== hit) {                // 새 벽에 막혔다 → 따라갈 쪽을 정한다
+        z.cmdWall = hit;
+        const along = c.dx * tx + c.dz * tz;
+        if (Math.abs(along) > 0.2) z.cmdSlide = Math.sign(along);
+        else {
+          const toB = (bx - z.foot.x) * tx + (bz - z.foot.z) * tz, toA = (z.foot.x - ax) * tx + (z.foot.z - az) * tz;
+          z.cmdSlide = toB < toA ? 1 : -1;
+        }
+      }
+      wx = tx * z.cmdSlide; wz = tz * z.cmdSlide;
+      if (wallHit(z.foot.x, z.foot.z, wx, wz, look)) { z.cmdSlide = -z.cmdSlide; wx = -wx; wz = -wz; }   // 구석 → 반대쪽으로
+    } else z.cmdWall = null;
+    steer(z.vel, wantV.set(wx * z.speed, wz * z.speed), ACCEL * dt);
+  }
+  function updateCmd(dt) {                    // 걸음마다: 화살표를 내 발밑에 붙이고, 카메라 옮김을 목표 쪽으로 부드럽게, 쿨타임 표시
+    const on = cmdPid !== null;
+    const cd = Math.ceil(Math.max(0, cmdReadyAt - clock) / CMD_COOL * 100) / 100;   // 남은 쿨타임 (1 → 0)
+    if (cd !== cmdCdShown) { cmdCdShown = cd; cmdEl.style.setProperty('--cd', cd); }
+    cmdArrow.visible = on;
+    if (on) {
+      cmdArrow.position.set(me.foot.x, 0.045, me.foot.z - RADIUS / SIN_P);   // 회전 중심 = 화면에 보이는 내 원의 한가운데 (발끝보다 이만큼 북쪽 바닥이 원 가운데와 겹쳐 보인다) — v99
+      cmdArrow.rotation.y = -Math.atan2(cmdDir.y, cmdDir.x);
+    }
+    const tx = on ? cmdDir.x * CMD_PEEK : 0, tz = on ? cmdDir.y * CMD_PEEK : 0;   // 목표: 누르는 동안 화살표 쪽 4칸, 놓으면 제자리
+    const w = on ? CMD_W : CMD_W_BACK;       // 갈 때 1.4초, 돌아올 때 2.8초
+    camVel.x += (w * w * (tx - camOff.x) - 2 * w * camVel.x) * dt;     // 임계 감쇠 스프링 — 멀면 붙는 힘, 빠르면 브레이크
+    camVel.y += (w * w * (tz - camOff.y) - 2 * w * camVel.y) * dt;
+    camOff.x += camVel.x * dt;
+    camOff.y += camVel.y * dt;
+  }
+
+  // ── 판 깔기: 나는 가운데, 활동 영역마다 시민 몇 명, 건물마다 안에 사람들 ──
+  function spawn() {
+    for (const b of bodies) {
+      scene.remove(b.mesh);
+      b.mesh.material.dispose();
+      if (b.icon) { scene.remove(b.icon); b.icon.material.dispose(); }
+      if (b.gauge) scene.remove(b.gauge);
+      if (b.hpBar) scene.remove(b.hpBar);
+      if (b.tracer) { scene.remove(b.tracer); b.tracer.material.dispose(); }
+    }
+    bodies.length = 0;
+    dying.length = 0;
+    camOff.set(0, 0);
+    areaOff.set(0, 0);
+    areaVel.set(0, 0);
+    camVel.set(0, 0);
+    camDist = DIST;
+    explored.fill(0);                         // 미니맵 — 새 판은 다시 다 까맣게
+    mmDirty = true;
+    mmT = 0;
+    deaths = stars = dispatchT = 0;
+    stationDown = false;
+    lastIncident = null;
+    for (const car of cars) scene.remove(car.g);
+    cars.length = 0;
+    carObs = [];
+    for (const S of stations) { S.down = false; S.found = false; S.roof.material = stationRoofMat; }   // 미니맵에서 다시 '발견 전'으로
+    cmdReadyAt = 0;
+    for (const r of rings) scene.remove(r);
+    rings.length = 0;
+    note.hidden = true;
+
+    me = addBody('me', 0, 0);
+    me.mode = 'free';
+    me.target = null;
+    me.maxHp = MY_HP;
+    me.hp = MY_HP * MY_START_HP;
+    me.r = MY_BODY;                          // 내 부딪힘은 작고 미는 힘은 세다 — 동료들 사이에 덜 갇히게
+    me.force = MY_FORCE;
+    addHpBar(me, hpOurMat);
+    me.hpBar.scale.set(1.2, 3, 1);   // v136에 가로 20% 늘림   // v76에 1.5배 더 두껍게 (늘 떠 있다)                    // 내 체력바는 두 배 두껍고, 다른 바·표시보다 늘 위에 그린다 (섞여도 보이게)
+    for (const m of me.hpBar.children) m.renderOrder += UI_ME - UI;   // 내 체력바 = 내 UI 층 (다른 UI보다 위)
+    me.sense = SIGHT * rand(0.9, 1.1);       // 좀비 인지거리 = 시민의 시야
+    me.speed = MY_SPEED;                     // 이동 속도 (동료와 같다)
+    me.attack = ATTACK;
+    me.tick = 0;
+    me.pick = null;
+    const placeOut = (area) => {            // 영역 안 빈 자리 — 내 시작 자리에서 SAFE_R 밖, 다른 사람과 1.2칸 넘게 (못 찾으면 null)
+      for (let t = 0; t < 80; t++) {
+        const g = pickGoal(area);
+        if (Math.hypot(g.x - me.foot.x, g.y - me.foot.z) < SAFE_R) continue;
+        if (bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2)) continue;
+        return g;
+      }
+      return null;
+    };
+    for (const [ox, oz] of BLOCKS) GROUPS.forEach((kinds, i) => {   // 동네마다 시민 묶음 10개 (v121)
+      if (!kinds) return;                     // 빈 묶음 — 영역 테두리도 안 그린다 (다른 묶음 자리는 그대로)
+      const a = i / GROUPS.length * Math.PI * 2, cx = ox + Math.sin(a) * GROUP_DIST, cz = oz - Math.cos(a) * GROUP_DIST;   // 그 동네 가운데에서 북쪽(-z)부터 시계 방향
+      const area = square(cx, cz);
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(cx, 0.01, cz);
+      ring.renderOrder = -1;
+      scene.add(ring);
+      rings.push(ring);
+      for (const k of kinds) {
+        const g = placeOut(area);
+        if (g) addCitizen(g.x, g.y, area, GROUP_TYPE[k]);
+      }
+    });
+    for (const B of buildings) {             // 건물 사람들 — 활동 영역 = 그 건물 안
+      for (const [k, n] of Object.entries(B.kinds)) for (let i = 0; i < n; i++) {
+        let g = pickGoal(B);
+        for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(B);
+        addCitizen(g.x, g.y, B, GROUP_TYPE[k]).home = B;
+      }
+    }
+    buildings.forEach((B, bi) => {           // 시민 건물 둘레 — 자리는 랜덤 (v115, v118에 인원 절반)
+      if (B.station) return;
+      const ring = { x0: B.x0 - 6, z0: B.z0 - 6, x1: B.x1 + 6, z1: B.z1 + 6 };   // 건물 둘레 6칸 (건물 안은 pickGoal이 뺀다)
+      for (const type of AROUND_MIX(B.local)) {
+        const g = placeOut(ring);
+        if (g) addCitizen(g.x, g.y, ring, type);
+      }
+    });
+    for (const [ox, oz] of BLOCKS) for (const [px, pz] of PATROL_AT) {   // 길거리 순찰 경찰 — 동네마다 2명씩, 지도 전체 10명. 자기 자리 둘레만 배회하고 출동·추적은 안 한다 (v134)
+      const area = { x0: ox + px - 4, z0: oz + pz - 4, x1: ox + px + 4, z1: oz + pz + 4 };
+      const g = placeOut(area);
+      if (!g) continue;
+      const c = addCitizen(g.x, g.y, area, 'police');
+      c.post = area;
+      c.area = area;
+      enterNormal(c);
+    }
+    for (const S of stations) {               // 경찰서마다 경찰 — 안에 15명 상주, 둘레에 10명·앞마당에 5명 배회. 출동하지 않는다
+      S.residents = [];
+      const cx = (S.x0 + S.x1) / 2;
+      const ring = { x0: S.x0 - 5, z0: S.z0 - 5, x1: S.x1 + 5, z1: S.z1 + 5 };   // 둘레 (건물 안은 pickGoal이 뺀다)
+      const front = { x0: cx - 6, z0: S.z1 + 1.5, x1: cx + 6, z1: S.z1 + 8 };    // 앞마당 = 문 앞(남쪽)
+      S.ringA = ring; S.frontA = front; S.outer = []; S.members = []; S.hurt = 0;
+      for (let i = 0; i < STATION_IN + STATION_OUT + STATION_FRONT; i++) {
+        const inside = i < STATION_IN, area = inside ? S : i < STATION_IN + STATION_OUT ? ring : front;
+        let g = pickGoal(area);
+        for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(area);
+        const c = addCitizen(g.x, g.y, area, 'police');
+        c.station = S;                        // 어느 경찰서 경찰인지
+        c.area = area;
+        enterNormal(c);
+        if (inside) S.residents.push(c); else S.outer.push(c);
+        S.members.push(c); c.lastHp = c.hp;
+      }
+    }
+  }
+  // 경찰서 호출 (v157) — 바깥 경찰(처음 3명 + 출동해 나온 경찰)이 잃은 피를 다 더해서 경찰 체력의 1/10을 넘을 때마다 한 번.
+  //   호출마다 안의 경찰 1명이 (v160) 다친 경찰 자리로 뛰어나와 바깥 경찰이 된다. 안에 좀비가 있거나 안 인원이 3명 이하면 무시.
+  //   싸움이 끝나 할 일이 없어진 바깥 경찰은 3명만 남기고 다시 안으로 들어간다.
+  const CALL_HP = POLICE_HP / 10;
+  function stationTick(S) {
+    const alive = (c) => c.kind === 'citizen' && bodies.includes(c);
+    S.outer = S.outer.filter(alive);
+    S.residents = S.residents.filter(alive);
+    for (const c of S.outer) {
+      if (c.hp < c.lastHp) S.hurt += c.lastHp - c.hp;
+      c.lastHp = c.hp;
+    }
+    for (const c of S.residents) c.lastHp = c.hp;   // 안에서 깎인 피는 안 센다
+    for (const c of S.outer) if (c.sortie && !c.boosted && c.space !== S) {   // 출동한 경찰이 경찰서 건물 밖으로 나오는 순간 → 인지거리·시야 3배 (v158)
+      c.boosted = true;
+      if (!(c.boostT > 0)) { c.boostSense = c.sense; c.boostSight = c.sight; }
+      c.boostT = SORTIE_SENSE_T;
+      c.sense = c.boostSense * SORTIE_SENSE;
+      c.sight = c.boostSight * SORTIE_SENSE;
+    }
+    while (S.hurt >= CALL_HP) {
+      S.hurt -= CALL_HP;
+      if (S.residents.length <= 3 || zombies.some((z) => z.space === S)) continue;   // 호출 무시
+      const n = 1;   // 호출 한 번에 한 명 (v160 — 전엔 1~2명)
+      for (let i = 0; i < n; i++) {
+        const c = S.residents.splice(Math.floor(Math.random() * S.residents.length), 1)[0];
+        S.outer.push(c);
+        c.area = S.ringA;
+        c.sortie = true;
+        const D = S.doors[0], a = rand(-1, 1);   // 문 밖 바로 앞까지만 뛰어나온다 — 거기서부터는 3배 시야로 좀비를 찾는다 (v159: 다친 경찰 자리로 가지 않는다)
+        c.calls.length = 0; c.calls.push(new THREE.Vector2(D.cx + D.nx * 2 + D.tx * a, D.cz + D.nz * 2 + D.tz * a));
+      }
+    }
+    if (S.outer.length > STATION_OUT_MIN) for (const c of S.outer.slice()) {   // 할 일 끝난 출동 경찰 → 안으로 (바깥 3명은 남긴다)
+      if (S.outer.length <= STATION_OUT_MIN) break;
+      if (!c.sortie || c.calls.length || c.boostT > 0 || c.state === 'fight' || c.state === 'alert') continue;   // 늘어난 시야가 남아 있는 동안(4초)은 안 들어간다
+      c.sortie = false;
+      c.boosted = false;                      // 다음에 또 출동하면 다시 3배
+      S.outer.splice(S.outer.indexOf(c), 1);
+      S.residents.push(c);
+      c.area = S;
+      c.goal = pickGoal(S);
+      c.back = true;
+    }
+  }
+  document.getElementById('reset').addEventListener('click', spawn);
+
+  let camDist = DIST;                         // 지금 카메라 거리 — 부대 크기에 맞춰 부드럽게 따라간다 (v122)
+  function stepWorld(dt) {
+    clock += dt;
+    zombies.length = 0;
+    for (const b of bodies) if (isZombie(b)) zombies.push(b);
+    crowd.clear();                            // 시민마다 지금 노리는 좀비 수 (v148) — 타겟을 새로 뽑을 때마다 바로 고쳐서, 같은 순간에 뽑는 좀비끼리도 겹치지 않는다
+    for (const z of zombies) if (z.pick && z.pick.kind === 'citizen' && z.pick.hp > 0) crowd.set(z.pick, (crowd.get(z.pick) || 0) + 1);
+    const n = zombies.length - (isZombie(me) ? 1 : 0), k = 1 + Math.max(0, n - ARMY_FREE) * ARMY_STEP;   // 부대 크기 = 동료 수
+    if (n !== armyN) { armyN = n; armyK = k; updateLegend(); }
+    camDist += (DIST * armyK - camDist) * Math.min(1, dt * 2);
+    const moving = me.vel.length() > 0.3;
+    if (meMoving && !moving) for (const b of bodies) if (b.kind === 'ally') { freshSlot(b); b.phase = 'track'; }   // 내가 멈추면 동료는 자리를 새로 뽑고 그리로 간다
+    meMoving = moving;
+    updateArea(dt);                           // 영역 중심을 내 이동 방향으로 밀거나 나에게로 되돌린다
+    for (const b of bodies) {                 // 걸음 전 자리·공간 — 건물 사람이 문 밖으로 나가면 그때부터 활동 영역 제한이 풀린다
+      b.px = b.foot.x; b.pz = b.foot.z;
+      b.space = spaceOf(b.foot.x, b.foot.z);
+      if (b.home && b.space !== b.home) b.freed = true;
+    }
+    for (const b of bodies) if (isZombie(b)) updateZombie(b, dt);
+    for (const b of bodies) if (b.kind === 'citizen') updateCitizen(b, dt);
+    for (const b of bodies) {
+      if (!b.fixed) { b.foot.x += b.vel.x * dt; b.foot.z += b.vel.y * dt; }
+      if (b.split && (b.splitT -= dt) <= 0) b.split = null;
+      if (b.lungeT >= 0) {                    // 때리는 모션 시간 — 붙는 순간 데미지
+        const before = b.lungeT;
+        b.lungeT += dt;
+        if (before < LUNGE_IN && b.lungeT >= LUNGE_IN && b.lungeVictim) { landHit(b, b.lungeVictim, b === me ? MY_DAMAGE : DAMAGE); b.lungeVictim = null; }
+        if (b.lungeT >= LUNGE_IN + LUNGE_OUT) b.lungeT = -1;
+      }
+    }
+    for (const z of dying) killZombie(z);    // HP 0이 된 좀비 처리 (목록을 돌고 난 뒤에 지운다)
+    dying.length = 0;
+    updateCars(dt);                           // 경찰차 달리기·서기·내리기
+    collide(dt);
+    carCollide();                             // 경찰차에 겹친 몸은 밀어낸다
+    for (const b of bodies) if (!b.fixed) wallCollide(b);   // 벽은 마지막에 — 서로 밀다가 벽을 넘지 않게
+    dispatchTick(dt);                         // 수배 별에 따라 경찰서에서 출동
+    draw(dt);
+    updateStars();
+    updateMinimap(dt);
+    updateCmd(dt);
+    place();
+    renderer.render(scene, camera);
+  }
+
+  let last = 0;
+  function frame(now) {
+    const dt = last ? Math.min((now - last) / 1000, 0.05) : 0;
+    last = now;
+    stepWorld(dt);
+    requestAnimationFrame(frame);
+  }
+
+  function start() {
+    spawn();
+    new ResizeObserver(resize).observe(canvas);
+    resize();
+    requestAnimationFrame(frame);
+    window.__rdReady = true;
+  }
+
+  window.__rd = { get me() { return me; }, bodies, spawn, fleeDir, step: stepWorld };   // 확인용 (콘솔에서 상태 보기·한 걸음씩 돌리기)
+  // 내가 고쳐 올리면 열려 있는 화면이 저절로 바뀐다 — 새 버전은 판을 새로 깐다
+  window.claude?.hot?.ready ? window.claude.hot.ready(start) : start();
+</script>
+
+</body></html>
