@@ -41,6 +41,23 @@
   }
   #stage { position: fixed; inset: 0; overflow: hidden; touch-action: none; }   /* 받은 화면 전체를 게임으로 — 아래 빈 띠가 안 남게 (v128) */
   #view { display: block; width: 100%; height: 100%; }
+  .item { position: absolute; width: 54px; height: 54px; margin: 0 0 -27px -27px; border-radius: 50%; touch-action: none; cursor: pointer; z-index: 5;
+    background: conic-gradient(var(--c) calc(var(--p) * 1%), rgba(255, 255, 255, 0.16) 0); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); }   /* 기술 버튼 (v190) — 둘레 = 다시 채우는 게이지 */
+  .item .core { position: absolute; inset: 5px; border-radius: 50%; background: rgba(22, 22, 28, 0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; pointer-events: none; }
+  .item .ic { font-size: 15px; line-height: 1; }
+  .item .n { font: 800 17px/1 var(--font); margin-top: 1px; }
+  .item.empty .core { opacity: 0.6; }
+  .item.pop { animation: itempop 0.35s ease-out; }
+  @keyframes itempop { 0% { transform: scale(1.6); } 100% { transform: scale(1); } }
+  #acq { position: absolute; inset: 0; z-index: 20; background: rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.25s; touch-action: none; }   /* 기술 획득 (v190) — 화면을 눌러야 닫힌다 */
+  #acq .big { font-size: 96px; line-height: 1; }
+  #acq .t { margin-top: 16px; font: 800 24px/1.2 var(--font); color: #fff; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8); }
+  #acq .h { margin-top: 10px; font: 600 13px/1 var(--font); color: rgba(255, 255, 255, 0.7); }
+  .fly { position: absolute; z-index: 21; pointer-events: none; line-height: 1; transform: translate(-50%, -50%); }
+  #stars .s { display: inline-block; }
+  #stars .s.off { opacity: 0.3; }
+  #stars .s.hit { animation: starhit 0.35s ease-out; }
+  @keyframes starhit { 0% { transform: scale(1.9); } 60% { transform: scale(0.85); } 100% { transform: scale(1); } }
   #smell { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }   /* 후각 표시 (v180) — 게임 화면 위, 다른 UI 아래 */
   #joy {
     position: absolute; left: 50%; bottom: calc(56px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; width: 124px; height: 124px; margin-left: -62px;
@@ -109,7 +126,7 @@
   <canvas id="view"></canvas>
   <canvas id="smell"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v189</div>
+  <div id="ver">v190</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -960,6 +977,18 @@
       c.sense = c.baseSense * (1 + (DROP_SENSE - 1) * c.dropT / DROP_SENSE_T);
     }
     if (c.state === 'held') { c.vel.set(0, 0); return; }   // 물리는 중엔 꼼짝 못 한다
+    if (c.stunT > 0) { c.stunT -= dt; c.vel.set(0, 0); return; }   // 감전 (v190) — 2초 동안 아무것도 못 한다 (맞기는 한다)
+    if (cashes.length && !c.noLure && c.state !== 'lured' && !c.lureAlert && c.state !== 'super' && (c.cashT = (c.cashT || 0) - dt) <= 0) {   // 돈다발 보기 (v190) — 인지거리 안이면 바로 유혹, 시야 안이면 먼저 경계
+      c.cashT = TICK;
+      const s = seeCash(c, c.sight);
+      if (s) { if (s.d <= c.sense) enterLured(c); else { enterAlert(c); c.lureAlert = true; } }
+    }
+    if (c.state === 'lured') { luredStep(c, dt); return; }
+    if (c.lureAlert) {                        // 돈다발 쪽을 보며 경계 — 끝나면 유혹 (그 사이 맞으면 풀린다)
+      steer(c.vel, wantV.set(0, 0), ACCEL * dt);
+      if ((c.timer -= dt) <= 0) { c.lureAlert = false; if (seeCash(c, c.sight)) enterLured(c); else enterNormal(c); }
+      return;
+    }
     if (c.state === 'fight') {               // 수비형: 제자리에서 맞서 싸운다 / 공격형: 쫓아가서 때린다 / 경찰: 제자리에서 쏜다
       if (c.police) policeFight(c, dt); else if (c.attacker) attackerFight(c, dt); else guardFight(c, dt);
       return;
@@ -1414,9 +1443,10 @@
     mmCtx.lineWidth = 1 * mmDpr; mmCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; mmCtx.stroke();
   }
 
-  function updateStars() {                    // 위 가운데: 수배 별만 (v123 — 감염 수·출동 시간·경찰서 수는 뺌)
-    const html = '★'.repeat(stars) + '<span style="opacity:.3">' + '★'.repeat(STAR_MAX - stars) + '</span>';
-    if (html !== starsShown) { starsShown = html; starsEl.innerHTML = html; }
+  function updateStars() {}                   // v190: 별은 연출이 끝난 만큼만 채운다 (drawStars)
+  function drawStars() {                      // 위 가운데: 수배 별 — 하나씩 따로 (연출이 박히는 자리)
+    if (starsEl.children.length !== STAR_MAX) starsEl.innerHTML = '<span class="s">★</span>'.repeat(STAR_MAX);
+    for (let i = 0; i < STAR_MAX; i++) starsEl.children[i].classList.toggle('off', i >= shownStars);
   }
   const starsEl = document.getElementById('stars');
   let starsShown = '';
@@ -1431,8 +1461,10 @@
   }
 
   function landHit(a, v, dmg = DAMAGE) {
-    if (v.dead || !(v.kind === 'citizen' || isZombie(v)) || v.hp <= 0) return;
+    if (v.dead || !(v.kind === 'citizen' || v.kind === 'safe' || isZombie(v)) || v.hp <= 0) return;
     v.hp = Math.max(0, v.hp - dmg);
+    if (v.kind === 'safe') { if (v.hp <= 0) breakSafe(v); return; }   // 금고 (v190)
+    if (v.kind === 'citizen' && (v.state === 'lured' || v.lureAlert)) { v.noLure = true; v.lureAlert = false; if (v.state === 'lured') v.state = 'normal'; }   // 한 대라도 맞으면 유혹이 풀리고 다시는 안 걸린다 (v190)
     if (v.kind === 'citizen') {
       if (v.state === 'held') return;
       if (v.hp <= 0 && !v.police) {           // HP 0 → 놀람 없이 패닉, 이제 덮칠 수 있다 (경찰은 덮칠 수만 있고 계속 싸운다)
@@ -1563,6 +1595,7 @@
     z.vel.set(0, 0);
     z.fixed = t.fixed = true;                // 무는 동안 둘 다 그 자리에 붙는다
     t.state = 'held';
+    t.noLure = true; t.lureAlert = false;     // 덮쳐지면 유혹이 풀리고 다시는 안 걸린다 (v190)
     t.biter = z;                              // 게이지는 무는 쪽의 남은 시간으로 찬다
     t.vel.set(0, 0);
     const dx = z.foot.x - t.foot.x, dz = z.foot.z - t.foot.z, d = Math.hypot(dx, dz) || 1;
@@ -1819,7 +1852,9 @@
           if (go) z.phase = 'track';               // 동료 좀비: 사냥이 끝나면 자기 자리로 간 다음 배회
           if (prey && !t && prey.hp <= 0) claimPrey(z, prey); else unclaim(z);   // HP 0 시민을 쫓는 동안 찜 (덮치면 marked가 대신한다)
         }
-        if (go && go.hp > 0) fight(z, go, dt);     // HP가 남았으면 가서 때린다
+        const sf = z === me && !t ? nearSafe(z) : null;   // 나만: 금고가 가장 가까우면 가서 때린다 (v190)
+        if (sf && (!go || Math.hypot(sf.foot.x - z.foot.x, sf.foot.z - z.foot.z) < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z))) fight(z, sf, dt);
+        else if (go && go.hp > 0) fight(z, go, dt);     // HP가 남았으면 가서 때린다
         else if (t && dashOk(z, t)) { z.mode = 'pounce'; z.target = t; z.pounceT = 1; t.marked = true; }
         else if (prey || t) { const q = prey || t; steer(z.vel, toward(z, q.foot.x, q.foot.z, z.speed * RAID), ACCEL * dt); }   // 습격: 타겟이 인지거리 안 → 습격 속도로 자동으로 달려간다 (방금 덮쳐서 못 닿은 시민이면 1초 동안은 덮치지 않고 다가간다)
         else if (z === me) steer(z.vel, wantV.set(0, 0), ACCEL * dt);   // 나는 타겟이 없으면 살짝 미끄러지며 선다
@@ -2076,6 +2111,11 @@
         }
       }
       if (b.kind !== 'citizen') continue;
+      if (b.stunT > 0 || b.stunShown) {       // 감전 중 깜빡임 (v190)
+        const base = COLOR[b.police ? 'police' : b.attacker ? 'attacker' : b.guard ? 'guard' : 'citizen'];
+        b.stunShown = b.stunT > 0;
+        b.mesh.material.color.setHex(b.stunShown && Math.floor(clock * 14) % 2 ? 0xc8f0ff : base);
+      }
       if (b.tracer) {                         // 경찰이 쏜 노란 선 — 두 원 가운데를 잇고, 흐려지며 사라진다
         b.tracer.visible = b.shotT >= 0 && !hide;
         if (b.shotT >= 0) {
@@ -2343,6 +2383,13 @@
     camVel.set(0, 0);
     camDist = DIST;
     explored.fill(0);                         // 미니맵 — 새 판은 다시 다 까맣게
+    for (const it of items) it.el.remove();   // 기술·돈다발·연출 초기화 (v190)
+    items = []; safesBroken = 0; itemOrder = Math.random() < 0.5 ? ['taser', 'cash'] : ['cash', 'taser'];
+    for (const k of cashes.slice()) removeCash(k);
+    zaps.length = 0; pendingAward.length = 0; shownStars = 0;
+    for (const el of stage.querySelectorAll('#acq, .fly')) el.remove();
+    acqOpen = starAnim = paused = false;
+    if (typeof drawStars === 'function') drawStars();
     visDirty = true;
     mmDirty = true;
     mmT = 0;
@@ -2466,6 +2513,7 @@
         S.members.push(c); c.lastHp = c.hp;
       }
     }
+    for (const S of stations) addSafe(S);     // 경찰서마다 금고 (v190)
     placeMe();
   }
   // 내 시작 자리 (v164): 마을 다섯 곳 중 아무 데나 (건물 밖, 벽에서 1.5칸 넘게).
@@ -2625,6 +2673,7 @@
       if (car.x < MM.x0 + m || car.x > MM.x1 - m) { car.x = Math.max(MM.x0 + m, Math.min(MM.x1 - m, car.x)); car.vx = 0; }
       if (car.z < MM.z0 + m || car.z > MM.z1 - m) { car.z = Math.max(MM.z0 + m, Math.min(MM.z1 - m, car.z)); car.vz = 0; }
     }
+    tickItems(dt);                            // 기술 다시 채우기 (v190)
     dispatchTick(dt);                         // 수배 별에 따라 경찰서에서 출동
     draw(dt);
     updateStars();
@@ -2635,6 +2684,187 @@
     renderer.render(scene, camera);
   }
 
+  // ── 기술 (v190) — 경찰서 금고를 부수면 처음 두 번에 테이저건·현금이 하나씩 (순서 랜덤). 조이스틱 오른쪽 위부터 둘레로 버튼 (최대 3개) ──
+  const ITEM = {
+    taser: { max: 3, reload: 20, icon: '⚡', name: '테이저건', col: '#ffd34d' },   // 3발, 1발 20초 — 내 인지거리 안 적 1명 (위험도 높은 순 → 가까운 순) 2초 감전
+    cash: { max: 1, reload: 15, icon: '💵', name: '현금', col: '#43d17a' },       // 1번, 15초 — 내 둘레 2~4칸에 돈다발 3개
+  };
+  const STUN_T = 2, CASH_N = 3, CASH_R = [2, 4], CASH_GET = 0.7;
+  const SLOT_A = [45, 15, 75], SLOT_R = 125;   // 버튼 자리 = 조이스틱 가운데에서 이 각도(오른쪽 0°, 위 90°)·거리(px)
+  let items = [], itemOrder = [], safesBroken = 0, paused = false, acqOpen = false, starAnim = false, shownStars = 0;
+  const pendingAward = [];
+  const cashes = [];                          // 바닥에 뿌려진 돈다발 {x, z, space, mesh}
+  const zaps = [];                            // 테이저 번쩍 {from:[x,z], to: 몸, t}
+  const cashGeo = new THREE.PlaneGeometry(0.62, 0.36).rotateX(-Math.PI / 2), cashMat = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, depthWrite: false });
+  const cashBandMat = new THREE.MeshBasicMaterial({ color: 0x1b7a43, transparent: true, depthWrite: false });
+  const DANGER = (c) => c.police ? 3 : c.attacker ? 2 : c.guard ? 1 : 0;
+  function slotPos(i) { const a = SLOT_A[i] * Math.PI / 180; return [Math.cos(a) * SLOT_R, Math.sin(a) * SLOT_R]; }
+  function makeItemButton(kind, i) {
+    const d = ITEM[kind], el = document.createElement('div'), [dx, dy] = slotPos(i);
+    el.className = 'item';
+    el.style.left = `calc(50% + ${dx}px)`;
+    el.style.bottom = `calc(118px + env(safe-area-inset-bottom, 0px) + ${dy}px)`;
+    el.style.setProperty('--c', d.col); el.style.setProperty('--p', 100);
+    el.innerHTML = `<div class="core"><span class="ic">${d.icon}</span><span class="n"></span></div>`;
+    el.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); if (!paused) useItem(kind); });
+    stage.appendChild(el);
+    return el;
+  }
+  function refreshItems() {
+    for (const it of items) {
+      const d = ITEM[it.kind];
+      it.el.style.setProperty('--p', it.ammo >= d.max ? 100 : Math.round(it.t / d.reload * 100));
+      it.el.querySelector('.n').textContent = it.ammo;
+      it.el.classList.toggle('empty', it.ammo <= 0);
+    }
+  }
+  function tickItems(dt) {
+    for (let i = zaps.length - 1; i >= 0; i--) if ((zaps[i].t -= dt) <= 0) zaps.splice(i, 1);
+    for (const it of items) {
+      const d = ITEM[it.kind];
+      if (it.ammo >= d.max) { it.t = 0; continue; }
+      if ((it.t += dt) >= d.reload) { it.t = 0; it.ammo++; }
+    }
+    refreshItems();
+  }
+  function useItem(kind) {
+    const it = items.find((x) => x.kind === kind);
+    if (!it || it.ammo <= 0 || !isZombie(me)) return;
+    it.ammo--;
+    if (kind === 'taser') {                   // 내 인지거리 안 적 1명 — 위험도 높은 순(경찰 > 공격형 > 수비형 > 일반), 같으면 가까운 순. 없으면 한 발 날린다
+      let best = null, bk = -1, bd = Infinity;
+      for (const c of bodies) {                // 누를 때 한 번이라 전체를 본다
+        if (c.kind !== 'citizen' || c.space !== me.space) continue;
+        const d = Math.hypot(c.foot.x - me.foot.x, c.foot.z - me.foot.z);
+        if (d > me.sense || blocked(me.foot.x, me.foot.z, c.foot.x, c.foot.z)) continue;
+        const k = DANGER(c);
+        if (k > bk || (k === bk && d < bd)) { best = c; bk = k; bd = d; }
+      }
+      if (best) { best.stunT = STUN_T; best.vel.set(0, 0); zaps.push({ to: best, t: 0.45 }); }
+      else zaps.push({ to: null, t: 0.2 });
+    } else {                                  // 돈다발 3개를 내 둘레 2~4칸에 뿌린다 (나와 같은 공간)
+      for (let i = 0; i < CASH_N; i++) {
+        for (let t = 0; t < 30; t++) {
+          const a = Math.random() * Math.PI * 2, r = CASH_R[0] + Math.random() * (CASH_R[1] - CASH_R[0]);
+          const x = me.foot.x + Math.cos(a) * r, z = me.foot.z + Math.sin(a) * r;
+          if (x < MM.x0 + 1 || x > MM.x1 - 1 || z < MM.z0 + 1 || z > MM.z1 - 1) continue;
+          if (spaceOf(x, z) !== me.space || !freeSpot(x, z, me.space) || blocked(me.foot.x, me.foot.z, x, z)) continue;
+          const mesh = new THREE.Mesh(cashGeo, cashMat);
+          const band = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.38).rotateX(-Math.PI / 2), cashBandMat); band.position.y = 0.002; mesh.add(band);
+          mesh.position.set(x, 0.03, z); mesh.rotation.y = Math.random() * Math.PI; mesh.renderOrder = -0.55;
+          scene.add(mesh);
+          cashes.push({ x, z, space: me.space, mesh });
+          break;
+        }
+      }
+    }
+    refreshItems();
+  }
+  function removeCash(k) { const i = cashes.indexOf(k); if (i >= 0) { cashes.splice(i, 1); scene.remove(k.mesh); } }
+  function seeCash(c, range) {                // 이 사람이 볼 수 있는 가장 가까운 돈다발 (같은 공간, 벽에 안 가림)
+    let best = null, bd = range;
+    for (const k of cashes) {
+      if (k.space !== c.space) continue;
+      const d = Math.hypot(k.x - c.foot.x, k.z - c.foot.z);
+      if (d <= bd && !blocked(c.foot.x, c.foot.z, k.x, k.z)) { bd = d; best = k; }
+    }
+    return best ? { k: best, d: bd } : null;
+  }
+  function enterLured(c) { c.state = 'lured'; c.lureAlert = false; c.foe = null; c.locked = false; }
+  function luredStep(c, dt) {                 // 유혹: 좀비는 안 보고 가장 가까운 돈다발로 달려간다. 닿으면 돈다발이 사라진다
+    const s = seeCash(c, c.sight);
+    if (!s) { enterNormal(c); return; }      // 볼 수 있는 돈다발이 없으면 유혹 끝
+    if (s.d < CASH_GET) { removeCash(s.k); return; }
+    const sp = PANIC_SPEED * (c.police ? POLICE_PACE : 1) * (c.guard ? GUARD_PACE : 1);
+    steer(c.vel, toward(c, s.k.x, s.k.z, sp), ACCEL * dt);
+  }
+  // 금고 (v190): 경찰서마다 안쪽 왼쪽·오른쪽·왼쪽 아래·오른쪽 아래 중 한 곳. 나만 때려 부술 수 있다 (체력 = 경찰의 1.5배)
+  const SAFE_HP = POLICE_HP * 1.5;
+  const safeGeo = new THREE.PlaneGeometry(0.95, 0.95), safeInGeo = new THREE.PlaneGeometry(0.62, 0.62);
+  function addSafe(S) {
+    const m = 1.1, cz = (S.z0 + S.z1) / 2, spots = [[S.x0 + m, cz], [S.x1 - m, cz], [S.x0 + m, S.z1 - m], [S.x1 - m, S.z1 - m]];
+    const [x, z] = spots[Math.floor(Math.random() * spots.length)];
+    const b = addBody('safe', x, z);
+    b.mesh.geometry = safeGeo; b.mesh.material.color.setHex(0x8a7a52);
+    const inner = new THREE.Mesh(safeInGeo, new THREE.MeshBasicMaterial({ color: 0x3a3d46, transparent: true, depthTest: false, depthWrite: false }));
+    inner.position.z = 0.001; inner.renderOrder = b.mesh.renderOrder; b.mesh.add(inner);
+    b.fixed = true; b.r = 0.5; b.hp = b.maxHp = SAFE_HP; b.station = S;
+    addHpBar(b, hpFoeMat);
+    S.safe = b;
+  }
+  function nearSafe(z) {                      // 나랑 같은 공간, 인지거리 안의 안 부서진 금고
+    for (const S of stations) {
+      const b = S.safe;
+      if (!b || b.dead || b.space !== z.space) continue;
+      if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) <= z.sense) return b;
+    }
+    return null;
+  }
+  function breakSafe(b) {
+    b.dead = true;
+    scene.remove(b.mesh); if (b.hpBar) scene.remove(b.hpBar);
+    const i = bodies.indexOf(b); if (i >= 0) bodies.splice(i, 1);
+    safesBroken++;
+    if (safesBroken <= 2) pendingAward.push(itemOrder[safesBroken - 1]);
+  }
+  // 획득 연출: 일시정지 → 반투명 바탕 위에 큰 기술 그림 + 글자 → 화면을 누르면 바탕이 사라지고 그림이 버튼 자리로 날아가 박힘 → 다시 움직임
+  function stopInput() { pid = null; joy.classList.remove('on'); knob.style.transform = 'translate(0px, 0px)'; move.set(0, 0); }
+  function showAward(kind) {
+    acqOpen = true; paused = true; stopInput();
+    const d = ITEM[kind], ov = document.createElement('div');
+    ov.id = 'acq';
+    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name} 획득</div><div class="h">화면을 누르세요</div>`;
+    stage.appendChild(ov);
+    const block = (e) => { e.stopPropagation(); e.preventDefault(); };
+    ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
+    ov.addEventListener('pointerdown', (e) => {
+      block(e);
+      if (ov.dataset.done) return;
+      ov.dataset.done = '1';
+      const slot = items.length, it = { kind, ammo: d.max, t: 0, el: makeItemButton(kind, slot) };
+      it.el.style.visibility = 'hidden';
+      const big = ov.querySelector('.big'), br = big.getBoundingClientRect(), sr = stage.getBoundingClientRect(), tr = it.el.getBoundingClientRect();
+      const fly = document.createElement('div');
+      fly.className = 'fly'; fly.textContent = d.icon; fly.style.fontSize = '96px';
+      fly.style.left = (br.left + br.width / 2 - sr.left) + 'px'; fly.style.top = (br.top + br.height / 2 - sr.top) + 'px';
+      stage.appendChild(fly);
+      big.style.visibility = 'hidden';
+      ov.style.opacity = '0';
+      fly.getBoundingClientRect();
+      fly.style.transition = 'left 0.45s ease-in, top 0.45s ease-in, font-size 0.45s ease-in';
+      fly.style.left = (tr.left + tr.width / 2 - sr.left) + 'px'; fly.style.top = (tr.top + tr.height / 2 - sr.top) + 'px'; fly.style.fontSize = '18px';
+      setTimeout(() => {
+        fly.remove(); ov.remove();
+        items.push(it); it.el.style.visibility = ''; it.el.classList.add('pop'); refreshItems();
+        acqOpen = false; paused = false; last = 0;
+      }, 470);
+    });
+  }
+  // 별 연출: 별이 하나 늘 때마다 일시정지 → 가운데 큰 보라 별 → 위쪽 제자리로 날아가 쾅 → 다시 움직임
+  function playStar() {
+    starAnim = true; paused = true; stopInput();
+    const idx = shownStars, sr = stage.getBoundingClientRect();
+    const fly = document.createElement('div');
+    fly.className = 'fly'; fly.textContent = '★';
+    Object.assign(fly.style, { left: '50%', top: '42%', fontSize: '10px', color: '#b44ee6', textShadow: '0 2px 10px rgba(0,0,0,0.7)', transition: 'font-size 0.3s ease-out' });
+    stage.appendChild(fly);
+    fly.getBoundingClientRect(); fly.style.fontSize = '130px';
+    setTimeout(() => {
+      const slot = starsEl.children[idx], r = slot.getBoundingClientRect();
+      fly.style.transition = 'left 0.35s ease-in, top 0.35s ease-in, font-size 0.35s ease-in';
+      fly.style.left = (r.left + r.width / 2 - sr.left) + 'px'; fly.style.top = (r.top + r.height / 2 - sr.top) + 'px'; fly.style.fontSize = '19px';
+      setTimeout(() => {
+        fly.remove();
+        shownStars = idx + 1; drawStars(); const el = starsEl.children[idx]; el.classList.remove('hit'); el.getBoundingClientRect(); el.classList.add('hit');
+        starAnim = false; paused = false; last = 0;
+      }, 370);
+    }, 650);
+  }
+  function uiTick() {                         // 매 프레임 (멈춰 있어도): 줄 서 있는 연출을 하나씩
+    if (acqOpen || starAnim) return;
+    if (pendingAward.length) { showAward(pendingAward.shift()); return; }
+    if (stars > shownStars) playStar();
+  }
   // ── 후각 (v180) — 나만 가진다. 내 인지거리 밖 ~ 그 1.5배 안의 사람을 원으로 알려 준다 ──
   //   원 자리 = 그 사람 쪽 방향으로 내 인지거리 테두리 위 (화면 밖이면 화면 가장자리에 걸친다)
   //   원 색 = 종류, 크기 = 인원 (1명 1배 ~ 10명 3.5배, 그 위로는 안 커진다). 같은 종류 원끼리 겹치면 가운데 한 원으로 합친다
@@ -2668,7 +2898,21 @@
     if (smellEl.width !== Math.round(W * dpr) || smellEl.height !== Math.round(H * dpr)) { smellEl.width = Math.round(W * dpr); smellEl.height = Math.round(H * dpr); }
     smellCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     smellCtx.clearRect(0, 0, W, H);
-    if (!isZombie(me) || !W) return;
+    if (!W) return;
+    camera.updateMatrixWorld();
+    for (const zp of zaps) {                  // 테이저 번쩍 (v190) — 나에서 맞은 적까지 지그재그 번개
+      const [ax, ay] = toScreen(me.foot.x, me.foot.z, W, H);
+      const [bx, by] = zp.to ? toScreen(zp.to.foot.x, zp.to.foot.z, W, H) : [ax + 18, ay - 18];
+      smellCtx.beginPath(); smellCtx.moveTo(ax, ay - 14);
+      const n = 7;
+      for (let i = 1; i < n; i++) { const t = i / n, jx = (Math.random() - 0.5) * 12, jy = (Math.random() - 0.5) * 12; smellCtx.lineTo(ax + (bx - ax) * t + jx, ay - 14 + (by - ay) * t + jy); }
+      smellCtx.lineTo(bx, by - 14);
+      smellCtx.globalAlpha = Math.min(1, zp.t / 0.15);
+      smellCtx.lineWidth = 7; smellCtx.strokeStyle = 'rgba(40, 150, 255, 0.85)'; smellCtx.stroke();
+      smellCtx.lineWidth = 2.5; smellCtx.strokeStyle = '#ffffff'; smellCtx.stroke();
+      smellCtx.globalAlpha = 1;
+    }
+    if (!isZombie(me)) return;
     const R0 = me.sense, R1 = me.sense * STATION_SMELL_K, mx = me.foot.x, mz = me.foot.z;
     camera.updateMatrixWorld();
     const [ox, oy] = toScreen(mx, mz, W, H);
@@ -2700,7 +2944,8 @@
   function frame(now) {
     const dt = last ? Math.min((now - last) / 1000, 0.05) : 0;
     last = now;
-    stepWorld(dt);
+    if (!paused) stepWorld(dt);
+    uiTick();
     requestAnimationFrame(frame);
   }
 
