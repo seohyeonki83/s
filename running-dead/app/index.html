@@ -187,7 +187,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v235</div>
+  <div id="ver">v236</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -355,7 +355,7 @@
   ].map((s, i) => ({ ...s, x: s.x * MAP * POS, z: s.z * MAP * POS, w: s.w * MAP, d: s.d * MAP, local: i }));   // 위치·크기 다 MAP배 (사람 수는 그대로)
   const START_BLOCK = 1;                      // 첫 마을 = 오른쪽 아래 (v230) — 경찰서 없이 건물 3개, 시작 자리, 성장 구역
   const BIG = { x: 0, z: -50 * MAP * POS, w: 16 * MAP, d: 12 * MAP, doors: ['s'], kinds: {}, big: true, local: 3 };   // v232: 첫 마을 경찰서 자리에 경찰서보다 큰 건물 — 안에 짭새 3 · 만두귀 2 · 좃밥 2 · 헬창 2
-  const BIG_PEOPLE = ['police', 'police', 'police', 'attacker', 'attacker', '', '', 'guard', 'guard'];
+  const BIG_PEOPLE = ['police', 'police', 'attacker', '', 'guard'];   // v236: 반으로 (9 → 5) — 짭새 2 · 만두귀 1 · 좃밥 1 · 헬창 1
   const BUILDINGS = BLOCKS.flatMap(([ox, oz], k) => TOWN.map((s) => (k === START_BLOCK && s.station ? BIG : s)).map((s) => ({ ...s, x: s.x + ox, z: s.z + oz, block: k })));
   const DOOR = 4 * MAP;   // 문 폭 (유닛) — 문은 그 벽 한가운데. 여럿이 나란히 지나간다
   const WALL_SENSE = 1 / 4;   // 도망칠 때 벽도 좀비처럼 피한다 — 가장 가까운 벽이 인지거리의 이만큼 안에 들어오면 (구석에 몰리지 않게)
@@ -3216,10 +3216,10 @@
     if (v > 0.5) { scr.hx = me.vel.x / v; scr.hz = me.vel.y / v; }
     if ((scr.tick -= dt) > 0) return;
     scr.tick = 0.25;
-    if (scr.st === 0 && (v > 0.5 || scr.t > 2)) { scrWant.push('n', 'n', 'n'); scr.st = 1; }   // v232: 모두 10마리 (좃밥 3 → 헬창 2·좃밥 1 → 만두귀 2 → 짭새 2)
-    else if (scr.st === 1 && scr.inf.n >= 2) { scrWant.push('g', 'n', 'g'); scr.st = 2; }
-    else if (scr.st === 2 && scr.inf.g >= 2) { scrWant.push('a', 'a'); scr.st = 3; scr.t3 = scr.t; }
-    else if (scr.st === 3 && scr.t - scr.t3 > 6) { scrWant.push('p', 'p'); scr.st = 4; }
+    if (scr.st === 0 && (v > 0.5 || scr.t > 2)) { scrWant.push('n', 'n'); scr.st = 1; }   // v236: 반으로 (10 → 5) — 좃밥 2 → (노랑 2 감염) 헬창 1 → (주황 1 감염) 만두귀 1 → (6초 뒤) 짭새 1
+    else if (scr.st === 1 && scr.inf.n >= 2) { scrWant.push('g'); scr.st = 2; }
+    else if (scr.st === 2 && scr.inf.g >= 1) { scrWant.push('a'); scr.st = 3; scr.t3 = scr.t; }
+    else if (scr.st === 3 && scr.t - scr.t3 > 6) { scrWant.push('p'); scr.st = 4; }
     while (scrWant.length && scrSpawn(scrWant[0])) scrWant.shift();
     for (const c of scr.list.slice()) {
       if (c.kind !== 'citizen' || !bodies.includes(c)) { scr.list.splice(scr.list.indexOf(c), 1); continue; }
