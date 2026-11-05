@@ -147,6 +147,11 @@
   #legend .domain { background: var(--domain); }
   #legend .fight { height: 0; border-top: 3px dashed var(--fight); border-radius: 0; }
   #legend .gap { margin-left: 6px; }
+  .okBtn {   /* v244: 모든 확인 버튼 = 조이스틱 자리에 조이스틱 크기 동그라미. 떠 있는 동안 조이스틱은 숨긴다 */
+    position: fixed !important; left: 50% !important; top: auto !important; bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    width: 124px !important; height: 124px !important; margin: 0 0 0 -62px !important; padding: 0 !important; border-radius: 50% !important; transform: none !important;
+    z-index: 45; font: 800 22px/1 var(--font) !important; box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55); border: 0; background: rgba(255, 255, 255, 0.94); color: #15151c; pointer-events: auto; touch-action: manipulation; }
+  #stage.okOn #joy { visibility: hidden; }
   #retry {   /* 죽으면 화면 아래 가운데에 뜨는 다시 하기 (v225) */
     position: absolute; z-index: 30; left: 50%; transform: translateX(-50%); bottom: calc(110px + env(safe-area-inset-bottom, 0px));
     padding: 16px 44px; border: 0; border-radius: 14px; background: rgba(255, 255, 255, 0.94); color: #15151c; font: 800 20px/1 var(--font);
@@ -187,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v243</div>
+  <div id="ver">v244</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2517,7 +2522,7 @@
     for (const k of Object.keys(up)) up[k] = 0;   // 레벨·능력치·방탄복 초기화 (v201)
     level = 0; xp = 0; pendingLv = 0; lvOpen = false; victoryOn = false; hasVest = false;
     if (vestEl) { vestEl.remove(); vestEl = null; }
-    for (const el of stage.querySelectorAll('#pick, #win, #tut, #goal')) el.remove();
+    for (const el of stage.querySelectorAll('#pick, #win, #tut, #goal, .okBtn')) el.remove();
     hiOff();
     goalShown = false; tutOpen = false; spawnFrames = 0; mmBang = false; camAnim = null; tutQueue.length = 0; for (const k of Object.keys(tutSeen)) delete tutSeen[k];   // 튜토리얼도 판마다 처음부터 (v202)
     gameNo++;
@@ -2928,7 +2933,7 @@
     ov.id = 'pick';
     ov.innerHTML = `<div class="hd">LEVEL UP!</div><div class="sub">Lv ${level} → Lv ${level + 1} · 능력 하나를 고르세요</div><div class="cards">` +
       keys.map((k) => `<div class="card" data-k="${k}"><div class="ic">${ABIL[k].icon}</div><div class="nm">${ABIL[k].name}</div><div class="ds">${ABIL[k].desc}</div></div>`).join('') +
-      `</div><button class="ok">확인</button>`;
+      `</div><button class="ok okBtn">확인</button>`;
     stage.appendChild(ov);
     let chosen = null;
     const block = (e) => { e.stopPropagation(); e.preventDefault(); };
@@ -3125,9 +3130,9 @@
       if (blocked(z.foot.x, z.foot.z, px, pz)) continue;
       if (g < ad) { ad = g; any = o; }
       const n = (objCrowd.get(o) || 0) - (z.objC === o ? 1 : 0);
-      if (g < bd && (z === me || o.type !== 'car' || n < CROWD_MAX)) { bd = g; best = o; }   // v243: 경찰차에 다른 좀비 3명이 붙어 있으면 다음 걸로 (나는 제한 없음)
+      if (g < bd && (z === me || n < CROWD_MAX)) { bd = g; best = o; }   // v243·v244: 경찰차·문에 다른 좀비 3명이 붙어 있으면 다음 걸로 (나는 제한 없음)
     }
-    return best;                              // 3명 찬 경찰차뿐이면 붙지 않는다 (다른 할 일로)
+    return best;                              // 3명 찬 사물뿐이면 붙지 않는다 (다른 할 일로)
   }
   function fightObj(z, o, dt) {
     z.engaging = null; z.objT = o; z.objF = objFrame;
@@ -3425,10 +3430,11 @@
     stage.appendChild(dim); dim.getBoundingClientRect(); dim.style.opacity = '1';
     const el = document.createElement('div');
     el.id = 'goal';
-    el.innerHTML = '<div class="g1">목표</div><div class="g2">모든 경찰서를 파괴해라</div><div class="g3">' + stations.map(() => '<span>!</span>').join('') + '</div><button class="ok">확인</button>';   // 경찰서 수만큼 느낌표 (v214), 확인 버튼 (v218)
+    el.innerHTML = '<div class="g1">목표</div><div class="g2">모든 경찰서를 파괴해라</div><div class="g3">' + stations.map(() => '<span>!</span>').join('') + '</div><button class="ok okBtn">확인</button>';   // 경찰서 수만큼 느낌표 (v214), 확인 버튼 (v218)
     stage.appendChild(el);
     el.getBoundingClientRect(); el.classList.add('on');
     const okBtn = el.querySelector('.ok');
+    stage.appendChild(okBtn);                 // v244: 확인은 조이스틱 자리 (목표 글과 따로)
     const blockG = (e) => { e.stopPropagation(); e.preventDefault(); };
     okBtn.addEventListener('pointermove', blockG); okBtn.addEventListener('pointerup', blockG);
     okBtn.addEventListener('pointerdown', (e) => {   // [확인] → 글이 사라지고 바탕은 서서히 투명해지며 느낌표들이 미니맵 각 경찰서로 날아가 박힌다 (v218)
@@ -3451,7 +3457,7 @@
         f.style.left = x + 'px'; f.style.top = y + 'px'; f.style.fontSize = '8px';   // v217: 느낌표는 그대로 날아가 박힌다 (투명해지는 건 바탕)
       }));
       setTimeout(() => { for (const { f } of flies) f.remove(); mmBang = true; updateMinimap(1); }, 500 + stations.length * 60 + 20);
-      setTimeout(() => { el.remove(); dim.remove(); tutOpen = false; paused = false; last = 0; }, 620 + stations.length * 60);
+      setTimeout(() => { el.remove(); dim.remove(); okBtn.remove(); tutOpen = false; paused = false; last = 0; }, 620 + stations.length * 60);
     });
   }
   // 발견 연출 (v216): 멈춤 → 카메라가 발견한 쪽으로 (천천히 출발해서 천천히 섬) → 소개 창 → [닫기] 누르면 바로 닫히고 카메라가 나에게 돌아옴 (그동안도 멈춤) → 다시 움직임
@@ -3534,12 +3540,11 @@
       hiOn(S ? S.bang : b ? b.mesh : null);
       const ov = document.createElement('div');
       ov.id = 'tut';
-      ov.innerHTML = (d.name ? `<div class="nm" style="color:${d.col}">${d.name} 발견!!!</div>` : '') + `<div class="say">${d.say}</div><button class="close">닫기</button>`;   // 이름은 대상 위, 설명은 대상 아래, 닫기는 그 밑 (사람·경찰서 같은 방식)
+      ov.innerHTML = (d.name ? `<div class="nm" style="color:${d.col}">${d.name} 발견!!!</div>` : '') + `<div class="say">${d.say}</div><button class="close okBtn">닫기</button>`;   // 이름은 대상 위, 설명은 대상 아래, 닫기는 그 밑 (사람·경찰서 같은 방식)
       stage.appendChild(ov);
       const H = ov.clientHeight, nm = ov.querySelector('.nm'), say = ov.querySelector('.say'), btn = ov.querySelector('.close');
       if (nm) nm.style.bottom = (H - (cy - gh - 26)) + 'px';
       say.style.top = (cy + gh + 38) + 'px';
-      btn.style.top = (cy + gh + 38 + say.offsetHeight + 26) + 'px';
       const block = (e) => { e.stopPropagation(); e.preventDefault(); };
       ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
       ov.addEventListener('pointerdown', (e) => {
@@ -3552,6 +3557,7 @@
     });
   }
   function uiTick() {                         // 매 프레임 (멈춰 있어도): 줄 서 있는 연출을 하나씩
+    stage.classList.toggle('okOn', !!stage.querySelector('.okBtn'));   // v244: 확인 버튼이 떠 있으면 조이스틱 숨김
     if (acqOpen || starAnim || lvOpen || victoryOn || tutOpen) return;
     if (!goalShown) { if (spawnFrames >= 3) showGoal(); return; }   // 판 시작 → 첫 장면을 몇 프레임 그린 뒤 목표 (v202)
     if (tutQueue.length) { showTut(tutQueue.shift()); return; }
