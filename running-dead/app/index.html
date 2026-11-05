@@ -187,7 +187,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v231</div>
+  <div id="ver">v232</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -354,7 +354,9 @@
     { x: 0, z: -50, w: 14, d: 10, doors: ['s'], kinds: {}, station: true },        // 경찰서 (동네 북쪽, v113 · v115에 더 북쪽으로) — 경찰은 판 깔 때 따로 넣는다
   ].map((s, i) => ({ ...s, x: s.x * MAP * POS, z: s.z * MAP * POS, w: s.w * MAP, d: s.d * MAP, local: i }));   // 위치·크기 다 MAP배 (사람 수는 그대로)
   const START_BLOCK = 1;                      // 첫 마을 = 오른쪽 아래 (v230) — 경찰서 없이 건물 3개, 시작 자리, 성장 구역
-  const BUILDINGS = BLOCKS.flatMap(([ox, oz], k) => TOWN.filter((s) => !(k === START_BLOCK && s.station)).map((s) => ({ ...s, x: s.x + ox, z: s.z + oz, block: k })));
+  const BIG = { x: 0, z: -50 * MAP * POS, w: 16 * MAP, d: 12 * MAP, doors: ['s'], kinds: {}, big: true, local: 3 };   // v232: 첫 마을 경찰서 자리에 경찰서보다 큰 건물 — 안에 짭새 3 · 만두귀 2 · 좃밥 2 · 헬창 2
+  const BIG_PEOPLE = ['police', 'police', 'police', 'attacker', 'attacker', '', '', 'guard', 'guard'];
+  const BUILDINGS = BLOCKS.flatMap(([ox, oz], k) => TOWN.map((s) => (k === START_BLOCK && s.station ? BIG : s)).map((s) => ({ ...s, x: s.x + ox, z: s.z + oz, block: k })));
   const DOOR = 4 * MAP;   // 문 폭 (유닛) — 문은 그 벽 한가운데. 여럿이 나란히 지나간다
   const WALL_SENSE = 1 / 4;   // 도망칠 때 벽도 좀비처럼 피한다 — 가장 가까운 벽이 인지거리의 이만큼 안에 들어오면 (구석에 몰리지 않게)
   const CORNER = 1.0;     // 패닉 중 건물 안 구석(두 벽 다 이 거리 안)에 몰리면 초패닉 — 좀비는 안 보고 문과 가까운 쪽으로 벽을 타고 돌아 문으로 나간다
@@ -537,7 +539,7 @@
 
   // ── 건물 — 벽 = 선분 (문 자리는 비운다). 바닥에 그리는 건 지붕(덮개)·벽·문 앞 발판 ──
   const buildings = BUILDINGS.map((s) => {
-    const B = { x0: s.x - s.w / 2, z0: s.z - s.d / 2, x1: s.x + s.w / 2, z1: s.z + s.d / 2, kinds: s.kinds, station: !!s.station, local: s.local, block: s.block };
+    const B = { x0: s.x - s.w / 2, z0: s.z - s.d / 2, x1: s.x + s.w / 2, z1: s.z + s.d / 2, kinds: s.kinds, station: !!s.station, big: !!s.big, local: s.local, block: s.block };
     B.doors = s.doors.map((side) => {        // 문 = 그 벽 한가운데. n = 바깥쪽, t = 벽을 따라가는 쪽
       const nx = side === 'e' ? 1 : side === 'w' ? -1 : 0, nz = side === 's' ? 1 : side === 'n' ? -1 : 0;
       return { side, cx: nx > 0 ? B.x1 : nx < 0 ? B.x0 : s.x, cz: nz > 0 ? B.z1 : nz < 0 ? B.z0 : s.z, nx, nz, tx: -nz, tz: nx };
@@ -2559,7 +2561,17 @@
       return c;
     };
     BLOCKS.forEach(([ox, oz], k) => {
-      if (k === START_BLOCK) return;          // 첫 마을은 성장 구역 스폰만 (v230)
+      if (k === START_BLOCK) {                // 첫 마을은 성장 구역 스폰 + 큰 건물 안 사람들만 (v230 · v232)
+        const B = buildings.find((H) => H.block === k && H.big);
+        for (const t of BIG_PEOPLE) {
+          let g = pickGoal(B);
+          for (let i = 0; i < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); i++) g = pickGoal(B);
+          const c = addCitizen(g.x, g.y, B, t);
+          c.home = B; c.area = B;
+          if (t === 'police') enterNormal(c);
+        }
+        return;
+      }
       const homes = buildings.filter((B) => B.block === k && !B.station);
       const bag = [];
       for (const ch of GROUPS.join('')) bag.push(GROUP_TYPE[ch]);
@@ -2634,7 +2646,7 @@
     for (const B of buildings) B.safe = null;
     for (const S of stations) addSafe(S);     // 경찰서마다 금고 (v190)
     const starter = buildings.filter((B) => B.block === START_BLOCK);
-    addSafe(starter[Math.floor(Math.random() * starter.length)]);   // 첫 마을 건물 3개 중 하나에 금고 (v230) — 거의 거저 얻는 아이템
+    addSafe(starter[Math.floor(Math.random() * starter.length)]);   // 첫 마을 건물 중 아무 데나 금고 (v230 · v232: 큰 건물 포함, 건물 안 자리도 랜덤)
     placeMe();
   }
   // 내 시작 자리 (v164): 마을 다섯 곳 중 아무 데나 (건물 밖, 벽에서 1.5칸 넘게).
@@ -3014,7 +3026,7 @@
   const SAFE_HP = POLICE_HP * 1.5;
   const safeGeo = new THREE.PlaneGeometry(2.85, 2.85), safeInGeo = new THREE.PlaneGeometry(1.86, 1.86);   // v195: 금고 2배, v196: 1.5배 더 (원래의 3배)
   function addSafe(S) {
-    const m = 2.2, cz = (S.z0 + S.z1) / 2, spots = S.station ? [[S.x0 + m, cz], [S.x1 - m, cz], [S.x0 + m, S.z1 - m], [S.x1 - m, S.z1 - m]] : [[(S.x0 + S.x1) / 2, cz]];   // 일반 건물(첫 마을)은 한가운데
+    const m = 2.2, cz = (S.z0 + S.z1) / 2, spots = S.station ? [[S.x0 + m, cz], [S.x1 - m, cz], [S.x0 + m, S.z1 - m], [S.x1 - m, S.z1 - m]] : [[rand(S.x0 + 2, S.x1 - 2), rand(S.z0 + 2, S.z1 - 2)]];   // 첫 마을 건물은 안 아무 자리 (v232)
     const [x, z] = spots[Math.floor(Math.random() * spots.length)];
     const b = addBody('safe', x, z);
     b.mesh.geometry = safeGeo; b.mesh.material.color.setHex(0x8a7a52);
@@ -3187,9 +3199,9 @@
     if (v > 0.5) { scr.hx = me.vel.x / v; scr.hz = me.vel.y / v; }
     if ((scr.tick -= dt) > 0) return;
     scr.tick = 0.25;
-    if (scr.st === 0 && (v > 0.5 || scr.t > 2)) { scrWant.push('n', 'n', 'n', 'n', 'n'); scr.st = 1; }   // v231: 모두 15마리 (좃밥 5 → 헬창 3·좃밥 1 → 만두귀 3·헬창 1 → 짭새 2)
-    else if (scr.st === 1 && scr.inf.n >= 2) { scrWant.push('g', 'n', 'g', 'g'); scr.st = 2; }
-    else if (scr.st === 2 && scr.inf.g >= 2) { scrWant.push('a', 'g', 'a', 'a'); scr.st = 3; scr.t3 = scr.t; }
+    if (scr.st === 0 && (v > 0.5 || scr.t > 2)) { scrWant.push('n', 'n', 'n'); scr.st = 1; }   // v232: 모두 10마리 (좃밥 3 → 헬창 2·좃밥 1 → 만두귀 2 → 짭새 2)
+    else if (scr.st === 1 && scr.inf.n >= 2) { scrWant.push('g', 'n', 'g'); scr.st = 2; }
+    else if (scr.st === 2 && scr.inf.g >= 2) { scrWant.push('a', 'a'); scr.st = 3; scr.t3 = scr.t; }
     else if (scr.st === 3 && scr.t - scr.t3 > 6) { scrWant.push('p', 'p'); scr.st = 4; }
     while (scrWant.length && scrSpawn(scrWant[0])) scrWant.shift();
     for (const c of scr.list.slice()) {
