@@ -176,7 +176,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v221</div>
+  <div id="ver">v222</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3150,9 +3150,23 @@
   let camAnim = null;
   const PAN_T = 0.8;
   const csV = new THREE.Vector3();
-  function centerOn(x, y, z) {                // 점 (x, y, z)가 화면 정가운데 오려면 카메라를 얼마나 옮겨야 하나 (v219)
+  function ctrlTop() {                        // 컨트롤러 영역(조이스틱·기술 버튼·명령키 중 보이는 것) 위쪽 끝 — 무대 위 px (v222)
+    const s = stage.getBoundingClientRect();
+    let top = s.height;
+    for (const el of [joy, cmdEl, ...stage.querySelectorAll('.item')]) {
+      if (el.style.visibility === 'hidden') continue;
+      const r = el.getBoundingClientRect();
+      if (r.width && r.height) top = Math.min(top, r.top - s.top);   // 안 보이는(display:none) 건 크기가 0
+    }
+    return top;
+  }
+  function viewCenter() {                     // 화면 중앙 = 가로는 가운데, 세로는 컨트롤러 영역을 뺀 나머지(화면 위 ~ 컨트롤러 위쪽 끝)의 가운데 (v222)
+    return [stage.clientWidth / 2, ctrlTop() / 2];
+  }
+  function centerOn(x, y, z, sx, sy) {        // 점 (x, y, z)가 화면 (sx, sy) px에 오려면 카메라를 얼마나 옮겨야 하나 (v219 · v222)
     place(); camera.updateMatrixWorld();
-    csV.set(0, 0, 0.5).unproject(camera).sub(camera.position);   // 화면 가운데를 지나는 시선
+    const r = canvas.getBoundingClientRect(), st = stage.getBoundingClientRect();
+    csV.set((sx - (r.left - st.left)) / r.width * 2 - 1, 1 - (sy - (r.top - st.top)) / r.height * 2, 0.5).unproject(camera).sub(camera.position);   // 그 화면 자리를 지나는 시선
     const t = (y - camera.position.y) / csV.y;                   // 그 시선이 높이 y에 닿는 곳
     return { x: camOff.x + x - (camera.position.x + csV.x * t), z: camOff.y + z - (camera.position.z + csV.z * t) };   // 카메라는 옆으로만 옮기니 그만큼 밀면 된다
   }
@@ -3203,8 +3217,9 @@
     const d = TUT[item.k], b = item.b, S = item.S;
     const P = S ? S.bang.position.clone()     // 경찰서 = 지붕 가운데 느낌표, 사람 = 그 원 한가운데
       : new THREE.Vector3(b ? b.foot.x : item.x, 0, b ? b.foot.z : item.z).addScaledVector(UP, b ? (b.halfH || RADIUS) : RADIUS);
-    const o = centerOn(P.x, P.y, P.z);
-    panCam(o.x, o.z, () => {   // 발견한 게 화면 정가운데 → 바탕이 어두워지고 대상만 그 위에 (v221)
+    const [sx, sy] = viewCenter();
+    const o = centerOn(P.x, P.y, P.z, sx, sy);
+    panCam(o.x, o.z, () => {   // 발견한 게 화면 중앙(컨트롤러 영역 뺀 세로 가운데) → 바탕이 어두워지고 대상만 그 위에 (v221 · v222)
       const [, cy] = toStage(P);
       const hh = cy - toStage(tQ.copy(P).addScaledVector(UP, S ? BANG_H / 2 : RADIUS))[1];   // 대상의 화면 반높이 (px)
       const gh = S ? hh * bangFill : hh;      // 느낌표는 판보다 글자가 작다 — 보이는 높이 기준
