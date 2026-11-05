@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v263</div>
+  <div id="ver">v264</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -632,6 +632,15 @@
   }
 
   const spaceOf = (x, z) => buildings.find((B) => x > B.x0 && x < B.x1 && z > B.z0 && z < B.z1) || null;   // 이 자리가 들어 있는 건물 (밖이면 null)
+  function doorwaySpace(b, B) {               // v264: 건물 안이지만 열린 문틈(벽에서 0.6칸 안, 문 폭 안)에 서 있으면 밖(null)으로
+    b.doorway = null;
+    if (!B) return null;
+    for (const D of B.doors) {
+      const along = D.nz ? Math.abs(b.foot.x - D.cx) : Math.abs(b.foot.z - D.cz), depth = D.nz ? Math.abs(b.foot.z - D.cz) : Math.abs(b.foot.x - D.cx);
+      if (along < DOOR / 2 && depth < 0.6) { b.doorway = D; return null; }
+    }
+    return B;
+  }
   function freeSpot(x, z, space) {            // 그 공간(건물 하나 또는 밖) 안이면서 벽에서 0.6칸 넘게 떨어진 곳인가
     if (space) return x > space.x0 + 0.6 && x < space.x1 - 0.6 && z > space.z0 + 0.6 && z < space.z1 - 0.6;
     return buildings.every((B) => x <= B.x0 - 0.6 || x >= B.x1 + 0.6 || z <= B.z0 - 0.6 || z >= B.z1 + 0.6);
@@ -1292,7 +1301,7 @@
   const cars = [];
   let carObs = [];                            // 길 찾기용 서 있는 경찰차 원 {x, z, r} — 사이로 몸이 못 지나갈 만큼 붙은 차들은 한 원으로 합친다 (v139)
   function updateCarObs() {
-    const cs = cars.filter((c) => c.state === 'parked').map((c) => ({ x: c.x, z: c.z, r: CAR_L / 2 * PARKED_K * (c.wreck ? 0.2 : 1) + 0.15 }));   // 잔해는 1/5 (v239)
+    const cs = cars.filter((c) => c.state === 'parked').map((c) => ({ x: c.x, z: c.z, r: CAR_W / 2 * PARKED_K * 0.8 * (c.wreck ? 0.2 : 1) }));   // v264: 돌아가는 원을 차 부딪힘보다 작게 — 좀비가 차에 실제로 닿아야 막힌 차를 때린다 (잔해는 1/5)
     for (let merged = true; merged; ) {
       merged = false;
       for (let i = 0; i < cs.length && !merged; i++) for (let j = i + 1; j < cs.length; j++) {
@@ -2221,7 +2230,8 @@
     for (const z of nearIn(zCells, b.foot.x, b.foot.z, eyeMaxR + RADIUS, viBuf)) {   // 둘레 칸의 좀비만 (v177)
       if (!isZombie(z)) continue;
       if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) > z.sense) continue;   // 몸 가운데가(몸 반 이상이) 인지거리 안에 들어와야 보인다 (v183)
-      if (!blocked(z.foot.x, z.foot.z, b.foot.x, b.foot.z)) return true;
+      const D = b.doorway, tx = D ? D.cx + D.nx * 0.4 : b.foot.x, tz = D ? D.cz + D.nz * 0.4 : b.foot.z;   // 문틈 사람은 문 바로 밖 점으로 본다 (v264)
+      if (!blocked(z.foot.x, z.foot.z, tx, tz)) return true;
     }
     return false;
   }
@@ -2842,8 +2852,9 @@
     updateArea(dt);                           // 영역 중심을 내 이동 방향으로 밀거나 나에게로 되돌린다
     for (const b of bodies) {                 // 걸음 전 자리·공간 — 건물 사람이 문 밖으로 나가면 그때부터 활동 영역 제한이 풀린다
       b.px = b.foot.x; b.pz = b.foot.z;
-      b.space = spaceOf(b.foot.x, b.foot.z);
-      if (b.home && b.space !== b.home) b.freed = true;
+      const sp0 = spaceOf(b.foot.x, b.foot.z);
+      b.space = b.kind === 'citizen' ? doorwaySpace(b, sp0) : sp0;   // v264: 문틈에 낀 사람은 밖에 있는 걸로 — 밖 좀비가 보고 노릴 수 있게
+      if (b.home && sp0 !== b.home) b.freed = true;
     }
     buildGrids();                             // 근처 찾기 칸 (v177)
     for (const b of bodies) if (isZombie(b)) updateZombie(b, dt);
