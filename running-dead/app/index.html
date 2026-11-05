@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v255</div>
+  <div id="ver">v256</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -235,7 +235,7 @@
   const RADIUS = 0.5;     // 원 반지름 — 나·시민 전부 (지름 1유닛 = 유니티 큐브 한 변)
   const MAP = 0.85;   /* 크기 배율 — 건물 크기·문 폭·활동 영역 크기 */ const POS = 0.8;   /* v145: 자리(점)만 20% 좁힘 — 건물·묶음·동네·순찰 위치. 크기는 그대로 */ //       // 맵 좌표 배율 — 건물 위치·크기·문 폭, 시민 묶음 위치·활동 영역, 경찰 출발 거리에 곱한다 (v82: v81에 이속을 15% 줄인 만큼 맵도 15% 좁힘. 캐릭터 크기·거리 능력치는 그대로)
   const SPEED_BASE = 2.45 * 0.85 * 1.2 * 1.2;   /* v168에 20% 더 */ /* v167에 20% 올림 — 나·동료·시민·경찰·경찰차(내 속도 기준) 전부 */ // // 속도 기준 (유닛/초) — 모든 이동 속도(나·동료·시민·경찰)가 이걸로 정해진다. v81에 15% 줄임
-  const MY_SPEED = SPEED_BASE * 1.44 * 1.2 * 0.9;   // 조종하는 나
+  const MY_SPEED = SPEED_BASE * 1.44 * 1.2 * 0.9 * 0.9;   // 조종하는 나 — v256: 나·동료 기본 이동 속도 10% 내림
   const SPEED = MY_SPEED; // 동료 좀비 이동 속도 = 나와 같게 (v68 — 전엔 SPEED_BASE × 1.2 × 1.1)
   const JOY_R = 60;       // 조이스틱 반지름 (px) — 손잡이 가운데는 이 안에서만 움직인다
   const DEAD = 8;         // 누른 자리에서 이만큼(px)은 끌어야 출발
@@ -1789,8 +1789,8 @@
     b.target = null;
     if (b.boostT > 0) { b.sense = b.boostSense; b.sight = b.boostSight; b.boostT = 0; }   // 출동 직후 늘어난 시야는 좀비가 되면 원래대로 (v158)
     b.sense = me && me.sense ? me.sense : b.sight;   // 동료 인지거리(= 시야) = 나와 똑같이 (v183 — 전엔 시민 때 자기 시야)
-    b.speed = SPEED;
-    b.attack = allyAttack();                  // 튼튼한 다리 반영 (v201)
+    b.speed = SPEED * legK();                 // 튼튼한 다리 = 이동 속도 (v256)
+    b.attack = allyAttack();
     b.tick = Math.random() * ZOMBIE_TICK;
     b.pick = null;
     b.slotA = 0;                              // 내 주변에서 맡은 방향 칸의 가운데 (assignSlots가 정한다)
@@ -2923,8 +2923,8 @@
       val: (n) => `감염 시간 −${n * 5}→−${(n + 1) * 5}% (나 ${myBiteLen(n).toFixed(2)}→${myBiteLen(n + 1).toFixed(2)}초)` },
     skin: { icon: '🛡️', name: '단단한 피부', desc: '나와 동료들의 체력 증가',
       val: (n) => `최대 체력 +${n * 3}→+${(n + 1) * 3}% (나 ${Math.round(MY_HP * (1 + n * 0.03))}→${Math.round(MY_HP * (1 + (n + 1) * 0.03))})` },
-    leg: { icon: '🦵', name: '튼튼한 다리', desc: '나와 동료들의 습격 거리 증가',
-      val: (n) => `습격 거리 +${n * 10}→+${(n + 1) * 10}% (나 ${(ATTACK * (1 + n * 0.1)).toFixed(2)}→${(ATTACK * (1 + (n + 1) * 0.1)).toFixed(2)}칸)` },
+    leg: { icon: '🦵', name: '튼튼한 다리', desc: '나와 동료들의 이동 속도 증가',
+      val: (n) => `이동 속도 +${n * 5}→+${(n + 1) * 5}%` },
   };
   const up = { brain: 0, meat: 0, arm: 0, bite: 0, skin: 0, leg: 0 };
   let level = 0, xp = 0, pendingLv = 0, lvOpen = false, hasVest = false, vestEl = null, victoryOn = false;
@@ -2935,7 +2935,8 @@
   const zDamage = (z) => (z === me ? MY_DAMAGE : ALLY_DAMAGE) * (1 + 0.05 * up.arm);
   const zHeal = (z) => (z === me ? MY_BITE_HEAL : BITE_HEAL) + 0.03 * up.meat;   // 감염 시간 1배 기준 초당 회복 (최대 체력 대비)
   const allyMaxHp = () => ALLY_HP * (1 + 0.03 * up.skin);
-  const allyAttack = () => ALLY_ATTACK * (1 + 0.1 * up.leg);
+  const allyAttack = () => ALLY_ATTACK;       // v256: 튼튼한 다리는 이제 습격 거리가 아니라 이동 속도
+  const legK = () => 1 + 0.05 * up.leg;      // 튼튼한 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
   const cashK = () => 1.6 * 1.1 * 1.1 * (1 + 0.2 * up.brain);   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
   const lureHits = () => 4 + up.brain;        // v237: 유혹 중 4대째 맞으면 정신 차린다 (3대까진 무시), 두뇌마다 +1
   function gainXp() {
@@ -2956,7 +2957,7 @@
       const d = (z === me ? MY_HP : ALLY_HP) * 0.03;
       z.maxHp += d; z.hp = Math.min(z.maxHp, z.hp + d);
     }
-    if (key === 'leg') for (const b of bodies) if (isZombie(b)) b.attack = b === me ? ATTACK * (1 + 0.1 * up.leg) : allyAttack();
+    if (key === 'leg') for (const b of bodies) if (isZombie(b)) b.speed = (b === me ? MY_SPEED : SPEED) * legK();   // v256: 이동 속도 +5%
     if (key === 'brain' && vestEl) vestEl.querySelector('.pc').textContent = '-' + vestPct(up.brain) + '%';
   }
   function showLevelUp() {
