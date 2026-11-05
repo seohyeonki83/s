@@ -109,7 +109,7 @@
   <canvas id="view"></canvas>
   <canvas id="smell"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v183</div>
+  <div id="ver">v184</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2663,7 +2663,12 @@
         smellCtx.fillStyle = smellCol[k.type]; smellCtx.fillText('!', k.x, k.y);
         continue;
       }
-      smellCtx.beginPath(); smellCtx.arc(k.x, k.y, smellR(k.n), 0, Math.PI * 2);
+      const R = smellR(k.n) * 1.15, a = Math.atan2(k.y - oy, k.x - ox);   // 세모 (v184) — 꼭짓점이 그 사람 쪽(나에서 바깥)을 가리킨다
+      smellCtx.beginPath();
+      smellCtx.moveTo(k.x + Math.cos(a) * R * 1.25, k.y + Math.sin(a) * R * 1.25);   // 뾰족한 꼭짓점 (정삼각형은 방향이 안 보여서 길쭉하게)
+      smellCtx.lineTo(k.x + Math.cos(a + 2.45) * R * 0.95, k.y + Math.sin(a + 2.45) * R * 0.95);
+      smellCtx.lineTo(k.x + Math.cos(a - 2.45) * R * 0.95, k.y + Math.sin(a - 2.45) * R * 0.95);
+      smellCtx.closePath();
       smellCtx.fillStyle = smellCol[k.type]; smellCtx.globalAlpha = 0.85; smellCtx.fill(); smellCtx.globalAlpha = 1;
       smellCtx.lineWidth = 1.5; smellCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; smellCtx.stroke();
     }
