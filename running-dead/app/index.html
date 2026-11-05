@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v250</div>
+  <div id="ver">v251</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -592,11 +592,17 @@
   function doorGap(D) {                       // v247: 문 자리를 벽 두께보다 훨씬 깊게(안팎 0.7칸씩) 밝은 바닥색으로 + 양쪽 문틀 — 멀리서도 '뚫린 문'으로 보이게
     const deep = 1.4, m = flat(D.tx ? DOOR : deep, D.tz ? DOOR : deep, D.cx, D.cz, gapMat, -0.5025);
     for (const sgn of [-1, 1]) {
-      const j = new THREE.Mesh(new THREE.PlaneGeometry(D.tx ? 0.22 : deep + 0.1, D.tz ? 0.22 : deep + 0.1).rotateX(-Math.PI / 2), jambMat);
+      const j = new THREE.Mesh(new THREE.PlaneGeometry(D.tx ? 0.22 : (deep + 0.1) / 2, D.tz ? 0.22 : (deep + 0.1) / 2).rotateX(-Math.PI / 2), jambMat);   // v251: 문틀 길이 반
       j.position.set(D.tx * sgn * DOOR / 2, 0.001, D.tz * sgn * DOOR / 2); j.renderOrder = -0.502; m.add(j);
     }
+    // v251: 문틈(벽 두께만큼)은 시야 밖으로 쳐져 검은 줄로 덮였다 — 밖에서 좀비가 그 문을 보고 있으면 그 틈도 시야로 찍어서 안 덮이게
+    D.see = new THREE.Mesh(new THREE.PlaneGeometry(D.tx ? DOOR : WALL * 1.6, D.tz ? DOOR : WALL * 1.6).rotateX(-Math.PI / 2), seeMat);
+    D.see.position.set(D.cx, 0.02, D.cz); D.see.renderOrder = -4.9; D.see.visible = false; D.see.frustumCulled = false;
+    scene.add(D.see); seeDoors.push(D);
     m.visible = false; return m;
   }
+  const seeDoors = [];
+  const seeMat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, depthTest: false, stencilWrite: true, stencilRef: 1, stencilFunc: THREE.AlwaysStencilFunc, stencilZPass: THREE.ReplaceStencilOp });
   const roofMat = flatMat(0x202020), wallMat = flatMat(0x2b2b2b), doormatMat = flatMat(0xd9b45a);
   const stationRoofMat = flatMat(0x1c2747), stationDownMat = flatMat(0x3b1f1f);   // 경찰서 지붕 = 짙은 남색, 파괴되면 짙은 붉은색 (v113)
   for (const B of buildings) {
@@ -2218,7 +2224,11 @@
     for (const B of buildings) {              // 좀비가 하나라도 들어간 건물만 지붕이 열린다
       B.open = eyes.some((z) => z.space === B);
       B.roof.visible = !B.open;
-      if (B.bang) B.bang.visible = !B.open && !B.down;   // 안 부서진 경찰서 지붕 느낌표 — 지붕이 열리면(좀비가 들어가면) 같이 사라진다
+      if (B.bang) B.bang.visible = !B.open && !B.down;
+      for (const D of B.doors) if (D.see) {   // v251: 밖에서 이 문을 보는 좀비가 있으면 문틈도 시야
+        const ox = D.cx + D.nx * 0.4, oz = D.cz + D.nz * 0.4;
+        D.see.visible = eyes.some((z) => !z.space && Math.hypot(z.foot.x - ox, z.foot.z - oz) <= z.sense && !blocked(z.foot.x, z.foot.z, ox, oz));
+      }   // 안 부서진 경찰서 지붕 느낌표 — 지붕이 열리면(좀비가 들어가면) 같이 사라진다
     }
     updateViewRect();
     drawVision(eyes);
@@ -3182,7 +3192,7 @@
       if (!B.walls.includes(o.seg)) B.walls.push(o.seg);
       const k = B.doors.indexOf(o.L); if (k >= 0) B.doors.splice(k, 1);
       o.mesh.visible = true; o.dead = false; o.hp = o.maxHp = B.side ? POLICE_HP : OBJ_HP;   // 쪽문 체력 = 경찰과 같음 (v242), 경찰서 문 = 경찰의 5배
-      o.off = false; if (o.fill) o.fill.visible = false; o.gap.visible = false;
+      o.off = false; if (o.fill) o.fill.visible = false; o.gap.visible = false; if (o.L.see) o.L.see.visible = false;
       if (!o.hpBar) addHpBar(o, hpFoeMat);
       o.hpBar.visible = false; o.hpDisp = o.hp;
     }
