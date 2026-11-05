@@ -127,7 +127,7 @@
   <canvas id="view"></canvas>
   <canvas id="smell"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v195</div>
+  <div id="ver">v196</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -965,7 +965,9 @@
     }
   }
   const GUARD_PACE = 0.8;      // 수비형 이동 속도 배율 (v150에 20% 내림) — 걷기·배회·패닉·초패닉 전부
+  const LURED_FORCE = MY_FORCE * 1.5;   // 돈다발로 달려가는 사람의 미는 힘(무게) = 나의 1.5배 (v196) — 유혹이 풀리면 원래대로
   function updateCitizen(c, dt) {
+    c.force = c.state === 'lured' ? LURED_FORCE : 1;
     if (c.boostT > 0) {                      // 경찰서에서 출동해 막 나온 경찰: 3배로 늘어난 인지거리·시야가 4초에 걸쳐 원래대로 (v158)
       c.boostT = Math.max(0, c.boostT - dt);
       const k = 1 + (SORTIE_SENSE - 1) * c.boostT / SORTIE_SENSE_T;
@@ -1521,7 +1523,7 @@
     z.engaging = c;                           // 수비형은 이걸 보고 '누가 나를 노리나'를 안다
     const d = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z);
     if (d > ATTACK_HOLD) z.attacking = false; // 상대가 1.5칸 밖 = 공격 중 아님 (다가가는 중)
-    if (d > MELEE) { steer(z.vel, toward(z, c.foot.x, c.foot.z, z.speed), ACCEL * dt); return; }
+    if (d > MELEE + (c.kind === 'safe' ? c.r : 0)) { steer(z.vel, toward(z, c.foot.x, c.foot.z, z.speed), ACCEL * dt); return; }   // 큰 금고는 겉면까지 닿으면 때린다 (v196)
     steer(z.vel, wantV.set(0, 0), ACCEL * dt);
     if (z.atkT <= 0) { strike(z, c); z.atkT = HIT_EVERY; z.attacking = true; }   // 휘두르는 순간부터 공격 중
   }
@@ -2691,7 +2693,7 @@
 
   // ── 기술 (v190) — 경찰서 금고를 부수면 처음 두 번에 테이저건·현금이 하나씩 (순서 랜덤). 조이스틱 오른쪽 위부터 둘레로 버튼 (최대 3개) ──
   const ITEM = {
-    taser: { max: 3, reload: 20, icon: '⚡', name: '테이저건', col: '#ffd34d' },   // 3발, 1발 20초 — 내 인지거리 안 적 1명 (위험도 높은 순 → 가까운 순) 4초 감전 (v195), 한 번 맞은 적은 다시 안 쏨
+    taser: { max: 3, reload: 20, icon: '⚡', name: '테이저건', col: '#ffd34d' },   // 3발, 1발 20초 — 내 인지거리 안 적 1명 (위험도 높은 순 → 가까운 순) 4초 감전 (v195), 감전 중인 적은 다시 안 쏨 (v196)
     cash: { max: 1, reload: 15, icon: '💵', name: '현금', col: '#43d17a' },       // 1번, 15초 — 내 둘레 1~2칸에 돈다발 3개 (v195)
   };
   const STUN_T = 4, CASH_N = 3, CASH_R = [1, 2], CASH_GET = 0.7;   // v195: 감전 2 → 4초, 돈다발 뿌리는 거리 2~4 → 1~2칸
@@ -2739,13 +2741,13 @@
     if (kind === 'taser') {                   // 내 인지거리 안 적 1명 — 위험도 높은 순(경찰 > 공격형 > 수비형 > 일반), 같으면 가까운 순. 없으면 한 발 날린다
       let best = null, bk = -1, bd = Infinity;
       for (const c of bodies) {                // 누를 때 한 번이라 전체를 본다
-        if (c.kind !== 'citizen' || c.space !== me.space || c.tased) continue;   // v195: 테이저를 한 번 맞은 적은 다시 안 쏜다
+        if (c.kind !== 'citizen' || c.space !== me.space || c.stunT > 0) continue;   // v196: 감전 중인 적은 안 쏜다 (풀리면 다시 쏠 수 있다)
         const d = Math.hypot(c.foot.x - me.foot.x, c.foot.z - me.foot.z);
         if (d > me.sense || blocked(me.foot.x, me.foot.z, c.foot.x, c.foot.z)) continue;
         const k = DANGER(c);
         if (k > bk || (k === bk && d < bd)) { best = c; bk = k; bd = d; }
       }
-      if (best) { best.stunT = STUN_T; best.tased = true; best.vel.set(0, 0); zaps.push({ to: best, t: 0.45 }); }
+      if (best) { best.stunT = STUN_T; best.vel.set(0, 0); zaps.push({ to: best, t: 0.45 }); }
       else zaps.push({ to: null, t: 0.2 });
     } else {                                  // 돈다발 3개를 내 둘레 2~4칸에 뿌린다 (나와 같은 공간)
       for (let i = 0; i < CASH_N; i++) {
@@ -2785,15 +2787,15 @@
   }
   // 금고 (v190): 경찰서마다 안쪽 왼쪽·오른쪽·왼쪽 아래·오른쪽 아래 중 한 곳. 나만 때려 부술 수 있다 (체력 = 경찰의 1.5배)
   const SAFE_HP = POLICE_HP * 1.5;
-  const safeGeo = new THREE.PlaneGeometry(1.9, 1.9), safeInGeo = new THREE.PlaneGeometry(1.24, 1.24);   // v195: 금고 2배
+  const safeGeo = new THREE.PlaneGeometry(2.85, 2.85), safeInGeo = new THREE.PlaneGeometry(1.86, 1.86);   // v195: 금고 2배, v196: 1.5배 더 (원래의 3배)
   function addSafe(S) {
-    const m = 1.7, cz = (S.z0 + S.z1) / 2, spots = [[S.x0 + m, cz], [S.x1 - m, cz], [S.x0 + m, S.z1 - m], [S.x1 - m, S.z1 - m]];
+    const m = 2.2, cz = (S.z0 + S.z1) / 2, spots = [[S.x0 + m, cz], [S.x1 - m, cz], [S.x0 + m, S.z1 - m], [S.x1 - m, S.z1 - m]];
     const [x, z] = spots[Math.floor(Math.random() * spots.length)];
     const b = addBody('safe', x, z);
     b.mesh.geometry = safeGeo; b.mesh.material.color.setHex(0x8a7a52);
     const inner = new THREE.Mesh(safeInGeo, new THREE.MeshBasicMaterial({ color: 0x3a3d46, transparent: true, depthTest: false, depthWrite: false }));
     inner.position.z = 0.001; inner.renderOrder = b.mesh.renderOrder; b.mesh.add(inner);
-    b.fixed = true; b.r = 1.0; b.halfH = 0.95; b.hp = b.maxHp = SAFE_HP; b.station = S;
+    b.fixed = true; b.r = 1.5; b.halfH = 1.425; b.hp = b.maxHp = SAFE_HP;   // 부딪힘(콜라이더) 반지름도 같이 커진다 b.station = S;
     addHpBar(b, hpFoeMat);
     S.safe = b;
   }
