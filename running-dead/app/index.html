@@ -187,7 +187,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v234</div>
+  <div id="ver">v235</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1057,11 +1057,7 @@
     }
     if (c.state === 'held') { c.vel.set(0, 0); return; }   // 물리는 중엔 꼼짝 못 한다
     if (c.stunT > 0) { c.stunT -= dt; c.vel.set(0, 0); return; }   // 감전 (v190) — 2초 동안 아무것도 못 한다 (맞기는 한다)
-    if (cashes.length && !c.noLure && c.state !== 'lured' && !c.lureAlert && c.state !== 'super' && (c.cashT = (c.cashT || 0) - dt) <= 0) {   // 돈다발 보기 (v190) — 인지거리 안이면 바로 유혹, 시야 안이면 먼저 경계
-      c.cashT = TICK;
-      const s = seeCash(c, c.sight * cashK());
-      if (s) { if (s.d <= c.sense * cashK()) enterLured(c); else { enterAlert(c); c.lureAlert = true; } }
-    }
+    // v235: 돈다발 알아채기는 뿌리는 순간 한 번만 (useItem 현금) — 나중에 돈다발을 보는 사람은 안 홀린다
     if (c.state === 'lured') { luredStep(c, dt); return; }
     if (c.lureAlert) {                        // 돈다발 쪽을 보며 경계 — 끝나면 유혹 (그 사이 맞으면 풀린다)
       steer(c.vel, wantV.set(0, 0), ACCEL * dt);
@@ -2966,7 +2962,9 @@
       it.el.classList.toggle('empty', it.ammo <= 0);
     }
   }
+  const CASH_LIFE = 10;                       // v235: 돈다발은 10초 뒤 사라진다
   function tickItems(dt) {
+    for (const k of cashes.slice()) if ((k.t -= dt) <= 0) removeCash(k);
     for (let i = zaps.length - 1; i >= 0; i--) if ((zaps[i].t -= dt) <= 0) zaps.splice(i, 1);
     for (const it of items) {
       const d = ITEM[it.kind];
@@ -2992,6 +2990,7 @@
       for (const { c } of hit) { c.stunT = STUN_T; c.vel.set(0, 0); zaps.push({ to: c, t: 0.45 }); }
       if (!hit.length) zaps.push({ to: null, t: 0.2 });
     } else {                                  // 돈다발 3개를 내 둘레 2~4칸에 뿌린다 (나와 같은 공간)
+      const fresh = [];
       for (let i = 0; i < 1 + up.brain; i++) {   // 돈다발 수 = 1 + 똑똑한 두뇌 (v201)
         for (let t = 0; t < 30; t++) {
           const a = Math.random() * Math.PI * 2, r = CASH_R[0] + Math.random() * (CASH_R[1] - CASH_R[0]);
@@ -3002,9 +3001,22 @@
           const band = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.38).rotateX(-Math.PI / 2), cashBandMat); band.position.y = 0.002; mesh.add(band);
           mesh.position.set(x, 0.03, z); mesh.rotation.y = Math.random() * Math.PI; mesh.renderOrder = -0.55;
           scene.add(mesh);
-          cashes.push({ x, z, space: me.space, mesh });
+          cashes.push({ x, z, space: me.space, mesh, t: CASH_LIFE, who: new Set() });
+          fresh.push(cashes[cashes.length - 1]);
           break;
         }
+      }
+      for (const c of bodies) {               // v235: 뿌리는 순간 딱 한 번 — 그때 돈다발을 볼 수 있는 사람만 그 돈다발에 홀린다
+        if (c.kind !== 'citizen' || c.noLure || c.state === 'super' || c.state === 'held' || c.state === 'lured') continue;
+        let bd = Infinity;
+        for (const k of fresh) {
+          if (k.space !== c.space) continue;
+          const d = Math.hypot(k.x - c.foot.x, k.z - c.foot.z);
+          if (d > c.sight * cashK() || blocked(c.foot.x, c.foot.z, k.x, k.z)) continue;
+          k.who.add(c); bd = Math.min(bd, d);
+        }
+        if (bd === Infinity) continue;
+        if (bd <= c.sense * cashK()) enterLured(c); else { enterAlert(c); c.lureAlert = true; }
       }
     }
     refreshItems();
@@ -3013,7 +3025,7 @@
   function seeCash(c, range) {                // 이 사람이 볼 수 있는 가장 가까운 돈다발 (같은 공간, 벽에 안 가림)
     let best = null, bd = range;
     for (const k of cashes) {
-      if (k.space !== c.space || (c.ignoreCash && c.ignoreCash.has(k))) continue;
+      if (k.space !== c.space || !k.who.has(c) || (c.ignoreCash && c.ignoreCash.has(k))) continue;   // v235: 뿌릴 때 본 돈다발만
       const d = Math.hypot(k.x - c.foot.x, k.z - c.foot.z);
       if (d <= bd && !blocked(c.foot.x, c.foot.z, k.x, k.z)) { bd = d; best = k; }
     }
