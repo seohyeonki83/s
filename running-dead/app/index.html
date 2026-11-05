@@ -107,7 +107,7 @@
 <div id="stage">
   <canvas id="view"></canvas>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v173</div>
+  <div id="ver">v174</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -738,6 +738,7 @@
     let g;
     for (let n = 0; n < 20; n++) {
       g = new THREE.Vector2(rand(a.x0 + 0.6, a.x1 - 0.6), rand(a.z0 + 0.6, a.z1 - 0.6));
+      g.x = Math.max(MM.x0 + 1, Math.min(MM.x1 - 1, g.x)); g.y = Math.max(MM.z0 + 1, Math.min(MM.z1 - 1, g.y));   // 지도 밖 자리는 지도 안으로 (v174)
       if (a.doors || freeSpot(g.x, g.y, null)) break;
     }
     return g;
@@ -1245,7 +1246,22 @@
     }
   }
   // ── 미니맵 (v123) — 스타크래프트처럼: 못 가 본 곳 = 까맣게, 가 본 곳 = 흐린 회색(건물도 보임), 지금 좀비 시야 안 = 밝게. 경찰서는 늘 보라, 나는 빨간 점 ──
-  const MM = { x0: Math.min(...BLOCKS.map((b) => b[0])) - 26 * 0.8, x1: Math.max(...BLOCKS.map((b) => b[0])) + 26 * 0.8, z0: Math.min(...BLOCKS.map((b) => b[1])) - 55 * 0.8, z1: Math.max(...BLOCKS.map((b) => b[1])) + 26 * 0.8 };   // v144에 맵과 같이 여유도 20% 줄임   // 지도 전체 (동네 다섯 개 + 여유)
+  const MM = (() => {   // 지도 전체 (동네 다섯 개 + 여유) — v174에 가운데 기준 95%로 줄여 바깥 여백을 덜어냈다. 캐릭터·경찰차는 이 밖으로 못 나간다
+    const x0 = Math.min(...BLOCKS.map((b) => b[0])) - 26 * 0.8, x1 = Math.max(...BLOCKS.map((b) => b[0])) + 26 * 0.8;
+    const z0 = Math.min(...BLOCKS.map((b) => b[1])) - 55 * 0.8, z1 = Math.max(...BLOCKS.map((b) => b[1])) + 26 * 0.8;
+    const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, k = 0.95;
+    return { x0: cx + (x0 - cx) * k, x1: cx + (x1 - cx) * k, z0: cz + (z0 - cz) * k, z1: cz + (z1 - cz) * k };
+  })();
+  {   // 지도 경계 (v174) — 지도 밖 바닥은 어둡게 덮고, 경계에 옅은 띠. 이 밖으로는 못 나간다
+    const mat = new THREE.MeshBasicMaterial({ color: 0x050507, transparent: true, opacity: 0.65, depthWrite: false });
+    const band = new THREE.MeshBasicMaterial({ color: 0xff6a6a, transparent: true, opacity: 0.55, depthWrite: false });
+    const F = 400, W = MM.x1 - MM.x0, H = MM.z1 - MM.z0, cx = (MM.x0 + MM.x1) / 2, cz = (MM.z0 + MM.z1) / 2, t = 0.18;
+    const quad = (w, h, x, z, m) => { const q = new THREE.Mesh(new THREE.PlaneGeometry(w, h).rotateX(-Math.PI / 2), m); q.position.set(x, 0.03, z); q.renderOrder = -0.6; q.frustumCulled = false; scene.add(q); };
+    quad(F, F, cx, MM.z0 - F / 2, mat); quad(F, F, cx, MM.z1 + F / 2, mat);              // 북·남
+    quad(F, H, MM.x0 - F / 2, cz, mat); quad(F, H, MM.x1 + F / 2, cz, mat);              // 서·동
+    quad(W + t, t, cx, MM.z0, band); quad(W + t, t, cx, MM.z1, band);                    // 경계 띠
+    quad(t, H + t, MM.x0, cz, band); quad(t, H + t, MM.x1, cz, band);
+  }
   const MM_S = Math.min(128 * 2 / 3 / (MM.x1 - MM.x0), 136 * 2 / 3 / (MM.z1 - MM.z0));   // 미니맵 배율 (화면 px / 유닛) — 가로세로 같은 비율로 (v125, v126), v129에 3분의 2 크기 (약 85×91)
   const MM_CW = Math.round((MM.x1 - MM.x0) * MM_S), MM_CH = Math.round((MM.z1 - MM.z0) * MM_S);
   const MM_CELL = 2;                          // 가 본 곳 기록 칸 (유닛)
@@ -2442,6 +2458,16 @@
     collide(dt);
     carCollide();                             // 경찰차에 겹친 몸은 밀어낸다
     for (const b of bodies) if (!b.fixed) wallCollide(b);   // 벽은 마지막에 — 서로 밀다가 벽을 넘지 않게
+    for (const b of bodies) {                 // 지도(미니맵) 밖으로는 못 나간다 (v174)
+      const r = b.r || BODY;
+      if (b.foot.x < MM.x0 + r) { b.foot.x = MM.x0 + r; if (b.vel.x < 0) b.vel.x = 0; } else if (b.foot.x > MM.x1 - r) { b.foot.x = MM.x1 - r; if (b.vel.x > 0) b.vel.x = 0; }
+      if (b.foot.z < MM.z0 + r) { b.foot.z = MM.z0 + r; if (b.vel.y < 0) b.vel.y = 0; } else if (b.foot.z > MM.z1 - r) { b.foot.z = MM.z1 - r; if (b.vel.y > 0) b.vel.y = 0; }
+    }
+    for (const car of cars) {                 // 경찰차도 (v174)
+      const m = CAR_L / 2;
+      if (car.x < MM.x0 + m || car.x > MM.x1 - m) { car.x = Math.max(MM.x0 + m, Math.min(MM.x1 - m, car.x)); car.vx = 0; }
+      if (car.z < MM.z0 + m || car.z > MM.z1 - m) { car.z = Math.max(MM.z0 + m, Math.min(MM.z1 - m, car.z)); car.vz = 0; }
+    }
     dispatchTick(dt);                         // 수배 별에 따라 경찰서에서 출동
     draw(dt);
     updateStars();
