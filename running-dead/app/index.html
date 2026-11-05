@@ -171,7 +171,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v206</div>
+  <div id="ver">v207</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2771,7 +2771,7 @@
       val: (n) => `내 회복 초당 ${(MY_BITE_HEAL * 100 + n * 3).toFixed(1)}→${(MY_BITE_HEAL * 100 + (n + 1) * 3).toFixed(1)}%` },
     arm: { icon: '💪', name: '강한 팔', desc: '모든 좀비 공격력 증가',
       val: (n) => `공격력 +${n * 5}→+${(n + 1) * 5}% (나 ${(MY_DAMAGE * (1 + n * 0.05)).toFixed(1)}→${(MY_DAMAGE * (1 + (n + 1) * 0.05)).toFixed(1)})` },
-    bite: { icon: '🦷', name: '물어뜯기', desc: '감염 속도 증가',
+    bite: { icon: '🦷', name: '물어뜯기', desc: '덮치는 속도 증가',
       val: (n) => `감염 시간 −${n * 5}→−${(n + 1) * 5}% (나 ${myBiteLen(n).toFixed(2)}→${myBiteLen(n + 1).toFixed(2)}초)` },
     skin: { icon: '🛡️', name: '단단한 피부', desc: '모든 좀비 체력 증가',
       val: (n) => `최대 체력 +${n * 3}→+${(n + 1) * 3}% (나 ${Math.round(MY_HP * (1 + n * 0.03))}→${Math.round(MY_HP * (1 + (n + 1) * 0.03))})` },
