@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v314</div>
+  <div id="ver">v315</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1497,7 +1497,7 @@
         if (Math.hypot(car.vx, car.vz) < 0.05) {   // 섰다 → 경찰이 내리고 차는 그 자리에 계속 서 있다
           car.vx = car.vz = 0;
           car.state = 'parked';
-          car.obj = { kind: 'obj', type: 'car', car, foot: new THREE.Vector3(car.x, 0, car.z), hp: OBJ_HP, maxHp: OBJ_HP, dead: false };   // 서 있는 경찰차는 부술 수 있다 (v239)
+          car.obj = { kind: 'obj', type: 'car', car, foot: new THREE.Vector3(car.x, 0, car.z), hp: OBJ_HP * 0.8, maxHp: OBJ_HP * 0.8, dead: false };   /* v315: 경찰차 20% 내림 */   // 서 있는 경찰차는 부술 수 있다 (v239)
           addHpBar(car.obj, hpFoeMat); objs.push(car.obj);
           updateCarObs();                     // 길 찾기에 이 차를 넣는다
           car.red.color.setHex(0x4a3a3a);
