@@ -194,7 +194,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v275</div>
+  <div id="ver">v276</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2583,7 +2583,7 @@
     camDist = DIST;
     explored.fill(0);                         // 미니맵 — 새 판은 다시 다 까맣게
     for (const it of items) it.el.remove();   // 기술·돈다발·연출 초기화 (v190)
-    items = []; safesBroken = 0; itemOrder = pickItems();   // v275: 9종 중 랜덤 3개 (사용 아이템은 2개까지)
+    items = []; safesBroken = 0; itemOrder = pickItems();   // v276: 9종 중 랜덤 4개 — 금고 4개 전부에서 하나씩 (사용 아이템은 2개까지)
     for (const k of Object.keys(owned)) delete owned[k];
     for (const el of Object.values(pBadges)) el.remove();
     for (const k of Object.keys(pBadges)) delete pBadges[k];
@@ -3369,12 +3369,12 @@
   const ACTIVE_ITEMS = ['taser', 'cash', 'mutate', 'bomb'], PASSIVE_ITEMS = ['vest', 'crowbar', 'pistol', 'flag', 'shoes'];
   const owned = {};                           // 가진 패시브
   const pBadges = {};                         // 왼쪽 아래 패시브 배지
-  function pickItems() {                      // 9종을 섞어 앞에서부터 3개 — 사용 아이템은 2개까지만
+  function pickItems() {                      // 9종을 섞어 앞에서부터 4개 (금고 4개 전부) — 사용 아이템은 2개까지만 (v276)
     const all = [...ACTIVE_ITEMS, ...PASSIVE_ITEMS];
     for (let i = all.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
     const out = []; let na = 0;
     for (const k of all) {
-      if (out.length >= 3) break;
+      if (out.length >= 4) break;
       if (ACTIVE_ITEMS.includes(k)) { if (na >= 2) continue; na++; }
       out.push(k);
     }
@@ -3580,7 +3580,7 @@
     scene.remove(b.mesh); if (b.hpBar) scene.remove(b.hpBar);
     const i = bodies.indexOf(b); if (i >= 0) bodies.splice(i, 1);
     safesBroken++;
-    if (safesBroken <= itemOrder.length) pendingAward.push(itemOrder[safesBroken - 1]);   // v201: 처음 3개 금고에서 하나씩, 마지막 금고는 없음
+    if (safesBroken <= itemOrder.length) pendingAward.push(itemOrder[safesBroken - 1]);   // v276: 금고 4개 전부에서 하나씩 (깨는 순서대로)
   }
   // 획득 연출: 일시정지 → 반투명 바탕 위에 큰 기술 그림 + 글자 → 화면을 누르면 바탕이 사라지고 그림이 버튼 자리로 날아가 박힘 → 다시 움직임
   function stopInput() { pid = null; joy.classList.remove('on'); knob.style.transform = 'translate(0px, 0px)'; move.set(0, 0); }
