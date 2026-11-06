@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v335</div>
+  <div id="ver">v336</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2861,6 +2861,20 @@
               if (!p) continue;
               const area = square(p[0], p[1]), c = addCitizen(p[0], p[1], area, ''); c.area = area;
             }
+          }
+          for (const H of homes1) for (let i = 0, n = 1 + Math.floor(Math.random() * 2); i < n; i++) {   // v336: 건물마다 노랑 1~2명 더
+            let g = pickGoal(H);
+            for (let t = 0; t < 30 && !free1(g.x, g.y); t++) g = pickGoal(H);
+            const c = addCitizen(g.x, g.y, H, ''); c.home = H; c.area = H;
+          }
+          for (let i = 0; i < 3; i++) {       // v336: 길거리에 노랑 3명 더
+            let p = null;
+            for (let t = 0; t < 80 && !p; t++) {
+              const x = rand(Math.max(Z.x0, MM.x0 + 2), Math.min(Z.x1, MM.x1 - 2)), z = rand(Math.max(Z.z0, MM.z0 + 2), Math.min(Z.z1, MM.z1 - 2));
+              if (freeSpot(x, z, null) && free1(x, z)) p = [x, z];
+            }
+            if (!p) continue;
+            const area = square(p[0], p[1]), c = addCitizen(p[0], p[1], area, ''); c.area = area;
           }
         }
         return;
