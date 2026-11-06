@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v315</div>
+  <div id="ver">v316</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1356,6 +1356,15 @@
       const f1 = puff(mx, 0, mz, 0xfff23a, 1.0, 1.0, 0.07, 0, 0, 0, 0.7);   // v255: 살짝 반투명 (70%)   // v254: 뿌연 번짐 없이 아주 밝은 노란 원이 딱 깜빡 (크기 2/3)
       f1.s.material.map = flashTex; f1.s.position.addScaledVector(UP, RADIUS); f1.s.renderOrder = UI - 0.5; f1.s.material.opacity = 0.7; f1.peak = true; f1.blink = true;
       c.recoilT = 0; c.recoilX = -ux; c.recoilZ = -uz;
+    }
+    {                                         // v316: 총 맞은 자리 — 작은 빨간 원들이 피 튀듯 퍼진다
+      const ddx = z.foot.x - c.foot.x, ddz = z.foot.z - c.foot.z, dl = Math.hypot(ddx, ddz) || 1, ux = ddx / dl, uz = ddz / dl;
+      const hx = z.foot.x - ux * RADIUS * 0.5, hz = z.foot.z - uz * RADIUS * 0.5;
+      for (let i = 0; i < 7; i++) {
+        const a = Math.atan2(uz, ux) + rand(-1.1, 1.1), sp = rand(1.5, 3.5);
+        const f = puff(hx, 0.6, hz, i % 3 ? 0xd91e1e : 0xff4a3a, rand(0.14, 0.24), rand(0.06, 0.12), rand(0.25, 0.4), Math.cos(a) * sp, rand(0.3, 1), Math.sin(a) * sp, 0.95);
+        f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true;
+      }
     }
     landHit(c, z, z === me && hasVest ? POLICE_DAMAGE * (1 - vestPct(up.brain) / 100) : POLICE_DAMAGE);   // 방탄복 — 내 총알 피해 감소 (v201)
   }
