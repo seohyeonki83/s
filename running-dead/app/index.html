@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v330</div>
+  <div id="ver">v331</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2822,7 +2822,7 @@
     BLOCKS.forEach(([ox, oz], k) => {
       if (k === START_BLOCK) {                // 첫 마을은 성장 구역 스폰 + 큰 건물 안 사람들만 (v230 · v232)
         const B = buildings.find((H) => H.block === k && H.big);
-        for (const t of BIG_PEOPLE) {
+        for (const t of [...BIG_PEOPLE, ...Array(12).fill('attacker'), ...Array(5).fill('guard')]) {   // v331: 큰 건물에 공격형 12 · 수비형 5 더
           let g = pickGoal(B);
           for (let i = 0; i < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); i++) g = pickGoal(B);
           const c = addCitizen(g.x, g.y, B, t);
@@ -2939,7 +2939,8 @@
     for (const S of stations) addSafe(S);     // 경찰서마다 금고 (v190)
     const starter = buildings.filter((B) => B.block === START_BLOCK && !B.big);   // v262: 큰 건물 말고 작은 건물 3채
     const real = starter[Math.floor(Math.random() * starter.length)];   // v288: 3채 전부 금고 — 진짜는 하나, 나머지 둘은 꽝
-    for (const B of starter) { addSafe(B); if (B !== real) B.safe.dud = true; }   // 첫 마을 건물 중 아무 데나 금고 (v230 · v232: 큰 건물 포함, 건물 안 자리도 랜덤)
+    for (const B of starter) { addSafe(B); if (B !== real) B.safe.dud = true; }
+    addSafe(buildings.find((B) => B.block === START_BLOCK && B.big));   // v331: 첫 마을 큰 건물에도 진짜 금고   // 첫 마을 건물 중 아무 데나 금고 (v230 · v232: 큰 건물 포함, 건물 안 자리도 랜덤)
     placeMe();
   }
   // 내 시작 자리 (v164): 마을 다섯 곳 중 아무 데나 (건물 밖, 벽에서 1.5칸 넘게).
@@ -3572,7 +3573,7 @@
     for (let i = all.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
     const out = []; let na = 0;
     for (const k of all) {
-      if (out.length >= 4) break;
+      if (out.length >= 5) break;   // v331: 진짜 금고 5개 (첫 마을 1 + 큰 건물 1 + 경찰서 3)
       if (ACTIVE_ITEMS.includes(k)) { if (na >= 2) continue; na++; }
       out.push(k);
     }
@@ -3763,7 +3764,7 @@
     b.dead = true;
     scene.remove(b.mesh); if (b.hpBar) scene.remove(b.hpBar);
     const i = bodies.indexOf(b); if (i >= 0) bodies.splice(i, 1);
-    if (b.dud) { pendingAward.push('dud'); return; }   // v288: 꽝 금고 — 아이템 없이 '힝~ 속았지' (아이템 순서는 안 쓴다)
+    if (b.dud) { dust(b.foot.x, b.foot.z, 16, 1.4); for (let i = 0; i < 8; i++) { const a = Math.random() * 6.28; puff(b.foot.x, 0.8, b.foot.z, 0x6a6a6a, 0.8, rand(2, 3), rand(1.2, 2), Math.cos(a) * 0.6, rand(0.6, 1.2), Math.sin(a) * 0.6, 0.6, rand(0, 0.3)); } return; }   // v331: 꽝 = 연기만, 아무 일 없음   // v288: 꽝 금고 — 아이템 없이 '힝~ 속았지' (아이템 순서는 안 쓴다)
     safesBroken++;
     if (safesBroken <= itemOrder.length) pendingAward.push(itemOrder[safesBroken - 1]);   // v276: 금고 4개 전부에서 하나씩 (깨는 순서대로)
   }
