@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v351</div>
+  <div id="ver">v352</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -302,7 +302,7 @@
   // 경찰 — 공격형과 같은데(경계 뒤 패닉 대신 덤빔) 그 자리에서 총을 쏘고, HP 0이 돼도 계속 쏜다.
   //   북쪽 경찰서에서 나온다 — 수배 별이 있으면 출동 간격마다 한 번 (아래 STAR·출동 값, v113)
   const POLICE_HP = 300 * 0.7 * 0.8;   /* v147에 20% 줄임 (210 → 168) */ //      // 체력 — v63에 30% 줄임 (210)
-  const POLICE_DAMAGE = 50 / 2 * 0.7 * 0.95;   /* v313: 5% 내림 (17.5 → 16.6) */   // 공격력 — v64에 50, v66에 절반, v71에 30% 줄임 (17.5). 사거리 = 자기 시야 (공격 간격·첫 공격까지 시간은 공격형과 같음)
+  const POLICE_DAMAGE = 50 / 2 * 0.7 * 0.95 * 0.9;   /* v352: 10% 내림 (16.6 → 15.0) */   /* v313: 5% 내림 (17.5 → 16.6) */   // 공격력 — v64에 50, v66에 절반, v71에 30% 줄임 (17.5). 사거리 = 자기 시야 (공격 간격·첫 공격까지 시간은 공격형과 같음)
   const POLICE_PACE = 1.1 * 1.3;    // 경찰 이동 속도 = 시민의 이만큼 배 (출동해서 뛰기·걷기·배회 다) — v51에 1.1배, v56에 30% 더
   const POLICE_ALERT = 1 / 3;       // 경찰 경계 시간 = 시민 경계 시간(ALERT_TIME)의 이만큼 — 좀비를 보고 더 빨리 쏘기 시작한다
   const ARRIVE = 1.0;               // 사건 자리에 이만큼 다가가면 도착
