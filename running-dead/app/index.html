@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v333</div>
+  <div id="ver">v334</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -620,13 +620,20 @@
     return c;
   })();
   const bangTex = new THREE.CanvasTexture(bangCv); bangTex.colorSpace = THREE.SRGBColorSpace;
-  const qmTex = (() => {                     // v288: 금고 있는 일반 건물 지붕 물음표 — 금고 위 물음표와 같은 노랑 + 검은 테두리
+  function drawChest(g, x, y, w) {            // v334: 보물상자 (플랫) — 가운데 (x, y), 폭 w
+    const h = w * 0.72, lid = h * 0.38, o = Math.max(2, w * 0.06);
+    g.lineJoin = 'round'; g.lineWidth = o * 2; g.strokeStyle = 'rgba(0,0,0,0.85)';
+    g.strokeRect(x - w / 2, y - h / 2, w, h);
+    g.fillStyle = '#9c5b2e'; g.fillRect(x - w / 2, y - h / 2 + lid, w, h - lid);   // 몸통
+    g.fillStyle = '#b8743a'; g.fillRect(x - w / 2, y - h / 2, w, lid);              // 뚜껑
+    g.fillStyle = '#f2c14e';
+    g.fillRect(x - w / 2, y - h / 2 + lid - o * 0.6, w, o * 1.2);                  // 금띠
+    g.fillRect(x - w * 0.09, y - h / 2, w * 0.18, h);                              // 세로 금띠
+    g.fillStyle = '#3a2410'; g.fillRect(x - w * 0.05, y - h / 2 + lid + o, w * 0.1, h * 0.16);   // 자물쇠 구멍
+  }
+  const qmTex = (() => {                     // v288: 금고 건물 지붕 표시 — v334: 물음표 → 보물상자
     const c = document.createElement('canvas'); c.width = 192; c.height = 256;
-    const g = c.getContext('2d');
-    g.font = '900 220px system-ui, -apple-system, "Segoe UI", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.lineJoin = 'round';
-    const m = g.measureText('?'), y = 128 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
-    g.lineWidth = 20; g.strokeStyle = 'rgba(0, 0, 0, 0.85)'; g.strokeText('?', 96, y);
-    g.fillStyle = '#ffd34d'; g.fillText('?', 96, y);
+    drawChest(c.getContext('2d'), 96, 128, 168);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
   })();
   const gapMat = flatMat(0xc4c4c4), jambMat = flatMat(0x111111);   // v247: 더 밝게 + 문틀
@@ -1697,6 +1704,7 @@
         mmCtx.fillStyle = '#e6b3ff'; mmCtx.fillText('!', x + w / 2, cy);
       }
     }
+    for (const B of buildings) if (!B.station && B.safe && !B.safe.dead) drawChest(mmCtx, X((B.x0 + B.x1) / 2), Z((B.z0 + B.z1) / 2), 7 * mmDpr);   // v334: 미니맵 금고 건물 = 보물상자
     const r = 2.2 * mmDpr;                                       // 나 = 빨간 점 (미니맵이 작아져서 조금 작게)
     mmCtx.beginPath(); mmCtx.arc(X(me.foot.x), Z(me.foot.z), r, 0, Math.PI * 2);
     mmCtx.fillStyle = '#ff3b30'; mmCtx.fill();
