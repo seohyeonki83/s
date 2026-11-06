@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v348</div>
+  <div id="ver">v349</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2069,7 +2069,7 @@
   function recallCheck(z, dt) {
     if (z.mode === 'pounce' || z.mode === 'bite') { z.outT = 0; return; }   // 습격·감염 중엔 지배 거리를 안 본다 — 끝난 뒤부터 다시 잰다 (그 전에 받은 복귀 명령은 그대로)
     if (inDomain(z)) { z.outT = 0; z.recall = false; return; }
-    if (z.outT === 0) z.outLimit = z.mut === 'armor' ? 0.2 : rand(...RECALL_DELAY);   // v344: 덩치는 0.2초
+    if (z.outT === 0) z.outLimit = z.mut === 'armor' ? 0 : rand(...RECALL_DELAY);   // v349: 덩치는 즉시 (0초)
     z.outT += dt;
     if (!z.recall && z.outT >= z.outLimit) {
       z.recall = true;
