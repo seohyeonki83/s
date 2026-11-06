@@ -212,7 +212,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v298</div>
+  <div id="ver">v299</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3084,7 +3084,7 @@
     taser: { max: 3, reload: 20, icon: IC.taser, name: '테이저건', col: '#ffd34d' },   // 3발, 1발 20초 — 내 인지거리 안 적 1명 (위험도 높은 순 → 가까운 순) 4초 감전 (v195), 감전 중인 적은 다시 안 쏨 (v196)
     cash: { max: 1, reload: 18.75, icon: IC.cash, name: '현금', col: '#43d17a' },    // v284: 15 → 18.75초 (25% 늘림) — 1번 — 내 둘레 1~2칸에 돈다발 (v201: 처음 1개 + 똑똑한 두뇌마다 1개)
     vest: { icon: IC.vest, name: '방탄복', passive: true },
-    mutate: { max: 1, reload: 35, icon: IC.mutate, name: '변이 주사', col: '#b05cff' },   // v275: 가장 가까운 동료 하나가 체력 가득 + 20초 변이 (갑옷 · 히드라 랜덤)
+    mutate: { max: 1, reload: 35, icon: IC.mutate, name: '변이 주사', col: '#b05cff' },   // v275: 가장 가까운 동료 하나가 체력 가득 + 변이 (갑옷 · 히드라 랜덤) — v299: 23초 + 도구 다루기마다 4초
     bomb: { max: 1, reload: 40, icon: IC.bomb, name: '자폭 스위치', col: '#5fcf3a' },     // v275: 적에게 가장 많이 둘러싸인 동료가 터지며 산성 덩어리
     crowbar: { icon: IC.crowbar, name: '빠루', passive: true },     // v275: 내가 건물·사물에 입히는 피해 +25%
     book: { icon: IC.book, name: '백과사전', passive: true },      // v286: 권총 대신 — 사용 도구 쿨타임 7% 줄임 (도구 다루기마다 3%씩 더)
@@ -3512,7 +3512,7 @@
     }
     return out;
   }
-  const MUT_T = () => 20 + 2 * up.brain;                            // 변이 유지 시간
+  const MUT_T = () => 23 + 4 * up.brain;                            // 변이 유지 시간 — v299: 기본 20 → 23초, 도구 다루기마다 +2 → +4초
   const itemMax = (k) => k === 'mutate' ? 1 + up.brain : ITEM[k].max;   // 변이 주사 장탄 +1씩
   const bookCut = () => owned.book ? Math.min(0.9, 0.07 + 0.03 * up.brain) : 0;   // v286: 백과사전 — 사용 도구 쿨타임 7% 줄임, 도구 다루기마다 3%p씩 더
   const itemReload = (k) => (k === 'bomb' ? Math.max(10, 40 - 3 * up.brain) : ITEM[k].reload) * (1 - bookCut());   // 자폭 쿨타임 −3초씩 → 그 위에 백과사전
