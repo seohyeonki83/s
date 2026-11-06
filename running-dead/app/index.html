@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v339</div>
+  <div id="ver">v340</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3380,7 +3380,6 @@
           const mesh = new THREE.Mesh(cashGeo, cashMat);
           const band = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.38).rotateX(-Math.PI / 2), cashBandMat); band.position.y = 0.002; mesh.add(band);
           mesh.position.set(x, 0.03, z); mesh.rotation.y = Math.random() * Math.PI; mesh.renderOrder = -0.55;
-          { const R0 = SIGHT * cashK(), ring = new THREE.Mesh(new THREE.RingGeometry(R0 - 0.12, R0, 64).rotateX(-Math.PI / 2), cashRingMat); ring.position.y = 0.004; ring.renderOrder = -0.5; mesh.add(ring); }   // v338: 사람이 돈을 알아채는 거리 원
           scene.add(mesh);
           cashes.push({ x, z, space: me.space, mesh, t: CASH_LIFE, who: new Set() });
           fresh.push(cashes[cashes.length - 1]);
