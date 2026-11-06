@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v342</div>
+  <div id="ver">v343</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1830,7 +1830,7 @@
   //   단, 덮침 거리 안에 덮칠 수 있는 시민(HP 0)이 있으면 복귀 명령·싸움·찜보다 그걸 먼저 덮친다 (덮치기부터 감염까지 한 덩어리).
   const NO_INPUT = new THREE.Vector2();
 
-    const inDomain = (b) => Math.hypot(b.foot.x - areaX(), b.foot.z - areaZ()) <= (b.mut === 'armor' ? (b.attacking ? 10 : 4) : (b.attacking ? DOMAIN_FIGHT : DOMAIN)) * (b.cmd ? b.cmd.mul : 1) * armyK;   // 공격 중이면 지배 거리가 늘어난다. 명령 중이면 (기본·공격 둘 다) 7초 동안 3배
+    const inDomain = (b) => Math.hypot(b.foot.x - areaX(), b.foot.z - areaZ()) <= (b.mut === 'armor' ? (b.attacking ? 7 : 4) : (b.attacking ? DOMAIN_FIGHT : DOMAIN)) * (b.cmd ? b.cmd.mul : 1) * armyK;   // 공격 중이면 지배 거리가 늘어난다. 명령 중이면 (기본·공격 둘 다) 7초 동안 3배
   // 덮치는 중(marked)인 시민은 아무도 안 노린다. 동료가 쫓기 시작해 찜한 시민은 다른 동료가 안 노린다 (나는 상관없이 노린다).
   // HP가 남은 시민(수비형)은 찜이 없다 — 여럿이 같이 때린다. 다른 공간(건물 안·밖)에 있는 시민은 안 보인다.
   const huntable = (z, b) => b && b.kind === 'citizen' && !b.marked && (z === me || b.hp > 0 || !b.chaser || b.chaser === z) && (b.space === z.space || (linked(z.space, b.space) && zSeen(b)));   // v296: 다른 공간도 좀비 편이 보고 있으면
