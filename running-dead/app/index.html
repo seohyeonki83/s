@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v329</div>
+  <div id="ver">v330</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3173,7 +3173,7 @@
   }
 
   const SLOT_A = [45, 15, 75], SLOT_R = 125;   // 버튼 자리 = 조이스틱 가운데에서 이 각도(오른쪽 0°, 위 90°)·거리(px)
-  const FORCE_FIRST_ITEM = 'mutate';           // v294: 시험용 — 첫 진짜 금고에서 이 아이템 (null이면 원래대로 완전 랜덤)
+  const FORCE_FIRST_ITEM = null;   /* v330: 다시 완전 랜덤 */           // v294: 시험용 — 첫 진짜 금고에서 이 아이템 (null이면 원래대로 완전 랜덤)
   let items = [], itemOrder = [], safesBroken = 0, paused = false, acqOpen = false, starAnim = false, shownStars = 0;
   const pendingAward = [];
   const cashes = [];                          // 바닥에 뿌려진 돈다발 {x, z, space, mesh}
