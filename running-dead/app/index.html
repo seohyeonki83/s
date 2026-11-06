@@ -74,7 +74,7 @@
   @keyframes lvup { 0% { transform: scale(1.8); color: #7fd4ff; } 100% { transform: scale(1); } }
   .toast { position: absolute; left: 50%; bottom: calc(220px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 30; padding: 10px 16px; border-radius: 10px; background: rgba(20, 20, 26, 0.88); color: #fff; font: 700 15px/1 var(--font); pointer-events: none; transition: opacity 0.3s; white-space: nowrap; }   /* v275 */
   .pbadge, #vest { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: 46px; height: 46px; border-radius: 12px; background: rgba(22, 22, 28, 0.85); border: 2px solid #8fa3b8;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; pointer-events: none; z-index: 4; }   /* 방탄복 (v201) — 패시브, 왼쪽 아래 */
+    display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; pointer-events: auto; cursor: pointer; touch-action: none; z-index: 4; }   /* 방탄복 (v201) — 패시브, 왼쪽 아래. v284: 누르면 설명창 */
   .pbadge .ic, #vest .ic { font-size: 20px; line-height: 1; }
   .pbadge .pc, #vest .pc { font: 700 10px/1 var(--font); margin-top: 2px; color: #cfe0f0; }
   #pick { position: absolute; inset: 0; z-index: 22; background: rgba(0, 0, 0, 0.7); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: calc(18vh + env(safe-area-inset-top, 0px)); box-sizing: border-box; touch-action: none; transition: opacity 0.3s; }   /* 레벨업 카드 고르기 (v201) */
@@ -171,6 +171,16 @@
     background: var(--btn-bg); color: var(--btn-fg); font: 600 13px/1 var(--font);
     touch-action: manipulation; cursor: pointer;
   }
+  #pause {   /* v284: 일시정지 — 오른쪽 아래 '처음부터' 바로 위, 작게. 멈춘 동안은 ▶ */
+    position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(51px + env(safe-area-inset-bottom, 0px));
+    width: 34px; height: 34px; padding: 0; border: 0; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    background: var(--btn-bg); color: var(--btn-fg); touch-action: manipulation; cursor: pointer;
+  }
+  #pause svg { width: 15px; height: 15px; fill: currentColor; display: block; }
+  #pause .pl, #pause.on .pa { display: none; }
+  #pause.on .pl { display: block; }
+  #pauseOv { position: absolute; inset: 0; z-index: 20; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: flex-start; padding-top: calc(28vh + env(safe-area-inset-top, 0px)); box-sizing: border-box; touch-action: none; }
+  #pauseOv .t { font: 900 40px/1 var(--font); color: #fff; letter-spacing: 4px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8); }
   #cmd {   /* 명령 컨트롤키 — 이동 조이스틱의 오른쪽 위에 붙은 작은 조이스틱. 엄지 하나로 둘 다 닿게 (v100)
               이동 조이스틱 가운데(아래 가운데, 바닥에서 118px)에서 오른쪽 92px · 위 92px = 이 키 가운데 → 두 원 사이 30px */
     position: absolute; left: calc(50% + 54px); bottom: calc(172px + env(safe-area-inset-bottom, 0px));
@@ -199,13 +209,14 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v283</div>
+  <div id="ver">v284</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
   <div id="note" hidden></div>
 </div>
 <button id="reset" type="button">처음부터</button>
+<button id="pause" type="button" aria-label="일시정지"><svg class="pa" viewBox="0 0 16 16"><rect x="3" y="2" width="3.6" height="12" rx="1"/><rect x="9.4" y="2" width="3.6" height="12" rx="1"/></svg><svg class="pl" viewBox="0 0 16 16"><path d="M4.5 2.4v11.2c0 .6.7 1 1.2.6l8-5.6c.4-.3.4-.9 0-1.2l-8-5.6c-.5-.4-1.2 0-1.2.6z"/></svg></button>
 <button id="retry" type="button" hidden>다시 하기</button>
 <div id="cmd" role="button" aria-label="명령 컨트롤키"><div id="cmdKnob"></div></div>
 
@@ -2354,8 +2365,9 @@
       if (!kind) continue;
       b.iconT += dt;
       const k = Math.min(1, b.iconT / 0.12), s = ICON_H * (0.6 + 0.4 * (1 - (1 - k) * (1 - k)));   // 뜰 때 살짝 튀어나온다
-      b.icon.scale.set(s * 2, s, 1);
-      b.icon.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + ICON_H * 0.6 + (barUp ? 0.35 : 0) + (gauged ? (CLOCK_R * 2 + 0.25) * (b.biter === me ? CLOCK_ME : CLOCK_ME * 2 / 3) : 0));   // 체력바·게이지가 있으면 그 위로
+      const big = kind === '$' ? 2 : 1;      // v284: 현금에 유혹된 $ 는 2배
+      b.icon.scale.set(s * 2 * big, s * big, 1);
+      b.icon.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + ICON_H * (big === 2 ? 1.1 : 0.6) + (barUp ? 0.35 : 0) + (gauged ? (CLOCK_R * 2 + 0.25) * (b.biter === me ? CLOCK_ME : CLOCK_ME * 2 / 3) : 0));   // 체력바·게이지가 있으면 그 위로
     }
     if (me.aim) { me.aim.mesh.add(aimRing); aimRing.visible = true; }
     else aimRing.visible = false;
@@ -2606,8 +2618,9 @@
     drawLv();
     for (const k of cashes.slice()) removeCash(k);
     zaps.length = 0; pendingAward.length = 0; shownStars = 0;
-    for (const el of stage.querySelectorAll('#acq, .fly')) el.remove();
+    for (const el of stage.querySelectorAll('#acq, .fly, #pauseOv')) el.remove();
     acqOpen = starAnim = paused = false;
+    menuOv = null; pauseEl.classList.remove('on');   // v284: 일시정지·설명창도 닫힌 채로 새 판
     if (typeof drawStars === 'function') drawStars();
     visDirty = true;
     mmDirty = true;
@@ -2876,7 +2889,7 @@
     for (const z of zombies) { z.objC = z.objT && z.objF === objFrame - 1 && !z.objT.dead ? z.objT : null; if (z.objC) objCrowd.set(z.objC, (objCrowd.get(z.objC) || 0) + 1); }
     const n = zombies.length - (isZombie(me) ? 1 : 0), k = 1 + Math.max(0, n - ARMY_FREE) * ARMY_STEP;   // 부대 크기 = 동료 수
     if (n !== armyN) { armyN = n; armyK = k; updateLegend(); }
-    const camK = 1 + Math.max(0, n - ARMY_FREE) * 0.009;   // v239: 카메라만 동료 한 명마다 0.9% (시야·영역은 그대로 1.25%)
+    const camK = 1 + Math.max(0, n - ARMY_FREE) * 0.008;   // v284: 0.9 → 0.8% — v239: 카메라만 동료 한 명마다 (시야·영역은 그대로 1.25%)
     camDist += (DIST * camK - camDist) * Math.min(1, dt * 2);
     const moving = me.vel.length() > 0.3;
     if (meMoving && !moving) for (const b of bodies) if (b.kind === 'ally') { freshSlot(b); b.phase = 'track'; }   // 내가 멈추면 동료는 자리를 새로 뽑고 그리로 간다
@@ -2968,7 +2981,7 @@
   };
   const ITEM = {
     taser: { max: 3, reload: 20, icon: IC.taser, name: '테이저건', col: '#ffd34d' },   // 3발, 1발 20초 — 내 인지거리 안 적 1명 (위험도 높은 순 → 가까운 순) 4초 감전 (v195), 감전 중인 적은 다시 안 쏨 (v196)
-    cash: { max: 1, reload: 15, icon: IC.cash, name: '현금', col: '#43d17a' },       // 1번, 15초 — 내 둘레 1~2칸에 돈다발 (v201: 처음 1개 + 똑똑한 두뇌마다 1개)
+    cash: { max: 1, reload: 18.75, icon: IC.cash, name: '현금', col: '#43d17a' },    // v284: 15 → 18.75초 (25% 늘림) — 1번 — 내 둘레 1~2칸에 돈다발 (v201: 처음 1개 + 똑똑한 두뇌마다 1개)
     vest: { icon: IC.vest, name: '방탄복', passive: true },
     mutate: { max: 1, reload: 35, icon: IC.mutate, name: '변이 주사', col: '#b05cff' },   // v275: 가장 가까운 동료 하나가 체력 가득 + 20초 변이 (갑옷 · 히드라 랜덤)
     bomb: { max: 1, reload: 40, icon: IC.bomb, name: '자폭 스위치', col: '#5fcf3a' },     // v275: 적에게 가장 많이 둘러싸인 동료가 터지며 산성 덩어리
@@ -3352,8 +3365,8 @@
     }
   }
   function boom(x, z) {
-    puff(x, 0.6, z, 0xfff3b0, 0.6, 5, 0.35, 0, 0, 0, 1);
-    for (let i = 0; i < 7; i++) { const a = Math.random() * Math.PI * 2, sp = rand(1, 3); puff(x, 0.5, z, i % 2 ? 0xff7a1a : 0xffc23a, 0.6, rand(2, 3.2), rand(0.35, 0.55), Math.cos(a) * sp, rand(0.5, 1.5), Math.sin(a) * sp, 0.95, rand(0, 0.1)); }
+    puff(x, 0.6, z, 0xfff3b0, 1.2, 10, 0.35, 0, 0, 0, 1);   // v284: 섬광 2배 크기 (0.6→5 에서 1.2→10, 시간은 그대로)
+    for (let i = 0; i < 7; i++) { const a = Math.random() * Math.PI * 2, sp = rand(1, 3); puff(x, 0.5, z, i % 2 ? 0xff7a1a : 0xffc23a, 1.2, rand(4, 6.4), rand(0.35, 0.55), Math.cos(a) * sp, rand(0.5, 1.5), Math.sin(a) * sp, 0.95, rand(0, 0.1)); }
     for (let i = 0; i < 12; i++) { const a = Math.random() * Math.PI * 2, sp = rand(0.2, 0.8); puff(x + rand(-0.6, 0.6), 0.8, z + rand(-0.6, 0.6), 0x2e2e2e, rand(0.8, 1.2), rand(2.4, 3.6), rand(1.6, 2.6), Math.cos(a) * sp, rand(0.8, 1.6), Math.sin(a) * sp, rand(0.55, 0.8), rand(0.1, 0.6)); }
   }
   function stepFx(dt) {
@@ -3389,7 +3402,7 @@
   const MUT_T = () => 20 + 2 * up.brain;                            // 변이 유지 시간
   const itemMax = (k) => k === 'mutate' ? 1 + up.brain : ITEM[k].max;   // 변이 주사 장탄 +1씩
   const itemReload = (k) => k === 'bomb' ? Math.max(10, 40 - 3 * up.brain) : ITEM[k].reload;   // 자폭 쿨타임 −3초씩
-  const pistolGap = () => 15 * Math.pow(0.95, up.brain);           // 권총 장전 — 그때 쿨타임의 5%씩 줄어든다
+  const pistolGap = () => 10 * Math.pow(0.95, up.brain);           // 권총 장전 — v284: 15 → 10초 (3분의 2). 도구 다루기마다 그때 쿨타임의 5%씩 줄어든다
   function refreshBadges() {                  // 패시브 배지 아래 숫자
     const t = {
       vest: () => '-' + vestPct(up.brain) + '%',
@@ -3652,6 +3665,7 @@
         const el = document.createElement('div'); el.className = 'pbadge';
         el.style.left = `calc(max(16px, env(safe-area-inset-left, 0px)) + ${Object.keys(pBadges).length * 54}px)`;
         el.innerHTML = `<span class="ic">${d.icon}</span><span class="pc"></span>`;
+        el.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); showInfo(kind); });   // v284: 누르면 일시정지 + 설명창
         stage.appendChild(el); pBadges[kind] = el;
         if (kind === 'vest') vestEl = el;
         it = { el, passive: true };
@@ -3934,9 +3948,42 @@
       });
     });
   }
+  // v284: 일시정지 버튼 · 패시브 배지 설명창 — 둘 다 게임을 멈추고, 조이스틱 자리 동그란 버튼으로 닫는다
+  //   다른 창(레벨업·획득·발견·승리)이 떠 있거나 죽었을 땐 안 열린다. 떠 있는 동안엔 다른 연출도 줄 서서 기다린다
+  let menuOv = null;
+  const pauseEl = document.getElementById('pause');
+  const canMenu = () => !paused && !menuOv && me && me.mode !== 'dead';
+  function openMenu(ov, label) {
+    menuOv = ov; paused = true; stopInput();
+    stage.appendChild(ov);
+    tapOk(ov, label, closeMenu);
+    pauseEl.classList.toggle('on', ov.id === 'pauseOv');
+  }
+  function closeMenu() {
+    if (!menuOv) return;
+    menuOv.remove(); menuOv = null;
+    pauseEl.classList.remove('on');
+    paused = false; last = 0;
+  }
+  function togglePause() {
+    if (menuOv && menuOv.id === 'pauseOv') { closeMenu(); return; }
+    if (!canMenu()) return;
+    const ov = document.createElement('div'); ov.id = 'pauseOv';
+    ov.innerHTML = '<div class="t">일시정지</div>';
+    openMenu(ov, '계속');
+  }
+  pauseEl.addEventListener('pointerdown', (e) => e.stopPropagation());
+  pauseEl.addEventListener('click', togglePause);
+  function showInfo(kind) {                   // 패시브 배지를 누르면 → 얻을 때 봤던 설명창 그대로 (닫기)
+    if (!canMenu()) return;
+    const d = ITEM[kind], ov = document.createElement('div');
+    ov.id = 'acq'; ov.className = 'info';
+    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name}</div><div class="ds">${itemDesc(kind)}</div>`;
+    openMenu(ov, '닫기');
+  }
   function uiTick() {                         // 매 프레임 (멈춰 있어도): 줄 서 있는 연출을 하나씩
     stage.classList.toggle('okOn', !!stage.querySelector('.okBtn'));   // v244: 확인 버튼이 떠 있으면 조이스틱 숨김
-    if (acqOpen || starAnim || lvOpen || victoryOn || tutOpen) return;
+    if (acqOpen || starAnim || lvOpen || victoryOn || tutOpen || menuOv) return;   // v284: 일시정지·설명창 동안도 기다린다
     if (!goalShown) { if (spawnFrames >= 3) showGoal(); return; }   // 판 시작 → 첫 장면을 몇 프레임 그린 뒤 목표 (v202)
     if (tutQueue.length) { showTut(tutQueue.shift()); return; }
     if (stationDown && !victoryOn) { showVictory(); return; }   // 경찰서 다 파괴 → 승리 (v201)
@@ -3946,15 +3993,15 @@
     if (stars > shownStars) playStar();
   }
   // v278: 동료 수 칭호 — 판마다 처음 도달할 때 딱 한 번. 게임은 멈추지 않고 화면 위쪽에 큰 글씨가 팡 떴다 사라진다
-  const RANKS = [
-    { n: 5, t: '패거리', d: '부하 몇 명이 따릅니다.' },
-    { n: 15, t: '떼거리', d: '부하들이 당신에게 충성을 다합니다.' },
-    { n: 30, t: '개떼', d: '어마어마한 통솔력입니다.' },
-    { n: 40, t: '대군', d: '당신의 함성이 전장을 찢어놓습니다.' },
-    { n: 50, t: '대재앙', d: '당신의 손짓이 죽음의 물결을 만들고 있습니다.' },   // v280: 대군 다음부터 10마리마다
-    { n: 60, t: '헬게이트', d: '무저갱의 황충떼를 보라.' },   // v281: 황충대 → 황충떼
-    { n: 70, t: '군단', d: '나는 군단이다.' },
-    { n: 80, t: '적당히 해라', d: '더 쓸 말 없다.' },   // v282
+  const RANKS = [   // v284: 단계마다 간격이 4마리씩 더 벌어진다 (간격 5·10·15·10… → 9·14·19·14…)
+    { n: 9, t: '패거리', d: '부하 몇 명이 따릅니다.' },
+    { n: 23, t: '떼거리', d: '부하들이 당신에게 충성을 다합니다.' },
+    { n: 42, t: '개떼', d: '어마어마한 통솔력입니다.' },
+    { n: 56, t: '대군', d: '당신의 함성이 전장을 찢어놓습니다.' },
+    { n: 70, t: '대재앙', d: '당신의 손짓이 죽음의 물결을 만들고 있습니다.' },   // v280: 대군 다음부터 10마리마다
+    { n: 84, t: '헬게이트', d: '무저갱의 황충떼를 보라.' },   // v281: 황충대 → 황충떼
+    { n: 98, t: '군단', d: '나는 군단이다.' },
+    { n: 112, t: '적당히 해라', d: '더 쓸 말 없다.' },   // v282
   ];
   let rankNext = 0, rankAnim = false;
   function showRank(r) {
