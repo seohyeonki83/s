@@ -2133,8 +2133,8 @@
     if (z.mode === 'bite') {
       if (input.x || input.y) endBite(z, false);   // 움직이면 감염 포기
       else if ((z.biteT -= dt) <= 0) endBite(z, true);
-      else if (z.target && (z.bloodT = (z.bloodT || 0) - dt) <= 0) { z.bloodT = rand(0.08, 0.16); bloodBurst(z.target.foot.x, z.target.foot.z, 2, 1, 2.5); }   // v317: 무는 동안 바바바박
       else z.hp = Math.min(z.maxHp, z.hp + z.maxHp * zHeal(z) / Math.max(0.05, biteK()) * dt);   // 무는 중 체력 회복 — 고기 흡수율 반영, 물어뜯기로 짧아진 만큼 빨리 (회복 총량 그대로, v201)   // 무는 중 체력 회복 (나는 1.3배)
+      if (z.mode === 'bite' && z.target && (z.bloodT = (z.bloodT || 0) - dt) <= 0) { z.bloodT = rand(0.08, 0.16); bloodBurst(z.target.foot.x, z.target.foot.z, 2, 1, 2.5); }   // v317: 무는 동안 바바바박
     }
     if (z.mode === 'pounce') {
       const t = z.target;
