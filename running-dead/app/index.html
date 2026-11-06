@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v271</div>
+  <div id="ver">v272</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3165,7 +3165,7 @@
     inner.position.z = 0.001; inner.renderOrder = b.mesh.renderOrder; b.mesh.add(inner);
     b.mesh.scale.setScalar(0.7);              // v239: 그림만 70% (부딪힘 r 1.5는 그대로)
     const q = new THREE.Sprite(new THREE.SpriteMaterial({ map: SAFE_Q, transparent: true, depthTest: false, depthWrite: false }));   // v271: 금고 위 큰 물음표 (금고 그림에 붙어 같이 보이고 같이 사라진다)
-    q.scale.set(6, 3, 1); q.position.set(0, 1.425 + 2.1, 0.02); q.renderOrder = UI - 1; b.mesh.add(q);
+    q.scale.set(5, 2.5, 1); q.position.set(0, 0, 0.02); q.renderOrder = UI - 1; b.mesh.add(q);   // v272: 금고 위로 띄우지 않고 금고 그림에 겹쳐 덮는다
     b.fixed = true; b.r = 1.5; b.halfH = 1.425 * 0.7; b.hp = b.maxHp = SAFE_HP;   // 부딪힘(콜라이더) 반지름도 같이 커진다 b.station = S;
     addHpBar(b, hpFoeMat);
     S.safe = b;
