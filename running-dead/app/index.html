@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v347</div>
+  <div id="ver">v348</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1736,7 +1736,7 @@
   function landHit(a, v, dmg = DAMAGE) {
     if (v.kind === 'obj' && a.mut === 'armor') dmg *= 4;   // v344: 2 → 4배   // v295: 덩치 — 문·경찰차 피해 2배
     if ((v.kind === 'obj' || v.kind === 'safe') && a === me && owned.crowbar) dmg *= 1.25 + 0.05 * up.brain;   // v275: 빠루 — 내가 건물·사물에 입히는 피해
-    if (isZombie(v) && v.mut) dmg *= v.mut === 'armor' ? 0.2 : 0.9;   // v275: 갑옷좀비 받는 피해 80% 줄임, 히드라 10% 줄임
+    if (isZombie(v) && v.mut) dmg *= v.mut === 'armor' ? (TEST_ARMOR ? 0 : 0.2) : 0.9;   // v275: 갑옷좀비 받는 피해 80% 줄임, 히드라 10% 줄임
     if (a.mut === 'armor' && v.kind === 'citizen' && !a.splashing) {   // v275: 갑옷좀비 — 앞쪽 80° 부채꼴, 근접 거리 1.2배 안 다른 적도 30%
       const R = (MELEE + (a.r - BODY)) * 1.2, fx = v.foot.x - a.foot.x, fz = v.foot.z - a.foot.z, fl = Math.hypot(fx, fz) || 1;
       a.splashing = true;
@@ -3669,10 +3669,11 @@
     return true;
   }
   const MUT_COL = { armor: 0x1f3d99, hydra: 0x2fb84a };
+  const TEST_ARMOR = true;                    // v348: 시험용 — 변이는 덩치만, 덩치는 안 죽고 안 풀린다 (false면 원래대로)
   function mutate(z) {
     if (z.mut) unmutate(z);
     if (z.mode === 'pounce') stopPounce(z);
-    const type = Math.random() < 0.5 ? 'armor' : 'hydra';
+    const type = TEST_ARMOR ? 'armor' : Math.random() < 0.5 ? 'armor' : 'hydra';
     z.mut = type; z.mutT = MUT_T();
     z.hp = z.maxHp;                           // 체력 가득
     z.mesh.material.color.setHex(MUT_COL[type]);
@@ -3812,7 +3813,7 @@
   }
 
   function itemsTick(dt) {
-    for (const z of zombies) if (z.mut && (z.mutT -= dt) <= 0) unmutate(z);   // 변이 끝
+    for (const z of zombies) if (z.mut && !(TEST_ARMOR && z.mut === 'armor') && (z.mutT -= dt) <= 0) unmutate(z);   // 변이 끝
     stepSpits(dt);
     gooTick(dt);
   }
