@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v356</div>
+  <div id="ver">v357</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2279,7 +2279,31 @@
     sightWalls.push([x0, z0, x1, z0], [x1, z0, x1, z1], [x0, z1, x1, z1], [x0, z0, x0, z1]);
     sightCorners.push([x0, z0], [x1, z0], [x1, z1], [x0, z1]);
   }
-  buildings.forEach((B, i) => { B.sightW = sightWalls.slice(i * 8, i * 8 + 8); B.sightC = sightCorners.slice(i * 8, i * 8 + 8); });   // 건물마다 자기 시야 벽·모서리 (v177)
+  buildings.forEach((B, i) => { B.sightW = sightWalls.slice(i * 8, i * 8 + 8); B.sightC = sightCorners.slice(i * 8, i * 8 + 8); });
+  function rebuildSight(B) {                  // v357: 열린 문(부서진 문 포함)은 시야도 뚫린다 — 길처럼
+    const W = [], C = [];
+    for (const k of [WALL / 2, -WALL / 2]) {
+      const x0 = B.x0 - k, x1 = B.x1 + k, z0 = B.z0 - k, z1 = B.z1 + k;
+      const sides = { n: [x0, z0, x1, z0], e: [x1, z0, x1, z1], s: [x0, z1, x1, z1], w: [x0, z0, x0, z1] };
+      C.push([x0, z0], [x1, z0], [x1, z1], [x0, z1]);
+      for (const [side, [ax, az, bx, bz]] of Object.entries(sides)) {
+        const D = B.doors.find((o) => o.side === side);
+        if (!D) { W.push([ax, az, bx, bz]); continue; }
+        const h = (D.w || DOOR) / 2;
+        if (az === bz) { W.push([ax, az, D.cx - h, az], [D.cx + h, az, bx, az]); C.push([D.cx - h, az], [D.cx + h, az]); }
+        else { W.push([ax, az, ax, D.cz - h], [ax, D.cz + h, ax, bz]); C.push([ax, D.cz - h], [ax, D.cz + h]); }
+      }
+    }
+    for (const D of B.doors) {                // 문설주 — 벽 두께 안으로 시야가 새지 않게
+      const h = (D.w || DOOR) / 2;
+      for (const sg of [-1, 1]) {
+        const px = D.cx + D.tx * h * sg, pz = D.cz + D.tz * h * sg;
+        W.push([px - D.nx * WALL / 2, pz - D.nz * WALL / 2, px + D.nx * WALL / 2, pz + D.nz * WALL / 2]);
+      }
+    }
+    B.sightW = W; B.sightC = C;
+  }
+  for (const B of buildings) rebuildSight(B);   // 건물마다 자기 시야 벽·모서리 (v177)
   const nbBuf = [], nearBuf = [];
   function bldgsNear(x0, z0, x1, z1) {         // 이 네모에 걸치는 건물들 (v177 — 지도 전체 벽 200개를 매번 훑지 않게)
     nbBuf.length = 0;
@@ -2424,7 +2448,7 @@
     const eyes = bodies.filter((b) => isZombie(b) || b === me);   // 시야 = 나 + 동료 좀비 전부 (내가 죽어도 마지막 자리 시야는 남는다)
     eyeMaxR = 0; for (const z of eyes) if (z.sense > eyeMaxR) eyeMaxR = z.sense;
     for (const B of buildings) {              // 좀비가 하나라도 들어간 건물만 지붕이 열린다
-      B.open = eyes.some((z) => z.space === B);
+      B.open = eyes.some((z) => z.space === B) || B.doors.some((D) => { const ox = D.cx + D.nx * 0.4, oz = D.cz + D.nz * 0.4; return eyes.some((z) => !z.space && Math.hypot(z.foot.x - ox, z.foot.z - oz) <= z.sense && !blocked(z.foot.x, z.foot.z, ox, oz)); });   // v357: 밖에서 열린 문을 보고 있으면 지붕도 열린다
       B.roof.visible = !B.open;
       if (B.bang) B.bang.visible = !B.open && !B.down;
       if (B.qm) B.qm.visible = !B.open && !!B.safe && !B.safe.dead;   // v288: 금고 지붕 물음표 — 좀비가 들어가거나 금고가 깨지면 사라진다
@@ -3530,6 +3554,7 @@
       if (i >= 0) walls.splice(i, 1);
       if (j >= 0) B.walls.splice(j, 1);
       if (!B.doors.includes(o.L)) B.doors.push(o.L);
+      rebuildSight(B);   // v357
       o.mesh.visible = false; o.gap.visible = true;
       dust(o.L.cx, o.L.cz, 18, 1.4);
     } else {                                  // 경찰차: 폭발 + 연기 + 먼지 → 잔해만 남는다 (부딪힘 1/5)
@@ -3551,6 +3576,7 @@
       if (!walls.includes(o.seg)) walls.push(o.seg);
       if (!B.walls.includes(o.seg)) B.walls.push(o.seg);
       const k = B.doors.indexOf(o.L); if (k >= 0) B.doors.splice(k, 1);
+      rebuildSight(B);   // v357
       o.mesh.material = lockMat; o.mesh.children[0].material = lockBarMat;   // v288: 빨갛던 문도 원래 색으로
       o.mesh.visible = true; o.dead = false; o.hp = o.maxHp = B.side ? POLICE_HP : OBJ_HP * 0.8;   /* v314: 경찰서 문 20% 내림 */   // v263: 경찰서 문 = 경찰차와 같은 체력   // 쪽문 체력 = 경찰과 같음 (v242), 경찰서 문 = 경찰의 5배
       o.off = false; if (o.fill) o.fill.visible = false; o.gap.visible = false; if (o.L.see) o.L.see.visible = false;
