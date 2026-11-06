@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v285</div>
+  <div id="ver">v286</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2604,7 +2604,7 @@
     for (const k of Object.keys(owned)) delete owned[k];
     for (const el of Object.values(pBadges)) el.remove();
     for (const k of Object.keys(pBadges)) delete pBadges[k];
-    pistolT = 0; for (const sp of spits) scene.remove(sp.s); spits.length = 0; pTrT = -1;
+    for (const sp of spits) scene.remove(sp.s); spits.length = 0;
     for (const k of Object.keys(up)) up[k] = 0;   // 레벨·능력치·방탄복 초기화 (v201)
     level = 0; xp = 0; pendingLv = 0; lvOpen = false; victoryOn = false; hasVest = false;
     vestEl = null;
@@ -2946,7 +2946,7 @@
     draw(dt);
     checkTut();                               // 처음 만난 적 소개 (v202)
     stepFx(dt); drawObjBars(dt);              // 사물 이펙트·체력바 (v239)
-    itemsTick(dt);                            // v275: 변이 시간 · 히드라 토사물 · 산성 덩어리 · 권총
+    itemsTick(dt);                            // v275: 변이 시간 · 히드라 토사물 · 산성 덩어리 (v286: 권총 삭제)
     scrTick(dt);                              // 첫 마을 성장 구역 스폰 (v230)
     spawnFrames++;
     updateStars();
@@ -2968,7 +2968,7 @@
     mutate: svgI('<rect x="9" y="2" width="6" height="2" rx="1" fill="#cfd6e3"/><rect x="11" y="4" width="2" height="3" fill="#cfd6e3"/><rect x="8" y="7" width="8" height="11" rx="1.5" fill="#e9edf5"/><rect x="9.5" y="10" width="5" height="7" rx="1" fill="#b05cff"/><rect x="11.3" y="18" width="1.4" height="4" fill="#9aa4b5"/>'),
     bomb: svgI('<rect x="4" y="9" width="16" height="11" rx="2" fill="#7a8396"/><rect x="11" y="3" width="2" height="6" fill="#9aa4b5"/><circle cx="12" cy="3.5" r="2" fill="#5fcf3a"/><circle cx="9" cy="14.5" r="2.4" fill="#e8455a"/><rect x="13" y="12.5" width="5" height="1.6" rx="0.8" fill="#8f97a6"/><rect x="13" y="15.5" width="5" height="1.6" rx="0.8" fill="#8f97a6"/>'),
     crowbar: svgI('<path d="M6 21 17 6c.9-1.3.4-3-1-3.6l-2.2-.9" stroke="#d64545" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M13.8 1.5 12 4" stroke="#d64545" stroke-width="2.6" stroke-linecap="round"/>'),
-    pistol: svgI('<path d="M3 7h17v4H11l-1 2H8l-1 7H3l1-7-1-1z" fill="#9aa3b3"/><rect x="18" y="8" width="3" height="2" fill="#6b7385"/><path d="M9 11h2v3H9z" fill="#6b7385"/>'),
+    book: svgI('<rect x="6" y="4" width="14.5" height="18" rx="1.4" fill="#f2ead8"/><rect x="4" y="2" width="14.5" height="18" rx="1.6" fill="#9c5b2e"/><rect x="4" y="2" width="3" height="18" rx="1.2" fill="#7a431f"/><rect x="9" y="6" width="7" height="2.4" rx="0.6" fill="#f2c14e"/><rect x="9" y="10" width="7" height="1.2" rx="0.5" fill="#f2c14e"/>'),   // v286: 백과사전 (권총 대신)
     flag: svgI('<rect x="5" y="2" width="2" height="20" rx="1" fill="#9aa4b5"/><path d="M7 3h12l-3 4 3 4H7z" fill="#e8455a"/>'),
     shoes: svgI('<path d="M2 17v-4c2 0 4-1 5-3l1.5-2 3 2.5c1.5 1 3 1.5 5 1.5h2.5a3 3 0 0 1 3 3V17z" fill="#4fa3f0"/><rect x="2" y="17" width="20" height="3" rx="1" fill="#e9edf5"/>'),
     brain: svgI('<path d="M12 4c-1.4-1.6-4.6-1.2-5.2 1.1C4.4 5.4 3.2 7.8 4.2 9.8 2.8 11.2 3 14 5 15c0 2.4 2.6 4 4.6 3 .6 1 1.6 1.4 2.4 1.4V4z" fill="#f29ab8"/><path d="M12 4c1.4-1.6 4.6-1.2 5.2 1.1 2.4.3 3.6 2.7 2.6 4.7 1.4 1.4 1.2 4.2-.8 5.2 0 2.4-2.6 4-4.6 3-.6 1-1.6 1.4-2.4 1.4V4z" fill="#e57fa3"/>'),
@@ -2986,7 +2986,7 @@
     mutate: { max: 1, reload: 35, icon: IC.mutate, name: '변이 주사', col: '#b05cff' },   // v275: 가장 가까운 동료 하나가 체력 가득 + 20초 변이 (갑옷 · 히드라 랜덤)
     bomb: { max: 1, reload: 40, icon: IC.bomb, name: '자폭 스위치', col: '#5fcf3a' },     // v275: 적에게 가장 많이 둘러싸인 동료가 터지며 산성 덩어리
     crowbar: { icon: IC.crowbar, name: '빠루', passive: true },     // v275: 내가 건물·사물에 입히는 피해 +25%
-    pistol: { icon: IC.pistol, name: '권총', passive: true },       // v275: 15초마다 자동 발사 (경찰 체력의 50%)
+    book: { icon: IC.book, name: '백과사전', passive: true },      // v286: 권총 대신 — 사용 도구 쿨타임 7% 줄임 (도구 다루기마다 3%씩 더)
     flag: { icon: IC.flag, name: '깃발', passive: true },           // v275: 복귀하는 동료 속도 +20%
     shoes: { icon: IC.shoes, name: '운동화', passive: true },       // v275: 내 이동 속도 +10%                         // 패시브 (v201) — 총알 피해 30% 감소, 똑똑한 두뇌마다 10% 더
   };
@@ -2999,7 +2999,7 @@
       mutate: ['가장 가까운 동료 하나가 체력이 가득 차며 잠시 변이합니다.', '도구 다루기가 오르면 주사를 더 들고 다니고 변이가 더 오래 갑니다.'],
       bomb: ['적에게 가장 많이 둘러싸인 동료 하나가 터지며 산성 덩어리를 뿌립니다.', '도구 다루기가 오르면 다시 쓰는 시간이 짧아집니다.'],
       crowbar: ['건물과 사물에 입히는 피해가 늘어납니다.', '도구 다루기가 오르면 피해가 더 늘어납니다.'],
-      pistol: ['일정 시간마다 총이 자동으로 발사됩니다.', '도구 다루기가 오르면 장전 시간이 빨라집니다.'],
+      book: ['모든 사용 도구의 쿨타임이 7% 줄어듭니다.', '도구 다루기가 오를 때마다 3%씩 더 줄어듭니다.'],
       flag: ['멀리 나갔던 동료들이 더 빨리 돌아옵니다.', '도구 다루기가 오르면 더 빨리 돌아옵니다.'],
       shoes: ['나의 이동 속도가 빨라집니다.', '도구 다루기가 오르면 더 빨라집니다.'],
     }[kind];
@@ -3383,9 +3383,9 @@
   }
   // ── 아이템 v275 ──────────────────────────────────────────────────────────────
   //   사용: 테이저건 · 현금 · 변이 주사 · 자폭 스위치 (한 판에 2개까지)
-  //   패시브: 방탄복 · 빠루 · 권총 · 깃발 · 운동화
+  //   패시브: 방탄복 · 빠루 · 백과사전 · 깃발 · 운동화 (v286: 권총 삭제)
   //   금고 3개에서 랜덤으로 하나씩. '업글' = 능력 도구 다루기(up.brain)
-  const ACTIVE_ITEMS = ['taser', 'cash', 'mutate', 'bomb'], PASSIVE_ITEMS = ['vest', 'crowbar', 'pistol', 'flag', 'shoes'];
+  const ACTIVE_ITEMS = ['taser', 'cash', 'mutate', 'bomb'], PASSIVE_ITEMS = ['vest', 'crowbar', 'book', 'flag', 'shoes'];
   const owned = {};                           // 가진 패시브
   const pBadges = {};                         // 왼쪽 아래 패시브 배지
   function pickItems() {                      // 9종을 섞어 앞에서부터 4개 (금고 4개 전부) — 사용 아이템은 2개까지만 (v276)
@@ -3401,13 +3401,13 @@
   }
   const MUT_T = () => 20 + 2 * up.brain;                            // 변이 유지 시간
   const itemMax = (k) => k === 'mutate' ? 1 + up.brain : ITEM[k].max;   // 변이 주사 장탄 +1씩
-  const itemReload = (k) => k === 'bomb' ? Math.max(10, 40 - 3 * up.brain) : ITEM[k].reload;   // 자폭 쿨타임 −3초씩
-  const pistolGap = () => 10 * Math.pow(0.95, up.brain);           // 권총 장전 — v284: 15 → 10초 (3분의 2). 도구 다루기마다 그때 쿨타임의 5%씩 줄어든다
+  const bookCut = () => owned.book ? Math.min(0.9, 0.07 + 0.03 * up.brain) : 0;   // v286: 백과사전 — 사용 도구 쿨타임 7% 줄임, 도구 다루기마다 3%p씩 더
+  const itemReload = (k) => (k === 'bomb' ? Math.max(10, 40 - 3 * up.brain) : ITEM[k].reload) * (1 - bookCut());   // 자폭 쿨타임 −3초씩 → 그 위에 백과사전
   function refreshBadges() {                  // 패시브 배지 아래 숫자
     const t = {
       vest: () => '-' + vestPct(up.brain) + '%',
       crowbar: () => '+' + Math.round(25 + 5 * up.brain) + '%',
-      pistol: () => Math.max(0, Math.ceil(pistolGap() - pistolT)) + '초',
+      book: () => '-' + Math.round(bookCut() * 100) + '%',
       flag: () => '+' + Math.round(20 + 5 * up.brain) + '%',
       shoes: () => '+' + Math.round(10 + 3 * up.brain) + '%',
     };
@@ -3569,43 +3569,10 @@
     }
   }
 
-  // 권총 (패시브): 일정 시간마다 내 인지거리 안 체력 있는 인간 중 완전 랜덤으로 한 발 — 경찰 체력의 50%. 없으면 헛발
-  let pistolT = 0, pTrT = -1, pTrTo = new THREE.Vector3();
-  const pTracer = new THREE.Mesh(tracerGeo, new THREE.MeshBasicMaterial({ color: 0xffe14d, transparent: true, depthTest: false, depthWrite: false }));
-  pTracer.renderOrder = -0.5; pTracer.visible = false; scene.add(pTracer);
-  function pistolTick(dt) {
-    if (!owned.pistol || !isZombie(me)) { pTracer.visible = false; return; }
-    if ((pistolT += dt) >= pistolGap()) {
-      pistolT = 0;
-      const cand = bodies.filter((c) => c.kind === 'citizen' && (c.guard || c.attacker || c.police) && c.hp > 0 && c.space === me.space
-        && Math.hypot(c.foot.x - me.foot.x, c.foot.z - me.foot.z) <= me.sense && !blocked(me.foot.x, me.foot.z, c.foot.x, c.foot.z));
-      let tx, tz;
-      if (cand.length) {
-        const t = cand[Math.floor(Math.random() * cand.length)];
-        landHit(me, t, POLICE_HP * 0.5);      // 죽을 만큼이면 체력 0
-        tx = t.foot.x; tz = t.foot.z;
-      } else { const a = Math.random() * Math.PI * 2; tx = me.foot.x + Math.cos(a) * 4; tz = me.foot.z + Math.sin(a) * 4; }   // 헛발
-      const dx = tx - me.foot.x, dz = tz - me.foot.z, d = Math.hypot(dx, dz) || 1;
-      pTrTo.set(tx, 0, tz); pTrT = 0;
-      const f = puff(me.foot.x + dx / d * RADIUS * 0.95, 0, me.foot.z + dz / d * RADIUS * 0.95, 0xfff23a, 1.0, 1.0, 0.07, 0, 0, 0, 0.7);
-      f.s.material.map = flashTex; f.s.position.addScaledVector(UP, RADIUS); f.s.renderOrder = UI - 0.5; f.peak = true; f.blink = true;
-      me.recoilT = 0; me.recoilX = -dx / d; me.recoilZ = -dz / d;
-    }
-    pTracer.visible = pTrT >= 0;
-    if (pTrT >= 0) {
-      const dx = pTrTo.x - me.foot.x, dz = pTrTo.z - me.foot.z;
-      pTracer.position.set(me.foot.x + dx / 2, 0, me.foot.z + dz / 2).addScaledVector(UP, RADIUS);
-      pTracer.rotation.y = -Math.atan2(dz, dx); pTracer.scale.x = Math.hypot(dx, dz) || 1e-3;
-      pTracer.material.opacity = 1 - pTrT / 0.15;
-      if ((pTrT += dt) >= 0.15) pTrT = -1;
-    }
-  }
   function itemsTick(dt) {
     for (const z of zombies) if (z.mut && (z.mutT -= dt) <= 0) unmutate(z);   // 변이 끝
     stepSpits(dt);
     gooTick(dt);
-    pistolTick(dt);
-    if (owned.pistol) refreshBadges();
   }
   function breakSafe(b) {
     b.dead = true;
