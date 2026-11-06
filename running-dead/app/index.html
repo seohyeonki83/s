@@ -212,7 +212,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v304</div>
+  <div id="ver">v305</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1991,21 +1991,19 @@
   // 자리 = 내 위치 + 자리 방향으로 자리 거리만큼 (나와 같이 움직인다).
   // 나와 같은 공간 안으로 당긴다 — 내가 건물 안이면 그 건물 안(벽에서 0.7칸), 밖이면 건물 밖(벽에서 0.7칸)
   const slotV = new THREE.Vector2();
-  function armorFront(z) {                   // v304: 동료 자리 범위(영역 중심 둘레) 안에서 나랑 가장 먼 점 — 움직일 땐 진행 방향 맨 앞
+  function armorFront(z) {                   // v305: 덩치 자리 = 다른 동료와 같은 방식(같은 거리 범위·흔들림)인데 방향만 진행 방향 앞쪽 — 섞인 채로 평균적으로 앞장선다
     const ol = areaOff.length();
-    let ux = ol > 0.15 ? areaOff.x / ol : headV.x, uz = ol > 0.15 ? areaOff.y / ol : headV.y;   // 영역 중심이 나에게서 밀려난 쪽 (멈춰 있으면 마지막으로 움직인 쪽)
+    let a = ol > 0.15 ? Math.atan2(areaOff.y, areaOff.x) : Math.atan2(headV.y, headV.x);   // 영역 중심이 밀려난 쪽 (멈춰 있으면 마지막으로 움직인 쪽)
     const arm = zombies.filter((b) => b !== me && b.mut === 'armor');
-    if (arm.length > 1) {                     // 여럿이면 앞쪽 부채꼴로 나눠 선다
-      const k = arm.indexOf(z), a = (k - (arm.length - 1) / 2) * 0.44, c = Math.cos(a), s = Math.sin(a);
-      [ux, uz] = [ux * c - uz * s, ux * s + uz * c];
-    }
-    const R = NEAR * armyK * 1.5 * 0.97;      // 동료 자리 범위(근접 거리의 0.5~1.5배)의 맨 바깥 — 어떤 동료 자리보다 앞
-    return slotV.set(areaX() + ux * R, areaZ() + uz * R);
+    if (arm.length > 1) a += (arm.indexOf(z) - (arm.length - 1) / 2) * 0.44;   // 여럿이면 앞쪽 부채꼴로 나눠 선다
+    a += z.slotOff;                           // 다른 동료처럼 자기 칸 안에서 조금 흔들린다
+    const r = z.slotK * NEAR * armyK;          // 거리도 다른 동료와 같다 (근접 거리 × 0.5~1.5, 내가 멈출 때마다 새로)
+    return slotV.set(areaX() + Math.cos(a) * r, areaZ() + Math.sin(a) * r);
   }
   function slotOf(z) {
     const r = z.slotK * NEAR * armyK;          // 자리 거리 — 부대가 커지면 같이 넓어진다 (v122)
     let x = areaX() + Math.cos(z.slotA + z.slotOff) * r, y = areaZ() + Math.sin(z.slotA + z.slotOff) * r;   // 영역 중심 둘레 (v110)
-    if (z.mut === 'armor') { const f = armorFront(z); x = f.x; y = f.y; }   // v304: 덩치는 맨 앞
+    if (z.mut === 'armor') { const f = armorFront(z); x = f.x; y = f.y; }   // v305: 덩치는 앞쪽 (다른 동료와 섞여서)
     const B = me.space, m = 0.7;
     if (B) { x = Math.max(B.x0 + m, Math.min(B.x1 - m, x)); y = Math.max(B.z0 + m, Math.min(B.z1 - m, y)); }
     else for (const C of buildings) {
