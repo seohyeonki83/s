@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v331</div>
+  <div id="ver">v332</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -316,7 +316,7 @@
   const STAR_AT = (() => { let t = 0, d = STAR_BASE; return Array.from({ length: 5 }, () => { t += d; d *= STAR_GROW; return Math.round(t); }); })();   // [5, 18, 49, 127, 322]
   const SORTIE_SENSE = 3, SORTIE_SENSE_T = 4;   // 경찰서 호출로 나온 경찰: 건물 밖으로 나오는 순간 인지거리·시야 3배 → 4초에 걸쳐 원래대로 (v158)
   const DROP_SENSE = 2, DROP_SENSE_T = 3;   // 경찰차에서 내린 경찰: 인지거리가 순간 2배 → 3초에 걸쳐 원래대로 (v114)
-  const DISPATCH_T = (n) => (30 - 5 * (n - 1)) / 1.15 / 1.15 / 1.1;   /* v257: 출동 빈도 10% 더 */   /* v239: 출동 빈도 15% 더 */   /* v179: 출동 빈도 15% 올림 (간격 ÷ 1.15) */ //   // 별 n개일 때 출동 간격 (초) — 30·25·20·15·10 (v118)
+  const DISPATCH_T = (n) => (30 - 5 * (n - 1)) / 1.15 / 1.15 / 1.1 / 1.15;   /* v332: 출동 빈도 15% 더 */   /* v257: 출동 빈도 10% 더 */   /* v239: 출동 빈도 15% 더 */   /* v179: 출동 빈도 15% 올림 (간격 ÷ 1.15) */ //   // 별 n개일 때 출동 간격 (초) — 30·25·20·15·10 (v118)
   const STATION_IN = 8,   /* v323: 14 → 8 (−40%, 8.4 반올림) */ STATION_OUT = 2, STATION_FRONT = 1;   /* v298: 안 14 → 17 (+20%) → v311: 17 → 14 (−15%, 14.45를 반올림) */   /* v162: 안 20 → 14 (30% 줄임) */   /* v157: 안 20 · 바깥 3 (둘레 2·앞마당 1), 다시 채우기 없음. 바깥 경찰 피해 합이 경찰 체력의 1/10을 넘을 때마다 호출 → 안에서 1~2명 출동 */ const STATION_OUT_MIN = 3; //   /* v147에 20% 줄임 (15·10·5 → 12·8·4) */ //   // 경찰서 안에 상주 · 둘레 배회 · 앞마당 배회(v115) — 출동하지 않는다. 안의 15명이 전부 감염되면 경찰서 파괴
   const AROUND_MIX = (i) => ['', 'guard', 'attacker', i % 2 ? 'attacker' : 'guard'];   // 시민 건물 i번 둘레에 흩어 두는 사람 — 일반 1 · 수비형·공격형 1~2 (v118에 전부 절반: 건물 3채 합쳐 일반 3 · 수비형 5 · 공격형 4)
   const PATROL_AT = [[-16 * 0.8, -4 * 0.8], [16 * 0.8, -4 * 0.8]];   /* v144·v145: 자리 20% 좁힘 (POS) */ //   // 동네마다 길거리 순찰 경찰 두 명의 자리 (동네 가운데 기준, 건물·시작 자리 피해서) — 동네 다섯 개 × 2 = 10명 (v134)
@@ -3056,7 +3056,7 @@
     for (const z of zombies) { z.objC = z.objT && z.objF === objFrame - 1 && !z.objT.dead ? z.objT : null; if (z.objC) objCrowd.set(z.objC, (objCrowd.get(z.objC) || 0) + 1); }
     const n = zombies.length - (isZombie(me) ? 1 : 0), k = 1 + Math.max(0, n - ARMY_FREE) * ARMY_STEP;   // 부대 크기 = 동료 수
     if (n !== armyN) { armyN = n; armyK = k; updateLegend(); }
-    const camK = 1 + Math.max(0, n - ARMY_FREE) * 0.007;   /* v329: 0.8 → 0.7% */   // v284: 0.9 → 0.8% — v239: 카메라만 동료 한 명마다 (시야·영역은 그대로 1.25%)
+    const camK = 1 + Math.max(0, n - ARMY_FREE) * 0.004;   /* v332: 0.7 → 0.4% */   // v284: 0.9 → 0.8% — v239: 카메라만 동료 한 명마다 (시야·영역은 그대로 1.25%)
     camDist += (DIST * camK - camDist) * Math.min(1, dt * 2);
     const moving = me.vel.length() > 0.3;
     if (meMoving && !moving) for (const b of bodies) if (b.kind === 'ally') { freshSlot(b); b.phase = 'track'; }   // 내가 멈추면 동료는 자리를 새로 뽑고 그리로 간다
