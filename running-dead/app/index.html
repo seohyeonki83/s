@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v308</div>
+  <div id="ver">v309</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2861,7 +2861,7 @@
           for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(B);
           addCitizen(g.x, g.y, B, bag.pop()).home = B;
         }
-        {                                     // v263: 건물마다 노란 시민 1명 더 (첫 마을 빼고)
+        for (let e = 0; e < 2; e++) {         // v263: 건물마다 노란 시민 1명 더 (첫 마을 빼고) — v309: 1 → 2명
           let g = pickGoal(B);
           for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(B);
           addCitizen(g.x, g.y, B, '').home = B;
