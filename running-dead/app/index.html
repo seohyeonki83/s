@@ -212,7 +212,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v294</div>
+  <div id="ver">v295</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -785,7 +785,27 @@
       if (from) return wp.set(lx - D.nx, lz - D.nz);   // 안 → 문 안쪽 앞
       tx = lx + D.nx; tz = lz + D.nz;                    // 밖 → 문 바깥 앞
     }
-    return from ? wp.set(tx, tz) : around(b.foot.x, b.foot.z, tx, tz);
+    return from ? insideVia(b, from, tx, tz) : around(b.foot.x, b.foot.z, tx, tz);   // v295: 건물 안은 금고를 돌아간다
+  }
+  const SAFE_AVOID = 1.0;                     // v295: 금고 = 건물 안 장애물 (경찰차처럼) — 돌아가는 원은 부딪힘(1.2)보다 살짝 작게
+  function insideVia(b, B, tx, tz) {
+    const S = B.safe;
+    if (!S || S.dead || b === S || Math.hypot(tx - S.foot.x, tz - S.foot.z) < 0.05) return wp.set(tx, tz);   // 금고 자체로 가는 길(때리러)은 그대로
+    const px = b.foot.x, pz = b.foot.z, L = Math.hypot(tx - px, tz - pz) || 1e-6, ux = (tx - px) / L, uz = (tz - pz) / L;
+    const R = SAFE_AVOID + BODY + 0.45;
+    const cx = S.foot.x - px, cz = S.foot.z - pz, dc = Math.hypot(cx, cz);
+    const along = cx * ux + cz * uz, perp = -cx * uz + cz * ux;
+    const a0 = Math.max(0, Math.min(L, along));
+    if (Math.hypot(px + ux * a0 - S.foot.x, pz + uz * a0 - S.foot.z) >= SAFE_AVOID + BODY) return wp.set(tx, tz);   // 가는 길이 금고에 안 닿는다
+    if (dc < R || Math.hypot(tx - S.foot.x, tz - S.foot.z) < R) {   // 금고에 붙어 있거나 목적지가 금고 바로 옆 → 둘레를 따라 목적지 쪽으로
+      const ap = Math.atan2(-cz, -cx), at = Math.atan2(tz - S.foot.z, tx - S.foot.x);
+      let dA = at - ap; dA = Math.atan2(Math.sin(dA), Math.cos(dA));
+      const a = ap + Math.sign(dA || 1) * Math.min(Math.abs(dA), dc < R ? 0.25 : 0.9);
+      return wp.set(S.foot.x + Math.cos(a) * (R + 0.5), S.foot.z + Math.sin(a) * (R + 0.5));
+    }
+    if (along <= 0 || Math.abs(perp) >= R) return wp.set(tx, tz);
+    const s = perp >= 0 ? 1 : -1;               // 금고 옆(길과 수직인 쪽)으로
+    return wp.set(S.foot.x + uz * s * (R + 0.3), S.foot.z - ux * s * (R + 0.3));
   }
   function segRect(px, pz, qx, qz, B, pad) { // 선분 p→q가 건물(사방 pad만큼 넓혀서)에 처음 닿는 비율 0~1 (안 닿으면 Infinity)
     let t0 = 0, t1 = 1;
@@ -1659,7 +1679,9 @@
     a.lungeVictim = v;
   }
 
+  const ARMOR_KB = 1.0;                       // v295: 덩치에 맞으면 처음 1칸/초로 밀려나 금방 멈춘다 (약 0.16칸 — 아주아주 살짝)
   function landHit(a, v, dmg = DAMAGE) {
+    if (v.kind === 'obj' && a.mut === 'armor') dmg *= 2;   // v295: 덩치 — 문·경찰차 피해 2배
     if ((v.kind === 'obj' || v.kind === 'safe') && a === me && owned.crowbar) dmg *= 1.25 + 0.05 * up.brain;   // v275: 빠루 — 내가 건물·사물에 입히는 피해
     if (isZombie(v) && v.mut) dmg *= v.mut === 'armor' ? 0.2 : 0.9;   // v275: 갑옷좀비 받는 피해 80% 줄임, 히드라 10% 줄임
     if (a.mut === 'armor' && v.kind === 'citizen' && !a.splashing) {   // v275: 갑옷좀비 — 앞쪽 80° 부채꼴, 근접 거리 1.2배 안 다른 적도 30%
@@ -1677,6 +1699,10 @@
     if (v.dead || !(v.kind === 'citizen' || v.kind === 'safe' || isZombie(v)) || v.hp <= 0) return;
     v.hp = Math.max(0, v.hp - dmg);
     if (v.kind === 'safe') { if (v.hp <= 0) breakSafe(v); return; }   // 금고 (v190)
+    if (v.kind === 'citizen' && a.mut === 'armor' && !a.splashing && v.hp > 0 && v.state !== 'held' && !(v.knockT > 0)) {   // v295: 덩치는 무게가 있어 맞은 상대가 아주 살짝 밀려난다
+      const kx = v.foot.x - a.foot.x, kz = v.foot.z - a.foot.z, kl = Math.hypot(kx, kz) || 1;
+      v.knockT = 0.25; v.knockVX = kx / kl * ARMOR_KB; v.knockVZ = kz / kl * ARMOR_KB;
+    }
     if (v.kind === 'citizen' && (v.state === 'lured' || v.lureAlert)) {   // 유혹 중: 정해진 대수만큼 맞으면 정신 차린다 (v234). 그 전엔 맞기만 하고 계속 돈다발로
       if ((v.lureHit = (v.lureHit || 0) + 1) < lureHits()) return;
       v.lureHit = 0; v.lureAlert = false; v.state = 'normal';
@@ -1952,6 +1978,10 @@
       const l = x - (C.x0 - m), r = C.x1 + m - x, u = y - (C.z0 - m), w = C.z1 + m - y, k = Math.min(l, r, u, w);   // 가장 가까운 벽 바깥으로
       if (k === l) x = C.x0 - m; else if (k === r) x = C.x1 + m; else if (k === u) y = C.z0 - m; else y = C.z1 + m;
     }
+    if (B && B.safe && !B.safe.dead) {        // v295: 건물 안 자리가 금고 위에 걸리면 금고 밖으로
+      const S = B.safe, dx = x - S.foot.x, dz = y - S.foot.z, d = Math.hypot(dx, dz), R = S.r + BODY + 0.3;
+      if (d < R) { if (d > 1e-6) { x = S.foot.x + dx / d * R; y = S.foot.z + dz / d * R; } else x = S.foot.x + R; }
+    }
     if (!B) for (const O of carObs) {         // 서 있는 경찰차 위에 자리가 걸리면 차 밖으로 (v139)
       const dx = x - O.x, dz = y - O.z, d = Math.hypot(dx, dz), R = O.r + BODY + 0.6;   // 길 찾기가 돌아가는 원보다 살짝 밖
       if (d >= R) continue;
@@ -2108,7 +2138,8 @@
     byX.length = 0;                            // x 순서로 늘어놓고, x 차이가 몸 두 개 폭보다 크면 그 뒤는 안 본다 (지도가 커져서, v121)
     for (const b of bodies) byX.push(b);
     byX.sort((p, q) => p.foot.x - q.foot.x);
-    let rBig = MY_BODY; for (const z of zombies) if (z.mut && z.r > rBig) rBig = z.r;   // v275: 갑옷좀비는 2.5배
+    let rBig = MY_BODY; for (const z of zombies) if (z.mut && z.r > rBig) rBig = z.r;
+    for (const B of buildings) if (B.safe && !B.safe.dead && B.safe.r > rBig) rBig = B.safe.r;   // v295: 금고도 — 안 그러면 옆에서 붙은 몸을 건너뛰어 겹친다   // v275: 갑옷좀비는 2.5배
     const reach = rBig + BODY + 0.05;
     for (let i = 0; i < byX.length; i++) {
       const a = byX[i];
@@ -3273,7 +3304,7 @@
     b.mesh.scale.setScalar(0.7);              // v239: 그림만 70% (부딪힘 r 1.5는 그대로)
     const q = new THREE.Sprite(new THREE.SpriteMaterial({ map: SAFE_Q, transparent: true, depthTest: false, depthWrite: false }));   // v271: 금고 위 큰 물음표 (금고 그림에 붙어 같이 보이고 같이 사라진다)
     q.scale.set(5, 2.5, 1); q.position.set(0, 0, 0.02); q.renderOrder = UI - 1; b.mesh.add(q);   // v272: 금고 위로 띄우지 않고 금고 그림에 겹쳐 덮는다
-    b.fixed = true; b.r = 1.5; b.halfH = 1.425 * 0.7; b.hp = b.maxHp = SAFE_HP;   // 부딪힘(콜라이더) 반지름도 같이 커진다 b.station = S;
+    b.fixed = true; b.r = 1.2; b.halfH = 1.425 * 0.7;   /* v295: 1.5 → 1.2 (그림 2×2칸에 맞게) */ b.hp = b.maxHp = SAFE_HP;   // 부딪힘(콜라이더) 반지름도 같이 커진다 b.station = S;
     addHpBar(b, hpFoeMat);
     S.safe = b;
     if (!S.station && !S.qm) {                // v288: 일반 건물 금고 — 지붕 가운데 물음표 (경찰서 느낌표처럼, 어둠 위)
@@ -3486,7 +3517,7 @@
     z.mut = type; z.mutT = MUT_T();
     z.hp = z.maxHp;                           // 체력 가득
     z.mesh.material.color.setHex(MUT_COL[type]);
-    if (type === 'armor') { z.r = BODY * 2.5; z.halfH = RADIUS * 2.5; z.mesh.scale.setScalar(2.5); z.force = MY_FORCE; }   // 덩치 2.5배 (부딪힘도), 미는 힘 = 나
+    if (type === 'armor') { z.r = BODY * 1.5; z.halfH = RADIUS * 1.5; z.mesh.scale.setScalar(1.5); z.force = MY_FORCE; }   // v295: 덩치 2.5 → 1.5배 (3/2, 부딪힘도)   // 덩치 2.5배 (부딪힘도), 미는 힘 = 나
     else z.force = MY_FORCE * 0.5;            // 히드라: 미는 힘 = 나의 50%
     for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; puff(z.foot.x, 0.4, z.foot.z, MUT_COL[type], 0.5, 1.4, 0.5, Math.cos(a) * 3, 0.4, Math.sin(a) * 3, 0.85); }
   }
