@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v350</div>
+  <div id="ver">v351</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2753,14 +2753,11 @@
       while (!itemOrder.includes(FORCE_FIRST_ITEM)) itemOrder = pickItems();
       itemOrder.splice(itemOrder.indexOf(FORCE_FIRST_ITEM), 1); itemOrder.unshift(FORCE_FIRST_ITEM);
     }   // v276: 9종 중 랜덤 4개 — 금고 4개 전부에서 하나씩 (사용 아이템은 2개까지)
-    while (itemOrder.includes('mutate')) itemOrder = pickItems();   // v341: 변이 주사는 처음부터 들고 시작 (고정) — 금고에선 안 나온다
-    items.push({ kind: 'mutate', ammo: 1, t: 0, el: makeItemButton('mutate', 0) }); refreshItems();
     for (const k of Object.keys(owned)) delete owned[k];
     for (const el of Object.values(pBadges)) el.remove();
     for (const k of Object.keys(pBadges)) delete pBadges[k];
     for (const el of Object.values(aBadges)) el.remove();
     for (const k of Object.keys(aBadges)) delete aBadges[k];
-    addActiveBadge('mutate');   // v344: 들고 시작하는 변이 주사 배지
     for (const sp of spits) scene.remove(sp.s); spits.length = 0;
     for (const k of Object.keys(up)) up[k] = 0;   // 레벨·능력치·방탄복 초기화 (v201)
     level = 0; xp = 0; pendingLv = 0; lvOpen = false; victoryOn = false; hasVest = false;
@@ -3669,7 +3666,7 @@
     return true;
   }
   const MUT_COL = { armor: 0x1f3d99, hydra: 0x2fb84a };
-  const TEST_ARMOR = true;                    // v348: 시험용 — 변이는 덩치만, 덩치는 안 죽고 안 풀린다 (false면 원래대로)
+  const TEST_ARMOR = false;   /* v351: 시험 끝 */                    // v348: 시험용 — 변이는 덩치만, 덩치는 안 죽고 안 풀린다 (false면 원래대로)
   function mutate(z) {
     if (z.mut) unmutate(z);
     if (z.mode === 'pounce') stopPounce(z);
