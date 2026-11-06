@@ -69,7 +69,7 @@
   #stars .lv { display: block; margin-top: 2px; min-height: 11px; font: 800 11px/1 var(--font); font-style: normal; color: #e2c2fb; }   /* 수배 단계 이름 (v194) */
   #stars .s.hit { animation: starhit 0.2s ease-out; }
   @keyframes starhit { 0% { transform: scale(1.9); } 60% { transform: scale(0.85); } 100% { transform: scale(1); } }
-  #lvbox { position: absolute; top: calc(26px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); pointer-events: none; z-index: 4; }   /* 레벨·경험치 (v201) */
+  #lvbox { position: absolute; top: calc(8px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); pointer-events: none; z-index: 4; }   /* 레벨·경험치 (v201) */
   #lvbox .lv { font: 800 12px/1 var(--font); color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }   /* v307: 15 → 12px */
   #lvbox .bar { margin-top: 3px; width: 66px; height: 5px; border-radius: 3px;   /* v307: 84×6 → 66×5 */ background: rgba(255, 255, 255, 0.18); overflow: hidden; }
   #lvbox .bar i { display: block; height: 100%; width: 0; background: #7fd4ff; transition: width 0.25s; }
@@ -149,7 +149,7 @@
     background: #24242a; pointer-events: none;   /* 못 가 본 곳 — v129에 반투명으로 했다가 밝은 바닥 위에서 가 본 곳과 구분이 안 돼서 v140에 다시 불투명 (v125 색) */
   }
   #legend {
-    position: absolute; top: calc(50px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));   /* 위 가운데 수배 별과 안 겹치게 (v113) */
+    position: absolute; top: calc(66px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));   /* 위 가운데 수배 별과 안 겹치게 (v113) */
     display: flex; align-items: center; gap: 5px;
     font: 600 12px/1 var(--font); color: rgba(255, 255, 255, 0.75); pointer-events: none;   /* 어둠 위라 밝은 글씨 */
   }
@@ -169,15 +169,15 @@
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); touch-action: manipulation; cursor: pointer;
   }
   #retry[hidden] { display: none; }
-  #reset {   /* 오른쪽 아래 (v130) — v344: 사용 장비 배지 위로 */
-    position: absolute; bottom: calc(72px + env(safe-area-inset-bottom, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+  #reset {   /* v345: 왼쪽 위 레벨 아래 */
+    position: absolute; top: calc(30px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); height: 27px;
     padding: 7px 11px; border: 0; border-radius: 8px;
     background: var(--btn-bg); color: var(--btn-fg); font: 600 13px/1 var(--font);
     touch-action: manipulation; cursor: pointer;
   }
   #pause {   /* v284: 일시정지 — 오른쪽 아래 '처음부터' 바로 위, 작게. 멈춘 동안은 ▶ */
-    position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(107px + env(safe-area-inset-bottom, 0px));
-    width: 34px; height: 34px; padding: 0; border: 0; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    position: absolute; left: calc(max(16px, env(safe-area-inset-left, 0px)) + 82px); top: calc(30px + env(safe-area-inset-top, 0px));   /* v345: 처음부터 오른쪽 */
+    width: 27px; height: 27px; padding: 0; border: 0; border-radius: 8px; display: flex; align-items: center; justify-content: center;
     background: var(--btn-bg); color: var(--btn-fg); touch-action: manipulation; cursor: pointer;
   }
   #pause svg { width: 15px; height: 15px; fill: currentColor; display: block; }
@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v344</div>
+  <div id="ver">v345</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
