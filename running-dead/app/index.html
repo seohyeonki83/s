@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v316</div>
+  <div id="ver">v317</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1882,7 +1882,15 @@
     if (s > z.speed) z.vel.multiplyScalar(z.speed / s);   // 덮치다 멈추면 평소 속도로 돌아온다
   }
 
+  function bloodBurst(x, z, n, sp0, sp1) {   // v317: 작은 빨간 원들이 사방으로 피 튀듯
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, sp = rand(sp0, sp1);
+      const f = puff(x, 0.6, z, i % 3 ? 0xd91e1e : 0xff4a3a, rand(0.12, 0.22), rand(0.05, 0.1), rand(0.25, 0.4), Math.cos(a) * sp, rand(0.3, 1), Math.sin(a) * sp, 0.95);
+      f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true;
+    }
+  }
   function startBite(z, t) {
+    bloodBurst(t.foot.x, t.foot.z, 10, 1.5, 3.5);   // v317: 덮치는 순간 확 터진다
     z.mode = 'bite';
     z.biteT = z.biteLen = (z === me ? INFECT / MY_INFECT : INFECT) * biteK();   // 나는 더 빨리 감염시킨다. 물어뜯기로 짧아진다 (v201)
     z.biteT = z.biteLen * (1 - Math.min(0.999, t.infect || 0));   // 저장된 감염 게이지에서 이어서 (v213)
@@ -2140,6 +2148,7 @@
     if (z.mode === 'bite') {
       if (input.x || input.y) endBite(z, false);   // 움직이면 감염 포기
       else if ((z.biteT -= dt) <= 0) endBite(z, true);
+      else if (z.target && (z.bloodT = (z.bloodT || 0) - dt) <= 0) { z.bloodT = rand(0.08, 0.16); bloodBurst(z.target.foot.x, z.target.foot.z, 2, 1, 2.5); }   // v317: 무는 동안 바바바박
       else z.hp = Math.min(z.maxHp, z.hp + z.maxHp * zHeal(z) / Math.max(0.05, biteK()) * dt);   // 무는 중 체력 회복 — 고기 흡수율 반영, 물어뜯기로 짧아진 만큼 빨리 (회복 총량 그대로, v201)   // 무는 중 체력 회복 (나는 1.3배)
     }
     if (z.mode === 'pounce') {
