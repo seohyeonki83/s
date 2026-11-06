@@ -55,7 +55,8 @@
   #acq .ds { margin: 18px 22px 0; max-width: 340px; padding: 14px 16px; border-radius: 12px; background: rgba(20, 20, 26, 0.75); color: #fff; font: 600 15px/1.5 var(--font); word-break: keep-all; }   /* 기술 자세한 설명 (v226) */
   #acq .ds li { margin: 0 0 4px 18px; }
   #acq .ds ul { margin: 0; padding: 0; }
-  #acq .ds .up { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.2); color: #ffd98a; }
+  #acq .ds .main { font: 800 19px/1.45 var(--font); color: #fff; }   /* v273: 본 설명이 더 크고 흰색 */
+  #acq .ds .up { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.15); color: rgba(220, 205, 160, 0.75); font: 500 13px/1.45 var(--font); }   /* 강화 설명은 작고 옅게 */
   #acq .ds .up b { color: #fff; }
   #acq .h { margin-top: 10px; font: 600 13px/1 var(--font); color: rgba(255, 255, 255, 0.7); }
   .fly { position: absolute; z-index: 21; pointer-events: none; line-height: 1; transform: translate(-50%, -50%); }
@@ -192,7 +193,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v272</div>
+  <div id="ver">v273</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2920,6 +2921,7 @@
     taser: svgI('<path d="M14 2 5 14h6l-2 8 10-13h-6l3-7z" fill="#ffd23a"/>'),
     cash: svgI('<rect x="2" y="6" width="20" height="12" rx="2" fill="#3fbf6a"/><rect x="4.5" y="8.5" width="15" height="7" rx="1" fill="#2f9a53"/><circle cx="12" cy="12" r="2.6" fill="#bdf2cf"/>'),
     vest: svgI('<path d="M8 3 5 5v15a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5l-3-2-1.5 3h-5z" fill="#566b8a"/><rect x="7.5" y="9" width="3.6" height="5.5" rx="0.8" fill="#8fa2bd"/><rect x="12.9" y="9" width="3.6" height="5.5" rx="0.8" fill="#8fa2bd"/><rect x="7" y="16.5" width="10" height="2" rx="0.6" fill="#28333f"/>'),
+    tool: svgI('<path d="M20.6 6.2a5 5 0 0 1-6.5 6.3l-7 7a2 2 0 0 1-2.8-2.8l7-7a5 5 0 0 1 6.3-6.5l-3 3 .6 2.4 2.4.6z" fill="#9fb0c8"/><circle cx="5.7" cy="18.3" r="1.1" fill="#5d6b80"/>'),   // v273: 도구 다루기 = 렌치
     brain: svgI('<path d="M12 4c-1.4-1.6-4.6-1.2-5.2 1.1C4.4 5.4 3.2 7.8 4.2 9.8 2.8 11.2 3 14 5 15c0 2.4 2.6 4 4.6 3 .6 1 1.6 1.4 2.4 1.4V4z" fill="#f29ab8"/><path d="M12 4c1.4-1.6 4.6-1.2 5.2 1.1 2.4.3 3.6 2.7 2.6 4.7 1.4 1.4 1.2 4.2-.8 5.2 0 2.4-2.6 4-4.6 3-.6 1-1.6 1.4-2.4 1.4V4z" fill="#e57fa3"/>'),
     meat: svgI('<circle cx="10" cy="11" r="7" fill="#c8673b"/><circle cx="9" cy="10" r="3" fill="#e08a5c"/><rect x="14.5" y="14.5" width="6" height="3" rx="1.5" transform="rotate(45 17.5 16)" fill="#f2ead8"/><circle cx="20.5" cy="18.5" r="1.8" fill="#f2ead8"/><circle cx="18.5" cy="20.5" r="1.8" fill="#f2ead8"/>'),
     arm: svgI('<path d="M4 20c0-4 1-7 3-9l3-5c1-1.5 3-1.2 3.3.4l.3 2.6c2.5-.7 5.4.7 6.2 3.4.9 3.2-1.5 6.6-5.8 7.6z" fill="#f0a35e"/><circle cx="12.5" cy="6.3" r="2.4" fill="#d9884a"/>'),
@@ -2936,11 +2938,11 @@
   const STUN_T = 4, CASH_N = 3, CASH_R = [1, 2], CASH_GET = 0.7;   // v195: 감전 2 → 4초, 돈다발 뿌리는 거리 2~4 → 1~2칸
   function itemDesc(kind) {                   // 획득할 때 뜨는 설명 (v228: 사용자가 정한 문구 그대로)
     const t = {
-      vest: ['총알 데미지를 감소시킵니다.', '똑똑한 두뇌가 오르면 총알 데미지 감소율이 올라갑니다.'],
-      taser: ['대상을 감전시킵니다.', '똑똑한 두뇌가 올라가면 감전 대상이 늘어납니다.'],
-      cash: ['인간들이 정신 못 차립니다.', '똑똑한 두뇌 강화 시 더 많은 돈을 뿌리고 더 많은 인간들이 몰려듭니다.'],
+      vest: ['총알 데미지를 감소시킵니다.', '도구 다루기가 오르면 총알 데미지 감소율이 올라갑니다.'],
+      taser: ['대상을 감전시킵니다.', '도구 다루기가 올라가면 감전 대상이 늘어납니다.'],
+      cash: ['인간들이 정신 못 차립니다.', '도구 다루기 강화 시 더 많은 돈을 뿌리고 더 많은 인간들이 몰려듭니다.'],
     }[kind];
-    return `<div>${t[0]}</div><div class="up"><span style="display:inline-block;width:1.15em;vertical-align:-0.22em;margin-right:4px">${IC.brain}</span>${t[1]}</div>`;   // v270: 설명 속 두뇌도 플랫 아이콘
+    return `<div class="main">${t[0]}</div><div class="up"><span style="display:inline-block;width:1.15em;vertical-align:-0.22em;margin-right:4px">${IC.tool}</span>${t[1]}</div>`;   // v270: 설명 속 두뇌도 플랫 아이콘
   }
 
   const SLOT_A = [45, 15, 75], SLOT_R = 125;   // 버튼 자리 = 조이스틱 가운데에서 이 각도(오른쪽 0°, 위 90°)·거리(px)
@@ -2953,7 +2955,7 @@
   // ── 레벨·능력치 (v201) — 동료가 생길 때마다(누가 감염시켰든) 경험치 1. 레벨마다 새로 필요한 수 10 → 20 → 40 → 80 …
   //   레벨이 오르면 일시정지 → 능력치 카드 3장 중 하나 고르고 확인 → 오르는 연출 → 다시 움직임. 수치는 다 처음 값 기준으로 같은 양씩 더해진다
   const ABIL = {
-    brain: { icon: IC.brain, name: '똑똑한 두뇌', desc: '나에게만 — 인간의 도구를 잘 다룸',
+    brain: { icon: IC.tool, name: '도구 다루기', desc: '나에게만 — 인간의 도구를 잘 다룸',   // v273: 이름·아이콘 바꿈 (똑똑한 두뇌 → 도구 다루기)
       val: (n) => `테이저 ${1 + n}→${2 + n}명 · 유혹 거리 +${n * 20}→+${(n + 1) * 20}% · 유혹 버팀 ${4 + 2 * n}→${6 + 2 * n}대 · 방탄복 ${vestPct(n)}→${vestPct(n + 1)}%` },
     meat: { icon: IC.meat, name: '고기 흡수율', desc: '나와 동료들의 물어뜯을 때 회복량 증가',
       val: (n) => `내 회복 초당 ${(MY_BITE_HEAL * 100 + n * 3).toFixed(1)}→${(MY_BITE_HEAL * 100 + (n + 1) * 3).toFixed(1)}%` },
