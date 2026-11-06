@@ -192,7 +192,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v270</div>
+  <div id="ver">v271</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -540,6 +540,7 @@
     t.colorSpace = THREE.SRGBColorSpace;
     return t;
   }
+  const SAFE_Q = iconTexture('?', 1, '#ffd34d');   // v271: 금고 위 물음표 (노랑)
   const ICONS = { '?': iconTexture('?', 1, '#ffffff'), '!': iconTexture('!', 1, '#ff3b2f'), '!!': iconTexture('!', 2, '#ff3b2f'), '!!!': iconTexture('!', 3, '#ff3b2f') };
 
   // ── 건물 — 벽 = 선분 (문 자리는 비운다). 바닥에 그리는 건 지붕(덮개)·벽·문 앞 발판 ──
@@ -3163,6 +3164,8 @@
     const inner = new THREE.Mesh(safeInGeo, new THREE.MeshBasicMaterial({ color: 0x3a3d46, transparent: true, depthTest: false, depthWrite: false }));
     inner.position.z = 0.001; inner.renderOrder = b.mesh.renderOrder; b.mesh.add(inner);
     b.mesh.scale.setScalar(0.7);              // v239: 그림만 70% (부딪힘 r 1.5는 그대로)
+    const q = new THREE.Sprite(new THREE.SpriteMaterial({ map: SAFE_Q, transparent: true, depthTest: false, depthWrite: false }));   // v271: 금고 위 큰 물음표 (금고 그림에 붙어 같이 보이고 같이 사라진다)
+    q.scale.set(6, 3, 1); q.position.set(0, 1.425 + 2.1, 0.02); q.renderOrder = UI - 1; b.mesh.add(q);
     b.fixed = true; b.r = 1.5; b.halfH = 1.425 * 0.7; b.hp = b.maxHp = SAFE_HP;   // 부딪힘(콜라이더) 반지름도 같이 커진다 b.station = S;
     addHpBar(b, hpFoeMat);
     S.safe = b;
