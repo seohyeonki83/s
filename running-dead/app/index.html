@@ -198,7 +198,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v279</div>
+  <div id="ver">v280</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3685,9 +3685,9 @@
     stage.appendChild(fly);
     const tag = document.createElement('div');   // 단계 이름 — 느낌표 아래에 같이 크게 떴다가, 위쪽 느낌표 아래 자리로 작게 박힌다 (v194)
     tag.className = 'fly'; tag.textContent = LEVEL_NAME[idx];
-    Object.assign(tag.style, { left: '50%', top: 'calc(16% + 48px)', fontSize: '8px', fontWeight: '800', color: '#e2c2fb', textShadow: '0 2px 6px rgba(0,0,0,0.8)', whiteSpace: 'nowrap', transition: 'font-size 0.15s ease-out' });
+    Object.assign(tag.style, { left: '50%', top: 'calc(16% + 62px)',   /* v280: 글자가 2배라 조금 더 아래 */ fontSize: '8px', fontWeight: '800', color: '#e2c2fb', textShadow: '0 2px 6px rgba(0,0,0,0.8)', whiteSpace: 'nowrap', transition: 'font-size 0.15s ease-out' });
     stage.appendChild(tag);
-    fly.getBoundingClientRect(); fly.style.fontSize = '64px'; tag.style.fontSize = '24px';
+    fly.getBoundingClientRect(); fly.style.fontSize = '64px'; tag.style.fontSize = '48px';   // v280: 단계 이름 2배 (24 → 48px)
     setTimeout(() => {
       const slot = starSlots()[idx], r = slot.getBoundingClientRect();
       const lvEl = starsEl.querySelector('.lv'); lvEl.style.visibility = 'hidden'; lvEl.textContent = LEVEL_NAME[idx];   // 이름이 박힐 자리
@@ -3950,7 +3950,9 @@
     { n: 15, t: '떼거리', d: '부하들이 당신에게 충성을 다합니다.' },
     { n: 30, t: '개떼', d: '어마어마한 통솔력입니다.' },
     { n: 40, t: '대군', d: '당신의 함성이 전장을 찢어놓습니다.' },
-    { n: 50, t: '군단', d: '나는 군단이다.' },
+    { n: 50, t: '대재앙', d: '당신의 손짓이 죽음의 물결을 만들고 있습니다.' },   // v280: 대군 다음부터 10마리마다
+    { n: 60, t: '헬게이트', d: '무저갱의 황충대를 보라.' },
+    { n: 70, t: '군단', d: '나는 군단이다.' },
   ];
   let rankNext = 0, rankAnim = false;
   function showRank(r) {
