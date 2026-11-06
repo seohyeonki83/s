@@ -212,7 +212,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v296</div>
+  <div id="ver">v297</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1005,7 +1005,8 @@
   // ── v296: 팀 시야 ──
   //   시야는 벽에 막힌다 — 밖에선 문이 열려 있어도 안이 안 보이고, 안에서도 밖이 안 보인다 (화면도 지금 그대로)
   //   대신 같은 편 누가 보고 있으면 그 편 전체가 본 걸로 친다. 그렇게 보이는 상대면 문이 열려 있는 한 안↔밖도 개입한다
-  //   원거리(경찰 총·히드라 토사물·테이저)는 벽 상관없이 바로, 근접은 문으로 들어가 같은 공간이 됐을 때 때린다. 덮치기도 같은 공간에서만
+  //   원거리(경찰 총·히드라 토사물·테이저)는 공격선이 벽에 안 막혀야 (열린 문 틈은 OK — 막히면 다가가기만), 근접은 문으로 들어가 같은 공간이 됐을 때. 덮치기도 같은 공간에서만 (v297)
+  //   쫓던 상대가 건물 안으로 들어가면 안에 우리 편이 없는 한 안 보이니까 더 못 쫓는다
   const linked = (a, b) => a === b || (!a ? b.doors.length > 0 : !b ? a.doors.length > 0 : false);   // 같은 공간이거나, 밖 ↔ 열린 문이 있는 건물
   const hsBuf = [], HS_R = SIGHT * 2;
   function hSeen(z) {                         // 사람 편 누가 이 좀비를 직접 보고 있나 (같은 공간, 자기 시야 안) — 걸음마다 한 번만 잰다
@@ -1305,7 +1306,7 @@
     const range = c.boostT > 0 ? c.boostSight : c.sight;   // 사거리 = 원래(1배) 시야 (v159)
     const far = (z) => Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
     if (tick || !sees(c, c.foe)) {          // 틱마다 다시 뽑는다 (상대가 죽었거나 아직 없거나 안 보이면 바로)
-      const inRange = nearestZombie(c, range);
+      const inRange = nearestZombie(c, range, true) || nearestZombie(c, range);   // v297: 쏠 수 있는 좀비 먼저 (없으면 보이는 좀비에게 다가간다)
       if (inRange) { c.foe = inRange; c.chaseR = 0; }   // 사거리 안에 좀비가 있으면 가장 가까운 걸 쏜다
       else {                                 // 늘어난 시야로 본 좀비 (v159): 처음 본 거리보다 멀어지지 않는 한, 시야가 줄어도 사거리에 들 때까지 쫓아간다
         if (!sees(c, c.foe) && sees(c, c.spot)) { c.foe = c.spot; c.chaseR = c.spotR; }   // 경계할 때 본 좀비
@@ -1316,15 +1317,16 @@
     }
     if (!c.foe) { c.chaseR = 0; steer(c.vel, wantV.set(0, 0), ACCEL * dt); enterNormal(c); return; }
     const z = c.foe, d = far(z);
-    if (d > range) { steer(c.vel, toward(c, z.foot.x, z.foot.z, PANIC_SPEED * POLICE_PACE), ACCEL * dt); return; }   // 사거리 밖 → 달려간다
+    if (d > range || fireBlocked(c.foot.x, c.foot.z, z.foot.x, z.foot.z)) { steer(c.vel, toward(c, z.foot.x, z.foot.z, PANIC_SPEED * POLICE_PACE), ACCEL * dt); return; }   // 사거리 밖이거나 벽에 막힘 → 다가간다 (v297: 열린 문 틈으로는 쏜다)
     steer(c.vel, wantV.set(0, 0), ACCEL * dt);
     if (c.atkT <= 0) { shoot(c, z); c.atkT = HIT_EVERY; }
   }
 
-  function nearestZombie(c, range) {
+  function nearestZombie(c, range, clear = false) {   // clear: 공격선이 벽에 안 막힌 좀비만 (v297)
     let best = null, bd = range;
     for (const z of nearIn(zCells, c.foot.x, c.foot.z, range, nzBuf)) {   // 둘레 칸의 좀비만 (v177)
       if (!sees(c, z)) continue;
+      if (clear && fireBlocked(c.foot.x, c.foot.z, z.foot.x, z.foot.z)) continue;
       const d = Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
       if (d <= bd) { bd = d; best = z; }
     }
@@ -2228,6 +2230,14 @@
     nbBuf.length = 0;
     for (const B of buildings) if (B.x1 + WALL >= x0 && B.x0 - WALL <= x1 && B.z1 + WALL >= z0 && B.z0 - WALL <= z1) nbBuf.push(B);
     return nbBuf;
+  }
+  function fireBlocked(ax, az, bx, bz) {      // v297: 원거리 공격선이 벽(잠긴 문 포함)에 막히나 — 열린 문 틈으로는 지나간다
+    const x0 = Math.min(ax, bx), x1 = Math.max(ax, bx), z0 = Math.min(az, bz), z1 = Math.max(az, bz);
+    for (const B of buildings) {
+      if (B.x1 + WALL < x0 || B.x0 - WALL > x1 || B.z1 + WALL < z0 || B.z0 - WALL > z1) continue;
+      for (const w of B.walls) if (crosses(ax, az, bx, bz, w)) return true;
+    }
+    return false;
   }
   function blocked(ax, az, bx, bz) {          // 두 점 사이를 시야 벽이 가리나 (그 선분 둘레 건물 벽만 본다)
     const x0 = Math.min(ax, bx), x1 = Math.max(ax, bx), z0 = Math.min(az, bz), z1 = Math.max(az, bz);
@@ -3251,7 +3261,7 @@
         const cross = c.space !== me.space;
         if (cross && !(linked(me.space, c.space) && zSeen(c))) continue;   // v296: 다른 공간은 좀비 편이 보고 있을 때만   // v196: 감전 중인 적은 안 쏜다 (풀리면 다시 쏠 수 있다)
         const d = Math.hypot(c.foot.x - me.foot.x, c.foot.z - me.foot.z);
-        if (d > me.sense || (!cross && blocked(me.foot.x, me.foot.z, c.foot.x, c.foot.z) && !zSeen(c))) continue;   // v296: 벽에 가려도 동료가 보고 있으면
+        if (d > me.sense || fireBlocked(me.foot.x, me.foot.z, c.foot.x, c.foot.z)) continue;   // v297: 공격선이 벽에 막히면 안 쏜다 (열린 문 틈으로는 OK)
         cand.push({ c, k: DANGER(c), d });
       }
       cand.sort((a, b) => b.k - a.k || a.d - b.d);
@@ -3570,7 +3580,7 @@
       return;
     }
     if (!t) { allyIdle(z, dt); return; }      // 히드라
-    if (bd > z.sense * 0.7) { steer(z.vel, toward(z, t.foot.x, t.foot.z, z.speed), ACCEL * dt); return; }   // 사거리 = 인지거리의 70%
+    if (bd > z.sense * 0.7 || fireBlocked(z.foot.x, z.foot.z, t.foot.x, t.foot.z)) { steer(z.vel, toward(z, t.foot.x, t.foot.z, z.speed), ACCEL * dt); return; }   // 사거리 = 인지거리의 70% — v297: 벽에 막히면 다가간다
     steer(z.vel, wantV.set(0, 0), ACCEL * dt);
     if (z.atkT <= 0) { spit(z, t); z.atkT = HIT_EVERY; }   // 공격 속도는 같다
   }
