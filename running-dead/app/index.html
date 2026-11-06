@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v332</div>
+  <div id="ver">v333</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3211,8 +3211,8 @@
   const allyAttack = () => ALLY_ATTACK;       // v256: 튼튼한 다리는 이제 습격 거리가 아니라 이동 속도
   const legK = () => 1 + 0.05 * up.leg;      // 튼튼한 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
   const meSpeed = () => MY_SPEED * (legK() + (owned.shoes ? 0.10 + 0.03 * up.brain : 0));   // v275: 운동화 +10% (도구 다루기마다 +3%) — 튼튼한 다리와 더한다
-  const cashK = () => 1.6 * 1.1 * 1.1 * 0.9 * (1 + 0.2 * up.brain);   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
-  const lureHits = () => 4 + 2 * up.brain;    // v269: 유혹 중 4대째 맞으면 정신 차린다, 두뇌마다 +2 (4, 6, 8 …)
+  const cashK = () => 1.6 * 1.1 * 1.1 * 0.9 * 0.9 * (1 + 0.2 * up.brain);   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
+  const lureHits = () => 3 + 2 * up.brain;   /* v333: 처음 4 → 3대 */    // v269: 유혹 중 4대째 맞으면 정신 차린다, 두뇌마다 +2 (4, 6, 8 …)
   function gainXp() {
     xp++;
     if (xp >= needXp(level + pendingLv)) { xp -= needXp(level + pendingLv); pendingLv++; }
@@ -3304,7 +3304,7 @@
       it.el.classList.toggle('empty', it.ammo <= 0);
     }
   }
-  const CASH_LIFE = 10;                       // v235: 돈다발은 10초 뒤 사라진다
+  const CASH_LIFE = 5;   /* v333: 10 → 5초 */                       // v235: 돈다발은 10초 뒤 사라진다
   function tickItems(dt) {
     for (const k of cashes.slice()) if ((k.t -= dt) <= 0) removeCash(k);
     for (let i = zaps.length - 1; i >= 0; i--) if ((zaps[i].t -= dt) <= 0) zaps.splice(i, 1);
