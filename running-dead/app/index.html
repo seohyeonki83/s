@@ -212,7 +212,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v292</div>
+  <div id="ver">v293</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4088,9 +4088,8 @@
     const [ox, oy] = toScreen(mx, mz, W, H);
     smEyes.length = 0;                         // 테두리 계산에 쓸 좀비 시야
     for (const z of nearIn(zCells, mx, mz, R1 + R0 * 1.3, smBuf)) if (isZombie(z)) smEyes.push(z);
-    const marks = [];                          // v288: 금고 있는 일반 건물도 경찰서처럼 알려 준다 (노란 물음표)
+    const marks = [];                          // 화면 가장자리 표시 — 경찰서 보라 ! 만 (v293: 금고 건물 노란 ? 는 뺐다. 지붕 ? 는 그대로)
     for (const S of stations) if (!S.down) marks.push([S, '!', '#b44ee6', 0.12]);   // 부서진 경찰서는 안 알려 준다
-    for (const B of buildings) if (!B.station && B.safe && !B.safe.dead) marks.push([B, '?', '#ffd34d', 0.3]);   // 깨진 금고(꽝 포함)는 안 알려 준다
     for (const [S, ch, col, wk] of marks) {
       const px = Math.max(S.x0, Math.min(S.x1, mx)), pz = Math.max(S.z0, Math.min(S.z1, mz));   // 경찰서 바깥 테두리에서 나와 가장 가까운 점
       const dx = px - mx, dz = pz - mz, d = Math.hypot(dx, dz);
