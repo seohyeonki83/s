@@ -212,7 +212,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v293</div>
+  <div id="ver">v294</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2632,7 +2632,11 @@
     camDist = DIST;
     explored.fill(0);                         // 미니맵 — 새 판은 다시 다 까맣게
     for (const it of items) it.el.remove();   // 기술·돈다발·연출 초기화 (v190)
-    items = []; safesBroken = 0; itemOrder = pickItems();   // v276: 9종 중 랜덤 4개 — 금고 4개 전부에서 하나씩 (사용 아이템은 2개까지)
+    items = []; safesBroken = 0; itemOrder = pickItems();
+    if (FORCE_FIRST_ITEM) {                   // v294: 시험용 — 변이 주사가 든 뽑기가 나올 때까지 다시 뽑고 맨 앞으로
+      while (!itemOrder.includes(FORCE_FIRST_ITEM)) itemOrder = pickItems();
+      itemOrder.splice(itemOrder.indexOf(FORCE_FIRST_ITEM), 1); itemOrder.unshift(FORCE_FIRST_ITEM);
+    }   // v276: 9종 중 랜덤 4개 — 금고 4개 전부에서 하나씩 (사용 아이템은 2개까지)
     for (const k of Object.keys(owned)) delete owned[k];
     for (const el of Object.values(pBadges)) el.remove();
     for (const k of Object.keys(pBadges)) delete pBadges[k];
@@ -3040,6 +3044,7 @@
   }
 
   const SLOT_A = [45, 15, 75], SLOT_R = 125;   // 버튼 자리 = 조이스틱 가운데에서 이 각도(오른쪽 0°, 위 90°)·거리(px)
+  const FORCE_FIRST_ITEM = 'mutate';           // v294: 시험용 — 첫 진짜 금고에서 이 아이템 (null이면 원래대로 완전 랜덤)
   let items = [], itemOrder = [], safesBroken = 0, paused = false, acqOpen = false, starAnim = false, shownStars = 0;
   const pendingAward = [];
   const cashes = [];                          // 바닥에 뿌려진 돈다발 {x, z, space, mesh}
@@ -3591,7 +3596,7 @@
     for (const [ox, oy, sc] of [[0.18, 0.12, 0.42], [-0.16, -0.08, 0.32], [0.05, -0.22, 0.26]]) { const s = new THREE.Sprite(gooMat); s.position.set(ox, oy, 0.02); s.scale.setScalar(sc); s.renderOrder = 1; g.add(s); }
     c.mesh.add(g); c.gooS = g;
   }
-  const minusTex = (() => { const cv = document.createElement('canvas'); cv.width = 64; cv.height = 32; const g = cv.getContext('2d'); g.font = '800 26px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 5; g.strokeStyle = 'rgba(0,0,0,0.75)'; g.strokeText('-1', 32, 17); g.fillStyle = '#9dff6a'; g.fillText('-1', 32, 17); return new THREE.CanvasTexture(cv); })();
+  const minusTex = (() => { const cv = document.createElement('canvas'); cv.width = 128; cv.height = 64; const g = cv.getContext('2d'); g.font = '800 52px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,0.75)'; g.strokeText('-1', 64, 34); g.fillStyle = '#ff4a3d'; g.fillText('-1', 64, 34); return new THREE.CanvasTexture(cv); })();   // v294: 빨강 (연두였다), 2배 해상도
   function gooTick(dt) {
     for (const c of bodies) {
       if (!c.goo || c.kind !== 'citizen') continue;
@@ -3605,8 +3610,8 @@
       c.hp = Math.max(0, c.hp - 1);
       if (c.hp <= 0 && !c.police && c.state !== 'held') enterPanic(c, null, true);
       if (c.mesh.visible) {                   // 아주 작은 -1 이 떠올랐다 사라진다
-        const f = puff(c.foot.x + 0.35, 1.3, c.foot.z, 0xffffff, 0.5, 0.5, 0.75, 0, 0.9, 0, 1);
-        f.s.material.map = minusTex; f.s.scale.set(0.5, 0.25, 1); f.fixedScale = true; f.peak = true; f.s.renderOrder = UI - 1;
+        const f = puff(c.foot.x + 0.6, 1.3, c.foot.z, 0xffffff, 0.5, 0.5, 0.75, 0, 0.9, 0, 1);   // v294: 커진 만큼 옆으로
+        f.s.material.map = minusTex; f.s.scale.set(1.0, 0.5, 1); f.fixedScale = true; f.peak = true; f.s.renderOrder = UI - 1;   // v294: 2배 (0.5×0.25 → 1×0.5)
       }
     }
   }
