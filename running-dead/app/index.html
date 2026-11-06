@@ -201,6 +201,13 @@
     position: absolute; left: 50%; top: 50%; width: 32px; height: 32px; margin: -16px 0 0 -16px;
     border-radius: 50%; background: var(--knob); pointer-events: none;
   }
+  #taunt {   /* v308: 죽으면 '죽었습니다' 밑에 대문짝만한 한마디 (랜덤) */
+    position: absolute; top: calc(40% + 62px); left: 0; right: 0; padding: 0 16px; text-align: center; pointer-events: none; z-index: 6;
+    font: 900 min(60px, 13vw)/1.1 var(--font); color: #fff; word-break: keep-all;
+    text-shadow: 0 0 18px rgba(255, 60, 40, 0.8), 0 4px 12px rgba(0, 0, 0, 0.9); animation: tauntpop 0.45s cubic-bezier(.2, 1.6, .4, 1);
+  }
+  #taunt[hidden] { display: none; }
+  @keyframes tauntpop { 0% { transform: scale(0.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
   #note {
     position: absolute; top: 40%; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
     padding: 12px 14px; border-radius: 10px; background: var(--note-bg); color: var(--note-fg);
@@ -213,11 +220,12 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v307</div>
+  <div id="ver">v308</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
   <div id="note" hidden></div>
+  <div id="taunt" hidden></div>
 </div>
 <button id="reset" type="button">처음부터</button>
 <button id="pause" type="button" aria-label="일시정지"><svg class="pa" viewBox="0 0 16 16"><rect x="3" y="2" width="3.6" height="12" rx="1"/><rect x="9.4" y="2" width="3.6" height="12" rx="1"/></svg><svg class="pl" viewBox="0 0 16 16"><path d="M4.5 2.4v11.2c0 .6.7 1 1.2.6l8-5.6c.4-.3.4-.9 0-1.2l-8-5.6c-.5-.4-1.2 0-1.2.6z"/></svg></button>
@@ -894,6 +902,8 @@
   let me = null;
   const isZombie = (b) => (b.kind === 'me' || b.kind === 'ally') && !b.dead;
   const note = document.getElementById('note');
+  const tauntEl = document.getElementById('taunt');
+  const TAUNTS = ['겜알못?', '이걸 죽음?', '그냥 하지 마라.'];   // v308: 죽으면 셋 중 하나
   const dying = [];                           // 이번 걸음에 HP가 0이 된 좀비 (걸음 끝에 처리)
 
   function addBody(kind, x, z) {
@@ -1768,8 +1778,10 @@
     if (z === me) {                           // 내 체력바는 빈 채로 남는다
       me.mode = 'dead';
       me.mesh.material.color.setHex(COLOR.dead);
-      note.textContent = '죽었어';
+      note.textContent = '죽었습니다';         // v308: 죽었어 → 죽었습니다
       note.hidden = false;
+      tauntEl.textContent = TAUNTS[Math.floor(Math.random() * TAUNTS.length)];   // v308: 그 밑에 대문짝만하게 (랜덤)
+      tauntEl.hidden = false;
       retryEl.hidden = false;                 // 화면 아래 '다시 하기' (v225) — 그 자리 조이스틱은 숨긴다
       joy.style.visibility = 'hidden';
       return;
@@ -2750,7 +2762,7 @@
     cmdReadyAt = 0;
     for (const r of rings) scene.remove(r);
     rings.length = 0;
-    note.hidden = true;
+    note.hidden = true; tauntEl.hidden = true;   // v308
     retryEl.hidden = true; joy.style.visibility = '';
 
     me = addBody('me', 0, 0);
