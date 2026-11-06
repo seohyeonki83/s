@@ -145,7 +145,7 @@
   #minimap {   /* 미니맵 (v123) — 지도 전체. 못 가 본 곳은 까맣게, 가 본 곳은 흐리게, 지금 보이는 곳은 밝게. 경찰서(보라)·나(빨강)만 표시 */
     position: absolute; top: calc(6px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px));   /* '처음부터' 버튼이 있던 자리로 (v130) */
     width: 85px; height: 91px; border-radius: 5px; outline: 1px solid rgba(255, 255, 255, 0.25);   /* 크기는 지도 비율에 맞춰 스크립트가 정한다 */
-    background: #000; pointer-events: none;   /* v290: 못 가 본 곳 = 완전 검정 */   /* 못 가 본 곳 — v129에 반투명으로 했다가 밝은 바닥 위에서 가 본 곳과 구분이 안 돼서 v140에 다시 불투명 (v125 색) */
+    background: #24242a; pointer-events: none;   /* 못 가 본 곳 — v129에 반투명으로 했다가 밝은 바닥 위에서 가 본 곳과 구분이 안 돼서 v140에 다시 불투명 (v125 색) */
   }
   #legend {
     position: absolute; top: calc(50px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));   /* 위 가운데 수배 별과 안 겹치게 (v113) */
@@ -212,7 +212,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v290</div>
+  <div id="ver">v291</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -644,7 +644,7 @@
       B.bang = new THREE.Mesh(new THREE.PlaneGeometry(BANG_W, BANG_H), new THREE.MeshBasicMaterial({ map: bangTex, transparent: true, depthTest: false, depthWrite: false }));   // 지붕 가운데 느낌표 (v220) — 안 부서진 동안 늘 있고, 지붕이 열리면 같이 사라진다
       B.bang.quaternion.copy(camera.quaternion);
       B.bang.position.set((B.x0 + B.x1) / 2, 0.06, (B.z0 + B.z1) / 2);
-      B.bang.renderOrder = -0.507;            // 안개(-0.52) 위 — v290: 못 가 본 곳 검정 막(-0.501) 밑 (못 본 곳에선 같이 숨는다)
+      B.bang.renderOrder = -0.49;             // 어둠 위 (어둠 속에서도 보인다) — v289: 못 가 본 곳 검정 막(-0.501)보다도 위
       scene.add(B.bang);
     }   // 좀비가 아무도 안 들어간 건물 안 = 어둠 (시야 밖 바닥과 같은 색, 문 너머로도 안 보인다)
     for (const D of B.doors) doorGap(D).visible = true;   // v248: 노란 발판은 뺐다 — 뚫린 문 자리만   // v246: 발판을 지붕·벽·어둠 위로 + 문 자리 벽을 뚫어 보이게
@@ -1603,8 +1603,7 @@
         const cz0 = Math.max(0, Math.floor((B.z0 - 1 - MM.z0) / MM_CELL)), cz1 = Math.min(mmH - 1, Math.floor((B.z1 + 1 - MM.z0) / MM_CELL));
         for (let cz = cz0; cz <= cz1 && !B.found; cz++) for (let cx = cx0; cx <= cx1; cx++) if (explored[cz * mmW + cx]) { B.found = true; break; }
       }
-      if (!B.found) continue;                                  // v290: 발견 전 건물은 안 그린다 (스타처럼)
-      mmCtx.fillStyle = '#3a3a42';
+      mmCtx.fillStyle = B.found ? '#3a3a42' : 'rgba(140, 140, 155, 0.3)';
       mmCtx.fillRect(X(B.x0), Z(B.z0), (B.x1 - B.x0) * sx, (B.z1 - B.z0) * sz);
       if (B.found) { mmCtx.lineWidth = 0.8 * mmDpr; mmCtx.strokeStyle = 'rgba(200, 200, 215, 0.55)'; mmCtx.strokeRect(X(B.x0), Z(B.z0), (B.x1 - B.x0) * sx, (B.z1 - B.z0) * sz); }
     }
@@ -1615,8 +1614,7 @@
         for (let cz = cz0; cz <= cz1 && !S.found; cz++) for (let cx = cx0; cx <= cx1; cx++) if (explored[cz * mmW + cx]) { S.found = true; break; }
       }
       const found = S.found || S.down, x = X(S.x0), y = Z(S.z0), w = (S.x1 - S.x0) * sx, h = (S.z1 - S.z0) * sz;
-      if (!found) continue;                                    // v290: 발견 전 경찰서(와 그 위 !)도 안 그린다
-      mmCtx.fillStyle = '#b44ee6';
+      mmCtx.fillStyle = found ? '#b44ee6' : 'rgba(180, 78, 230, 0.28)';
       mmCtx.fillRect(x, y, w, h);
       if (S.down) {                                            // 부서진 경찰서 = 흰 X
         const e = 1.2 * mmDpr;
@@ -3347,7 +3345,7 @@
       S.qm = new THREE.Mesh(new THREE.PlaneGeometry(BANG_W * 1.5, BANG_H), new THREE.MeshBasicMaterial({ map: qmTex, transparent: true, depthTest: false, depthWrite: false }));
       S.qm.quaternion.copy(camera.quaternion);
       S.qm.position.set((S.x0 + S.x1) / 2, 0.06, (S.z0 + S.z1) / 2);
-      S.qm.renderOrder = -0.507;              // v290: 안개 위, 검정 막 밑
+      S.qm.renderOrder = -0.49;               // v289: 검정 막 위
       scene.add(S.qm);
     }
   }
@@ -3942,7 +3940,7 @@
         f.style.transition = `left ${e}, top ${e}, font-size ${e}, transform ${e}`;
         f.style.left = x + 'px'; f.style.top = y + 'px'; f.style.fontSize = '8px'; f.style.transform = 'translate(-50%, -50%) scale(1)';
       }), POP);
-      setTimeout(() => { for (const { f } of flies) { f.style.transition = 'opacity 0.6s ease-in'; f.style.opacity = '0'; setTimeout(() => f.remove(), 650); } mmBang = true; updateMinimap(1); }, POP + FLY + stations.length * GAP + 20);   // v290: 박히고 나서 스르르 사라진다
+      setTimeout(() => { for (const { f } of flies) f.remove(); mmBang = true; updateMinimap(1); }, POP + FLY + stations.length * GAP + 20);
       setTimeout(() => { el.remove(); dim.remove(); okBtn.remove(); tutOpen = false; paused = false; last = 0; }, POP + FLY + stations.length * GAP + 120);
     });
   }
