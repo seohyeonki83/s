@@ -212,7 +212,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v300</div>
+  <div id="ver">v301</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1704,7 +1704,7 @@
     a.lungeVictim = v;
   }
 
-  const ARMOR_KB = 2.0;                       // v295: 덩치에 맞으면 처음 이 속도(칸/초)로 밀려나 0.25초 만에 멈춘다 — v300: 1 → 2 (밀리는 거리 2배, 연출 시간은 그대로)
+  const ARMOR_KB = 2.3, ARMOR_KT = 0.4;       // v295: 덩치에 맞으면 처음 이 속도(칸/초)로 밀려나 이 시간 동안 점점 느려진다 — v300: 거리 2배, v301: 0.32 → 0.46칸 (1.5배, 2 → 2.3칸/초 · 0.25 → 0.4초)
   function landHit(a, v, dmg = DAMAGE) {
     if (v.kind === 'obj' && a.mut === 'armor') dmg *= 2;   // v295: 덩치 — 문·경찰차 피해 2배
     if ((v.kind === 'obj' || v.kind === 'safe') && a === me && owned.crowbar) dmg *= 1.25 + 0.05 * up.brain;   // v275: 빠루 — 내가 건물·사물에 입히는 피해
@@ -1724,9 +1724,9 @@
     if (v.dead || !(v.kind === 'citizen' || v.kind === 'safe' || isZombie(v)) || v.hp <= 0) return;
     v.hp = Math.max(0, v.hp - dmg);
     if (v.kind === 'safe') { if (v.hp <= 0) breakSafe(v); return; }   // 금고 (v190)
-    if (v.kind === 'citizen' && a.mut === 'armor' && !a.splashing && v.hp > 0 && v.state !== 'held' && !(v.knockT > 0)) {   // v295: 덩치는 무게가 있어 맞은 상대가 아주 살짝 밀려난다
+    if (v.kind === 'citizen' && a.mut === 'armor' && v.hp > 0 && v.state !== 'held' && !(v.knockT > 0)) {   // v295: 덩치는 무게가 있어 맞은 상대가 밀려난다 — v301: 스플래시 맞은 애들도 (덩치에서 먼 쪽으로)
       const kx = v.foot.x - a.foot.x, kz = v.foot.z - a.foot.z, kl = Math.hypot(kx, kz) || 1;
-      v.knockT = 0.25; v.knockVX = kx / kl * ARMOR_KB; v.knockVZ = kz / kl * ARMOR_KB;
+      v.knockT = ARMOR_KT; v.knockVX = kx / kl * ARMOR_KB; v.knockVZ = kz / kl * ARMOR_KB;
     }
     if (v.kind === 'citizen' && (v.state === 'lured' || v.lureAlert)) {   // 유혹 중: 정해진 대수만큼 맞으면 정신 차린다 (v234). 그 전엔 맞기만 하고 계속 돈다발로
       if ((v.lureHit = (v.lureHit || 0) + 1) < lureHits()) return;
@@ -3582,7 +3582,7 @@
       return;
     }
     if (!t) { allyIdle(z, dt); return; }      // 히드라
-    if (bd > z.sense * 0.7 || fireBlocked(z.foot.x, z.foot.z, t.foot.x, t.foot.z)) { steer(z.vel, toward(z, t.foot.x, t.foot.z, z.speed), ACCEL * dt); return; }   // 사거리 = 인지거리의 70% — v297: 벽에 막히면 다가간다
+    if (bd > z.sense * 0.91 || fireBlocked(z.foot.x, z.foot.z, t.foot.x, t.foot.z)) { steer(z.vel, toward(z, t.foot.x, t.foot.z, z.speed), ACCEL * dt); return; }   // 사거리 = 인지거리의 91% (v301: 70%에서 +30%) — v297: 벽에 막히면 다가간다
     steer(z.vel, wantV.set(0, 0), ACCEL * dt);
     if (z.atkT <= 0) { spit(z, t); z.atkT = HIT_EVERY; }   // 공격 속도는 같다
   }
@@ -3592,7 +3592,7 @@
     s.scale.setScalar(0.42); s.renderOrder = 6;
     s.position.copy(z.foot).addScaledVector(UP, RADIUS);
     scene.add(s);
-    spits.push({ s, z, t, dmg: zDamage(z) * 2 });
+    spits.push({ s, z, t, dmg: zDamage(z) * 4 });   // v301: 2배 더 (일반 데미지의 2 → 4배)
   }
   const sV2 = new THREE.Vector3();
   function stepSpits(dt) {
