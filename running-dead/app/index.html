@@ -212,7 +212,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v299</div>
+  <div id="ver">v300</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1704,7 +1704,7 @@
     a.lungeVictim = v;
   }
 
-  const ARMOR_KB = 1.0;                       // v295: 덩치에 맞으면 처음 1칸/초로 밀려나 금방 멈춘다 (약 0.16칸 — 아주아주 살짝)
+  const ARMOR_KB = 2.0;                       // v295: 덩치에 맞으면 처음 이 속도(칸/초)로 밀려나 0.25초 만에 멈춘다 — v300: 1 → 2 (밀리는 거리 2배, 연출 시간은 그대로)
   function landHit(a, v, dmg = DAMAGE) {
     if (v.kind === 'obj' && a.mut === 'armor') dmg *= 2;   // v295: 덩치 — 문·경찰차 피해 2배
     if ((v.kind === 'obj' || v.kind === 'safe') && a === me && owned.crowbar) dmg *= 1.25 + 0.05 * up.brain;   // v275: 빠루 — 내가 건물·사물에 입히는 피해
