@@ -77,7 +77,7 @@
   #lvbox.up .lv { animation: lvup 0.6s ease-out; }
   @keyframes lvup { 0% { transform: scale(1.8); color: #7fd4ff; } 100% { transform: scale(1); } }
   .toast { position: absolute; left: 50%; bottom: calc(220px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 30; padding: 10px 16px; border-radius: 10px; background: rgba(20, 20, 26, 0.88); color: #fff; font: 700 15px/1 var(--font); pointer-events: none; transition: opacity 0.3s; white-space: nowrap; }   /* v275 */
-  .pbadge, #vest { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: 46px; height: 46px; border-radius: 12px; background: rgba(22, 22, 28, 0.85); border: 2px solid #8fa3b8;
+  .pbadge, #vest { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(6px + env(safe-area-inset-bottom, 0px)); width: 46px; height: 46px; border-radius: 12px; background: rgba(22, 22, 28, 0.85); border: 2px solid #8fa3b8;
     display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; pointer-events: auto; cursor: pointer; touch-action: none; z-index: 4; }   /* 방탄복 (v201) — 패시브, 왼쪽 아래. v284: 누르면 설명창 */
   .pbadge .ic, #vest .ic { font-size: 20px; line-height: 1; }
   .pbadge .pc, #vest .pc { font: 700 10px/1 var(--font); margin-top: 2px; color: #cfe0f0; }
@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v353</div>
+  <div id="ver">v354</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -316,7 +316,7 @@
   const STAR_AT = (() => { let t = 0, d = STAR_BASE; return Array.from({ length: 5 }, () => { t += d; d *= STAR_GROW; return Math.round(t); }); })();   // [5, 18, 49, 127, 322]
   const SORTIE_SENSE = 3, SORTIE_SENSE_T = 4;   // 경찰서 호출로 나온 경찰: 건물 밖으로 나오는 순간 인지거리·시야 3배 → 4초에 걸쳐 원래대로 (v158)
   const DROP_SENSE = 2, DROP_SENSE_T = 3;   // 경찰차에서 내린 경찰: 인지거리가 순간 2배 → 3초에 걸쳐 원래대로 (v114)
-  const DISPATCH_T = (n) => (30 - 5 * (n - 1)) / 1.15 / 1.15 / 1.1 / 1.15;   /* v332: 출동 빈도 15% 더 */   /* v257: 출동 빈도 10% 더 */   /* v239: 출동 빈도 15% 더 */   /* v179: 출동 빈도 15% 올림 (간격 ÷ 1.15) */ //   // 별 n개일 때 출동 간격 (초) — 30·25·20·15·10 (v118)
+  const DISPATCH_T = (n) => (30 - 5 * (n - 1)) / 1.15 / 1.15 / 1.1 / 1.15 / 0.95;   /* v354: 출동 빈도 5% 내림 */   /* v332: 출동 빈도 15% 더 */   /* v257: 출동 빈도 10% 더 */   /* v239: 출동 빈도 15% 더 */   /* v179: 출동 빈도 15% 올림 (간격 ÷ 1.15) */ //   // 별 n개일 때 출동 간격 (초) — 30·25·20·15·10 (v118)
   const STATION_IN = 8,   /* v323: 14 → 8 (−40%, 8.4 반올림) */ STATION_OUT = 2, STATION_FRONT = 1;   /* v298: 안 14 → 17 (+20%) → v311: 17 → 14 (−15%, 14.45를 반올림) */   /* v162: 안 20 → 14 (30% 줄임) */   /* v157: 안 20 · 바깥 3 (둘레 2·앞마당 1), 다시 채우기 없음. 바깥 경찰 피해 합이 경찰 체력의 1/10을 넘을 때마다 호출 → 안에서 1~2명 출동 */ const STATION_OUT_MIN = 3; //   /* v147에 20% 줄임 (15·10·5 → 12·8·4) */ //   // 경찰서 안에 상주 · 둘레 배회 · 앞마당 배회(v115) — 출동하지 않는다. 안의 15명이 전부 감염되면 경찰서 파괴
   const AROUND_MIX = (i) => ['', 'guard', 'attacker', i % 2 ? 'attacker' : 'guard'];   // 시민 건물 i번 둘레에 흩어 두는 사람 — 일반 1 · 수비형·공격형 1~2 (v118에 전부 절반: 건물 3채 합쳐 일반 3 · 수비형 5 · 공격형 4)
   const PATROL_AT = [[-16 * 0.8, -4 * 0.8], [16 * 0.8, -4 * 0.8]];   /* v144·v145: 자리 20% 좁힘 (POS) */ //   // 동네마다 길거리 순찰 경찰 두 명의 자리 (동네 가운데 기준, 건물·시작 자리 피해서) — 동네 다섯 개 × 2 = 10명 (v134)
@@ -386,7 +386,7 @@
     { x: 0, z: -11, w: 14, d: 10, doors: ['s'], kinds: { a: 1, g: 1, n: 2 } },    // 대: 공격형 1 · 수비형 1 · 일반 2 (v118에 전부 절반)
     { x: -10, z: 8, w: 11, d: 8, doors: ['e'], kinds: { g: 1, n: 1, a: 1 } },   /* v143에 공격형 +1 */           // 중: 수비형 1 · 일반 1
     { x: 10, z: 8, w: 8, d: 6, doors: ['w'], kinds: { n: 1, g: 1 } },   /* v143에 수비형 +1 */                    // 소: 일반 1
-    { x: 0, z: -50, w: 14, d: 10, doors: ['s'], locks: ['e', 'w', 'n'], kinds: {}, station: true },   // v257: 뒷문(북) 추가   // v239: 동·서에 잠긴 문 (부수면 열린다)        // 경찰서 (동네 북쪽, v113 · v115에 더 북쪽으로) — 경찰은 판 깔 때 따로 넣는다
+    { x: 0, z: -50, w: 14, d: 10, doors: [], locks: ['s', 'e', 'w', 'n'], kinds: {}, station: true }   /* v354: 정문도 처음엔 닫힘 (부수고 들어간다) */,   // v257: 뒷문(북) 추가   // v239: 동·서에 잠긴 문 (부수면 열린다)        // 경찰서 (동네 북쪽, v113 · v115에 더 북쪽으로) — 경찰은 판 깔 때 따로 넣는다
   ].map((s, i) => ({ ...s, x: s.x * MAP * POS, z: s.z * MAP * POS, w: s.w * MAP, d: s.d * MAP, local: i }));   // 위치·크기 다 MAP배 (사람 수는 그대로)
   const START_BLOCK = 1;                      // 첫 마을 = 오른쪽 아래 (v230) — 경찰서 없이 건물 3개, 시작 자리, 성장 구역
   const BIG = { x: 0, z: -50 * MAP * POS, w: 16 * MAP, d: 12 * MAP, doors: ['s'], kinds: {}, big: true, local: 3 };   // v232: 첫 마을 경찰서 자리에 경찰서보다 큰 건물 — 안에 짭새 3 · 만두귀 2 · 좃밥 2 · 헬창 2
@@ -585,6 +585,7 @@
       const nx = side === 'e' ? 1 : side === 'w' ? -1 : 0, nz = side === 's' ? 1 : side === 'n' ? -1 : 0;
       return { side, cx: nx > 0 ? B.x1 : nx < 0 ? B.x0 : s.x, cz: nz > 0 ? B.z1 : nz < 0 ? B.z0 : s.z, nx, nz, tx: -nz, tz: nx, w: s.station ? DOOR * 4 / 9 : DOOR };   // v298: 경찰서 정문 폭 1/3 → v302: 거기서 1/3 더 (1.13 → 1.51칸)
     });
+    B.front = B.doors.find((o) => o.side === 's') || B.locks.find((o) => o.side === 's');   // v354: 경찰서 정문 자리 (닫혀 있어도)
     return B;
   });
   const walls = [];                           // [ax, az, bx, bz]
@@ -790,6 +791,7 @@
     const from = b.space, to = spaceOf(tx, tz);
     if (from !== to) {
       const B = from || to;
+      if (!B.doors.length) return wp.set(b.foot.x, b.foot.z);   // v354: 열린 문이 없으면 제자리
       let D = B.doors[0], best = Infinity;    // 쓸 문 = 지금 자리 → 문 → 목적지가 가장 짧은 문
       for (const o of B.doors) { const l = Math.hypot(o.cx - b.foot.x, o.cz - b.foot.z) + Math.hypot(tx - o.cx, tz - o.cz); if (l < best) { best = l; D = o; } }
       const rx = b.foot.x - D.cx, rz = b.foot.z - D.cz, along = rx * D.tx + rz * D.tz;
@@ -1411,7 +1413,7 @@
     }
     const x = (Math.random() < 0.5 ? 1 : 2) * DISPATCH_MORE;   // 출동 인원 (v170에 30% 늘림) — 1.3명 또는 2.6명 → 소수점은 확률로 (평균 1.5 → 1.95명)
     const n = Math.floor(x) + (Math.random() < x % 1 ? 1 : 0);
-    const D = S.doors[0], ox = D.cx + D.nx * 1.6, oz = D.cz + D.nz * 1.6;   // 그 경찰서 문 바로 밖
+    const D = S.front, ox = D.cx + D.nx * 1.6, oz = D.cz + D.nz * 1.6;   // 그 경찰서 문 바로 밖
     const sd = Math.random() < 0.5 ? 1 : -1;   // v257: 경찰차는 정문이 아니라 경찰서 옆(동·서 중 하나)에서 나온다
     if (stars >= 2 && Math.random() < 0.5) addCar(sd > 0 ? S.x1 + 2.6 : S.x0 - 2.6, (S.z0 + S.z1) / 2 + rand(-1.5, 1.5), sd > 0 ? 0 : Math.PI, site, n);
     else for (let i = 0; i < n; i++) {
@@ -3047,12 +3049,14 @@
         S.outer.push(c);
         c.area = S.ringA;
         c.sortie = true;
-        const D = S.doors[0], a = rand(-1, 1);   // 문 밖 바로 앞까지만 뛰어나온다 — 거기서부터는 3배 시야로 좀비를 찾는다 (v159: 다친 경찰 자리로 가지 않는다)
+        const D = S.front, a = rand(-1, 1);
+        c.foot.x = D.cx + D.nx * 1.2 + D.tx * a * 0.5; c.foot.z = D.cz + D.nz * 1.2 + D.tz * a * 0.5; c.space = null; c.vel.set(0, 0);   // v354: 문을 안 열고 바로 정문 밖으로 나온다   // 문 밖 바로 앞까지만 뛰어나온다 — 거기서부터는 3배 시야로 좀비를 찾는다 (v159: 다친 경찰 자리로 가지 않는다)
         c.calls.length = 0; c.calls.push(new THREE.Vector2(D.cx + D.nx * 2 + D.tx * a, D.cz + D.nz * 2 + D.tz * a));
       }
     }
     if (S.outer.length > S.outMin) for (const c of S.outer.slice()) {   // 할 일 끝난 출동 경찰 → 안으로 (바깥 3명은 남긴다)
       if (S.outer.length <= S.outMin) break;
+      if (!S.doors.length) break;   // v354: 열린 문이 없으면 못 들어간다 — 밖에 남는다
       if (!c.sortie || c.calls.length || c.boostT > 0 || c.state === 'fight' || c.state === 'alert') continue;   // 늘어난 시야가 남아 있는 동안(4초)은 안 들어간다
       c.sortie = false;
       c.boosted = false;                      // 다음에 또 출동하면 다시 3배
@@ -3646,6 +3650,10 @@
     for (const [k, el] of Object.entries(pBadges)) if (t[k]) el.querySelector('.pc').textContent = t[k]();
     const n = up.brain, a = { taser: () => `${1 + n}명`, cash: () => `${(1.2 + 0.2 * n).toFixed(1)}배`, mutate: () => `${23 + 4 * n}초`, bomb: () => `${Math.max(10, 40 - 3 * n)}초` };
     for (const [k, el] of Object.entries(aBadges)) el.querySelector('.pc').textContent = a[k]();
+    for (const [g, side] of [[pBadges, 'left'], [aBadges, 'right']]) {   // v354: 3개 넘으면 작게 · 촘촘하게 (조이스틱 안 가리게)
+      const L = Object.values(g), tight = L.length >= 3, step = tight ? 40 : 54, sz = tight ? 36 : 46;
+      L.forEach((el, i) => { el.style[side] = `calc(max(16px, env(safe-area-inset-${side}, 0px)) + ${i * step}px)`; el.style.width = el.style.height = sz + 'px'; });
+    }
   }
   function toast(text) {                      // 화면 아래쪽에 잠깐 뜨는 글
     const el = document.createElement('div'); el.className = 'toast'; el.textContent = text;
