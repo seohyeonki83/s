@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v352</div>
+  <div id="ver">v353</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2188,7 +2188,7 @@
           if (go) z.phase = 'track';               // 동료 좀비: 사냥이 끝나면 자기 자리로 간 다음 배회
           if (prey && !t && prey.hp <= 0) claimPrey(z, prey); else unclaim(z);   // HP 0 시민을 쫓는 동안 찜 (덮치면 marked가 대신한다)
         }
-        const sf = z === me && !t ? nearSafe(z) : null;   // 나만: 금고가 가장 가까우면 가서 때린다 (v190)
+        const sf = !t ? nearSafe(z) : null;   /* v353: 동료도 금고를 때린다 */   // 나만: 금고가 가장 가까우면 가서 때린다 (v190)
         let ob = !t ? nearObj(z) : null;       // v240: 문·경찰차도 다른 타겟과 같은 우선순위 — 더 가까우면 그걸 (대신 아주 가까이 있어야 알아챈다)
         if (!t && !ob && !go && !sf) ob = nearObj.any;   // v245: 주변에 다음 타겟이 없으면 3명이 찬 문·경찰차에도 제한 없이 붙는다
         if (ob && (!go || objGap(ob, z) < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z) - RADIUS) && (!sf || objGap(ob, z) < Math.hypot(sf.foot.x - z.foot.x, sf.foot.z - z.foot.z) - sf.r)) fightObj(z, ob, dt);
@@ -3428,7 +3428,7 @@
     steer(c.vel, toward(c, s.k.x, s.k.z, sp), ACCEL * dt);
   }
   // 금고 (v190): 경찰서마다 안쪽 왼쪽·오른쪽·왼쪽 아래·오른쪽 아래 중 한 곳. 나만 때려 부술 수 있다 (체력 = 경찰의 1.5배)
-  const SAFE_HP = POLICE_HP * 1.5;
+  const SAFE_HP = POLICE_HP * 1.5 * 3;   /* v353: 3배 */
   const safeGeo = new THREE.PlaneGeometry(2.85, 2.85), safeInGeo = new THREE.PlaneGeometry(1.86, 1.86);   // v195: 금고 2배, v196: 1.5배 더 (원래의 3배)
   function addSafe(S) {
     const m = 2.2, cz = (S.z0 + S.z1) / 2, spots = S.station ? [[S.x0 + m, cz], [S.x1 - m, cz], [S.x0 + m, S.z1 - m], [S.x1 - m, S.z1 - m]] : [[rand(S.x0 + 2, S.x1 - 2), rand(S.z0 + 2, S.z1 - 2)]];   // 첫 마을 건물은 안 아무 자리 (v232)
@@ -3699,7 +3699,7 @@
       if (d < bd && d <= z.sense && (cross || !blocked(z.foot.x, z.foot.z, c.foot.x, c.foot.z) || zSeen(c))) { bd = d; t = c; }
     }
     if (z.mut === 'armor') {
-      if (!t) { const ob = nearObj(z); if (ob) fightObj(z, ob, dt); else allyIdle(z, dt); return; }
+      if (!t) { const ob = nearObj(z), sf = nearSafe(z); if (ob) fightObj(z, ob, dt); else if (sf) fight(z, sf, dt); else allyIdle(z, dt); return; }   // v353: 덩치도 금고
       z.engaging = t;
       if (bd > z.r + (t.r || BODY) + (MELEE - 2 * BODY) / 3 || t.space !== z.space) { steer(z.vel, toward(z, t.foot.x, t.foot.z, z.speed), ACCEL * dt); return; }   // v296: 덩치도 근접은 같은 공간에서
       steer(z.vel, wantV.set(0, 0), ACCEL * dt);
