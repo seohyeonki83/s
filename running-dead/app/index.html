@@ -212,7 +212,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v297</div>
+  <div id="ver">v298</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -308,7 +308,7 @@
   const SORTIE_SENSE = 3, SORTIE_SENSE_T = 4;   // 경찰서 호출로 나온 경찰: 건물 밖으로 나오는 순간 인지거리·시야 3배 → 4초에 걸쳐 원래대로 (v158)
   const DROP_SENSE = 2, DROP_SENSE_T = 3;   // 경찰차에서 내린 경찰: 인지거리가 순간 2배 → 3초에 걸쳐 원래대로 (v114)
   const DISPATCH_T = (n) => (30 - 5 * (n - 1)) / 1.15 / 1.15 / 1.1;   /* v257: 출동 빈도 10% 더 */   /* v239: 출동 빈도 15% 더 */   /* v179: 출동 빈도 15% 올림 (간격 ÷ 1.15) */ //   // 별 n개일 때 출동 간격 (초) — 30·25·20·15·10 (v118)
-  const STATION_IN = 14, STATION_OUT = 2, STATION_FRONT = 1;   /* v162: 안 20 → 14 (30% 줄임) */   /* v157: 안 20 · 바깥 3 (둘레 2·앞마당 1), 다시 채우기 없음. 바깥 경찰 피해 합이 경찰 체력의 1/10을 넘을 때마다 호출 → 안에서 1~2명 출동 */ const STATION_OUT_MIN = 3; //   /* v147에 20% 줄임 (15·10·5 → 12·8·4) */ //   // 경찰서 안에 상주 · 둘레 배회 · 앞마당 배회(v115) — 출동하지 않는다. 안의 15명이 전부 감염되면 경찰서 파괴
+  const STATION_IN = 17, STATION_OUT = 2, STATION_FRONT = 1;   /* v298: 안 14 → 17 (+20%) */   /* v162: 안 20 → 14 (30% 줄임) */   /* v157: 안 20 · 바깥 3 (둘레 2·앞마당 1), 다시 채우기 없음. 바깥 경찰 피해 합이 경찰 체력의 1/10을 넘을 때마다 호출 → 안에서 1~2명 출동 */ const STATION_OUT_MIN = 3; //   /* v147에 20% 줄임 (15·10·5 → 12·8·4) */ //   // 경찰서 안에 상주 · 둘레 배회 · 앞마당 배회(v115) — 출동하지 않는다. 안의 15명이 전부 감염되면 경찰서 파괴
   const AROUND_MIX = (i) => ['', 'guard', 'attacker', i % 2 ? 'attacker' : 'guard'];   // 시민 건물 i번 둘레에 흩어 두는 사람 — 일반 1 · 수비형·공격형 1~2 (v118에 전부 절반: 건물 3채 합쳐 일반 3 · 수비형 5 · 공격형 4)
   const PATROL_AT = [[-16 * 0.8, -4 * 0.8], [16 * 0.8, -4 * 0.8]];   /* v144·v145: 자리 20% 좁힘 (POS) */ //   // 동네마다 길거리 순찰 경찰 두 명의 자리 (동네 가운데 기준, 건물·시작 자리 피해서) — 동네 다섯 개 × 2 = 10명 (v134)
   const START_COP_CLEAR = 11;       // v191: 15 → 11 (마을 4개라 땅이 좁아져서 — 경찰 시야 약 7.9칸 + 여유 3칸)  // 내 시작 자리 (v164) — 마을 안 아무 데나(건물 밖). 경찰·경찰서는 이만큼 안에 없고, 시민(일반·수비형·공격형)은 내 인지거리 밖이면 가까워도 된다
@@ -574,7 +574,7 @@
     B.locks = (s.locks || ['n', 'e', 's', 'w'].filter((d) => !s.doors.includes(d))).map(side2);   // 잠긴 문 (v239) — 쪽문 후보는 정문 없는 벽 전부, 판마다 하나만 문이 되고 나머지는 벽
     B.doors = s.doors.map((side) => {        // 문 = 그 벽 한가운데. n = 바깥쪽, t = 벽을 따라가는 쪽
       const nx = side === 'e' ? 1 : side === 'w' ? -1 : 0, nz = side === 's' ? 1 : side === 'n' ? -1 : 0;
-      return { side, cx: nx > 0 ? B.x1 : nx < 0 ? B.x0 : s.x, cz: nz > 0 ? B.z1 : nz < 0 ? B.z0 : s.z, nx, nz, tx: -nz, tz: nx };
+      return { side, cx: nx > 0 ? B.x1 : nx < 0 ? B.x0 : s.x, cz: nz > 0 ? B.z1 : nz < 0 ? B.z0 : s.z, nx, nz, tx: -nz, tz: nx, w: s.station ? DOOR / 3 : DOOR };   // v298: 경찰서 정문 폭 1/3
     });
     return B;
   });
@@ -583,7 +583,7 @@
     const sides = { n: [B.x0, B.z0, B.x1, B.z0], s: [B.x0, B.z1, B.x1, B.z1], w: [B.x0, B.z0, B.x0, B.z1], e: [B.x1, B.z0, B.x1, B.z1] };
     const n0 = walls.length;
     for (const [side, [ax, az, bx, bz]] of Object.entries(sides)) {
-      const D = B.doors.find((o) => o.side === side) || B.locks.find((o) => o.side === side), h = DOOR / 2;   // 잠긴 문 자리도 일단 비우고 (아래에서 막는다)
+      const D = B.doors.find((o) => o.side === side) || B.locks.find((o) => o.side === side), h = (D && D.w || DOOR) / 2;   // v298: 문마다 폭   // 잠긴 문 자리도 일단 비우고 (아래에서 막는다)
       if (!D) walls.push([ax, az, bx, bz]);
       else if (az === bz) walls.push([ax, az, D.cx - h, az], [D.cx + h, az, bx, bz]);
       else walls.push([ax, az, ax, D.cz - h], [ax, D.cz + h, bx, bz]);
@@ -623,13 +623,14 @@
   const gapMat = flatMat(0xc4c4c4), jambMat = flatMat(0x111111);   // v247: 더 밝게 + 문틀
   gapMat.opacity = 0;                         // v249: 밝은 바닥은 안 보이게 — 검은 문틀만           // v246: 문 자리 = 뚫린 벽 (바닥색) — 지붕·벽·어둠 위에 그려 어디서든 보인다
   function doorGap(D) {                       // v247: 문 자리를 벽 두께보다 훨씬 깊게(안팎 0.7칸씩) 밝은 바닥색으로 + 양쪽 문틀 — 멀리서도 '뚫린 문'으로 보이게
-    const deep = 1.4, m = flat(D.tx ? DOOR : deep, D.tz ? DOOR : deep, D.cx, D.cz, gapMat, -0.5025);
+    const DW = D.w || DOOR;                   // v298: 이 문의 폭
+    const deep = 1.4, m = flat(D.tx ? DW : deep, D.tz ? DW : deep, D.cx, D.cz, gapMat, -0.5025);
     for (const sgn of [-1, 1]) {
       const j = new THREE.Mesh(new THREE.PlaneGeometry(D.tx ? 0.22 : (deep + 0.1) / 2, D.tz ? 0.22 : (deep + 0.1) / 2).rotateX(-Math.PI / 2), jambMat);   // v251: 문틀 길이 반
-      j.position.set(D.tx * sgn * DOOR / 2, 0.001, D.tz * sgn * DOOR / 2); j.renderOrder = -0.502; m.add(j);
+      j.position.set(D.tx * sgn * DW / 2, 0.001, D.tz * sgn * DW / 2); j.renderOrder = -0.502; m.add(j);
     }
     // v251: 문틈(벽 두께만큼)은 시야 밖으로 쳐져 검은 줄로 덮였다 — 밖에서 좀비가 그 문을 보고 있으면 그 틈도 시야로 찍어서 안 덮이게
-    D.see = new THREE.Mesh(new THREE.PlaneGeometry(D.tx ? DOOR : WALL * 1.6, D.tz ? DOOR : WALL * 1.6).rotateX(-Math.PI / 2), seeMat);
+    D.see = new THREE.Mesh(new THREE.PlaneGeometry(D.tx ? DW : WALL * 1.6, D.tz ? DW : WALL * 1.6).rotateX(-Math.PI / 2), seeMat);
     D.see.position.set(D.cx, 0.02, D.cz); D.see.renderOrder = -4.9; D.see.visible = false; D.see.frustumCulled = false;
     scene.add(D.see); seeDoors.push(D);
     m.visible = false; return m;
@@ -688,7 +689,7 @@
     if (!B) return null;
     for (const D of B.doors) {
       const along = D.nz ? Math.abs(b.foot.x - D.cx) : Math.abs(b.foot.z - D.cz), depth = D.nz ? Math.abs(b.foot.z - D.cz) : Math.abs(b.foot.x - D.cx);
-      if (along < DOOR / 2 && depth < 0.6) { b.doorway = D; return null; }
+      if (along < (D.w || DOOR) / 2 && depth < 0.6) { b.doorway = D; return null; }
     }
     return B;
   }
@@ -776,9 +777,9 @@
       let D = B.doors[0], best = Infinity;    // 쓸 문 = 지금 자리 → 문 → 목적지가 가장 짧은 문
       for (const o of B.doors) { const l = Math.hypot(o.cx - b.foot.x, o.cz - b.foot.z) + Math.hypot(tx - o.cx, tz - o.cz); if (l < best) { best = l; D = o; } }
       const rx = b.foot.x - D.cx, rz = b.foot.z - D.cz, along = rx * D.tx + rz * D.tz;
-      const a = Math.max(-(DOOR / 2 - BODY - 0.1), Math.min(DOOR / 2 - BODY - 0.1, along));   // 문 폭 안에서 지금 자리와 나란한 곳 — 여럿이 나란히 지나가게
+      const DH = (D.w || DOOR) / 2, a = Math.max(-Math.max(0, DH - BODY - 0.1), Math.min(Math.max(0, DH - BODY - 0.1), along));   // 문 폭 안에서 지금 자리와 나란한 곳 — 여럿이 나란히 지나가게 (v298: 문마다 폭)
       const lx = D.cx + D.tx * a, lz = D.cz + D.tz * a;
-      if (Math.abs(along) < DOOR / 2 - BODY / 2 && Math.abs(rx * D.nx + rz * D.nz) < LANE) {   // 문을 지나는 중 → 똑바로 건너편으로
+      if (Math.abs(along) < DH - BODY / 2 && Math.abs(rx * D.nx + rz * D.nz) < LANE) {   // 문을 지나는 중 → 똑바로 건너편으로
         const s = from ? LANE : -LANE;
         return wp.set(lx + D.nx * s, lz + D.nz * s);
       }
@@ -824,8 +825,9 @@
       if (px > B.x0 - pad && px < B.x1 + pad && pz > B.z0 - pad && pz < B.z1 + pad) {   // 그 건물 문을 지나는 중이면 빼고
         for (const D of B.doors) {             // 문 틈에 걸쳐 있으면 먼저 문 앞으로 똑바로 나간다 — 비스듬히 가다 문설주에 걸리지 않게 (v157)
           const rx = px - D.cx, rz = pz - D.cz, al = rx * D.tx + rz * D.tz, no = rx * D.nx + rz * D.nz;
-          if (Math.abs(al) < DOOR / 2 && no > -0.1 && no < LANE - 0.2) {
-            const a = Math.max(-(DOOR / 2 - BODY - 0.1), Math.min(DOOR / 2 - BODY - 0.1, al));
+          const DH = (D.w || DOOR) / 2;         // v298: 문마다 폭
+          if (Math.abs(al) < DH && no > -0.1 && no < LANE - 0.2) {
+            const a = Math.max(-Math.max(0, DH - BODY - 0.1), Math.min(Math.max(0, DH - BODY - 0.1), al));
             return wp.set(D.cx + D.tx * a + D.nx * LANE, D.cz + D.tz * a + D.nz * LANE);
           }
         }
