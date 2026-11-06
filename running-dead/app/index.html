@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v323</div>
+  <div id="ver">v324</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2973,8 +2973,8 @@
   function reinforce() {
     for (const S of stations) {
       if (S.down || !S.members) continue;
-      const addIn = Math.floor(S.inT * 0.5 + Math.random()), addOut = Math.floor(S.outT * 0.2 + Math.random());   // v322: 안 인원 늘어나는 양 20 → 40%
-      S.inT *= 1.5;   /* v323: 원래 20%의 2.5배 = 50% */ S.outT *= 1.2;
+      const addIn = Math.floor(S.inT * 0.6 + Math.random()), addOut = Math.floor(S.outT * 0.2 + Math.random());   // v322: 안 인원 늘어나는 양 20 → 40%
+      S.inT *= 1.6;   /* v324: 원래 20%의 3배 = 60% */ S.outT *= 1.2;
       S.outMin += addOut;
       for (let i = 0; i < addIn + addOut; i++) {
         const inside = i < addIn, area = inside ? S : S.ringA;
