@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v327</div>
+  <div id="ver">v328</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2973,7 +2973,7 @@
   function reinforce() {
     for (const S of stations) {
       if (S.down || !S.members) continue;
-      const ADD_BY_DOWN = [0, 6, 10], addIn = ADD_BY_DOWN[Math.min(2, stations.filter((T) => T.down).length)], nIn = S.inT + addIn,   // v327: 깨질 때마다 안에 고정으로 +6명 → +10명
+      const ADD_BY_DOWN = [0, 6, 9], addIn = ADD_BY_DOWN[Math.min(2, stations.filter((T) => T.down).length)], nIn = S.inT + addIn,   // v327: 깨질 때마다 안에 고정으로 +6명 → +9명 (v328)
          addOut = Math.floor(S.outT * 0.2 + Math.random());   // v322: 안 인원 늘어나는 양 20 → 40%
       S.inT = nIn; S.outT *= 1.2;
       S.outMin += addOut;
