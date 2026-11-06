@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v319</div>
+  <div id="ver">v320</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1362,7 +1362,7 @@
       const hx = z.foot.x - ux * RADIUS * 0.5, hz = z.foot.z - uz * RADIUS * 0.5;
       for (let i = 0; i < 7; i++) {
         const a = Math.atan2(uz, ux) + rand(-1.1, 1.1), sp = rand(1.5, 3.5) * 3;   // v319: 퍼지는 범위 3배
-        const f = puff(hx, 0.6, hz, i % 3 ? 0xd91e1e : 0xff4a3a, rand(0.14, 0.24), rand(0.06, 0.12), rand(0.25, 0.4), Math.cos(a) * sp, rand(0.3, 1), Math.sin(a) * sp, 0.95);
+        const f = puff(hx, 0.6, hz, i % 3 ? 0xd91e1e : 0xff4a3a, rand(0.28, 0.48), rand(0.12, 0.24), rand(0.25, 0.4), Math.cos(a) * sp, rand(0.3, 1), Math.sin(a) * sp, 0.95);
         f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true;
       }
     }
@@ -1885,7 +1885,7 @@
   function bloodBurst(x, z, n, sp0, sp1) {   // v317: 작은 빨간 원들이 사방으로 피 튀듯
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2, sp = rand(sp0, sp1) * 3;   // v319: 퍼지는 범위 3배 (원 크기는 그대로)
-      const f = puff(x, 0.6, z, i % 3 ? 0xd91e1e : 0xff4a3a, rand(0.12, 0.22), rand(0.05, 0.1), rand(0.25, 0.4), Math.cos(a) * sp, rand(0.3, 1), Math.sin(a) * sp, 0.95);
+      const f = puff(x, 0.6, z, i % 3 ? 0xd91e1e : 0xff4a3a, rand(0.24, 0.44), rand(0.1, 0.2), rand(0.25, 0.4), Math.cos(a) * sp, rand(0.3, 1), Math.sin(a) * sp, 0.95);
       f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true;
     }
   }
