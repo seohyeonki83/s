@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v337</div>
+  <div id="ver">v338</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3211,6 +3211,7 @@
   const cashes = [];                          // 바닥에 뿌려진 돈다발 {x, z, space, mesh}
   const zaps = [];                            // 테이저 번쩍 {from:[x,z], to: 몸, t}
   const cashGeo = new THREE.PlaneGeometry(0.62, 0.36).rotateX(-Math.PI / 2), cashMat = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, depthWrite: false });
+  const cashRingMat = new THREE.MeshBasicMaterial({ color: 0x43d17a, transparent: true, opacity: 0.45, depthWrite: false });
   const cashBandMat = new THREE.MeshBasicMaterial({ color: 0x1b7a43, transparent: true, depthWrite: false });
   // ── 레벨·능력치 (v201) — 동료가 생길 때마다(누가 감염시켰든) 경험치 1. 레벨마다 새로 필요한 수 10 → 20 → 40 → 80 …
   //   레벨이 오르면 일시정지 → 능력치 카드 3장 중 하나 고르고 확인 → 오르는 연출 → 다시 움직임. 수치는 다 처음 값 기준으로 같은 양씩 더해진다
@@ -3242,7 +3243,7 @@
   const allyAttack = () => ALLY_ATTACK;       // v256: 튼튼한 다리는 이제 습격 거리가 아니라 이동 속도
   const legK = () => 1 + 0.05 * up.leg;      // 튼튼한 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
   const meSpeed = () => MY_SPEED * (legK() + (owned.shoes ? 0.10 + 0.03 * up.brain : 0));   // v275: 운동화 +10% (도구 다루기마다 +3%) — 튼튼한 다리와 더한다
-  const cashK = () => 1.6 * 1.1 * 1.1 * 0.9 * 0.9 * (1 + 0.2 * up.brain);   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
+  const cashK = () => 1.6 * 1.1 * 1.1 * 0.9 * 0.9 * 0.8 * (1 + 0.2 * up.brain);   /* v338: 20% 더 줄임 */   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
   const lureHits = () => 3 + 2 * up.brain;   /* v333: 처음 4 → 3대 */    // v269: 유혹 중 4대째 맞으면 정신 차린다, 두뇌마다 +2 (4, 6, 8 …)
   function gainXp() {
     xp++;
@@ -3379,6 +3380,7 @@
           const mesh = new THREE.Mesh(cashGeo, cashMat);
           const band = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.38).rotateX(-Math.PI / 2), cashBandMat); band.position.y = 0.002; mesh.add(band);
           mesh.position.set(x, 0.03, z); mesh.rotation.y = Math.random() * Math.PI; mesh.renderOrder = -0.55;
+          { const R0 = SIGHT * cashK(), ring = new THREE.Mesh(new THREE.RingGeometry(R0 - 0.12, R0, 64).rotateX(-Math.PI / 2), cashRingMat); ring.position.y = 0.004; ring.renderOrder = -0.5; mesh.add(ring); }   // v338: 사람이 돈을 알아채는 거리 원
           scene.add(mesh);
           cashes.push({ x, z, space: me.space, mesh, t: CASH_LIFE, who: new Set() });
           fresh.push(cashes[cashes.length - 1]);
