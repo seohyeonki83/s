@@ -58,6 +58,9 @@
   #acq .ds .main { font: 800 19px/1.45 var(--font); color: #fff; }   /* v273: 본 설명이 더 크고 흰색 */
   #acq .ds .up { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.15); color: rgba(220, 205, 160, 0.75); font: 500 13px/1.45 var(--font); }   /* 강화 설명은 작고 옅게 */
   #acq .ds .up b { color: #fff; }
+  #acq.dud .big { font: 900 104px/1 var(--font); color: #ff4d3a; text-shadow: 0 0 22px rgba(255, 77, 58, 0.55), 0 4px 12px rgba(0, 0, 0, 0.85); animation: dudpop 0.5s cubic-bezier(.2, 1.6, .4, 1); }   /* v288: 꽝 금고 */
+  #acq.dud .t { margin-top: 24px; font-size: 28px; }
+  @keyframes dudpop { 0% { transform: scale(0.2) rotate(-14deg); } 100% { transform: scale(1) rotate(0deg); } }
   #acq .h { margin-top: 10px; font: 600 13px/1 var(--font); color: rgba(255, 255, 255, 0.7); }
   .fly { position: absolute; z-index: 21; pointer-events: none; line-height: 1; transform: translate(-50%, -50%); }
   #stars .s { display: inline-block; width: 0.62em; font-weight: 900; text-align: center; font-size: 22px; }   /* v193: 수배 단계 = 보라 느낌표 */
@@ -209,7 +212,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v287</div>
+  <div id="ver">v288</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -608,6 +611,15 @@
     return c;
   })();
   const bangTex = new THREE.CanvasTexture(bangCv); bangTex.colorSpace = THREE.SRGBColorSpace;
+  const qmTex = (() => {                     // v288: 금고 있는 일반 건물 지붕 물음표 — 금고 위 물음표와 같은 노랑 + 검은 테두리
+    const c = document.createElement('canvas'); c.width = 192; c.height = 256;
+    const g = c.getContext('2d');
+    g.font = '900 220px system-ui, -apple-system, "Segoe UI", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.lineJoin = 'round';
+    const m = g.measureText('?'), y = 128 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
+    g.lineWidth = 20; g.strokeStyle = 'rgba(0, 0, 0, 0.85)'; g.strokeText('?', 96, y);
+    g.fillStyle = '#ffd34d'; g.fillText('?', 96, y);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  })();
   const gapMat = flatMat(0xc4c4c4), jambMat = flatMat(0x111111);   // v247: 더 밝게 + 문틀
   gapMat.opacity = 0;                         // v249: 밝은 바닥은 안 보이게 — 검은 문틀만           // v246: 문 자리 = 뚫린 벽 (바닥색) — 지붕·벽·어둠 위에 그려 어디서든 보인다
   function doorGap(D) {                       // v247: 문 자리를 벽 두께보다 훨씬 깊게(안팎 0.7칸씩) 밝은 바닥색으로 + 양쪽 문틀 — 멀리서도 '뚫린 문'으로 보이게
@@ -650,6 +662,24 @@
     const fill = B.side ? flat(L.nz ? DOOR + WALL : WALL, L.nz ? WALL : DOOR + WALL, L.cx, L.cz, wallMat, -0.505) : null;   // 쪽문이 안 된 자리는 그냥 벽으로 보인다
     L.obj = { kind: 'obj', type: 'door', B, L, seg, mesh, fill, gap: doorGap(L), foot: new THREE.Vector3(L.cx, 0, L.cz), hp: 0, maxHp: 0, dead: false, off: false };
     objs.push(L.obj);
+  }
+  // v288: 내가 지금 노리는 문 · 경찰차 · 금고는 빨갛게 (동료가 노리는 건 그대로)
+  const TARGET_RED = 0xff2a2a, lockRedMat = flatMat(TARGET_RED);
+  let redObj = null;
+  function tintTarget(o, on) {
+    if (!o) return;
+    if (o.kind === 'safe') { if (!o.dead) o.mesh.material.color.setHex(on ? TARGET_RED : 0x8a7a52); return; }
+    if (o.type === 'door') { o.mesh.material = on ? lockRedMat : lockMat; o.mesh.children[0].material = on ? lockRedMat : lockBarMat; return; }
+    if (o.type === 'car' && !o.car.wreck) o.car.g.children[0].material.color.setHex(on ? TARGET_RED : 0x24305a);   // 부서진 잔해 색은 건드리지 않는다
+  }
+  function drawMyTarget() {
+    let t = null;
+    if (isZombie(me)) {
+      if (me.objT && me.objF === objFrame && !me.objT.dead) t = me.objT;                       // 이번 걸음에 내가 때리러 가는 / 때리는 문·경찰차
+      else if (me.engaging && me.engaging.kind === 'safe' && !me.engaging.dead) t = me.engaging;   // 금고
+    }
+    if (t === redObj) return;
+    tintTarget(redObj, false); tintTarget(t, true); redObj = t;
   }
 
   const spaceOf = (x, z) => buildings.find((B) => x > B.x0 && x < B.x1 && z > B.z0 && z < B.z1) || null;   // 이 자리가 들어 있는 건물 (밖이면 null)
@@ -2280,6 +2310,7 @@
       B.open = eyes.some((z) => z.space === B);
       B.roof.visible = !B.open;
       if (B.bang) B.bang.visible = !B.open && !B.down;
+      if (B.qm) B.qm.visible = !B.open && !!B.safe && !B.safe.dead;   // v288: 금고 지붕 물음표 — 좀비가 들어가거나 금고가 깨지면 사라진다
       for (const D of B.doors) if (D.see) {   // v251: 밖에서 이 문을 보는 좀비가 있으면 문틈도 시야
         const ox = D.cx + D.nx * 0.4, oz = D.cz + D.nz * 0.4;
         D.see.visible = eyes.some((z) => !z.space && Math.hypot(z.foot.x - ox, z.foot.z - oz) <= z.sense && !blocked(z.foot.x, z.foot.z, ox, oz));
@@ -2371,6 +2402,7 @@
     }
     if (me.aim) { me.aim.mesh.add(aimRing); aimRing.visible = true; }
     else aimRing.visible = false;
+    drawMyTarget();                           // v288: 내가 노리는 문·경찰차·금고 = 빨강
   }
 
   function place() {
@@ -2773,8 +2805,9 @@
     }
     for (const B of buildings) B.safe = null;
     for (const S of stations) addSafe(S);     // 경찰서마다 금고 (v190)
-    const starter = buildings.filter((B) => B.block === START_BLOCK && !B.big);   // v262: 큰 건물 말고 작은 건물 3채 중 하나
-    addSafe(starter[Math.floor(Math.random() * starter.length)]);   // 첫 마을 건물 중 아무 데나 금고 (v230 · v232: 큰 건물 포함, 건물 안 자리도 랜덤)
+    const starter = buildings.filter((B) => B.block === START_BLOCK && !B.big);   // v262: 큰 건물 말고 작은 건물 3채
+    const real = starter[Math.floor(Math.random() * starter.length)];   // v288: 3채 전부 금고 — 진짜는 하나, 나머지 둘은 꽝
+    for (const B of starter) { addSafe(B); if (B !== real) B.safe.dud = true; }   // 첫 마을 건물 중 아무 데나 금고 (v230 · v232: 큰 건물 포함, 건물 안 자리도 랜덤)
     placeMe();
   }
   // 내 시작 자리 (v164): 마을 다섯 곳 중 아무 데나 (건물 밖, 벽에서 1.5칸 넘게).
@@ -3238,6 +3271,13 @@
     b.fixed = true; b.r = 1.5; b.halfH = 1.425 * 0.7; b.hp = b.maxHp = SAFE_HP;   // 부딪힘(콜라이더) 반지름도 같이 커진다 b.station = S;
     addHpBar(b, hpFoeMat);
     S.safe = b;
+    if (!S.station && !S.qm) {                // v288: 일반 건물 금고 — 지붕 가운데 물음표 (경찰서 느낌표처럼, 어둠 위)
+      S.qm = new THREE.Mesh(new THREE.PlaneGeometry(BANG_W * 1.5, BANG_H), new THREE.MeshBasicMaterial({ map: qmTex, transparent: true, depthTest: false, depthWrite: false }));
+      S.qm.quaternion.copy(camera.quaternion);
+      S.qm.position.set((S.x0 + S.x1) / 2, 0.06, (S.z0 + S.z1) / 2);
+      S.qm.renderOrder = -0.507;
+      scene.add(S.qm);
+    }
   }
   function nearSafe(z) {                      // 나랑 같은 공간, 인지거리 안의 안 부서진 금고
     for (const S of buildings) {
@@ -3311,6 +3351,7 @@
     }
   }
   function resetObjs() {                      // 새 판: 문은 다시 잠기고, 경찰차 사물은 지운다
+    tintTarget(redObj, false); redObj = null;   // v288
     for (let i = objs.length - 1; i >= 0; i--) {
       const o = objs[i];
       if (o.type === 'car') { if (o.hpBar) scene.remove(o.hpBar); objs.splice(i, 1); continue; }
@@ -3318,6 +3359,7 @@
       if (!walls.includes(o.seg)) walls.push(o.seg);
       if (!B.walls.includes(o.seg)) B.walls.push(o.seg);
       const k = B.doors.indexOf(o.L); if (k >= 0) B.doors.splice(k, 1);
+      o.mesh.material = lockMat; o.mesh.children[0].material = lockBarMat;   // v288: 빨갛던 문도 원래 색으로
       o.mesh.visible = true; o.dead = false; o.hp = o.maxHp = B.side ? POLICE_HP : OBJ_HP;   // v263: 경찰서 문 = 경찰차와 같은 체력   // 쪽문 체력 = 경찰과 같음 (v242), 경찰서 문 = 경찰의 5배
       o.off = false; if (o.fill) o.fill.visible = false; o.gap.visible = false; if (o.L.see) o.L.see.visible = false;
       if (!o.hpBar) addHpBar(o, hpFoeMat);
@@ -3578,6 +3620,7 @@
     b.dead = true;
     scene.remove(b.mesh); if (b.hpBar) scene.remove(b.hpBar);
     const i = bodies.indexOf(b); if (i >= 0) bodies.splice(i, 1);
+    if (b.dud) { pendingAward.push('dud'); return; }   // v288: 꽝 금고 — 아이템 없이 '힝~ 속았지' (아이템 순서는 안 쓴다)
     safesBroken++;
     if (safesBroken <= itemOrder.length) pendingAward.push(itemOrder[safesBroken - 1]);   // v276: 금고 4개 전부에서 하나씩 (깨는 순서대로)
   }
@@ -3617,6 +3660,18 @@
     });
     ov.addEventListener('pointermove', block);
     for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) ov.addEventListener(ev, (e) => { block(e); if (e.pointerId === pidH && !fired) cancel(); });
+  }
+  function showDud() {                        // v288: 꽝 금고 — 멈추고 '꽝!' + 놀리는 글, 조이스틱 자리 [확인]
+    acqOpen = true; paused = true; stopInput();
+    const ov = document.createElement('div');
+    ov.id = 'acq'; ov.className = 'dud';
+    ov.innerHTML = '<div class="big">꽝!</div><div class="t">힝~ 속았지. ㅋㅋㅋㅋ</div>';
+    stage.appendChild(ov);
+    tapOk(ov, '확인', () => {
+      if (ov.dataset.done) return;
+      ov.dataset.done = '1';
+      ov.remove(); acqOpen = false; paused = false; last = 0;
+    });
   }
   function showAward(kind) {
     acqOpen = true; paused = true; stopInput();
@@ -3954,7 +4009,7 @@
     if (!goalShown) { if (spawnFrames >= 3) showGoal(); return; }   // 판 시작 → 첫 장면을 몇 프레임 그린 뒤 목표 (v202)
     if (tutQueue.length) { showTut(tutQueue.shift()); return; }
     if (stationDown && !victoryOn) { showVictory(); return; }   // 경찰서 다 파괴 → 승리 (v201)
-    if (pendingAward.length) { showAward(pendingAward.shift()); return; }
+    if (pendingAward.length) { const k = pendingAward.shift(); if (k === 'dud') showDud(); else showAward(k); return; }   // v288: 꽝
     if (pendingLv > 0) { showLevelUp(); return; }
     if (!rankAnim && rankNext < RANKS.length && armyN >= RANKS[rankNext].n) showRank(RANKS[rankNext++]);   // v278: 동료 수 칭호 (판마다 처음 한 번씩만)
     if (stars > shownStars) playStar();
@@ -4033,15 +4088,17 @@
     const [ox, oy] = toScreen(mx, mz, W, H);
     smEyes.length = 0;                         // 테두리 계산에 쓸 좀비 시야
     for (const z of nearIn(zCells, mx, mz, R1 + R0 * 1.3, smBuf)) if (isZombie(z)) smEyes.push(z);
-    for (const S of stations) {
-      if (S.down) continue;                    // 부서진 경찰서는 안 알려 준다
+    const marks = [];                          // v288: 금고 있는 일반 건물도 경찰서처럼 알려 준다 (노란 물음표)
+    for (const S of stations) if (!S.down) marks.push([S, '!', '#b44ee6', 0.12]);   // 부서진 경찰서는 안 알려 준다
+    for (const B of buildings) if (!B.station && B.safe && !B.safe.dead) marks.push([B, '?', '#ffd34d', 0.3]);   // 깨진 금고(꽝 포함)는 안 알려 준다
+    for (const [S, ch, col, wk] of marks) {
       const px = Math.max(S.x0, Math.min(S.x1, mx)), pz = Math.max(S.z0, Math.min(S.z1, mz));   // 경찰서 바깥 테두리에서 나와 가장 가까운 점
       const dx = px - mx, dz = pz - mz, d = Math.hypot(dx, dz);
       if (d <= R0 || d > R1) continue;
       const k = 1 + (BANG_MAX - 1) * (R1 - d) / (R1 - R0), size = BANG_PX * k;
       const ux = dx / d, uz = dz / d, edge = Math.min(unionEdge(mx, mz, ux, uz), d);   // 나와 모든 좀비 시야를 합친 영역의 바깥 테두리 위 그 방향
       let [x, y] = toScreen(mx + ux * edge, mz + uz * edge, W, H);
-      const mx2 = size * 0.12 + 1, my2 = size * 0.32;   // 화면 가장자리에 걸치게 (v189 — 전엔 너무 안쪽): 느낌표가 가늘어서 양옆은 거의 붙이고, 위아래는 키의 1/3쯤
+      const mx2 = size * wk + 1, my2 = size * 0.32;   // 화면 가장자리에 걸치게 (v189 — 전엔 너무 안쪽): 느낌표가 가늘어서 양옆은 거의 붙이고, 위아래는 키의 1/3쯤
       if (x < mx2 || x > W - mx2 || y < my2 || y > H - my2) {   // 화면 밖 → 나에서 그쪽으로 그은 선이 화면 가장자리에 닿는 곳
         const vx = x - ox, vy = y - oy;
         let t = 1;
@@ -4051,8 +4108,8 @@
       }
       smellCtx.font = '900 ' + size.toFixed(1) + 'px ' + getComputedStyle(document.body).fontFamily;
       smellCtx.textAlign = 'center'; smellCtx.textBaseline = 'middle';
-      smellCtx.lineWidth = Math.max(3, size * 0.16); smellCtx.strokeStyle = 'rgba(0, 0, 0, 0.85)'; smellCtx.strokeText('!', x, y);
-      smellCtx.fillStyle = '#b44ee6'; smellCtx.fillText('!', x, y);
+      smellCtx.lineWidth = Math.max(3, size * 0.16); smellCtx.strokeStyle = 'rgba(0, 0, 0, 0.85)'; smellCtx.strokeText(ch, x, y);
+      smellCtx.fillStyle = col; smellCtx.fillText(ch, x, y);
     }
   }
   let last = 0;
