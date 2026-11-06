@@ -65,12 +65,13 @@
   .fly { position: absolute; z-index: 21; pointer-events: none; line-height: 1; transform: translate(-50%, -50%); }
   #stars .s { display: inline-block; width: 0.62em; font-weight: 900; text-align: center; font-size: 22px; }   /* v193: 수배 단계 = 보라 느낌표 */
   #stars .s.off { opacity: 0.3; }
+  #stars .cap { position: absolute; right: 100%; top: 6px; margin-right: 6px; font: 800 11px/1 var(--font); color: #e2c2fb; white-space: nowrap; }   /* v307: 느낌표 줄 왼쪽에 '경보단계' (느낌표 줄은 가운데 그대로) */
   #stars .lv { display: block; margin-top: 2px; min-height: 11px; font: 800 11px/1 var(--font); font-style: normal; color: #e2c2fb; }   /* 수배 단계 이름 (v194) */
   #stars .s.hit { animation: starhit 0.2s ease-out; }
   @keyframes starhit { 0% { transform: scale(1.9); } 60% { transform: scale(0.85); } 100% { transform: scale(1); } }
   #lvbox { position: absolute; top: calc(26px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); pointer-events: none; z-index: 4; }   /* 레벨·경험치 (v201) */
-  #lvbox .lv { font: 800 15px/1 var(--font); color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
-  #lvbox .bar { margin-top: 4px; width: 84px; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.18); overflow: hidden; }
+  #lvbox .lv { font: 800 12px/1 var(--font); color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }   /* v307: 15 → 12px */
+  #lvbox .bar { margin-top: 3px; width: 66px; height: 5px; border-radius: 3px;   /* v307: 84×6 → 66×5 */ background: rgba(255, 255, 255, 0.18); overflow: hidden; }
   #lvbox .bar i { display: block; height: 100%; width: 0; background: #7fd4ff; transition: width 0.25s; }
   #lvbox .xp { display: none; }   /* v283: 경험치 숫자 숨김 — 게이지 바만 */
   #lvbox.up .lv { animation: lvup 0.6s ease-out; }
@@ -212,7 +213,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v306</div>
+  <div id="ver">v307</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1687,7 +1688,7 @@
   const LEVEL_NAME = ['수상함', '난리남', '개판', '계엄', '데프콘'];   // 수배 단계 이름 (v194) — 느낌표 아래 작게
   const starSlots = () => starsEl.querySelectorAll('.s');
   function drawStars() {                      // 위 가운데: 수배 느낌표 — 하나씩 따로 (연출이 박히는 자리) + 아래에 지금 단계 이름
-    if (starSlots().length !== STAR_MAX) starsEl.innerHTML = '<span class="s">!</span>'.repeat(STAR_MAX) + '<i class="lv"></i>';   // v193: 별 → 느낌표
+    if (starSlots().length !== STAR_MAX) starsEl.innerHTML = '<b class="cap">경보단계</b>' + '<span class="s">!</span>'.repeat(STAR_MAX) + '<i class="lv"></i>';   // v307: 이름표   // v193: 별 → 느낌표
     const sl = starSlots();
     for (let i = 0; i < STAR_MAX; i++) sl[i].classList.toggle('off', i >= shownStars);
     starsEl.querySelector('.lv').textContent = shownStars ? LEVEL_NAME[shownStars - 1] : '';
