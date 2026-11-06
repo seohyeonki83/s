@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v358</div>
+  <div id="ver">v359</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2779,7 +2779,9 @@
     if (FORCE_FIRST_ITEM) {                   // v294: 시험용 — 변이 주사가 든 뽑기가 나올 때까지 다시 뽑고 맨 앞으로
       while (!itemOrder.includes(FORCE_FIRST_ITEM)) itemOrder = pickItems();
       itemOrder.splice(itemOrder.indexOf(FORCE_FIRST_ITEM), 1); itemOrder.unshift(FORCE_FIRST_ITEM);
-    }   // v276: 9종 중 랜덤 4개 — 금고 4개 전부에서 하나씩 (사용 아이템은 2개까지)
+    }
+    while (!itemOrder.includes('mutate')) itemOrder = pickItems();   // v359: 변이 주사는 첫째나 둘째 금고에서 꼭 나온다
+    { const i = itemOrder.indexOf('mutate'); itemOrder.splice(i, 1); itemOrder.splice(Math.random() < 0.5 ? 0 : 1, 0, 'mutate'); }   // v276: 9종 중 랜덤 4개 — 금고 4개 전부에서 하나씩 (사용 아이템은 2개까지)
     for (const k of Object.keys(owned)) delete owned[k];
     for (const el of Object.values(pBadges)) el.remove();
     for (const k of Object.keys(pBadges)) delete pBadges[k];
