@@ -205,7 +205,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v400 저격수 시험</div>
+  <div id="ver">v401 저격수 시험</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -916,6 +916,13 @@
     return b;
   }
 
+  const diamondMat = (() => {                 // v401: 저격수 머리 위 빨간 다이아몬드
+    const cv = document.createElement('canvas'); cv.width = cv.height = 64; const g = cv.getContext('2d');
+    g.beginPath(); g.moveTo(32, 4); g.lineTo(58, 32); g.lineTo(32, 60); g.lineTo(6, 32); g.closePath();
+    g.fillStyle = '#ff2a2a'; g.fill(); g.lineWidth = 5; g.strokeStyle = 'rgba(40, 0, 0, 0.85)'; g.stroke();
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+    return new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false, depthWrite: false });
+  })();
   function addCitizen(x, z, area, type) {
     const c = addBody('citizen', x, z);
     c.area = area;
@@ -940,7 +947,7 @@
     }
     c.sense = SENSE * rand(0.9, 1.1);
     c.sight = SIGHT * rand(0.9, 1.1);
-    if (c.sniper) { c.sight = SIGHT * 1.5; c.sense = c.sight; }   // v396: 저격수 시야 10.8칸 — 시야 안이면 경계 없이 바로 싸움
+    if (c.sniper) { c.sight = SIGHT * 1.5; c.sense = c.sight; c.mark = new THREE.Sprite(diamondMat); c.mark.scale.set(0.55, 0.55, 1); c.mark.renderOrder = UI; c.mark.visible = false; scene.add(c.mark); }   // v396: 저격수 시야 10.8칸 — 시야 안이면 경계 없이 바로 싸움
     c.flee = new THREE.Vector2();
     c.lastSeen = new THREE.Vector3();
     c.lastSeenSpeed = SPEED;
@@ -1339,7 +1346,7 @@
     if (tick) c.tick += TICK;
     const range = c.boostT > 0 ? c.boostSight : c.sight;   // 사거리 = 원래(1배) 시야 (v159)
     if (c.sniper && !c.space) {               // v396: 저격수 — 좀비가 회피거리 안이면 바로 도망 (건물 안에선 안 함)
-      const er = ATTACK * 1.2;                // v399: 회피거리 = 내 덮침 거리(3.24칸)의 1.2배 = 3.89칸
+      const er = ATTACK * 1.1;                // v401: 회피거리 = 내 덮침 거리(3.24칸)의 1.1배 = 3.56칸
       for (const z of nearIn(zCells, c.foot.x, c.foot.z, er, evBuf)) if (isZombie(z) && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= er) { c.state = 'evade'; c.foe = null; c.tick = 0; return; }
     }
     const far = (z) => Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
@@ -1357,7 +1364,7 @@
     const z = c.foe, d = far(z);
     if (d > range || fireBlocked(c.foot.x, c.foot.z, z.foot.x, z.foot.z)) { steer(c.vel, toward(c, z.foot.x, z.foot.z, copSpeed(c)), accelOf(c) * dt); return; }   // 사거리 밖이거나 벽에 막힘 → 다가간다 (v297: 열린 문 틈으로는 쏜다)
     steer(c.vel, wantV.set(0, 0), accelOf(c) * dt);
-    if (c.atkT <= 0) { shoot(c, z); c.atkT = HIT_EVERY * (c.sniper ? 3 : 1); }   // v396: 저격수는 3배 느리게
+    if (c.atkT <= 0) { shoot(c, z); c.atkT = HIT_EVERY * (c.sniper ? 4 : 1); }   // v401: 저격수는 경찰 공격 속도의 1/4 (3.1초마다)
   }
 
   function nearestZombie(c, range, clear = false) {   // clear: 공격선이 벽에 안 막힌 좀비만 (v297)
@@ -1980,6 +1987,7 @@
   }
 
   function makeZombie(b) {
+    if (b.mark) { scene.remove(b.mark); b.mark = null; }   // v401: 감염되면 저격수 다이아몬드 지움
     if (b.gooS) { b.mesh.remove(b.gooS); b.gooS = null; } b.goo = false;   // v275: 좀비가 되면 산성 덩어리는 사라진다
     if (b.scr) scr.inf[b.scr]++;              // 성장 구역 스폰이 감염됨 (v230)
     b.kind = 'ally';
@@ -2538,8 +2546,9 @@
         }
       }
       if (b.kind !== 'citizen') continue;
+      if (b.mark) { b.mark.visible = !hide; if (!hide) b.mark.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + 0.32); }   // v401: 저격수 다이아몬드
       if (b.stunT > 0 || b.stunShown) {       // 감전 중 깜빡임 (v190)
-        const base = COLOR[b.police ? 'police' : b.attacker ? 'attacker' : b.guard ? 'guard' : 'citizen'];
+        const base = COLOR[b.sniper ? 'sniper' : b.police ? 'police' : b.attacker ? 'attacker' : b.guard ? 'guard' : 'citizen'];
         b.stunShown = b.stunT > 0;
         b.mesh.material.color.setHex(b.stunShown && Math.floor(clock * 14) % 2 ? 0xc8f0ff : base);
       }
@@ -2803,6 +2812,7 @@
       if (b.icon) { scene.remove(b.icon); b.icon.material.dispose(); }
       if (b.gauge) scene.remove(b.gauge);
       if (b.hpBar) scene.remove(b.hpBar);
+      if (b.mark) scene.remove(b.mark);
       if (b.tracer) { scene.remove(b.tracer); b.tracer.material.dispose(); }
     }
     bodies.length = 0;
