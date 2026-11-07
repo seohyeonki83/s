@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v365</div>
+  <div id="ver">v366</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3035,7 +3035,7 @@
   // 경찰서 호출 (v157) — 바깥 경찰(처음 3명 + 출동해 나온 경찰)이 잃은 피를 다 더해서 경찰 체력의 1/10을 넘을 때마다 한 번.
   //   호출마다 안의 경찰 1명이 (v160) 다친 경찰 자리로 뛰어나와 바깥 경찰이 된다. 안에 좀비가 있거나 안 인원이 3명 이하면 무시.
   //   싸움이 끝나 할 일이 없어진 바깥 경찰은 3명만 남기고 다시 안으로 들어간다.
-  const CALL_HP = POLICE_HP / 10;
+  const CALL_HP = POLICE_HP / 10 * 2;   /* v366: 2배 (16.8 → 33.6) */
   // 경찰서 하나가 부서질 때마다 남은 경찰서의 고정 인원(안·바깥)이 20%씩 늘어난다 (v171) — 소수점은 확률로 (평균 20%)
   function reinforce() {
     for (const S of stations) {
