@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v375</div>
+  <div id="ver">v376</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1779,7 +1779,7 @@
   // HP 0이 된 좀비: 동료는 사라지고, 나는 '죽었어'를 띄우고 멈춘다
   function killZombie(z) {
     if (z === me && owned.revive && reviveT <= 0) {   // v375: 부활 — 체력 가득으로 되살아난다
-      reviveT = reviveCd(); me.hp = me.maxHp; refreshBadges();
+      reviveT = reviveCd(); me.hp = me.maxHp * reviveHp(); refreshBadges();
       for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; puff(me.foot.x, 0.5, me.foot.z, 0xff5a6e, 0.55, 1.5, 0.55, Math.cos(a) * 3.2, 0.5, Math.sin(a) * 3.2, 0.9); }
       toast('부활!');
       return;
@@ -3275,7 +3275,7 @@
       crowbar: ['건물과 사물에 입히는 피해가 늘어납니다.', '장비 강화가 오르면 피해가 더 늘어납니다.'],
       book: ['당신이 가진 모든 장비의 쿨타임이 감소합니다.', '장비 강화가 오를 때마다 3%씩 더 줄어듭니다.'],
       stim: ['10초마다 동료 하나에게 주사합니다 (변이 좀비 먼저, 없으면 내 근접 거리 안). 공격력·최대 체력이 오르고 체력이 가득 찹니다.', '장비 강화가 오르면 공격력·최대 체력이 10%씩 더 오릅니다.'],
-      revive: ['죽으면 체력이 가득 찬 채로 되살아납니다. 다시 쓰려면 쿨타임이 지나야 합니다.', '장비 강화가 오르면 쿨타임이 10초씩 줄어듭니다.'],
+      revive: ['죽으면 체력 30%로 되살아납니다. 다시 쓰려면 2분이 지나야 합니다.', '장비 강화가 오르면 되살아날 때 체력이 10%씩 더 찹니다.'],
       shoes: ['나의 이동 속도가 빨라집니다.', '장비 강화가 오르면 더 빨라집니다.'],
     }[kind];
     return `<div class="main">${t[0]}</div><div class="up"><span style="display:inline-block;width:1.15em;vertical-align:-0.22em;margin-right:4px">${IC.tool}</span>${t[1]}</div>`;   // v270: 설명 속 두뇌도 플랫 아이콘
@@ -3694,7 +3694,7 @@
       taser: () => `한 번에 ${1 + n}명 감전`, cash: () => `시야 ${(1.2 + 0.2 * n).toFixed(1)}배 · ${2 + 2 * n}대 버팀`,
       mutate: () => `주사 ${1 + n}개 · 변이 ${23 + 4 * n}초`, bomb: () => `쿨타임 ${Math.max(10, 40 - 3 * n)}초`,
       vest: () => `총알 피해 -${vestPct(n)}%`, crowbar: () => `건물·사물 피해 +${25 + 5 * n}%`, book: () => `쿨타임 -${Math.min(90, 7 + 3 * n)}%`,
-      revive: () => `1번 · 쿨타임 ${Math.max(20, 60 - 10 * n)}초`, stim: () => `10초마다 1명 · 공격력·체력 x${(1.5 + 0.1 * n).toFixed(1)}`, shoes: () => `이동 속도 +${10 + 3 * n}%`,
+      revive: () => `체력 ${Math.round(Math.min(1, 0.3 + 0.1 * n) * 100)}%로 부활 · 쿨타임 120초`, stim: () => `10초마다 1명 · 공격력·체력 x${(1.5 + 0.1 * n).toFixed(1)}`, shoes: () => `이동 속도 +${10 + 3 * n}%`,
     }[kind]();
   }
   const pBadges = {};                         // 왼쪽 아래 패시브 배지
@@ -3925,7 +3925,8 @@
     z.flame = new THREE.Sprite(flameMat); z.flame.scale.set(0.9, 0.9, 1); z.flame.renderOrder = UI; scene.add(z.flame); stimmed.push(z);
     for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; puff(z.foot.x, 0.4, z.foot.z, 0xffffff, 0.45, 1.2, 0.45, Math.cos(a) * 2.5, 0.4, Math.sin(a) * 2.5, 0.85); }
   }
-  const reviveCd = () => Math.max(20, 60 - 10 * up.brain);   // v375: 부활 쿨타임 60초, 장비 강화마다 −10초 (최소 20초)
+  const reviveCd = () => 120;   // v376: 부활 쿨타임 2분 고정
+  const reviveHp = (n = up.brain) => Math.min(1, 0.3 + 0.1 * n);   // v376: 부활 체력 30%, 장비 강화마다 +10%p
   let reviveT = 0;
   function itemsTick(dt) {
     if (reviveT > 0) { const p = Math.ceil(reviveT); reviveT = Math.max(0, reviveT - dt); if (Math.ceil(reviveT) !== p) refreshBadges(); }
