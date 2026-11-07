@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v393</div>
+  <div id="ver">v394</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -312,7 +312,7 @@
   //   출동 간격 = 별 1개 30초, 별 하나 늘 때마다 5초씩 짧게 (5개면 10초 — v118에 전부 5초씩 줄임). 한 번 출동 = 경찰 1~2명이 걸어서,
   //   별 2개부터는 50% 확률로 경찰차 한 대(1~2명 탑승). 가는 곳 = 마지막 사건(감염) 자리. 경찰서가 파괴되면 더는 안 나온다.
   const STAR_MAX = 5;
-  const STAR_BASE = 5, STAR_GROW = 2.6;   /* v393: 2.5 → 2.6배 → 누적 [5, 18, 52, 140, 368] */   // 별 사이에 더 필요한 감염 수가 2.5배씩 늘어난다: +5, +12.5, +31, +78, +195 (v135)
+  const STAR_BASE = 5, STAR_GROW = 2.5;   /* v394: 다시 2.5배 → 누적 [5, 18, 49, 127, 322] */   // 별 사이에 더 필요한 감염 수가 2.5배씩 늘어난다: +5, +12.5, +31, +78, +195 (v135)
   const STAR_AT = (() => { let t = 0, d = STAR_BASE; return Array.from({ length: 5 }, () => { t += d; d *= STAR_GROW; return Math.round(t); }); })();   // [5, 18, 49, 127, 322]
   const SORTIE_SENSE = 3, SORTIE_SENSE_T = 4;   // 경찰서 호출로 나온 경찰: 건물 밖으로 나오는 순간 인지거리·시야 3배 → 4초에 걸쳐 원래대로 (v158)
   const DROP_SENSE = 2, DROP_SENSE_T = 3;   // 경찰차에서 내린 경찰: 인지거리가 순간 2배 → 3초에 걸쳐 원래대로 (v114)
