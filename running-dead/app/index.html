@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v399</div>
+  <div id="ver">v400</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1344,7 +1344,7 @@
     if (z.mut === 'armor' || z.mode === 'bite') return;   // 덩치 · 무는(감염 중) 좀비는 안 밀린다
     if (z.mode === 'pounce') stopPounce(z);
     const kx = z.foot.x - c.foot.x, kz = z.foot.z - c.foot.z, kl = Math.hypot(kx, kz) || 1;
-    z.knockT = ARMOR_KT; z.knockVX = kx / kl * ARMOR_KB * 4; z.knockVZ = kz / kl * ARMOR_KB * 4; z.knockSlide = true;   // 밀리는 동안 이동 입력 무시 (updateZombie)
+    z.knockT = ARMOR_KT; z.knockVX = kx / kl * ARMOR_KB * 2; z.knockVZ = kz / kl * ARMOR_KB * 2;   /* v400: 덩치 넉백의 4배 → 2배 (약 0.9칸) */ z.knockSlide = true;   // 밀리는 동안 이동 입력 무시 (updateZombie)
     z.engaging = null; z.attacking = false;
   }
   function policeFight(c, dt) {
