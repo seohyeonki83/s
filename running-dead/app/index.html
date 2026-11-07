@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v386</div>
+  <div id="ver">v387</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3014,6 +3014,24 @@
     const starter = buildings.filter((B) => B.block === START_BLOCK && !B.big);   // v262: 큰 건물 말고 작은 건물 3채
     const real = starter[Math.floor(Math.random() * starter.length)];   // v288: 3채 전부 금고 — 진짜는 하나, 나머지 둘은 꽝
     for (const B of starter) { addSafe(B); if (B !== real) B.safe.dud = true; }
+    {   // v387: 첫 마을 말고 마을마다 노랑 2 · 빨강 2 · 주황 2를 지우고 그 자리에 경찰
+      const blockOf = (b) => { let k = 0, bd = Infinity; BLOCKS.forEach(([ox, oz], i) => { const d = Math.hypot(b.foot.x - ox, b.foot.z - oz); if (d < bd) { bd = d; k = i; } }); return k; };
+      BLOCKS.forEach((_, k) => {
+        if (k === START_BLOCK) return;
+        for (const kind of ['', 'attacker', 'guard']) {
+          const pool = bodies.filter((c) => c.kind === 'citizen' && !c.police && !c.station && (kind === '' ? !c.guard && !c.attacker : c[kind]) && blockOf(c) === k);
+          for (let n = 0; n < 2 && pool.length; n++) {
+            const c = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+            const x = c.foot.x, z = c.foot.z, area = c.area, home = c.home, sp = c.space;
+            for (const o of [c.mesh, c.icon, c.gauge, c.hpBar, c.tracer]) if (o) scene.remove(o);
+            bodies.splice(bodies.indexOf(c), 1);
+            const p = addCitizen(x, z, area, 'police');
+            p.area = area; if (home) p.home = home; if (sp) p.post = sp;
+            enterNormal(p);
+          }
+        }
+      });
+    }
     addSafe(buildings.find((B) => B.block === START_BLOCK && B.big));   // v331: 첫 마을 큰 건물에도 진짜 금고   // 첫 마을 건물 중 아무 데나 금고 (v230 · v232: 큰 건물 포함, 건물 안 자리도 랜덤)
     placeMe();
   }
