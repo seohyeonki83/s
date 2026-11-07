@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v370</div>
+  <div id="ver">v371</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3754,7 +3754,7 @@
   }
   function unmutate(z) {
     z.mut = null;
-    z.mesh.material.color.setHex(z.stim ? 0xffffff : COLOR.ally);   // v369: 스팀팩 맞은 동료는 흰색으로
+    z.mesh.material.color.setHex(COLOR.ally);   // v371: 흰색 없앰 (불꽃으로 표시)   // v369: 스팀팩 맞은 동료는 흰색으로
     z.r = BODY; delete z.halfH; z.mesh.scale.setScalar(1); z.force = 1;
     if (z.baseMaxHp) { z.maxHp = z.baseMaxHp; delete z.baseMaxHp; }   // v302: 덩치 3배 체력 원래대로
     z.speed = SPEED * legK();                 // v304: 속도도 원래대로
@@ -3911,7 +3911,6 @@
     const z = cand[Math.floor(Math.random() * cand.length)], k = stimMul();
     z.stim = true; z.stimK = k;
     z.maxHp *= k; if (z.baseMaxHp) z.baseMaxHp *= k; z.hp = z.maxHp;
-    if (!z.mut) z.mesh.material.color.setHex(0xffffff);
     z.flame = new THREE.Sprite(flameMat); z.flame.scale.set(0.9, 0.9, 1); z.flame.renderOrder = UI; scene.add(z.flame); stimmed.push(z);
     for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; puff(z.foot.x, 0.4, z.foot.z, 0xffffff, 0.45, 1.2, 0.45, Math.cos(a) * 2.5, 0.4, Math.sin(a) * 2.5, 0.85); }
   }
