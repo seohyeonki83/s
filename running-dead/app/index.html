@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v388</div>
+  <div id="ver">v389</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3026,7 +3026,7 @@
             for (const o of [c.mesh, c.icon, c.gauge, c.hpBar, c.tracer]) if (o) scene.remove(o);
             bodies.splice(bodies.indexOf(c), 1);
             const p = addCitizen(x, z, area, 'police');
-            p.area = area; if (home) p.home = home; if (sp) p.post = sp;
+            p.area = area; if (home) p.home = home; p.post = sp || area || square(x, z);   // v389: 늘 제자리 경찰 (자리 없는 경찰은 맵 어디서든 나를 쫓아온다)
             enterNormal(p);
           }
         }
