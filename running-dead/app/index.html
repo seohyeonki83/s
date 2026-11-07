@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v401</div>
+  <div id="ver">v402</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -931,10 +931,12 @@
     return b;
   }
 
-  const diamondMat = (() => {                 // v401: 저격수 머리 위 빨간 다이아몬드
+  const diamondMat = (() => {                 // v402: 저격수 머리 위 빨간 스코프 (조준경) 표시 — v401 다이아몬드 대신
     const cv = document.createElement('canvas'); cv.width = cv.height = 64; const g = cv.getContext('2d');
-    g.beginPath(); g.moveTo(32, 4); g.lineTo(58, 32); g.lineTo(32, 60); g.lineTo(6, 32); g.closePath();
-    g.fillStyle = '#ff2a2a'; g.fill(); g.lineWidth = 5; g.strokeStyle = 'rgba(40, 0, 0, 0.85)'; g.stroke();
+    const ring = (w, col) => { g.lineWidth = w; g.strokeStyle = col; g.beginPath(); g.arc(32, 32, 20, 0, Math.PI * 2); g.stroke();
+      g.beginPath(); g.moveTo(32, 3); g.lineTo(32, 22); g.moveTo(32, 42); g.lineTo(32, 61); g.moveTo(3, 32); g.lineTo(22, 32); g.moveTo(42, 32); g.lineTo(61, 32); g.stroke(); };
+    g.lineCap = 'round'; ring(9, 'rgba(40, 0, 0, 0.85)'); ring(5, '#ff2a2a');
+    g.fillStyle = '#ff2a2a'; g.beginPath(); g.arc(32, 32, 4, 0, Math.PI * 2); g.fill();
     const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
     return new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false, depthWrite: false });
   })();
@@ -962,7 +964,7 @@
     }
     c.sense = SENSE * rand(0.9, 1.1);
     c.sight = SIGHT * rand(0.9, 1.1);
-    if (c.sniper) { c.sight = SIGHT * 1.5; c.sense = c.sight; c.mark = new THREE.Sprite(diamondMat); c.mark.scale.set(0.55, 0.55, 1); c.mark.renderOrder = UI; c.mark.visible = false; scene.add(c.mark); }   // v396: 저격수 시야 10.8칸 — 시야 안이면 경계 없이 바로 싸움
+    if (c.sniper) { c.sight = SIGHT * 1.5; c.sense = c.sight; c.mark = new THREE.Sprite(diamondMat); c.mark.scale.set(0.62, 0.62, 1); c.mark.renderOrder = UI; c.mark.visible = false; scene.add(c.mark); }   // v396: 저격수 시야 10.8칸 — 시야 안이면 경계 없이 바로 싸움
     c.flee = new THREE.Vector2();
     c.lastSeen = new THREE.Vector3();
     c.lastSeenSpeed = SPEED;
