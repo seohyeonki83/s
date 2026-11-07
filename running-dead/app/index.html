@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v381</div>
+  <div id="ver">v382</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2871,7 +2871,7 @@
     BLOCKS.forEach(([ox, oz], k) => {
       if (k === START_BLOCK) {                // 첫 마을은 성장 구역 스폰 + 큰 건물 안 사람들만 (v230 · v232)
         const B = buildings.find((H) => H.block === k && H.big);
-        for (const t of [...BIG_PEOPLE, ...Array(6).fill('attacker'), ...Array(5).fill('guard')]) {   // v381: 빨강 8 → 7, 수비형 8 → 6   // v362: 빨강 10 → 8, 수비형 +2 — v361: 공격형 12 → 9   // v331: 큰 건물에 공격형 12 · 수비형 5 더
+        for (const t of [...BIG_PEOPLE, ...Array(6).fill('attacker'), ...Array(5).fill('guard'), '']) {   // v382: 노랑 +1   // v381: 빨강 8 → 7, 수비형 8 → 6   // v362: 빨강 10 → 8, 수비형 +2 — v361: 공격형 12 → 9   // v331: 큰 건물에 공격형 12 · 수비형 5 더
           let g = pickGoal(B);
           for (let i = 0; i < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); i++) g = pickGoal(B);
           const c = addCitizen(g.x, g.y, B, t);
