@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v367</div>
+  <div id="ver">v368</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2077,6 +2077,7 @@
     z.outT += dt;
     if (!z.recall && z.outT >= z.outLimit) {
       z.recall = true;
+      if (z.mut === 'armor') z.dimUntil = clock + 2;   // v368: 덩치는 복귀 명령 받으면 2초 동안 인지거리 1/3
       z.cmd = null;                           // 복귀 명령을 받으면 수행 중이던 명령은 끝난다 (v102)
       z.cmdWall = null;
       freshSlot(z);                           // 돌아갈 자리도 새로 뽑는다 — 들어온 뒤 타겟이 없으면 그 자리까지 온다
@@ -3761,12 +3762,13 @@
   function mutStep(z, dt) {                   // 변이 좀비: 덮치기·물기 없이 때리기(갑옷) / 토사물(히드라)만
     if (z.recall) { goSlot(z, dt); return; }
     let t = null, bd = Infinity;
-    for (const c of nearIn(cCells, z.foot.x, z.foot.z, z.sense, mutBuf)) {
+    const zs = z.sense * (z.mut === 'armor' && z.dimUntil > clock ? 1 / 3 : 1);   // v368
+    for (const c of nearIn(cCells, z.foot.x, z.foot.z, zs, mutBuf)) {
       if (c.kind !== 'citizen' || c.hp <= 0) continue;   // 체력 있는 인간만 (노랑·HP 0은 다른 동료 몫)
       const cross = c.space !== z.space;
       if (cross && !(linked(z.space, c.space) && zSeen(c))) continue;   // v296: 다른 공간은 좀비 편이 보고 있을 때만
       const d = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z);
-      if (d < bd && d <= z.sense && (cross || !blocked(z.foot.x, z.foot.z, c.foot.x, c.foot.z) || zSeen(c))) { bd = d; t = c; }
+      if (d < bd && d <= zs && (cross || !blocked(z.foot.x, z.foot.z, c.foot.x, c.foot.z) || zSeen(c))) { bd = d; t = c; }
     }
     if (z.mut === 'armor') {
       if (!t) { const ob = nearObj(z), sf = nearSafe(z); if (ob) fightObj(z, ob, dt); else if (sf) fight(z, sf, dt); else allyIdle(z, dt); return; }   // v353: 덩치도 금고
