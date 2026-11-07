@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v377</div>
+  <div id="ver">v378</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1738,16 +1738,16 @@
   const ARMOR_KB = 2.3, ARMOR_KT = 0.4;       // v295: 덩치에 맞으면 처음 이 속도(칸/초)로 밀려나 이 시간 동안 점점 느려진다 — v300: 거리 2배, v301: 0.32 → 0.46칸 (1.5배, 2 → 2.3칸/초 · 0.25 → 0.4초)
   function landHit(a, v, dmg = DAMAGE) {
     if (a && a.stim) dmg *= a.stimK || 1.5;   // v369 · v370: 스팀팩 (강화마다 +10%p)
-    if (v.kind === 'obj' && a.mut === 'armor') dmg *= 4;   // v344: 2 → 4배   // v295: 덩치 — 문·경찰차 피해 2배
+    if ((v.kind === 'obj' || v.kind === 'safe') && a.mut === 'armor') dmg *= 4;   // v378: 금고도   // v344: 2 → 4배   // v295: 덩치 — 문·경찰차 피해 2배
     if ((v.kind === 'obj' || v.kind === 'safe') && a === me && owned.crowbar) dmg *= 1.25 + 0.05 * up.brain;   // v275: 빠루 — 내가 건물·사물에 입히는 피해
     if (isZombie(v) && v.mut) dmg *= v.mut === 'armor' ? (TEST_ARMOR ? 0 : 0.2) : 0.9;   // v275: 갑옷좀비 받는 피해 80% 줄임, 히드라 10% 줄임
     if (a.mut === 'armor' && v.kind === 'citizen' && !a.splashing) {   // v275: 갑옷좀비 — 앞쪽 80° 부채꼴, 근접 거리 1.2배 안 다른 적도 30%
-      const R = (MELEE + (a.r - BODY)) * 1.2, fx = v.foot.x - a.foot.x, fz = v.foot.z - a.foot.z, fl = Math.hypot(fx, fz) || 1;
+      const R = (MELEE + (a.r - BODY)) * 1.2 * 2, fx = v.foot.x - a.foot.x, fz = v.foot.z - a.foot.z, fl = Math.hypot(fx, fz) || 1;
       a.splashing = true;
       for (const c of bodies) {
         if (c === v || c.kind !== 'citizen' || c.hp <= 0 || c.space !== a.space) continue;
         const dx = c.foot.x - a.foot.x, dz = c.foot.z - a.foot.z, d = Math.hypot(dx, dz);
-        if (d > R || d < 1e-3 || (dx * fx + dz * fz) / (d * fl) < Math.cos(40 * Math.PI / 180)) continue;
+        if (d > R || d < 1e-3 || (dx * fx + dz * fz) / (d * fl) < Math.cos(45 * Math.PI / 180)) continue;   // v378: 앞쪽 90° · 거리 2배
         landHit(a, c, dmg * 0.3);
       }
       a.splashing = false;
