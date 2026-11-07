@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v359</div>
+  <div id="ver">v360</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1822,6 +1822,7 @@
     if (d > ATTACK_HOLD) z.attacking = false; // 상대가 1.5칸 밖 = 공격 중 아님 (다가가는 중)
     if (d > MELEE + (c.kind === 'safe' ? c.r : 0) || c.space !== z.space) { steer(z.vel, toward(z, c.foot.x, c.foot.z, z.speed), ACCEL * dt); return; }   // v296: 다른 공간이면 문으로 들어가서 때린다   // 큰 금고는 겉면까지 닿으면 때린다 (v196)
     steer(z.vel, wantV.set(0, 0), ACCEL * dt);
+    if (z === me && c.kind === 'safe') c.hotF = objFrame;   // v360: 내가 금고를 때리는 중
     if (z.atkT <= 0) { strike(z, c); z.atkT = HIT_EVERY; z.attacking = true; }   // 휘두르는 순간부터 공격 중
   }
 
@@ -3502,7 +3503,7 @@
     for (const S of buildings) {
       const b = S.safe;
       if (!b || b.dead || b.space !== z.space) continue;
-      if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) <= z.sense) return b;
+      if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) - (z === me ? 0 : b.r) <= (z === me || hotObj(b) ? z.sense : OBJ_SEE)) return b;   // v360: 동료는 경찰차처럼 붙어야 알아챈다 (내가 때리는 중이면 인지거리)
     }
     return null;
   }
@@ -3525,6 +3526,7 @@
     return Math.hypot(z.foot.x - p.x, z.foot.z - p.y);
   }
   let objFrame = 0;
+  const hotObj = (o) => o.hotF !== undefined && o.hotF >= objFrame - 1;   // v360: 내가 지금 때리고 있는 사물 — 동료가 보통 인지거리로 알아챈다 (멈추면 바로 원래대로)
   const objCrowd = new Map();
   function nearObj(z) {
     let best = null, bd = Infinity, any = null, ad = Infinity;
@@ -3532,7 +3534,7 @@
       if (o.dead || o.off) continue;
       if (o.type === 'car' ? z.space : (z.space && z.space !== o.B)) continue;   // 차는 밖에서만, 문은 그 경찰서 밖이나 안에서
       const g = objGap(o, z);
-      if (g > (z === me ? z.sense : OBJ_SEE) || (g >= bd && g >= ad)) continue;   // v241: 나는 다른 타겟과 똑같이 내 인지거리로 알아챈다 (동료만 1.5배 근접 거리)
+      if (g > (z === me || hotObj(o) ? z.sense : OBJ_SEE) || (g >= bd && g >= ad)) continue;   // v360: 내가 때리는 중이면 동료도 인지거리로   // v241: 나는 다른 타겟과 똑같이 내 인지거리로 알아챈다 (동료만 1.5배 근접 거리)
       const [px, pz] = objPoint(o, z);
       if (blocked(z.foot.x, z.foot.z, px, pz)) continue;
       if (g < ad) { ad = g; any = o; }
@@ -3547,6 +3549,7 @@
     if (z.objC !== o) { if (z.objC) objCrowd.set(z.objC, objCrowd.get(z.objC) - 1); objCrowd.set(o, (objCrowd.get(o) || 0) + 1); z.objC = o; }   // 같은 걸음에 고르는 좀비끼리도 바로 반영 (몰렸다 흩어졌다 안 하게)
     if (objGap(o, z) > MELEE - RADIUS + Math.max(0, (z.r || BODY) - BODY)) { const [px, pz] = objPoint(o, z); steer(z.vel, toward(z, px, pz, z.speed), ACCEL * dt); return; }   // v275: 커진 몸은 그만큼 멀리서 닿는다
     steer(z.vel, wantV.set(0, 0), ACCEL * dt);
+    if (z === me) o.hotF = objFrame;   // v360: 내가 붙어서 때리는 중
     if (z.atkT <= 0) { strike(z, o); z.atkT = HIT_EVERY; z.attacking = true; }
   }
   function breakObj(o) {
