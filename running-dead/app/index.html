@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v373</div>
+  <div id="ver">v374</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3085,13 +3085,14 @@
       c.sense = c.boostSense * SORTIE_SENSE;
       c.sight = c.boostSight * SORTIE_SENSE;
     }
-    while (S.hurt >= CALL_HP && !(clock - S.callAt < 3)) {   // v373: 출동은 최소 3초 간격 (데미지는 쌓아 둔다)
+    if (clock - S.callAt < 3 || S.open) S.hurt = 0;   // v374: 출동 뒤 3초 안에 받은 데미지 · 안이 드러난 동안 받은 데미지는 버린다
+    while (S.hurt >= CALL_HP) {   // v373: 출동은 최소 3초 간격
       S.hurt -= CALL_HP;
       if (S.residents.length <= 5 || zombies.some((z) => z.space === S)) continue;   // v365: 안에 5명은 늘 남는다 (3 → 5)   // 호출 무시
       const n = 1;   // 호출 한 번에 한 명 (v160 — 전엔 1~2명)
       for (let i = 0; i < n; i++) {
         const c = S.residents.splice(Math.floor(Math.random() * S.residents.length), 1)[0];
-        S.outer.push(c); S.callAt = clock;
+        S.outer.push(c); S.callAt = clock; S.hurt = 0;   // v374: 한 번에 한 명, 남은 데미지는 버림
         c.area = S.ringA;
         c.sortie = true;
         const D = S.front, a = rand(-1, 1);
