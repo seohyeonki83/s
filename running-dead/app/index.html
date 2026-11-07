@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v379</div>
+  <div id="ver">v380</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3791,7 +3791,16 @@
       if (z.atkT <= 0) { strike(z, t); z.atkT = HIT_EVERY; z.attacking = true; }
       return;
     }
-    if (!t) { const ob = nearObj(z), sf = nearSafe(z); if (ob) fightObj(z, ob, dt); else if (sf) fight(z, sf, dt); else allyIdle(z, dt); return; }   // v375: 히드라도 사물·금고를 때린다
+    if (!t) {                                 // v380: 히드라는 사물·금고도 원거리로 (토사물)
+      const ob = nearObj(z), sf = ob ? null : nearSafe(z), o = ob || sf;
+      if (!o) { allyIdle(z, dt); return; }
+      const g = ob ? objGap(ob, z) : Math.hypot(sf.foot.x - z.foot.x, sf.foot.z - z.foot.z) - sf.r;
+      if (g > z.sense * 0.91) { steer(z.vel, toward(z, o.foot.x, o.foot.z, z.speed), ACCEL * dt); return; }
+      steer(z.vel, wantV.set(0, 0), ACCEL * dt);
+      if (ob) { z.objT = ob; z.objF = objFrame; }
+      if (z.atkT <= 0) { spit(z, o); z.atkT = HIT_EVERY; }
+      return;
+    }
     if (bd > z.sense * 0.91 || fireBlocked(z.foot.x, z.foot.z, t.foot.x, t.foot.z)) { steer(z.vel, toward(z, t.foot.x, t.foot.z, z.speed), ACCEL * dt); return; }   // 사거리 = 인지거리의 91% (v301: 70%에서 +30%) — v297: 벽에 막히면 다가간다
     steer(z.vel, wantV.set(0, 0), ACCEL * dt);
     if (z.atkT <= 0) { spit(z, t); z.atkT = HIT_EVERY; }   // 공격 속도는 같다
@@ -3810,8 +3819,9 @@
       const p = spits[i];
       sV2.copy(p.t.foot).addScaledVector(UP, RADIUS).sub(p.s.position);
       const d = sV2.length(), step = 13 * dt;
-      if (d <= step || p.t.kind !== 'citizen' || !bodies.includes(p.t)) {
-        if (p.t.kind === 'citizen' && bodies.includes(p.t)) { landHit(p.z, p.t, p.dmg); for (let k = 0; k < 4; k++) { const a = Math.random() * 6.28; puff(p.t.foot.x, 0.5, p.t.foot.z, 0x6fd23f, 0.2, 0.6, 0.35, Math.cos(a) * 1.5, 0.5, Math.sin(a) * 1.5, 0.9); } }
+      const live = p.t.kind === 'citizen' ? bodies.includes(p.t) : (p.t.kind === 'obj' || p.t.kind === 'safe') && !p.t.dead;   // v380: 사물·금고도 맞힌다
+      if (d <= step || !live) {
+        if (live) { landHit(p.z, p.t, p.dmg); for (let k = 0; k < 4; k++) { const a = Math.random() * 6.28; puff(p.t.foot.x, 0.5, p.t.foot.z, 0x6fd23f, 0.2, 0.6, 0.35, Math.cos(a) * 1.5, 0.5, Math.sin(a) * 1.5, 0.9); } }
         scene.remove(p.s); p.s.material.dispose(); spits.splice(i, 1);
         continue;
       }
