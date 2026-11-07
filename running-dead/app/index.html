@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v363</div>
+  <div id="ver">v364</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2988,7 +2988,7 @@
       const cx = (S.x0 + S.x1) / 2;
       const ring = { x0: S.x0 - 5, z0: S.z0 - 5, x1: S.x1 + 5, z1: S.z1 + 5 };   // 둘레 (건물 안은 pickGoal이 뺀다)
       const front = { x0: cx - 6, z0: S.z1 + 1.5, x1: cx + 6, z1: S.z1 + 8 };    // 앞마당 = 문 앞(남쪽)
-      S.ringA = ring; S.frontA = front; S.outer = []; S.members = []; S.hurt = 0; S.inT = STATION_IN; S.refillAt = undefined; S.outT = STATION_OUT_MIN; S.outMin = STATION_OUT_MIN;
+      S.ringA = ring; S.frontA = front; S.outer = []; S.members = []; S.hurt = 0; S.inT = STATION_IN; S.refillLeft = REFILL_T; S.refillClk = 0; S.outT = STATION_OUT_MIN; S.outMin = STATION_OUT_MIN;
       for (let i = 0; i < STATION_IN + STATION_OUT + STATION_FRONT; i++) {
         const inside = i < STATION_IN, area = inside ? S : i < STATION_IN + STATION_OUT ? ring : front;
         let g = pickGoal(area);
@@ -3055,21 +3055,22 @@
       }
     }
   }
+  const REFILL_T = 7;                         // v364: 경찰서 안 인원 복구 간격 (10 → 7초)
   function stationTick(S) {
     const alive = (c) => c.kind === 'citizen' && bodies.includes(c);
     S.outer = S.outer.filter(alive);
     S.residents = S.residents.filter(alive);
-    if (!S.down && S.residents.length < S.inT && !zombies.some((z) => z.space === S)) {   // v363: 안 인원이 고정 인원보다 적으면 10초에 한 명씩 복구 (안에 좀비가 있거나 파괴되면 멈춤)
-      if (S.refillAt === undefined) S.refillAt = clock + 10;
-      else if (clock >= S.refillAt) {
-        S.refillAt = clock + 10;
+    { const d = clock - S.refillClk; S.refillClk = clock;   // v364: 안 인원이 정원보다 적으면 7초에 한 명씩 복구 — 안에 좀비가 있는 동안은 쿨타임이 멈춘다 (리셋 아님)
+      if (S.down || S.residents.length >= S.inT) S.refillLeft = REFILL_T;   // 정원이면 다음 빈자리 때 처음부터
+      else if (!zombies.some((z) => z.space === S) && d > 0 && d < 1 && (S.refillLeft -= d) <= 0) {
+        S.refillLeft += REFILL_T;
         let g = pickGoal(S);
         for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(S);
         const c = addCitizen(g.x, g.y, S, 'police');
         c.station = S; c.area = S; enterNormal(c);
         S.residents.push(c); S.members.push(c); c.lastHp = c.hp;
       }
-    } else S.refillAt = undefined;
+    }
     for (const c of S.outer) {
       if (c.hp < c.lastHp) S.hurt += c.lastHp - c.hp;
       c.lastHp = c.hp;
