@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v364</div>
+  <div id="ver">v365</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3055,7 +3055,7 @@
       }
     }
   }
-  const REFILL_T = 7;                         // v364: 경찰서 안 인원 복구 간격 (10 → 7초)
+  const REFILL_T = 2.5;                       // v365: 7 → 2.5초 — v364: 경찰서 안 인원 복구 간격
   function stationTick(S) {
     const alive = (c) => c.kind === 'citizen' && bodies.includes(c);
     S.outer = S.outer.filter(alive);
@@ -3085,7 +3085,7 @@
     }
     while (S.hurt >= CALL_HP) {
       S.hurt -= CALL_HP;
-      if (S.residents.length <= 3 || zombies.some((z) => z.space === S)) continue;   // 호출 무시
+      if (S.residents.length <= 5 || zombies.some((z) => z.space === S)) continue;   // v365: 안에 5명은 늘 남는다 (3 → 5)   // 호출 무시
       const n = 1;   // 호출 한 번에 한 명 (v160 — 전엔 1~2명)
       for (let i = 0; i < n; i++) {
         const c = S.residents.splice(Math.floor(Math.random() * S.residents.length), 1)[0];
