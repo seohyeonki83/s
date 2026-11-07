@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v372</div>
+  <div id="ver">v373</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2990,7 +2990,7 @@
       const cx = (S.x0 + S.x1) / 2;
       const ring = { x0: S.x0 - 5, z0: S.z0 - 5, x1: S.x1 + 5, z1: S.z1 + 5 };   // 둘레 (건물 안은 pickGoal이 뺀다)
       const front = { x0: cx - 6, z0: S.z1 + 1.5, x1: cx + 6, z1: S.z1 + 8 };    // 앞마당 = 문 앞(남쪽)
-      S.ringA = ring; S.frontA = front; S.outer = []; S.members = []; S.hurt = 0; S.inT = STATION_IN; S.refillLeft = REFILL_T; S.refillClk = 0; S.outT = STATION_OUT_MIN; S.outMin = STATION_OUT_MIN;
+      S.ringA = ring; S.frontA = front; S.outer = []; S.members = []; S.hurt = 0; S.inT = STATION_IN; S.callAt = -1e9; S.refillLeft = REFILL_T; S.refillClk = 0; S.outT = STATION_OUT_MIN; S.outMin = STATION_OUT_MIN;
       for (let i = 0; i < STATION_IN + STATION_OUT + STATION_FRONT; i++) {
         const inside = i < STATION_IN, area = inside ? S : i < STATION_IN + STATION_OUT ? ring : front;
         let g = pickGoal(area);
@@ -3085,13 +3085,13 @@
       c.sense = c.boostSense * SORTIE_SENSE;
       c.sight = c.boostSight * SORTIE_SENSE;
     }
-    while (S.hurt >= CALL_HP) {
+    while (S.hurt >= CALL_HP && !(clock - S.callAt < 3)) {   // v373: 출동은 최소 3초 간격 (데미지는 쌓아 둔다)
       S.hurt -= CALL_HP;
       if (S.residents.length <= 5 || zombies.some((z) => z.space === S)) continue;   // v365: 안에 5명은 늘 남는다 (3 → 5)   // 호출 무시
       const n = 1;   // 호출 한 번에 한 명 (v160 — 전엔 1~2명)
       for (let i = 0; i < n; i++) {
         const c = S.residents.splice(Math.floor(Math.random() * S.residents.length), 1)[0];
-        S.outer.push(c);
+        S.outer.push(c); S.callAt = clock;
         c.area = S.ringA;
         c.sortie = true;
         const D = S.front, a = rand(-1, 1);
