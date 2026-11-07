@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v360</div>
+  <div id="ver">v361</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2863,13 +2863,15 @@
     BLOCKS.forEach(([ox, oz], k) => {
       if (k === START_BLOCK) {                // 첫 마을은 성장 구역 스폰 + 큰 건물 안 사람들만 (v230 · v232)
         const B = buildings.find((H) => H.block === k && H.big);
-        for (const t of [...BIG_PEOPLE, ...Array(12).fill('attacker'), ...Array(5).fill('guard')]) {   // v331: 큰 건물에 공격형 12 · 수비형 5 더
+        for (const t of [...BIG_PEOPLE, ...Array(9).fill('attacker'), ...Array(5).fill('guard')]) {   // v361: 공격형 12 → 9 (안에 빨강 10명)   // v331: 큰 건물에 공격형 12 · 수비형 5 더
           let g = pickGoal(B);
           for (let i = 0; i < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); i++) g = pickGoal(B);
           const c = addCitizen(g.x, g.y, B, t);
           c.home = B; c.area = B;
           if (t === 'police') { c.post = B; enterNormal(c); }   // v233: 큰 건물 짭새는 제자리 경찰 — 안 나가서 주인공을 쫓지 않는다 (전엔 시작하자마자 3마리가 쫓아옴)
         }
+        { const L = B.locks.find((o) => o.front);   // v361: 큰 건물 정문 바로 앞에 노랑 2명 고정 (그 자리 둘레만)
+          if (L) for (const sg of [-1, 1]) { const x = L.cx + L.tx * sg * 1.2 + L.nx * 1.6, z = L.cz + L.tz * sg * 1.2 + L.nz * 1.6, area = { x0: x - 0.4, z0: z - 0.4, x1: x + 0.4, z1: z + 0.4 }, c = addCitizen(x, z, area, ''); c.area = area; } }
         const small = buildings.find((H) => H.block === k && !H.big && H.local === 2);   // v261: 첫 마을 가장 작은 건물 안에 좃밥 2
         for (let i = 0; i < 2; i++) {
           let g = pickGoal(small);
