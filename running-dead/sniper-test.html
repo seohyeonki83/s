@@ -205,7 +205,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v403 저격수 시험</div>
+  <div id="ver">v404 저격수 시험</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -949,7 +949,7 @@
     }
     c.sense = SENSE * rand(0.9, 1.1);
     c.sight = SIGHT * rand(0.9, 1.1);
-    if (c.sniper) { c.sight = SIGHT * 1.5; c.sense = c.sight; c.mark = new THREE.Sprite(diamondMat); c.mark.scale.set(0.62, 0.62, 1); c.mark.renderOrder = UI; c.mark.visible = false; scene.add(c.mark); }   // v396: 저격수 시야 10.8칸 — 시야 안이면 경계 없이 바로 싸움
+    if (c.sniper) { c.sight = SIGHT * 1.25; c.sense = c.sight;   /* v404: 경찰과 차이를 절반으로 (1.5 → 1.25배, 9칸) */ c.mark = new THREE.Sprite(diamondMat); c.mark.scale.set(0.62, 0.62, 1); c.mark.renderOrder = UI; c.mark.visible = false; scene.add(c.mark); }   // v396: 저격수 시야 10.8칸 — 시야 안이면 경계 없이 바로 싸움
     c.flee = new THREE.Vector2();
     c.lastSeen = new THREE.Vector3();
     c.lastSeenSpeed = SPEED;
