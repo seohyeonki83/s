@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v436</div>
+  <div id="ver">v437</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1362,7 +1362,7 @@
   //   HP가 0이 돼도 도망가지 않고 계속 쏜다 (덮칠 수는 있다). 시야 안에 좀비가 없으면 싸움 끝 → 다음 사건 자리로, 없으면 배회.
   const SNIPER_TRAIL = 2, SNIPER_THICK = 2.2;   // v408: 저격수 총알 선 — 맞은 자리 너머로 2칸 더, 굵기 2.2배
   const SNIPER_SPEED = PANIC_SPEED * POLICE_PACE;   // v435: 저격수 속도는 군인과 완전히 같음 (3.06) — 다른 건 회피할 때(4.2)뿐
-  const SNIPER_EVADE = MY_SPEED;              // v432: 저격수 회피 속도 = 내 처음 속도 (4.2)
+  const SNIPER_EVADE = PANIC_SPEED * POLICE_PACE;   // v437: 회피할 때도 군인과 같은 속도 (3.06) — 저격수 속도는 하나로 통일 (v432: 4.2였음)
   const copSpeed = (c) => c.sniper ? SNIPER_SPEED : PANIC_SPEED * POLICE_PACE;
   const sniperEvadeR = () => ATTACK * 1.1 * 1.05 * 1.1 * 1.1 * rand(0.85, 1.15);   /* v433: 10% 더 → 4.53칸 ±15% (3.85 ~ 5.21칸) */   /* v418: 10% 더 → 4.12칸 ±15% (3.5 ~ 4.7칸) */   // v409: 5% 늘림 → 3.74칸 ±15% (3.2 ~ 4.3칸) — v407: 3.56칸 ±15%
   const accelOf = (c) => c.sniper ? ACCEL * 2 : ACCEL;   /* v426: 다시 2배 (최고 속도까지 약 0.12초) */   // v420: 저격수 즉시 최고 속도 — 무한대는 시간 0인 프레임에서 계산이 깨져서(NaN) 아주 큰 값으로 (v419)
@@ -1413,7 +1413,7 @@
     if (!m) { c.outT = 0; return false; }
     const lim = c.inRange ? GUARD_DOMAIN_FIGHT : GUARD_DOMAIN;
     if (Math.hypot(c.foot.x - m.foot.x, c.foot.z - m.foot.z) <= lim) { c.outT = 0; return false; }
-    if (!c.outT) c.outLimit = rand(0, 0.25);   // v436: 군인 복귀 딜레이 0~0.25초 (v426: 0.25~0.5초)
+    if (!c.outT) c.outLimit = rand(0.2, 1);   // v437: 군인 복귀 딜레이 0.2~1초 (v436: 0~0.25초)
     c.outT = (c.outT || 0) + dt;
     if (c.outT < c.outLimit) return false;
     c.outT = 0; c.recall = true; c.foe = null; c.inRange = false; enterNormal(c);
