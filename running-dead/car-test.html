@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v488 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v489 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3304,7 +3304,7 @@
     addSafe(buildings.find((B) => B.block === START_BLOCK && B.big));   // v331: 첫 마을 큰 건물에도 진짜 금고   // 첫 마을 건물 중 아무 데나 금고 (v230 · v232: 큰 건물 포함, 건물 안 자리도 랜덤)
     if (!TEST_MAP) {                          // v484: 첫 마을 말고 맵 전체에 노랑 4 · 주황 4 · 빨강 2를 랜덤 자리에 (밖 길거리)
       const Z = scrZone(), near = (x, z) => { let k = 0, bd = Infinity; BLOCKS.forEach(([ox, oz], i) => { const d = Math.hypot(ox - x, oz - z); if (d < bd) { bd = d; k = i; } }); return k; };
-      for (const t of ['', '', '', '', 'guard', 'guard', 'guard', 'guard', 'attacker', 'attacker']) {
+      for (const t of ['', '', '', '', '', '', '', '', 'guard', 'guard', 'guard', 'guard', 'attacker', 'attacker']) {   // v489: 밖 노랑 4 → 8
         for (let n = 0; n < 300; n++) {
           const x = rand(MM.x0 + 2, MM.x1 - 2), z = rand(MM.z0 + 2, MM.z1 - 2);
           if (near(x, z) === START_BLOCK || (x > Z.x0 && x < Z.x1 && z > Z.z0 && z < Z.z1) || spaceOf(x, z) || !freeSpot(x, z, null)) continue;
@@ -3317,7 +3317,7 @@
         const c = addCitizen(g.x, g.y, S, ''); c.home = S; c.area = S;
       }
       const homes = buildings.filter((H) => H.block !== START_BLOCK && !H.station);   // v485: 첫 마을 말고 건물 안에도 노랑 4 (경찰서 제외)
-      for (let i = 0; i < 4 && homes.length; i++) {
+      for (let i = 0; i < 7 && homes.length; i++) {   // v489: 건물 안 노랑 4 → 7
         const H = homes[Math.floor(Math.random() * homes.length)];
         let g = pickGoal(H);
         for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(H);
