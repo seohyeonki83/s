@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v473</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v474</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -318,7 +318,7 @@
   const STAR_MAX = 5;
   const STAR_BASE = 10, STAR_GROW = 2.1;   /* v395: 10명 시작 · 2.1배 → 누적 [10, 31, 75, 168, 362] */   // 별 사이에 더 필요한 감염 수가 2.5배씩 늘어난다: +5, +12.5, +31, +78, +195 (v135)
   const STAR_AT = (() => { let t = 0, d = STAR_BASE; return Array.from({ length: 5 }, () => { t += d; d *= STAR_GROW; return Math.round(t); }); })();   // [5, 18, 49, 127, 322]
-  const TEAM_COMP = { 2: ['sniper', 'soldier', 'soldier', 'soldier'], 1: ['sniper', 'soldier', 'soldier', 'sniper', 'soldier', 'soldier'] };   /* v458: 분대마다 군인 한 명씩 줄임 — 1단계 저격수 1 + 군인 2 (×2), 2단계 군인차 한 대에 저격수 1 + 군인 3 */   /* v426: 1팀 = 저격수 2 + 군인 6 (저격수 하나에 군인 셋씩) */   /* v418: 1팀 = 저격수 2 + 군인 4 (저격수 하나에 군인 둘씩) */   // v410: 군인팀 구성 — 1팀 = 군인 2 + 저격수 1 (2~4팀은 아직 미정 → 그 차례엔 안 나온다)
+  const TEAM_COMP = { 2: ['sniper', 'soldier', 'soldier', 'soldier', 'sniper', 'soldier', 'soldier', 'soldier'], 1: ['sniper', 'soldier', 'soldier', 'sniper', 'soldier', 'soldier', 'sniper', 'soldier', 'soldier'] };   /* v474: 1팀 = 분대 셋 (저격수 1 + 군인 2씩, 10초 간격), 군인차 한 대 = 저격수 2 + 군인 3씩 */   /* v458: 분대마다 군인 한 명씩 줄임 — 1단계 저격수 1 + 군인 2 (×2), 2단계 군인차 한 대에 저격수 1 + 군인 3 */   /* v426: 1팀 = 저격수 2 + 군인 6 (저격수 하나에 군인 셋씩) */   /* v418: 1팀 = 저격수 2 + 군인 4 (저격수 하나에 군인 둘씩) */   // v410: 군인팀 구성 — 1팀 = 군인 2 + 저격수 1 (2~4팀은 아직 미정 → 그 차례엔 안 나온다)
   const TEAM_EVENTS = (() => {               // v410: 군인팀 출동 시점 = 경보 3단계(개판)부터 단계마다 도달할 때 + 다음 단계와의 중간 (데프콘 뒤로도 2.1배씩 계속)
     const th = []; let t = 0, d = STAR_BASE;
     for (let i = 0; i < 14; i++) { t += d; d *= STAR_GROW; th.push(Math.round(t)); }
@@ -1388,7 +1388,7 @@
     for (const z of nearIn(zCells, c.foot.x, c.foot.z, ER, evBuf)) if (isZombie(z) && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= ER) list.push(z);
     if (!list.length) { c.evadeR = sniperEvadeR(); enterFight(c, null, true); return; }   // v406: 다음 회피거리는 새로 뽑는다
     if ((c.tick -= dt) <= 0) { c.tick += TICK; c.flee.copy(fleeDir(c, list)); }
-    steer(c.vel, wantV.copy(c.flee).multiplyScalar(SPEED * legK() * 0.95), accelOf(c) * dt);   /* v461: 회피는 동료보다 5% 느리게 */   /* v442: 회피 = 동료 속도와 같음 (v441: 1.05배) */
+    steer(c.vel, wantV.copy(c.flee).multiplyScalar(SPEED * legK() * 0.95 * 0.95), accelOf(c) * dt);   /* v474: 5% 더 느리게 (동료의 90.25%) */   /* v442: 회피 = 동료 속도와 같음 (v441: 1.05배) */
     moveShoot(c, dt);   // v442: 회피하면서도 쏜다 (공격 속도 절반)   // v437: 회피도 군인과 같은 속도 (3.06)
   }
   const BURST_GAP = 0.08;                     // v410: 군인 연사 사이 간격 (초) — 4발이 0.24초 안에
@@ -1656,25 +1656,23 @@
     }
     return [tx, tz, k];
   }
-  function unloadSquad(car) {                 // v447: 군인차 — 한쪽으로 진형을 갖춰 내린다 (앞줄 군인 3, 뒷줄 저격수 + 군인 둘레). 건물·벽에 덜 끼는 쪽으로
-    const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx, row = BODY * 2 + 0.35, off = CAR_W * MIL_K / 2 + BODY + 0.3;
-    const slots = (sd) => {                   // 차에서 먼 쪽이 뒷줄 (저격수)
+  function unloadSquad(car) {                 // v447 · v474: 군인차 — 한쪽으로 진형을 갖춰 내린다 (줄마다 3명, 차에서 먼 줄에 저격수). 건물·벽에 덜 끼는 쪽으로
+    const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx, row = BODY * 2 + 0.35, off = CAR_W * MIL_K / 2 + BODY + 0.3, n = car.squad.length;
+    const slots = (sd) => {
       const L = [];
-      [-1, 0, 1].forEach((a) => L.push([off, a * row]));
-      L.push([off + row, 0]); [-1, 1].forEach((a) => L.push([off + row, a * row]));
-      return L.map(([o, a]) => ({ x: car.x + rx * o * sd + fx * a, z: car.z + rz * o * sd + fz * a, back: o > off }));
+      for (let i = 0; i < n; i++) { const r = Math.floor(i / 3), a = [0, -1, 1][i % 3]; L.push({ o: off + r * row, a }); }
+      return L.map(({ o, a }) => ({ x: car.x + rx * o * sd + fx * a * row, z: car.z + rz * o * sd + fz * a * row, o }));
     };
     const score = (sd) => slots(sd).filter((p) => freeSpot(p.x, p.z, null) && !spaceOf(p.x, p.z)).length;
-    const sd = score(1) >= score(-1) ? 1 : -1, S = slots(sd);
-    const front = S.filter((p) => !p.back), back = S.filter((p) => p.back);
-    let sn = null; const sol = [];
+    const sd = score(1) >= score(-1) ? 1 : -1, S = slots(sd).sort((p, q) => p.o - q.o);   // 가까운 줄 → 먼 줄
+    const nS = car.squad.filter((t) => t === 'sniper').length, far = S.splice(S.length - nS, nS);
+    let sn = null;
     for (const t of car.squad) {
-      const p = t === 'sniper' ? back.shift() : (front.shift() || back.pop());
+      const p = t === 'sniper' ? far.shift() : S.shift();
       const c = addCitizen(p.x, p.z, square(p.x, p.z), t);
-      if (t === 'sniper') sn = c; else sol.push(c);
+      if (t === 'sniper') sn = c; else if (sn) { c.master = sn; c.slotA = Math.random() * Math.PI * 2; c.slotK = rand(0.5, 1); }   // 저격수 뒤에 오는 군인 = 그 저격수 호위
       c.tick = 0;
     }
-    if (sn) sol.forEach((c) => { c.master = sn; c.slotA = Math.random() * Math.PI * 2; c.slotK = rand(0.5, 1); });
   }
   function unload(car) {                      // 양옆 문으로 1~2명 내린다 — 한 명이면 아무 쪽이나
     if (car.squad) { unloadSquad(car); return; }
