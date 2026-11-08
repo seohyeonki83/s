@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v409</div>
+  <div id="ver">v410</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -314,6 +314,16 @@
   const STAR_MAX = 5;
   const STAR_BASE = 10, STAR_GROW = 2.1;   /* v395: 10명 시작 · 2.1배 → 누적 [10, 31, 75, 168, 362] */   // 별 사이에 더 필요한 감염 수가 2.5배씩 늘어난다: +5, +12.5, +31, +78, +195 (v135)
   const STAR_AT = (() => { let t = 0, d = STAR_BASE; return Array.from({ length: 5 }, () => { t += d; d *= STAR_GROW; return Math.round(t); }); })();   // [5, 18, 49, 127, 322]
+  const TEAM_COMP = { 1: ['soldier', 'soldier', 'sniper'] };   // v410: 군인팀 구성 — 1팀 = 군인 2 + 저격수 1 (2~4팀은 아직 미정 → 그 차례엔 안 나온다)
+  const TEAM_EVENTS = (() => {               // v410: 군인팀 출동 시점 = 경보 3단계(개판)부터 단계마다 도달할 때 + 다음 단계와의 중간 (데프콘 뒤로도 2.1배씩 계속)
+    const th = []; let t = 0, d = STAR_BASE;
+    for (let i = 0; i < 14; i++) { t += d; d *= STAR_GROW; th.push(Math.round(t)); }
+    const ev = [];
+    for (let s = 2; s < th.length - 1; s++) { const tier = Math.min(4, s - 1); ev.push({ at: th[s], tier }, { at: Math.round((th[s] + th[s + 1]) / 2), tier }); }
+    return ev;
+  })();
+  let teamIdx = 0;
+  const teamQueue = [];
   const SORTIE_SENSE = 3, SORTIE_SENSE_T = 4;   // 경찰서 호출로 나온 경찰: 건물 밖으로 나오는 순간 인지거리·시야 3배 → 4초에 걸쳐 원래대로 (v158)
   const DROP_SENSE = 2, DROP_SENSE_T = 3;   // 경찰차에서 내린 경찰: 인지거리가 순간 2배 → 3초에 걸쳐 원래대로 (v114)
   const DISPATCH_T = (n) => (30 - 5 * (n - 1)) / 1.15 / 1.15 / 1.1 / 1.15 / 0.95;   /* v354: 출동 빈도 5% 내림 */   /* v332: 출동 빈도 15% 더 */   /* v257: 출동 빈도 10% 더 */   /* v239: 출동 빈도 15% 더 */   /* v179: 출동 빈도 15% 올림 (간격 ÷ 1.15) */ //   // 별 n개일 때 출동 간격 (초) — 30·25·20·15·10 (v118)
@@ -406,7 +416,7 @@
   const BITE_GAP = RADIUS;   // 물 때 두 원 중심 거리 = 반지름 → 반쯤 겹친다
   const SPLIT = 1.5;      // 물기가 끝나고 둘이 떨어지는 속도 (유닛/초)
   const ICON_H = 0.55;    // 머리 위 ? ! !!! 높이 (유닛)
-  const COLOR = { me: 0x3366f2, citizen: 0xffcf33, guard: 0xff8c1a, attacker: 0xc62828, police: 0x8e24aa, sniper: 0x556b2f, ally: 0x8aa4f5, dead: 0x555555 };   // 나 = 유니티 큐브 파랑, 시민 = 노랑, 수비형 = 주황, 공격형 = 진한 빨강, 경찰 = 보라, 동료 좀비 = 연한 파랑
+  const COLOR = { me: 0x3366f2, citizen: 0xffcf33, guard: 0xff8c1a, attacker: 0xc62828, police: 0x8e24aa, sniper: 0x556b2f, soldier: 0x556b2f, ally: 0x8aa4f5, dead: 0x555555 };   // 나 = 유니티 큐브 파랑, 시민 = 노랑, 수비형 = 주황, 공격형 = 진한 빨강, 경찰 = 보라, 동료 좀비 = 연한 파랑
 
   // 그리는 층 (v132) — 바닥·벽·어둠·경찰차·캐릭터 < 모든 UI(체력바·머리 위 표시) < 내 UI(내 체력바·감염 시계·조준 테두리·명령 화살표)
   const UI = 10, UI_ME = 20;
@@ -945,12 +955,14 @@
     c.area = area;
     c.guard = type === 'guard';          // 수비형: HP가 있고, 맞으면 때린 좀비와 싸운다
     c.attacker = type === 'attacker';    // 공격형: 수비형과 같은데, 좀비를 보면 패닉 대신 다가와서 때린다
-    c.police = type === 'police' || type === 'sniper';
+    c.police = type === 'police' || type === 'sniper' || type === 'soldier';
+    c.soldier = type === 'soldier';      // v410: 군인 — 경찰 바탕, 체력 1.5배, 한 번에 4발 연사(총 데미지 경찰의 120%), 경계 없음, 주인 저격수를 호위
+    c.military = type === 'sniper' || type === 'soldier';   // v410: 군대 — 사건 출동 규칙에서 빠진다
     c.sniper = type === 'sniper';        // v396: 저격수 — 경찰 바탕 (체력 같음), 시야·사거리 1.5배, 3배 데미지, 쏘는 간격 3배, 경계·반응 없이 바로 발사, 가까우면 회피        // 경찰: 공격형과 같은데, 그 자리에서 쏜다 — HP 0이 돼도 계속 쏜다
     if (type) {
       c.mesh.material.color.setHex(COLOR[type]);
       if (c.sniper) c.hp = c.maxHp = 0;   // v397: 저격수는 체력 0 — 바로 덮칠 수 있다 (체력바 없음)
-      else { c.hp = c.maxHp = c.police ? POLICE_HP : GUARD_HP; addHpBar(c, hpFoeMat); }
+      else { c.hp = c.maxHp = c.police ? POLICE_HP * (c.soldier ? 1.5 : 1) : GUARD_HP; addHpBar(c, hpFoeMat); }
     }
     if (c.police) {                      // 쏠 때 번쩍이는 노란 선 (원 밑에 깔린다)
       c.tracer = new THREE.Mesh(tracerGeo, new THREE.MeshBasicMaterial({ color: 0xffe14d, transparent: true, depthTest: false, depthWrite: false }));
@@ -964,6 +976,7 @@
     }
     c.sense = SENSE * rand(0.9, 1.1);
     c.sight = SIGHT * rand(0.9, 1.1);
+    if (c.soldier) c.sense = c.sight;    // v410: 군인은 경계 없이 시야 안이면 바로 싸움
     if (c.sniper) { c.evadeR = sniperEvadeR(); c.sight = SIGHT * 1.25; c.sense = c.sight;   /* v404: 경찰과 차이를 절반으로 (1.5 → 1.25배, 9칸) */ c.mark = new THREE.Sprite(diamondMat); c.mark.scale.set(0.62, 0.62, 1); c.mark.renderOrder = UI; c.mark.visible = false; scene.add(c.mark); }   // v396: 저격수 시야 10.8칸 — 시야 안이면 경계 없이 바로 싸움
     c.flee = new THREE.Vector2();
     c.lastSeen = new THREE.Vector3();
@@ -1231,7 +1244,8 @@
       c.sense = c.baseSense * (1 + (DROP_SENSE - 1) * c.dropT / DROP_SENSE_T);
     }
     if (c.state === 'held') { c.vel.set(0, 0); return; }   // 물리는 중엔 꼼짝 못 한다
-    if (c.stunT > 0) { c.stunT -= dt; c.vel.set(0, 0); return; }   // 감전 (v190) — 2초 동안 아무것도 못 한다 (맞기는 한다)
+    if (c.stunT > 0) { c.stunT -= dt; c.vel.set(0, 0); return; }
+    if (c.burstN > 0 && (c.burstT -= dt) <= 0) soldierBullet(c);   // v410: 군인 연사 진행   // 감전 (v190) — 2초 동안 아무것도 못 한다 (맞기는 한다)
     // v235: 돈다발 알아채기는 뿌리는 순간 한 번만 (useItem 현금) — 나중에 돈다발을 보는 사람은 안 홀린다
     if (c.state === 'lured') { luredStep(c, dt); return; }
     if (c.lureAlert) {                        // 돈다발 쪽을 보며 경계 — 끝나면 유혹 (그 사이 맞으면 풀린다)
@@ -1251,7 +1265,7 @@
       steer(c.vel, wantV, ACCEL * dt);
       return;
     }
-    if ((c.tick -= dt) <= 0) { c.tick += TICK; sense(c); }
+    if ((c.tick -= dt) <= 0) { c.tick += TICK; if (!c.recall) sense(c); }   // v410: 복귀 중인 군인은 적을 무시
 
     wantV.set(0, 0);
     if (c.state === 'alert') {
@@ -1272,8 +1286,10 @@
         if (!c.station) c.onDuty = true;                    // 경찰서 경찰(호출로 나온)은 사건을 안 받는다
         if (!c.calls.length) enterNormal(c);                 // 더 들를 곳이 없으면 그 근처를 배회
       } else toward(c, s.x, s.y, Math.min(copSpeed(c), d * 3));   // 건물 안이면 문으로 들어간다
+    } else if (c.soldier && masterOf(c)) {             // v410: 군인 — 주인 저격수 둘레 자기 자리로
+      soldierFollow(c);
     } else if (c.police && !c.station && !c.post && isZombie(me)) {     // 들를 사건 자리가 더 없는 경찰은 주인공(나)을 쫓는다 — 보이면 경계 → 싸움 (v89). 경찰서 경찰은 제자리 배회
-      toward(c, me.foot.x, me.foot.z, copSpeed(c));
+      toward(c, me.foot.x, me.foot.z, PANIC_SPEED * POLICE_PACE);   // v410: 추적은 늘 경찰·군인 속도 (저격수도 타겟이 없을 땐 군인 속도)
     } else if (c.goal) {                                     // 일반: 영역 안 한 곳으로 걷기
       const d = Math.hypot(c.goal.x - c.foot.x, c.goal.y - c.foot.z);
       if (d < 0.1) { c.goal = null; c.back = false; c.timer = rand(...IDLE_TIME); }
@@ -1350,6 +1366,73 @@
     if ((c.tick -= dt) <= 0) { c.tick += TICK; c.flee.copy(fleeDir(c, list)); }
     steer(c.vel, wantV.copy(c.flee).multiplyScalar(SNIPER_SPEED), accelOf(c) * dt);
   }
+  const BURST_GAP = 0.08;                     // v410: 군인 연사 사이 간격 (초) — 4발이 0.24초 안에
+  const GUARD_DOMAIN = DOMAIN, GUARD_DOMAIN_FIGHT = DOMAIN_FIGHT;   // v410: 저격수의 지배 · 공격 지배 거리 (나와 같은 기본값, 고정)
+  function muzzleFlash(c, tx, tz) {           // v410: 헛발 총구 불꽃 (맞힐 상대가 없을 때)
+    const dx = tx - c.foot.x, dz = tz - c.foot.z, d = Math.hypot(dx, dz) || 1, ux = dx / d, uz = dz / d;
+    const f1 = puff(c.foot.x + ux * RADIUS * 0.95, 0, c.foot.z + uz * RADIUS * 0.95, 0xfff23a, 1.0, 1.0, 0.07, 0, 0, 0, 0.7);
+    f1.s.material.map = flashTex; f1.s.position.addScaledVector(UP, RADIUS); f1.s.renderOrder = UI - 0.5; f1.s.material.opacity = 0.7; f1.peak = true; f1.blink = true;
+    c.recoilT = 0; c.recoilX = -ux; c.recoilZ = -uz;
+  }
+  function soldierBullet(c) {                 // v410: 연사 한 발 — 상대가 이미 죽었거나 사라졌으면 헛발
+    c.burstN--; c.burstT += BURST_GAP;
+    const z = c.burstZ;
+    if (z && bodies.includes(z) && isZombie(z) && z.hp > 0) { shoot(c, z); c.burstX = z.foot.x; c.burstZz = z.foot.z; }
+    else { c.shotT = 0; muzzleFlash(c, c.burstX, c.burstZz); }
+  }
+  function masterOf(c) {                      // v410: 군인의 주인 저격수 — 처음 정한 주인을 고정으로, 죽거나 사라지면 그때 가장 가까운 저격수
+    const m = c.master;
+    if (m && m.kind === 'citizen' && m.sniper && bodies.includes(m)) return m;
+    c.master = null;
+    let best = null, bd = Infinity;
+    for (const b of bodies) if (b.kind === 'citizen' && b.sniper) { const d = Math.hypot(b.foot.x - c.foot.x, b.foot.z - c.foot.z); if (d < bd) { bd = d; best = b; } }
+    if (best) { c.master = best; c.slotA = Math.random() * Math.PI * 2; c.slotK = rand(0.5, 1.5); }
+    return best;
+  }
+  function soldierFollow(c) {                 // v410: 주인 둘레 자기 자리 (근접 거리 × 0.5~1.5) 로 — 복귀 중이면 지배 거리 안에 들어오면 풀린다
+    const m = c.master;
+    if (c.recall && Math.hypot(c.foot.x - m.foot.x, c.foot.z - m.foot.z) <= GUARD_DOMAIN) c.recall = false;
+    let tx = m.foot.x + Math.cos(c.slotA) * NEAR * c.slotK, tz = m.foot.z + Math.sin(c.slotA) * NEAR * c.slotK;
+    if (!freeSpot(tx, tz, m.space)) { tx = m.foot.x; tz = m.foot.z; }
+    if (Math.hypot(tx - c.foot.x, tz - c.foot.z) > 0.5) toward(c, tx, tz, PANIC_SPEED * POLICE_PACE); else wantV.set(0, 0);
+  }
+  function soldierLeash(c, dt) {              // v410: 내 동료가 나를 따르는 것과 같은 지배 거리 규칙
+    const m = masterOf(c);
+    if (!m) { c.outT = 0; return false; }
+    const lim = c.inRange ? GUARD_DOMAIN_FIGHT : GUARD_DOMAIN;
+    if (Math.hypot(c.foot.x - m.foot.x, c.foot.z - m.foot.z) <= lim) { c.outT = 0; return false; }
+    if (!c.outT) c.outLimit = rand(...RECALL_DELAY);
+    c.outT = (c.outT || 0) + dt;
+    if (c.outT < c.outLimit) return false;
+    c.outT = 0; c.recall = true; c.foe = null; c.inRange = false; enterNormal(c);
+    return true;
+  }
+  function teamSpot() {                       // v410: 맵 가장자리 중 나·동료 시야 밖 — 없으면 가장자리 아무 데나
+    const edge = () => {
+      const W = MM.x1 - MM.x0 - 3, H = MM.z1 - MM.z0 - 3, t = Math.random() * 2 * (W + H);
+      if (t < W) return { x: MM.x0 + 1.5 + t, z: MM.z0 + 1.5 };
+      if (t < W + H) return { x: MM.x1 - 1.5, z: MM.z0 + 1.5 + (t - W) };
+      if (t < 2 * W + H) return { x: MM.x1 - 1.5 - (t - W - H), z: MM.z1 - 1.5 };
+      return { x: MM.x0 + 1.5, z: MM.z1 - 1.5 - (t - 2 * W - H) };
+    };
+    for (let k = 0; k < 300; k++) { const p = edge(); if (freeSpot(p.x, p.z, null) && !zombies.some((zb) => Math.hypot(zb.foot.x - p.x, zb.foot.z - p.z) < zb.sense + 2)) return p; }
+    for (let k = 0; k < 100; k++) { const p = edge(); if (freeSpot(p.x, p.z, null)) return p; }
+    return edge();
+  }
+  function spawnTeam(tier) {                  // v410: 군인팀 하나 — 같은 팀 군인의 주인 = 그 팀 저격수
+    const comp = TEAM_COMP[tier];
+    if (!comp) return;
+    const p = teamSpot();
+    let sn = null; const sol = [];
+    comp.forEach((type, i) => {
+      const a = i / comp.length * Math.PI * 2;
+      let x = p.x + Math.cos(a) * 1.3, z = p.z + Math.sin(a) * 1.3;
+      if (!freeSpot(x, z, null)) { x = p.x; z = p.z; }
+      const c = addCitizen(x, z, square(x, z), type);
+      if (type === 'sniper') sn = c; else sol.push(c);
+    });
+    if (sn) for (const c of sol) { c.master = sn; c.slotA = Math.random() * Math.PI * 2; c.slotK = rand(0.5, 1.5); }
+  }
   function sniperHit(c, z) {                  // v396: 저격 — 죽으면 피가 팍 터지고, 살면 뒤로 쭉 밀린다 (덩치 넉백의 4배 거리, 같은 0.4초)
     if (z.hp <= 0) { bloodBurst(z.foot.x, z.foot.z, 30, 2, 5); bloodBurst(z.foot.x, z.foot.z, 14, 0.5, 1.5); return; }
     if (z.mut === 'armor' || z.mode === 'bite') return;   // 덩치 · 무는(감염 중) 좀비는 안 밀린다
@@ -1364,6 +1447,7 @@
     const tick = (c.tick -= dt) <= 0;
     if (tick) c.tick += TICK;
     const range = c.boostT > 0 ? c.boostSight : c.sight;   // 사거리 = 원래(1배) 시야 (v159)
+    if (c.soldier && soldierLeash(c, dt)) return;   // v410: 주인 저격수에게서 지배 거리 밖에 1~2초 → 복귀
     if (c.sniper && !c.space) {               // v396: 저격수 — 좀비가 회피거리 안이면 바로 도망 (건물 안에선 안 함)
       const er = c.evadeR;                    // v406: 회피거리 = 내 덮침 거리(3.24칸)의 1.1배 = 3.56칸 ±10% (회피할 때마다 새로 뽑는다)
       for (const z of nearIn(zCells, c.foot.x, c.foot.z, er, evBuf)) if (isZombie(z) && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= er) { c.state = 'evade'; c.foe = null; c.tick = 0; return; }
@@ -1381,9 +1465,10 @@
     }
     if (!c.foe) { c.chaseR = 0; steer(c.vel, wantV.set(0, 0), accelOf(c) * dt); enterNormal(c); return; }
     const z = c.foe, d = far(z);
-    if (d > range || fireBlocked(c.foot.x, c.foot.z, z.foot.x, z.foot.z)) { steer(c.vel, toward(c, z.foot.x, z.foot.z, copSpeed(c)), accelOf(c) * dt); return; }   // 사거리 밖이거나 벽에 막힘 → 다가간다 (v297: 열린 문 틈으로는 쏜다)
+    if (d > range || fireBlocked(c.foot.x, c.foot.z, z.foot.x, z.foot.z)) { c.inRange = false; steer(c.vel, toward(c, z.foot.x, z.foot.z, copSpeed(c)), accelOf(c) * dt); return; }   // 사거리 밖이거나 벽에 막힘 → 다가간다 (v297: 열린 문 틈으로는 쏜다)
+    c.inRange = true;
     steer(c.vel, wantV.set(0, 0), accelOf(c) * dt);
-    if (c.atkT <= 0) { shoot(c, z); c.atkT = HIT_EVERY * (c.sniper ? 4 : 1); }   // v401: 저격수는 경찰 공격 속도의 1/4 (3.1초마다)
+    if (c.atkT <= 0) { if (c.soldier) { c.burstN = 4; c.burstT = 0; c.burstZ = z; c.burstX = z.foot.x; c.burstZz = z.foot.z; } else shoot(c, z); c.atkT = HIT_EVERY * (c.sniper ? 4 : 1); }   // v410: 군인은 4발 연사   // v401: 저격수는 경찰 공격 속도의 1/4 (3.1초마다)
   }
 
   function nearestZombie(c, range, clear = false) {   // clear: 공격선이 벽에 안 막힌 좀비만 (v297)
@@ -1417,7 +1502,7 @@
         f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true;
       }
     }
-    const base = POLICE_DAMAGE * (c.sniper ? 3 : 1);   // v396: 저격수 3배
+    const base = POLICE_DAMAGE * (c.sniper ? 3 : c.soldier ? 1.2 / 4 : 1);   // v396: 저격수 3배 · v410: 군인은 경찰의 120%를 4발에 나눠서
     landHit(c, z, z === me && hasVest ? base * (1 - vestPct(up.brain) / 100) : base);   // 방탄복 — 내 총알 피해 감소 (v201)
     if (c.sniper && isZombie(z)) sniperHit(c, z);
   }
@@ -1429,10 +1514,11 @@
   let deaths = 0, stars = 0, dispatchT = 0, stationDown = false, lastIncident = null;   // 감염 수, 수배 별, 출동 시계, 경찰서 전부 파괴, 마지막 사건 자리
   const stations = buildings.filter((B) => B.station);   // 경찰서 다섯 곳 (v121) — B.residents = 안에 상주하는 경찰, B.down = 파괴됨
   function callPolice(spot) {                 // 사람이 감염될 때마다 (경찰도) — 출동 끝낸 경찰에게 사건 알림, 별 올리기
-    for (const b of bodies) if (b.kind === 'citizen' && b.onDuty) b.calls.push(new THREE.Vector2(spot.x, spot.z));
+    for (const b of bodies) if (b.kind === 'citizen' && b.onDuty && !b.military) b.calls.push(new THREE.Vector2(spot.x, spot.z));
     for (const car of cars) if (car.state === 'drive') car.calls.push(new THREE.Vector2(spot.x, spot.z));   // 달리는 경찰차도 새 사건 자리를 받는다 (v116)
     lastIncident = new THREE.Vector2(spot.x, spot.z);
     deaths++;
+    while (teamIdx < TEAM_EVENTS.length && deaths >= TEAM_EVENTS[teamIdx].at) teamQueue.push(TEAM_EVENTS[teamIdx++].tier);   // v410: 군인팀 출동 차례
     stars = Math.min(STAR_MAX, STAR_AT.filter((n) => deaths >= n).length);
   }
   const DISPATCH_MORE = 1.3;   // 별 출동 인원 배율 (v170)
@@ -2577,7 +2663,7 @@
       if (b.kind !== 'citizen') continue;
       if (b.mark) { b.mark.visible = !hide; if (!hide) b.mark.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + 0.32); }   // v401: 저격수 다이아몬드
       if (b.stunT > 0 || b.stunShown) {       // 감전 중 깜빡임 (v190)
-        const base = COLOR[b.sniper ? 'sniper' : b.police ? 'police' : b.attacker ? 'attacker' : b.guard ? 'guard' : 'citizen'];
+        const base = COLOR[b.sniper ? 'sniper' : b.soldier ? 'soldier' : b.police ? 'police' : b.attacker ? 'attacker' : b.guard ? 'guard' : 'citizen'];
         b.stunShown = b.stunT > 0;
         b.mesh.material.color.setHex(b.stunShown && Math.floor(clock * 14) % 2 ? 0xc8f0ff : base);
       }
@@ -2876,7 +2962,7 @@
     visDirty = true;
     mmDirty = true;
     mmT = 0;
-    deaths = stars = dispatchT = 0;
+    deaths = stars = dispatchT = 0; teamIdx = 0; teamQueue.length = 0;
     stationDown = false;
     lastIncident = null;
     for (const car of cars) scene.remove(car.g);
@@ -3098,7 +3184,7 @@
   //   경찰서·경찰은 START_COP_CLEAR(15칸) 안에 없어야 하고, 밖에 있는 시민(일반·수비형·공격형)은 내 인지거리 밖이면 된다
   function testPopulate() {                   // v396: 시험 맵 — 저격수 2명을 세로 가운데, 가로로 고르게 / 나는 아래 가운데
     const W = MM.x1 - MM.x0, cz = (MM.z0 + MM.z1) / 2;
-    for (const f of [1 / 3, 2 / 3]) { const x = MM.x0 + W * f, area = square(x, cz); addCitizen(x, cz, area, 'sniper'); }
+    teamQueue.push(1);                        // v410: 시험 맵 — 시작하자마자 맵 가장자리에서 1팀 (군인 2 + 저격수 1)
     me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;
   }
   function placeMe() {
@@ -3236,6 +3322,7 @@
     if (!TEST_MAP) trickle(dt);
     zombies.length = 0;
     for (const b of bodies) if (isZombie(b)) zombies.push(b);
+    while (teamQueue.length) spawnTeam(teamQueue.shift());   // v410: 군인팀 출동 (이번 걸음 좀비 목록을 만든 뒤)
     crowd.clear();                            // 시민마다 지금 노리는 좀비 수 (v148) — 타겟을 새로 뽑을 때마다 바로 고쳐서, 같은 순간에 뽑는 좀비끼리도 겹치지 않는다
     for (const z of zombies) if (z.pick && z.pick.kind === 'citizen' && z.pick.hp > 0) crowd.set(z.pick, (crowd.get(z.pick) || 0) + 1);
     objFrame++; objCrowd.clear();             // 경찰차에 붙은 좀비 수 (v243) — 지난 걸음에 때리던 좀비
