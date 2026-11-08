@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v450 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v451 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4684,8 +4684,8 @@
   const dangerEl = document.getElementById('danger');
   function dangerTick() {                     // v450: 내 체력 20% 이하 (시작 체력이 딱 20%라 시작하자마자 깜빡인다 — 위험한 상태) → 화면 가장자리 빨간 경고가 깜빡인다 (0에 가까울수록 진하게)
     const r = me && isZombie(me) && me.maxHp > 0 ? me.hp / me.maxHp : 1;
-    if (r > 0.2 + 1e-6 || r <= 0) { if (dangerEl.style.opacity !== '0') dangerEl.style.opacity = '0'; return; }
-    const k = 0.35 + 0.65 * (0.2 - r) / 0.2, blink = 0.55 + 0.45 * Math.sin(performance.now() / 1000 * Math.PI * 2 * (1 + k));
+    if (r > 0.3 + 1e-6 || r <= 0) { if (dangerEl.style.opacity !== '0') dangerEl.style.opacity = '0'; return; }
+    const k = 0.35 + 0.65 * (0.3 - r) / 0.3,   /* v451: 30%부터 */ blink = 0.55 + 0.45 * Math.sin(performance.now() / 1000 * Math.PI * 2 * (1 + k));
     dangerEl.style.opacity = (k * blink * 0.8).toFixed(3);
   }
   function uiTick() {
