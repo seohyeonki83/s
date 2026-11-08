@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v477 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v478 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1475,6 +1475,13 @@
     z.knockT = ARMOR_KT; z.knockVX = kx / kl * ARMOR_KB * 2; z.knockVZ = kz / kl * ARMOR_KB * 2;   /* v400: 덩치 넉백의 4배 → 2배 (약 0.9칸) */ z.knockSlide = true;   // 밀리는 동안 이동 입력 무시 (updateZombie)
     z.engaging = null; z.attacking = false;
   }
+  function soldierHit(c, z) {                 // v478: 군인 총알도 밀어낸다 — 저격수와 같은 방식, 시간·거리 1/5 (0.08초 · 약 0.18칸)
+    if (z.hp <= 0 || z.mut === 'armor' || z.mode === 'bite') return;
+    if (z.mode === 'pounce') stopPounce(z);
+    const kx = z.foot.x - c.foot.x, kz = z.foot.z - c.foot.z, kl = Math.hypot(kx, kz) || 1, v = ARMOR_KB * 2 * 0.59;   // 시간 1/5에 속도 0.59배 → 거리 1/5
+    z.knockT = ARMOR_KT / 5; z.knockVX = kx / kl * v; z.knockVZ = kz / kl * v; z.knockSlide = true;
+    z.engaging = null; z.attacking = false;
+  }
   function policeFight(c, dt) {
     if (c.atkT > 0) c.atkT -= dt * (c.goo ? 0.56 : 1);   // v275: 산성 덩어리 묻으면 공격 속도 20% 느리게
     if (c.notice > 0) c.notice -= dt;
@@ -1549,6 +1556,7 @@
     const base = POLICE_DAMAGE * (c.sniper ? 3 * 0.8 * 0.9 :   /* v462: 10% 더 줄임 (v460: 20%) */ c.soldier ? 1.2 / 4 * 0.9 :   /* v462: 군인 데미지 10% 줄임 */ 1);   // v396: 저격수 3배 · v410: 군인은 경찰의 120%를 4발에 나눠서
     landHit(c, z, z === me && hasVest ? base * (1 - vestPct(up.brain) / 100) : base);   // 방탄복 — 내 총알 피해 감소 (v201)
     if (c.sniper && isZombie(z)) sniperHit(c, z);
+    else if (c.soldier && isZombie(z)) soldierHit(c, z);   // v478
   }
 
   // 경찰 출동 — 사람이 감염될 때마다 (경찰이 감염돼도 센다):
