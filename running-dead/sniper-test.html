@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v458 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v459 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -952,7 +952,7 @@
     c.sniper = type === 'sniper';        // v396: 저격수 — 경찰 바탕 (체력 같음), 시야·사거리 1.5배, 3배 데미지, 쏘는 간격 3배, 경계·반응 없이 바로 발사, 가까우면 회피        // 경찰: 공격형과 같은데, 그 자리에서 쏜다 — HP 0이 돼도 계속 쏜다
     if (type) {
       c.mesh.material.color.setHex(COLOR[type]);
-      c.hp = c.maxHp = c.sniper ? POLICE_HP * 1.5 * 0.07 : c.police ? POLICE_HP * (c.soldier ? 3 : 1) : GUARD_HP;   /* v441: 군인 체력 2배 (252 → 504), 저격수는 17.6 그대로 */   // v439: 저격수 체력 = 군인의 7% (약 17.6) — v397~v438은 0 (바로 덮치기)
+      c.hp = c.maxHp = c.sniper ? POLICE_HP * 1.5 * 0.07 : c.police ? POLICE_HP * (c.soldier ? 2 : 1) : GUARD_HP;   /* v459: 군인 체력 1/3 줄임 (504 → 336) */   /* v441: 군인 체력 2배 (252 → 504), 저격수는 17.6 그대로 */   // v439: 저격수 체력 = 군인의 7% (약 17.6) — v397~v438은 0 (바로 덮치기)
       addHpBar(c, hpFoeMat);
     }
     if (c.police) {                      // 쏠 때 번쩍이는 노란 선 (원 밑에 깔린다)
@@ -1240,6 +1240,7 @@
       if ((c.pushT -= dt) <= 0) { c.pushT = 0; c.pushVX = c.pushVZ = 0; }
     }
     if (c.knockT > 0) { knockStep(c, dt); return; }
+    if (c.shotStop > 0) { c.shotStop -= dt; c.vel.set(0, 0); if (c.atkT > 0) c.atkT -= dt; return; }   // v459
     if (c.dropT > 0) {                       // 경찰차에서 막 내린 경찰: 늘어난 인지거리가 3초에 걸쳐 원래대로 (v114)
       c.dropT = Math.max(0, c.dropT - dt);
       c.sense = c.baseSense * (1 + (DROP_SENSE - 1) * c.dropT / DROP_SENSE_T);
@@ -1291,7 +1292,7 @@
     } else if (c.soldier && masterOf(c)) {             // v410: 군인 — 주인 저격수 둘레 자기 자리로
       soldierFollow(c);
     } else if (c.police && !c.station && !c.post && isZombie(me)) {     // 들를 사건 자리가 더 없는 경찰은 주인공(나)을 쫓는다 — 보이면 경계 → 싸움 (v89). 경찰서 경찰은 제자리 배회
-      toward(c, me.foot.x, me.foot.z, PANIC_SPEED * POLICE_PACE);   // v410: 추적은 늘 경찰·군인 속도 (저격수도 타겟이 없을 땐 군인 속도)
+      toward(c, me.foot.x, me.foot.z, copSpeed(c));   // v459: 저격수는 동료 속도 — v410: 추적은 늘 경찰·군인 속도 (저격수도 타겟이 없을 땐 군인 속도)
     } else if (c.goal) {                                     // 일반: 영역 안 한 곳으로 걷기
       const d = Math.hypot(c.goal.x - c.foot.x, c.goal.y - c.foot.z);
       if (d < 0.1) { c.goal = null; c.back = false; c.timer = rand(...IDLE_TIME); }
@@ -1356,7 +1357,7 @@
   const SNIPER_TRAIL = 2, SNIPER_THICK = 2.2;   // v408: 저격수 총알 선 — 맞은 자리 너머로 2칸 더, 굵기 2.2배
   const SNIPER_SPEED = PANIC_SPEED * POLICE_PACE;   // v435: 저격수 속도는 군인과 완전히 같음 (3.06) — v437부터 회피할 때도 같음
   const SNIPER_EVADE = PANIC_SPEED * POLICE_PACE;   // v437: 회피할 때도 군인과 같은 속도 (3.06) — 저격수 속도는 하나로 통일 (v432: 4.2였음)
-  const copSpeed = (c) => c.sniper ? SNIPER_SPEED : PANIC_SPEED * POLICE_PACE;
+  const copSpeed = (c) => c.sniper ? SPEED * legK() :   /* v459: 저격수 = 동료 속도 (다리 강화 따라감) */ PANIC_SPEED * POLICE_PACE;
   const sniperEvadeR = () => ATTACK * 1.1 * 1.05 * 1.1 * 1.1 * rand(0.85, 1.15);   /* v433: 10% 더 → 4.53칸 ±15% (3.85 ~ 5.21칸) */   /* v418: 10% 더 → 4.12칸 ±15% (3.5 ~ 4.7칸) */   // v409: 5% 늘림 → 3.74칸 ±15% (3.2 ~ 4.3칸) — v407: 3.56칸 ±15%
   const accelOf = (c) => c.sniper ? ACCEL * 2 : ACCEL;   /* v426: 다시 2배 (최고 속도까지 약 0.12초) */   // v420: 저격수 즉시 최고 속도 — 무한대는 시간 0인 프레임에서 계산이 깨져서(NaN) 아주 큰 값으로 (v419)
   const evBuf = [];
@@ -1503,6 +1504,7 @@
     if (!z) return;
     if (c.soldier) { c.burstN = 4; c.burstT = 0; c.burstZ = z; c.burstX = z.foot.x; c.burstZz = z.foot.z; } else shoot(c, z);
     c.atkT = HIT_EVERY * (c.sniper ? 4 : 1);
+    if (c.sniper) c.shotStop = 0.2;   // v459: 저격수는 이동 중에 쏘면 0.2초 멈췄다가 다시 달린다
   }
   function nearestZombie(c, range, clear = false) {   // clear: 공격선이 벽에 안 막힌 좀비만 (v297)
     let best = null, bd = range;
@@ -1535,7 +1537,7 @@
         f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true;
       }
     }
-    const base = POLICE_DAMAGE * (c.sniper ? 3 : c.soldier ? 1.2 / 4 : 1);   // v396: 저격수 3배 · v410: 군인은 경찰의 120%를 4발에 나눠서
+    const base = POLICE_DAMAGE * (c.sniper ? 3 * 0.7 :   /* v459: 저격수 데미지 30% 줄임 */ c.soldier ? 1.2 / 4 : 1);   // v396: 저격수 3배 · v410: 군인은 경찰의 120%를 4발에 나눠서
     landHit(c, z, z === me && hasVest ? base * (1 - vestPct(up.brain) / 100) : base);   // 방탄복 — 내 총알 피해 감소 (v201)
     if (c.sniper && isZombie(z)) sniperHit(c, z);
   }
