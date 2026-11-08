@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v493 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v494 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -953,7 +953,7 @@
     c.sniper = type === 'sniper';        // v396: 저격수 — 경찰 바탕 (체력 같음), 시야·사거리 1.5배, 3배 데미지, 쏘는 간격 3배, 경계·반응 없이 바로 발사, 가까우면 회피        // 경찰: 공격형과 같은데, 그 자리에서 쏜다 — HP 0이 돼도 계속 쏜다
     if (type) {
       c.mesh.material.color.setHex(COLOR[type]);
-      c.hp = c.maxHp = c.sniper ? POLICE_HP * 1.5 * 0.07 : c.police ? POLICE_HP * (c.soldier ? 2 : 1) : GUARD_HP;   /* v459: 군인 체력 1/3 줄임 (504 → 336) */   /* v441: 군인 체력 2배 (252 → 504), 저격수는 17.6 그대로 */   // v439: 저격수 체력 = 군인의 7% (약 17.6) — v397~v438은 0 (바로 덮치기)
+      c.hp = c.maxHp = c.sniper ? POLICE_HP * 1.5 * 0.07 : c.police ? POLICE_HP * (c.soldier ? 2 : 0.9) : GUARD_HP;   /* v494: 경찰만 체력 10% 줄임 (168 → 151.2) */   /* v459: 군인 체력 1/3 줄임 (504 → 336) */   /* v441: 군인 체력 2배 (252 → 504), 저격수는 17.6 그대로 */   // v439: 저격수 체력 = 군인의 7% (약 17.6) — v397~v438은 0 (바로 덮치기)
       addHpBar(c, hpFoeMat);
     }
     if (c.police) {                      // 쏠 때 번쩍이는 노란 선 (원 밑에 깔린다)
@@ -1554,7 +1554,7 @@
         f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true;
       }
     }
-    const base = POLICE_DAMAGE * (c.sniper ? 3 * 0.8 * 0.9 :   /* v462: 10% 더 줄임 (v460: 20%) */ c.soldier ? 1.2 / 4 * 0.9 :   /* v462: 군인 데미지 10% 줄임 */ 1);   // v396: 저격수 3배 · v410: 군인은 경찰의 120%를 4발에 나눠서
+    const base = POLICE_DAMAGE * (c.sniper ? 3 * 0.8 * 0.9 :   /* v462: 10% 더 줄임 (v460: 20%) */ c.soldier ? 1.2 / 4 * 0.9 :   /* v462: 군인 데미지 10% 줄임 */ 0.95);   /* v494: 경찰 공격력 5% 줄임 */   // v396: 저격수 3배 · v410: 군인은 경찰의 120%를 4발에 나눠서
     landHit(c, z, z === me && hasVest ? base * (1 - vestPct(up.brain) / 100) : base);   // 방탄복 — 내 총알 피해 감소 (v201)
     if (c.sniper && isZombie(z)) sniperHit(c, z);
     else if (c.soldier && isZombie(z)) soldierHit(c, z);   // v478
