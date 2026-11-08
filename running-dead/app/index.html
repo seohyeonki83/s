@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v478</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v479</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -951,10 +951,12 @@
 
   const diamondMat = (() => {                 // v402: 저격수 머리 위 빨간 스코프 (조준경) 표시 — v401 다이아몬드 대신
     const cv = document.createElement('canvas'); cv.width = cv.height = 64; const g = cv.getContext('2d');
-    const ring = (w, col) => { g.lineWidth = w; g.strokeStyle = col; g.beginPath(); g.arc(32, 32, 20, 0, Math.PI * 2); g.stroke();
-      g.beginPath(); g.moveTo(32, 3); g.lineTo(32, 22); g.moveTo(32, 42); g.lineTo(32, 61); g.moveTo(3, 32); g.lineTo(22, 32); g.moveTo(42, 32); g.lineTo(61, 32); g.stroke(); };
-    g.lineCap = 'round'; ring(9, 'rgba(40, 0, 0, 0.85)'); ring(5, '#ff2a2a');
-    g.fillStyle = '#ff2a2a'; g.beginPath(); g.arc(32, 32, 4, 0, Math.PI * 2); g.fill();
+    // v479: 스코프 대신 위험 표시 — 검은 테두리 노랑·빨강 경고 삼각형 + 굵은 검은 느낌표
+    const tri = () => { g.beginPath(); g.moveTo(32, 4); g.lineTo(61, 57); g.lineTo(3, 57); g.closePath(); };
+    g.lineJoin = 'round'; tri(); g.lineWidth = 8; g.strokeStyle = '#1a0000'; g.stroke();
+    tri(); g.fillStyle = '#ff2a1a'; g.fill();
+    g.beginPath(); g.moveTo(32, 15); g.lineTo(52, 52); g.lineTo(12, 52); g.closePath(); g.fillStyle = '#ffd400'; g.fill();
+    g.fillStyle = '#111'; g.fillRect(28.5, 23, 7, 17); g.beginPath(); g.arc(32, 46, 3.8, 0, Math.PI * 2); g.fill();
     const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
     return new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false, depthWrite: false });
   })();
@@ -1388,7 +1390,7 @@
     for (const z of nearIn(zCells, c.foot.x, c.foot.z, ER, evBuf)) if (isZombie(z) && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= ER) list.push(z);
     if (!list.length) { c.evadeR = sniperEvadeR(); enterFight(c, null, true); return; }   // v406: 다음 회피거리는 새로 뽑는다
     if ((c.tick -= dt) <= 0) { c.tick += TICK; c.flee.copy(fleeDir(c, list)); }
-    steer(c.vel, wantV.copy(c.flee).multiplyScalar(3.7), accelOf(c) * dt);   /* v477: 회피 속도 3.7 고정 */   /* v442: 회피 = 동료 속도와 같음 (v441: 1.05배) */
+    steer(c.vel, wantV.copy(c.flee).multiplyScalar(3.7 * 0.95), accelOf(c) * dt);   /* v479: 회피 3.7 → 3.52 (5% 줄임) */   /* v442: 회피 = 동료 속도와 같음 (v441: 1.05배) */
     moveShoot(c, dt);   // v442: 회피하면서도 쏜다 (공격 속도 절반)   // v437: 회피도 군인과 같은 속도 (3.06)
   }
   const BURST_GAP = 0.08;                     // v410: 군인 연사 사이 간격 (초) — 4발이 0.24초 안에
