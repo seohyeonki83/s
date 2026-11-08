@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v439 군인팀 시험</div>
+  <div id="ver">v440 군인팀 시험</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -527,6 +527,7 @@
   // 체력바 = 감염 게이지와 같은 모양, 체력이 깎여 있는 동안 머리 위에 뜬다 — 꽉 차 있으면 안 보인다, 0이면 빈 바 (시민 빨강, 좀비 초록. 나도 같다)
   const hpFoeMat = new THREE.MeshBasicMaterial({ color: 0xff4d4d, transparent: true, depthTest: false, depthWrite: false });
   const hpOurMat = new THREE.MeshBasicMaterial({ color: 0x43d17a, transparent: true, depthTest: false, depthWrite: false });
+  const barW = (b, mine) => Math.max(0.001, (mine ? 1.2 / MY_HP : 0.5 / POLICE_HP) * (b.maxHp || 0));   // v440: 체력바 가로 = 최대 체력에 비례 — 남들은 경찰 체력(168)일 때 예전 길이(50%), 나는 처음 최대 체력(약 190)일 때 예전 길이(120%) · 강화·스팀팩·변이로 늘면 같이 늘어난다
   function addHpBar(b, mat) {
     b.hpBar = new THREE.Group();
     b.hpBar.quaternion.copy(camera.quaternion);
@@ -537,7 +538,7 @@
     b.hpFill.renderOrder = UI + 1;
     b.hpBar.add(track, b.hpFill);
     b.hpBar.visible = false;
-    b.hpBar.scale.x = 0.5;                    // v275: 나 말고 모든 체력바 가로 50% (내 것은 spawn에서 따로 정한다)
+    b.hpBar.scale.x = barW(b, false);         // v440: 가로 = 최대 체력에 비례 (v275: 모두 50%) — 내 것은 spawn에서 따로 정한다
     scene.add(b.hpBar);
     b.hpDisp = b.hp;                          // 화면에 보이는 체력 — 실제 체력 쪽으로 빠르게 줄어든다
   }
@@ -2675,6 +2676,7 @@
         if (barUp) {
           b.hpBar.position.copy(b.foot).addScaledVector(UP, (b.halfH || RADIUS) * 2 + 0.22 + (b === me ? GAUGE_H : 0));   // 내 바는 두 배 두꺼워서 아래 끝이 같게 조금 올린다
           b.hpFill.scale.x = Math.max(0.001, b.hpDisp / b.maxHp);
+          b.hpBar.scale.x = barW(b, b === me);   // v440: 가로 = 최대 체력에 비례 (좀비가 되거나 강화·스팀팩·변이로 바뀌면 바로)
         }
       }
       if (b.kind !== 'citizen') continue;
@@ -3004,7 +3006,7 @@
     me.r = MY_BODY;                          // 내 부딪힘은 작고 미는 힘은 세다 — 동료들 사이에 덜 갇히게
     me.force = MY_FORCE;
     addHpBar(me, hpOurMat);
-    me.hpBar.scale.set(1.2, 3 * 0.7, 1);   // v275: 세로 30% 줄임   // v136에 가로 20% 늘림   // v76에 1.5배 더 두껍게 (늘 떠 있다)                    // 내 체력바는 두 배 두껍고, 다른 바·표시보다 늘 위에 그린다 (섞여도 보이게)
+    me.hpBar.scale.set(barW(me, true), 3 * 0.7, 1);   // v440: 가로는 내 최대 체력에 비례 (처음 1.2)   // v275: 세로 30% 줄임   // v136에 가로 20% 늘림   // v76에 1.5배 더 두껍게 (늘 떠 있다)                    // 내 체력바는 두 배 두껍고, 다른 바·표시보다 늘 위에 그린다 (섞여도 보이게)
     for (const m of me.hpBar.children) m.renderOrder += UI_ME + 50 - UI;   // v379: 내 체력바는 언제나 맨 위 (다른 모든 그림·UI보다)   // 내 체력바 = 내 UI 층 (다른 UI보다 위)
     me.sense = SIGHT;                        // 좀비 인지거리 = 시야 기준 7.2로 고정 (v198 — 전엔 판마다 ±10%). 동료도 이 값
     me.speed = MY_SPEED;                     // 이동 속도 (동료와 같다)
@@ -3837,6 +3839,7 @@
       if (!o.hpBar.visible) continue;
       o.hpDisp += (o.hp - o.hpDisp) * Math.min(1, dt * 12);
       o.hpFill.scale.x = Math.max(0.001, o.hpDisp / o.maxHp);
+      o.hpBar.scale.x = barW(o, false);   // v440: 문·경찰차도 최대 체력에 비례
       o.hpBar.position.set(o.foot.x, 0, o.foot.z).addScaledVector(UP, 1.6);
     }
   }
