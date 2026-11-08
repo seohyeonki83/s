@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v469</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v470</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1611,7 +1611,7 @@
   const cars = [];
   let carObs = [];                            // 길 찾기용 서 있는 경찰차 원 {x, z, r} — 사이로 몸이 못 지나갈 만큼 붙은 차들은 한 원으로 합친다 (v139)
   function updateCarObs() {
-    const cs = cars.filter((c) => c.state === 'parked' && !CAR_TEST).map((c) => ({ x: c.x, z: c.z, r: CAR_W * ck(c) / 2 * PARKED_K * 0.8 * (c.wreck ? 0.2 : 1) }));   // v264: 돌아가는 원을 차 부딪힘보다 작게 — 좀비가 차에 실제로 닿아야 막힌 차를 때린다 (잔해는 1/5)
+    const cs = cars.filter((c) => false && c.state === 'parked')   /* v470: 좀비는 서 있는 차를 피해 돌아가지 않고 밀고 들어간다 (본편도) */.map((c) => ({ x: c.x, z: c.z, r: CAR_W * ck(c) / 2 * PARKED_K * 0.8 * (c.wreck ? 0.2 : 1) }));   // v264: 돌아가는 원을 차 부딪힘보다 작게 — 좀비가 차에 실제로 닿아야 막힌 차를 때린다 (잔해는 1/5)
     for (let merged = true; merged; ) {
       merged = false;
       for (let i = 0; i < cs.length && !merged; i++) for (let j = i + 1; j < cs.length; j++) {
@@ -1821,7 +1821,7 @@
           const f = b === me || b.sniper ? 1 : (b.force || 1) * (b.mut === 'armor' ? 2 / 3 : 1),   /* v469: 덩치는 차에 미는 힘의 2/3만 (10.4 → 6.93) */   /* v465: 나·저격수는 차에 보통 몸 힘(1)만 */ sh = f / (f + CAR_MASS * 2 / 3),   /* v468: 미는 데 쓰는 차 무게 2/3 (10 → 6.67) */ ex = nx - b.foot.x, ez = nz - b.foot.z;
           b.foot.x += ex * (1 - sh); b.foot.z += ez * (1 - sh);
           car.x -= ex * sh; car.z -= ez * sh;
-          if (CAR_TEST) {                     // v467: 미는 자리에 따라 돈다 — 중심에서 민 자리까지(r) × 밀린 거리(d) = 회전
+          {                                   // v470: 본편도 — v467: 미는 자리에 따라 돈다 — 중심에서 민 자리까지(r) × 밀린 거리(d) = 회전
             const px = b.foot.x - car.x, pz = b.foot.z - car.z, dx = -ex * sh, dz = -ez * sh, L = CAR_L * ck(car), W = CAR_W * ck(car);
             car.h += (px * dz - pz * dx) / ((L * L + W * W) / 12 + px * px + pz * pz);
           }
