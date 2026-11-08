@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v484 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v485 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3309,6 +3309,13 @@
           if (near(x, z) === START_BLOCK || (x > Z.x0 && x < Z.x1 && z > Z.z0 && z < Z.z1) || spaceOf(x, z) || !freeSpot(x, z, null)) continue;
           const c = addCitizen(x, z, square(x, z), t); enterNormal(c); break;
         }
+      }
+      const homes = buildings.filter((H) => H.block !== START_BLOCK && !H.station);   // v485: 첫 마을 말고 건물 안에도 노랑 4 (경찰서 제외)
+      for (let i = 0; i < 4 && homes.length; i++) {
+        const H = homes[Math.floor(Math.random() * homes.length)];
+        let g = pickGoal(H);
+        for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(H);
+        const c = addCitizen(g.x, g.y, H, ''); c.home = H; c.area = H;
       }
     }
     placeMe();
