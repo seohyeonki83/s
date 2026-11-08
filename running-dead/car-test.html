@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v506 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v507 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3302,13 +3302,10 @@
     const starter = buildings.filter((B) => B.block === START_BLOCK && !B.big);   // v262: 큰 건물 말고 작은 건물 3채
     const dud = starter[Math.floor(Math.random() * starter.length)];   // v454: 3채 전부 금고 — 진짜 둘, 꽝 하나 (v288: 진짜 하나)
     for (const B of starter) { addSafe(B); if (B === dud) B.safe.dud = true; }
-    if (!TEST_MAP) BLOCKS.forEach((_, k) => {   // v506: 첫 마을 말고 마을마다 건물 하나에 숨은 금고 — 미니맵·지붕 물음표 없음, 깨면 패시브 아이템
-      if (k === START_BLOCK) return;
-      const hs = buildings.filter((H) => H.block === k && !H.station && !H.safe);
-      if (!hs.length) return;
-      const H = hs[Math.floor(Math.random() * hs.length)];
-      addSafe(H); H.safe.hidden = true;
-    });
+    if (!TEST_MAP) {                          // v507: 맵 전체에 숨은 금고 딱 하나 — 첫 마을 말고 아무 마을 건물 하나 (미니맵·지붕 물음표 없음, 깨면 패시브 아이템)
+      const hs = buildings.filter((H) => H.block !== START_BLOCK && !H.station && !H.safe);
+      if (hs.length) { const H = hs[Math.floor(Math.random() * hs.length)]; addSafe(H); H.safe.hidden = true; }
+    }
     {   // v387: 첫 마을 말고 마을마다 노랑 2 · 빨강 2 · 주황 2를 지우고 그 자리에 경찰
       const Z1 = scrZone(), blockOf = (b) => { if (b.space) return b.space.block; if (b.home) return b.home.block; if (b.foot.x > Z1.x0 && b.foot.x < Z1.x1 && b.foot.z > Z1.z0 && b.foot.z < Z1.z1) return START_BLOCK; let k = 0, bd = Infinity; BLOCKS.forEach(([ox, oz], i) => { const d = Math.hypot(b.foot.x - ox, b.foot.z - oz); if (d < bd) { bd = d; k = i; } }); return k; };
       BLOCKS.forEach((_, k) => {
