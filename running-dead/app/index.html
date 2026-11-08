@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v426</div>
+  <div id="ver">v427</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3235,9 +3235,27 @@
       if (!ok) continue;
       me.foot.set(x, 0, z);
       me.space = null;
+      clearStart();                           // v427
       return;
     }
     me.foot.set(0, 0, 0); me.space = spaceOf(0, 0);   // 못 찾으면 (거의 없음) 예전 자리
+    clearStart();
+  }
+  function clearStart() {                     // v427: 시작하자마자 둘레(내 인지거리 + 1칸)에 길거리 사람이 없게 — 있으면 첫 마을 다른 곳으로 옮긴다 (없으면 맵 아무 데나)
+    const R = me.sense + 1, Z = scrZone();
+    for (const b of bodies) {
+      if (b.kind !== 'citizen' || b.space || b.police) continue;
+      if (Math.hypot(b.foot.x - me.foot.x, b.foot.z - me.foot.z) > R) continue;
+      for (let t = 0; t < 200; t++) {
+        const wide = t >= 120;
+        const x = wide ? rand(MM.x0 + 2, MM.x1 - 2) : rand(Math.max(Z.x0, MM.x0 + 2), Math.min(Z.x1, MM.x1 - 2));
+        const z = wide ? rand(MM.z0 + 2, MM.z1 - 2) : rand(Math.max(Z.z0, MM.z0 + 2), Math.min(Z.z1, MM.z1 - 2));
+        if (Math.hypot(x - me.foot.x, z - me.foot.z) < R + 2 || !freeSpot(x, z, null)) continue;
+        if (bodies.some((o) => o !== b && Math.hypot(o.foot.x - x, o.foot.z - z) < 1.2)) continue;
+        b.foot.set(x, 0, z); b.vel.set(0, 0); b.area = square(x, z); b.goal = null;
+        break;
+      }
+    }
   }
   // 경찰서 호출 (v157) — 바깥 경찰(처음 3명 + 출동해 나온 경찰)이 잃은 피를 다 더해서 경찰 체력의 1/10을 넘을 때마다 한 번.
   //   호출마다 안의 경찰 1명이 (v160) 다친 경찰 자리로 뛰어나와 바깥 경찰이 된다. 안에 좀비가 있거나 안 인원이 3명 이하면 무시.
