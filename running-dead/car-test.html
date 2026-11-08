@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v500 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v501 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2466,7 +2466,7 @@
         { let cb = null, cd = Infinity; const reach = MELEE - RADIUS + Math.max(0, (z.r || BODY) - BODY);
           if (!z.space) for (const o of objs) if (o.type === 'car' && !o.dead) { const g = objGap(o, z); if (g <= reach && g < cd) { cd = g; cb = o; } }
           if (cb && (!go || cd < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z) - RADIUS)) { z.carT = z.carHold === cb ? (z.carT || 0) + dt : dt; z.carHold = cb; } else { z.carT = 0; z.carHold = null; }
-          if (z.carT >= 2.5) forced = z.carHold; }
+          if (z.carT >= 1.25) forced = z.carHold; }   // v501: 2.5 → 1.25초
         let ob = forced || (!t ? nearObj(z) : null);       // v240: 문·경찰차도 다른 타겟과 같은 우선순위 — 더 가까우면 그걸 (대신 아주 가까이 있어야 알아챈다)
         if (!t && !ob && !go && !sf) ob = nearObj.any;   // v245: 주변에 다음 타겟이 없으면 3명이 찬 문·경찰차에도 제한 없이 붙는다
         if (ob && (forced || !go || objGap(ob, z) < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z) - RADIUS) && (!sf || objGap(ob, z) < Math.hypot(sf.foot.x - z.foot.x, sf.foot.z - z.foot.z) - sf.r)) fightObj(z, ob, dt);
