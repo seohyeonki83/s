@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v437 군인팀 시험</div>
+  <div id="ver">v438 군인팀 시험</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1398,7 +1398,7 @@
     if (!m) { c.outT = 0; return false; }
     const lim = c.inRange ? GUARD_DOMAIN_FIGHT : GUARD_DOMAIN;
     if (Math.hypot(c.foot.x - m.foot.x, c.foot.z - m.foot.z) <= lim) { c.outT = 0; return false; }
-    if (!c.outT) c.outLimit = rand(0.2, 1);   // v437: 군인 복귀 딜레이 0.2~1초 (v436: 0~0.25초)
+    if (!c.outT) c.outLimit = rand(0.3, 1.5);   // v438: 군인 복귀 딜레이 0.3~1.5초 (v437: 0.2~1초)
     c.outT = (c.outT || 0) + dt;
     if (c.outT < c.outLimit) return false;
     c.outT = 0; c.recall = true; c.foe = null; c.inRange = false; enterNormal(c);
