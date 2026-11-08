@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v462 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v463 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1800,9 +1800,27 @@
           car.vx *= ns / sp; car.vz *= ns / sp;
         }
         if (hu - Math.abs(u) < hv - Math.abs(v)) u = (u < 0 ? -1 : 1) * hu; else v = (v < 0 ? -1 : 1) * hv;
-        b.foot.x = car.x + u * fx + v * rx;
-        b.foot.z = car.z + u * fz + v * rz;
+        const nx = car.x + u * fx + v * rx, nz = car.z + u * fz + v * rz;
+        if (b.mut === 'armor' && car.state === 'parked') {   // v463: 덩치는 서 있는 차를 밀어낸다 — 밀린 거리를 힘으로 나눈다 (덩치 8 : 차 무게 10)
+          const sh = b.force / (b.force + CAR_MASS), ex = nx - b.foot.x, ez = nz - b.foot.z;
+          b.foot.x += ex * (1 - sh); b.foot.z += ez * (1 - sh);
+          car.x -= ex * sh; car.z -= ez * sh;
+          carClampB(car); if (car.obj) car.obj.foot.set(car.x, 0, car.z); pushedCar = true;
+          continue;
+        }
+        b.foot.x = nx;
+        b.foot.z = nz;
       }
+    }
+    if (pushedCar) { pushedCar = false; updateCarObs(); }
+  }
+  let pushedCar = false;
+  function carClampB(car) {                   // v463: 건물에 파고든 차를 가장 가까운 벽 밖으로
+    for (const B of buildings) {
+      const m = CAR_W * ck(car) / 2 + 0.2;
+      if (car.x <= B.x0 - m || car.x >= B.x1 + m || car.z <= B.z0 - m || car.z >= B.z1 + m) continue;
+      const l = car.x - (B.x0 - m), r = B.x1 + m - car.x, u = car.z - (B.z0 - m), w = B.z1 + m - car.z, k = Math.min(l, r, u, w);
+      if (k === l) car.x = B.x0 - m; else if (k === r) car.x = B.x1 + m; else if (k === u) car.z = B.z0 - m; else car.z = B.z1 + m;
     }
   }
   function drawCars(eyes) {                   // 좀비 시야 안에 있을 때만 보인다 (벽 너머는 안 보임)
