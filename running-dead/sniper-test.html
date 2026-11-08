@@ -205,7 +205,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v411 군인팀 시험</div>
+  <div id="ver">v412 군인팀 시험</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -962,7 +962,7 @@
     c.sense = SENSE * rand(0.9, 1.1);
     c.sight = SIGHT * rand(0.9, 1.1);
     if (c.soldier) c.sense = c.sight;    // v410: 군인은 경계 없이 시야 안이면 바로 싸움
-    if (c.sniper) { c.evadeR = sniperEvadeR(); c.sight = SIGHT * 1.25; c.sense = c.sight;   /* v404: 경찰과 차이를 절반으로 (1.5 → 1.25배, 9칸) */ c.mark = new THREE.Sprite(diamondMat); c.mark.scale.set(0.62, 0.62, 1); c.mark.renderOrder = UI; c.mark.visible = false; scene.add(c.mark); }   // v396: 저격수 시야 10.8칸 — 시야 안이면 경계 없이 바로 싸움
+    if (c.sniper) { c.evadeR = sniperEvadeR(); c.sight = SIGHT * 1.25; c.sense = c.sight;   /* v404: 경찰과 차이를 절반으로 (1.5 → 1.25배, 9칸) */ c.mark = new THREE.Sprite(diamondMat); c.mark.scale.set(0.9, 0.9, 1); c.mark.renderOrder = UI; c.mark.visible = false; scene.add(c.mark); }   // v396: 저격수 시야 10.8칸 — 시야 안이면 경계 없이 바로 싸움
     c.flee = new THREE.Vector2();
     c.lastSeen = new THREE.Vector3();
     c.lastSeenSpeed = SPEED;
@@ -2654,7 +2654,7 @@
         }
       }
       if (b.kind !== 'citizen') continue;
-      if (b.mark) { b.mark.visible = !hide; if (!hide) b.mark.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + 0.32); }   // v401: 저격수 다이아몬드
+      if (b.mark) { b.mark.visible = !hide; if (!hide) b.mark.position.copy(b.foot).addScaledVector(UP, RADIUS); }   // v412: 저격수 스코프 — 몸 한가운데에 크게
       if (b.stunT > 0 || b.stunShown) {       // 감전 중 깜빡임 (v190)
         const base = COLOR[b.sniper ? 'sniper' : b.soldier ? 'soldier' : b.police ? 'police' : b.attacker ? 'attacker' : b.guard ? 'guard' : 'citizen'];
         b.stunShown = b.stunT > 0;
