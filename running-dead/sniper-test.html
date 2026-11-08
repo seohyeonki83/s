@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v444 군인팀 시험</div>
+  <div id="ver">v445 군인팀 시험</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1234,6 +1234,11 @@
       c.sense = c.boostSense * k;
       c.sight = c.boostSight * k;
     }
+    if (c.pushT > 0) {                       // v445: 덩치에 밀리는 중 — 위치만 밀린다 (공격·복귀·연사는 계속)
+      c.foot.x += c.pushVX * dt; c.foot.z += c.pushVZ * dt;
+      const f = Math.exp(-4 * dt); c.pushVX *= f; c.pushVZ *= f;
+      if ((c.pushT -= dt) <= 0) { c.pushT = 0; c.pushVX = c.pushVZ = 0; }
+    }
     if (c.knockT > 0) { knockStep(c, dt); return; }
     if (c.dropT > 0) {                       // 경찰차에서 막 내린 경찰: 늘어난 인지거리가 3초에 걸쳐 원래대로 (v114)
       c.dropT = Math.max(0, c.dropT - dt);
@@ -1920,9 +1925,9 @@
     if (v.dead || !(v.kind === 'citizen' || v.kind === 'safe' || isZombie(v)) || v.hp <= 0) return;
     v.hp = Math.max(0, v.hp - dmg);
     if (v.kind === 'safe') { if (v.hp <= 0) breakSafe(v); return; }   // 금고 (v190)
-    if (v.kind === 'citizen' && a.mut === 'armor' && v.hp > 0 && v.state !== 'held' && !(v.knockT > 0)) {   // v295: 덩치는 무게가 있어 맞은 상대가 밀려난다 — v301: 스플래시 맞은 애들도 (덩치에서 먼 쪽으로)
+    if (v.kind === 'citizen' && a.mut === 'armor' && v.hp > 0 && v.state !== 'held') {   // v445: 덩치 밀치기 = 이동만 더해진다 (하던 행동은 그대로, 겹쳐 맞으면 더해진다)
       const kx = v.foot.x - a.foot.x, kz = v.foot.z - a.foot.z, kl = Math.hypot(kx, kz) || 1;
-      v.knockT = ARMOR_KT; v.knockVX = kx / kl * ARMOR_KB; v.knockVZ = kz / kl * ARMOR_KB;
+      v.pushT = ARMOR_KT; v.pushVX = (v.pushVX || 0) + kx / kl * ARMOR_KB; v.pushVZ = (v.pushVZ || 0) + kz / kl * ARMOR_KB;
     }
     if (v.kind === 'citizen' && (v.state === 'lured' || v.lureAlert)) {   // 유혹 중: 정해진 대수만큼 맞으면 정신 차린다 (v234). 그 전엔 맞기만 하고 계속 돈다발로
       if ((v.lureHit = (v.lureHit || 0) + 1) < lureHits()) return;
@@ -1936,7 +1941,7 @@
         v.lastSeenSpeed = a.speed;
         enterPanic(v, null, true);
         v.tick = 0;
-      } else if (v.state !== 'fight') enterFight(v, a, true);   // 처음 맞으면 맞서 싸운다 — 첫 상대는 때린 좀비
+      } else if (v.state !== 'fight' && !v.recall) enterFight(v, a, true);   // v445: 복귀 중인 군인은 맞아도 복귀를 계속 (가면서 쏜다)   // 처음 맞으면 맞서 싸운다 — 첫 상대는 때린 좀비
     } else if (v.hp <= 0) dying.push(v);
   }
 
