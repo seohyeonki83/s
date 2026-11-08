@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v481 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v482 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -935,12 +935,10 @@
   }
 
   const diamondMat = (() => {                 // v402: 저격수 머리 위 빨간 스코프 (조준경) 표시 — v401 다이아몬드 대신
-    // v480: 몸을 두르는 빨간 테두리 + 머리 위 빨간 느낌표 (세로로 긴 그림 — 아래쪽 1/4 지점이 몸 한가운데)
-    const cv = document.createElement('canvas'); cv.width = 64; cv.height = 128; const g = cv.getContext('2d');
-    g.lineWidth = 9; g.strokeStyle = 'rgba(40, 0, 0, 0.8)'; g.beginPath(); g.arc(32, 96, 26, 0, Math.PI * 2); g.stroke();
-    g.lineWidth = 5; g.strokeStyle = '#ff2a2a'; g.beginPath(); g.arc(32, 96, 26, 0, Math.PI * 2); g.stroke();
-    g.font = '900 46px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.lineWidth = 7; g.strokeStyle = 'rgba(40, 0, 0, 0.85)'; g.strokeText('!', 32, 36); g.fillStyle = '#ff2a2a'; g.fillText('!', 32, 36);
+    // v482: 몸을 두르는 빨간 테두리 + 가로·세로를 가로지르는 빨간 십자 (조준선)
+    const cv = document.createElement('canvas'); cv.width = cv.height = 64; const g = cv.getContext('2d');
+    const draw = (w, col) => { g.lineWidth = w; g.strokeStyle = col; g.beginPath(); g.arc(32, 32, 26, 0, Math.PI * 2); g.moveTo(32, 2); g.lineTo(32, 62); g.moveTo(2, 32); g.lineTo(62, 32); g.stroke(); };
+    g.lineCap = 'round'; draw(9, 'rgba(40, 0, 0, 0.8)'); draw(5, '#ff2a2a');
     const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
     return new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false, depthWrite: false });
   })();
@@ -975,7 +973,7 @@
     c.sense = SENSE * rand(0.9, 1.1);
     c.sight = SIGHT * rand(0.9, 1.1);
     if (c.soldier) c.sense = c.sight;    // v410: 군인은 경계 없이 시야 안이면 바로 싸움
-    if (c.sniper) { c.evadeR = sniperEvadeR(); c.sight = SIGHT * 1.1; c.sense = c.sight;   /* v432: 시야(사거리) = 경찰의 1.1배 → 7.92칸 */   /* v404: 경찰과 차이를 절반으로 (1.5 → 1.25배, 9칸) */ c.mark = new THREE.Sprite(diamondMat); c.mark.scale.set(1.3, 2.6, 1); c.mark.center.set(0.5, 0.25); /* v480: 테두리 + 느낌표 */ c.mark.renderOrder = UI; c.mark.visible = false; scene.add(c.mark); }   // v396: 저격수 시야 10.8칸 — 시야 안이면 경계 없이 바로 싸움
+    if (c.sniper) { c.evadeR = sniperEvadeR(); c.sight = SIGHT * 1.1; c.sense = c.sight;   /* v432: 시야(사거리) = 경찰의 1.1배 → 7.92칸 */   /* v404: 경찰과 차이를 절반으로 (1.5 → 1.25배, 9칸) */ c.mark = new THREE.Sprite(diamondMat); c.mark.scale.set(1.3, 1.3, 1); /* v482: 테두리 + 십자 */ c.mark.renderOrder = UI; c.mark.visible = false; scene.add(c.mark); }   // v396: 저격수 시야 10.8칸 — 시야 안이면 경계 없이 바로 싸움
     c.flee = new THREE.Vector2();
     c.lastSeen = new THREE.Vector3();
     c.lastSeenSpeed = SPEED;
@@ -1374,7 +1372,7 @@
     for (const z of nearIn(zCells, c.foot.x, c.foot.z, ER, evBuf)) if (isZombie(z) && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= ER) list.push(z);
     if (!list.length) { c.evadeR = sniperEvadeR(); enterFight(c, null, true); return; }   // v406: 다음 회피거리는 새로 뽑는다
     if ((c.tick -= dt) <= 0) { c.tick += TICK; c.flee.copy(fleeDir(c, list)); }
-    steer(c.vel, wantV.copy(c.flee).multiplyScalar(3.7 * 0.95), accelOf(c) * dt);   /* v479: 회피 3.7 → 3.52 (5% 줄임) */   /* v442: 회피 = 동료 속도와 같음 (v441: 1.05배) */
+    steer(c.vel, wantV.copy(c.flee).multiplyScalar(PANIC_SPEED * POLICE_PACE * 1.03), accelOf(c) * dt);   /* v482: 회피 = 평소(군인) 속도의 1.03배 (3.15) */   /* v442: 회피 = 동료 속도와 같음 (v441: 1.05배) */
     moveShoot(c, dt);   // v442: 회피하면서도 쏜다 (공격 속도 절반)   // v437: 회피도 군인과 같은 속도 (3.06)
   }
   const BURST_GAP = 0.08;                     // v410: 군인 연사 사이 간격 (초) — 4발이 0.24초 안에
@@ -1441,7 +1439,8 @@
     if (!comp) return;
     if (tier >= 2) {                          // v447: 군인차 두 대 — 한 대에 한 분대씩 (가장자리에서 출발해 나를 향해 온다)
       teamsSpawned++;
-      for (let i = 0; i < 2; i++) { const p = teamSpot(); addCar(p.x, p.z, Math.atan2(me.foot.z - p.z, me.foot.x - p.x), null, 0, comp); }
+      const seg = teamSeg();
+      for (let i = 0; i < 2; i++) teamWait.push({ car: comp, t: i * 3, seg });   // v482: 군인차도 같은 가장자리 구간에서 3초 간격
       return;
     }
     const sq = [];
@@ -3480,7 +3479,7 @@
     zombies.length = 0;
     for (const b of bodies) if (isZombie(b)) zombies.push(b);
     while (teamQueue.length) queueSquads(teamQueue.shift());
-    for (let i = teamWait.length - 1; i >= 0; i--) if ((teamWait[i].t -= dt) <= 0) { const w = teamWait.splice(i, 1)[0]; spawnTeam(w.comp, w.first, w.seg); }   // v444: 분대 10초 간격   // v410: 군인팀 출동 (이번 걸음 좀비 목록을 만든 뒤)
+    for (let i = teamWait.length - 1; i >= 0; i--) if ((teamWait[i].t -= dt) <= 0) { const w = teamWait.splice(i, 1)[0]; if (w.car) { const p = teamSpot(w.seg); addCar(p.x, p.z, Math.atan2(me.foot.z - p.z, me.foot.x - p.x), null, 0, w.car); } else spawnTeam(w.comp, w.first, w.seg); }   // v444: 분대 10초 간격   // v410: 군인팀 출동 (이번 걸음 좀비 목록을 만든 뒤)
     crowd.clear();                            // 시민마다 지금 노리는 좀비 수 (v148) — 타겟을 새로 뽑을 때마다 바로 고쳐서, 같은 순간에 뽑는 좀비끼리도 겹치지 않는다
     for (const z of zombies) if (z.pick && z.pick.kind === 'citizen' && z.pick.hp > 0) crowd.set(z.pick, (crowd.get(z.pick) || 0) + 1);
     objFrame++; objCrowd.clear();             // 경찰차에 붙은 좀비 수 (v243) — 지난 걸음에 때리던 좀비
