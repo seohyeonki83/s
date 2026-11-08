@@ -205,7 +205,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v416 군인팀 시험</div>
+  <div id="ver">v417 군인팀 시험</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4146,7 +4146,7 @@
   function dropPickup(kind, x, z, space) {
     const p = { kind, x, z, space, t: 0 };
     p.s = new THREE.Sprite(new THREE.SpriteMaterial({ map: itemTex(kind, p), transparent: true, depthTest: false, depthWrite: false }));
-    p.s.renderOrder = UI - 1; p.s.scale.set(1.1, 1.1, 1);
+    p.s.renderOrder = UI - 1; p.s.scale.set(3.3, 3.3, 1);   // v417: 3배 (1.1 → 3.3)
     scene.add(p.s);
     pickups.push(p);
     for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; puff(x, 0.5, z, 0xffd25a, 0.4, 1.2, 0.5, Math.cos(a) * 2.5, 0.6, Math.sin(a) * 2.5, 0.85); }
@@ -4155,7 +4155,7 @@
     for (let i = pickups.length - 1; i >= 0; i--) {
       const p = pickups[i];
       p.t += dt;
-      p.s.position.set(p.x, 0, p.z).addScaledVector(UP, RADIUS + 0.45 + Math.sin(p.t * 3) * 0.12);
+      p.s.position.set(p.x, 0, p.z).addScaledVector(UP, 1.75 + Math.sin(p.t * 3) * 0.15);   // v417: 커진 만큼 위로 (아래 끝이 바닥 위)
       if (isZombie(me) && me.space === p.space && Math.hypot(me.foot.x - p.x, me.foot.z - p.z) <= PICK_R) {
         scene.remove(p.s); p.s.material.map.dispose(); p.s.material.dispose();
         pickups.splice(i, 1);
