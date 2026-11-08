@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v435 군인팀 시험</div>
+  <div id="ver">v436 군인팀 시험</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1364,7 +1364,7 @@
     steer(c.vel, wantV.copy(c.flee).multiplyScalar(SNIPER_EVADE), accelOf(c) * dt);   // v432: 회피는 내 처음 속도
   }
   const BURST_GAP = 0.08;                     // v410: 군인 연사 사이 간격 (초) — 4발이 0.24초 안에
-  const GUARD_NEAR = NEAR * 0.9, GUARD_DOMAIN = GUARD_NEAR * 1.2, GUARD_DOMAIN_FIGHT = GUARD_DOMAIN * 1.1;   /* v432: 근접 2.36칸 (−10%) · 지배 = 근접의 1.2배 (2.83칸) · 공격 지배 = 지배의 1.1배 (3.11칸) */   /* v426: 지배 −10% (5.42칸) · 공격 지배 −20% (11.5칸), 근접 거리는 그대로 */   // v410: 저격수의 지배 · 공격 지배 거리 (나와 같은 기본값, 고정)
+  const GUARD_NEAR = NEAR * 0.9 * 0.8, GUARD_DOMAIN = GUARD_NEAR * 1.1, GUARD_DOMAIN_FIGHT = GUARD_NEAR * 1.2;   /* v436: 근접 1.89칸 (−20%) · 지배 = 근접의 1.1배 (2.08칸) · 공격 지배 = 근접의 1.2배 (2.27칸) */   /* v432: 근접 2.36칸 (−10%) · 지배 = 근접의 1.2배 (2.83칸) · 공격 지배 = 지배의 1.1배 (3.11칸) */   /* v426: 지배 −10% (5.42칸) · 공격 지배 −20% (11.5칸), 근접 거리는 그대로 */   // v410: 저격수의 지배 · 공격 지배 거리 (나와 같은 기본값, 고정)
   function muzzleFlash(c, tx, tz) {           // v410: 헛발 총구 불꽃 (맞힐 상대가 없을 때)
     const dx = tx - c.foot.x, dz = tz - c.foot.z, d = Math.hypot(dx, dz) || 1, ux = dx / d, uz = dz / d;
     const f1 = puff(c.foot.x + ux * RADIUS * 0.95, 0, c.foot.z + uz * RADIUS * 0.95, 0xfff23a, 1.0, 1.0, 0.07, 0, 0, 0, 0.7);
@@ -1398,7 +1398,7 @@
     if (!m) { c.outT = 0; return false; }
     const lim = c.inRange ? GUARD_DOMAIN_FIGHT : GUARD_DOMAIN;
     if (Math.hypot(c.foot.x - m.foot.x, c.foot.z - m.foot.z) <= lim) { c.outT = 0; return false; }
-    if (!c.outT) c.outLimit = rand(...RECALL_DELAY) / 4;   // v426: 군인 복귀 딜레이 1/4 (0.25~0.5초)
+    if (!c.outT) c.outLimit = rand(0, 0.25);   // v436: 군인 복귀 딜레이 0~0.25초 (v426: 0.25~0.5초)
     c.outT = (c.outT || 0) + dt;
     if (c.outT < c.outLimit) return false;
     c.outT = 0; c.recall = true; c.foe = null; c.inRange = false; enterNormal(c);
