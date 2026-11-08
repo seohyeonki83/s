@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v456</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v457</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3558,7 +3558,7 @@
     const t = {
       vest: ['총알 데미지를 감소시킵니다.', '장비 강화가 오르면 총알 데미지 감소율이 올라갑니다.'],
       taser: ['대상을 감전시킵니다.', '장비 강화가 올라가면 감전 대상이 늘어납니다.'],
-      cash: ['인간들이 정신 못 차립니다.', '장비 강화 시 더 많은 돈을 뿌리고 더 많은 인간들이 몰려듭니다.'],
+      cash: ['인간들이 정신 못 차립니다.', '장비 강화 시 더 많은 돈을 뿌리고 더 많은 인간들이 몰려듭니다.', '훈련된 인간은 유혹에 강합니다.'],
       mutate: ['가장 가까운 동료 하나가 체력이 가득 차며 잠시 변이합니다.', '장비 강화가 오르면 주사를 더 들고 다니고 변이가 더 오래 갑니다.'],
       bomb: ['적에게 가장 많이 둘러싸인 동료 하나가 터지며 산성 덩어리를 뿌립니다.', '장비 강화가 오르면 다시 쓰는 시간이 짧아집니다.'],
       crowbar: ['건물과 사물에 입히는 피해가 늘어납니다.', '장비 강화가 오르면 피해가 더 늘어납니다.'],
@@ -3567,7 +3567,7 @@
       revive: ['죽으면 체력 30%로 되살아납니다. 다시 쓰려면 2분이 지나야 합니다.', '장비 강화가 오르면 되살아날 때 체력이 10%씩 더 찹니다.'],
       shoes: ['나의 이동 속도가 빨라집니다.', '장비 강화가 오르면 더 빨라집니다.'],
     }[kind];
-    return `<div class="main">${t[0]}</div><div class="up"><span style="display:inline-block;width:1.15em;vertical-align:-0.22em;margin-right:4px">${IC.tool}</span>${t[1]}</div>`;   // v270: 설명 속 두뇌도 플랫 아이콘
+    return `<div class="main">${t[0]}${t[2] ? '<br>' + t[2] : ''}</div><div class="up"><span style="display:inline-block;width:1.15em;vertical-align:-0.22em;margin-right:4px">${IC.tool}</span>${t[1]}</div>`;   // v270: 설명 속 두뇌도 플랫 아이콘
   }
 
   const SLOT_A = [45, 15, 75], SLOT_R = 125;   // 버튼 자리 = 조이스틱 가운데에서 이 각도(오른쪽 0°, 위 90°)·거리(px)
