@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v446</div>
+  <div id="ver">v447</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -318,7 +318,7 @@
   const STAR_MAX = 5;
   const STAR_BASE = 10, STAR_GROW = 2.1;   /* v395: 10명 시작 · 2.1배 → 누적 [10, 31, 75, 168, 362] */   // 별 사이에 더 필요한 감염 수가 2.5배씩 늘어난다: +5, +12.5, +31, +78, +195 (v135)
   const STAR_AT = (() => { let t = 0, d = STAR_BASE; return Array.from({ length: 5 }, () => { t += d; d *= STAR_GROW; return Math.round(t); }); })();   // [5, 18, 49, 127, 322]
-  const TEAM_COMP = { 1: ['sniper', 'soldier', 'soldier', 'soldier', 'sniper', 'soldier', 'soldier', 'soldier'] };   /* v426: 1팀 = 저격수 2 + 군인 6 (저격수 하나에 군인 셋씩) */   /* v418: 1팀 = 저격수 2 + 군인 4 (저격수 하나에 군인 둘씩) */   // v410: 군인팀 구성 — 1팀 = 군인 2 + 저격수 1 (2~4팀은 아직 미정 → 그 차례엔 안 나온다)
+  const TEAM_COMP = { 2: ['sniper', 'soldier', 'soldier', 'soldier', 'soldier'], 1: ['sniper', 'soldier', 'soldier', 'soldier', 'sniper', 'soldier', 'soldier', 'soldier'] };   /* v426: 1팀 = 저격수 2 + 군인 6 (저격수 하나에 군인 셋씩) */   /* v418: 1팀 = 저격수 2 + 군인 4 (저격수 하나에 군인 둘씩) */   // v410: 군인팀 구성 — 1팀 = 군인 2 + 저격수 1 (2~4팀은 아직 미정 → 그 차례엔 안 나온다)
   const TEAM_EVENTS = (() => {               // v410: 군인팀 출동 시점 = 경보 3단계(개판)부터 단계마다 도달할 때 + 다음 단계와의 중간 (데프콘 뒤로도 2.1배씩 계속)
     const th = []; let t = 0, d = STAR_BASE;
     for (let i = 0; i < 14; i++) { t += d; d *= STAR_GROW; th.push(Math.round(t)); }
@@ -1443,6 +1443,11 @@
   function queueSquads(tier) {                // v444: 팀을 분대(저격수 하나 + 딸린 군인)로 나눠 10초 간격으로 하나씩
     const comp = TEAM_COMP[tier];
     if (!comp) return;
+    if (tier >= 2) {                          // v447: 군인차 두 대 — 한 대에 한 분대씩 (가장자리에서 출발해 나를 향해 온다)
+      teamsSpawned++;
+      for (let i = 0; i < 2; i++) { const p = teamSpot(); addCar(p.x, p.z, Math.atan2(me.foot.z - p.z, me.foot.x - p.x), null, 0, comp); }
+      return;
+    }
     const sq = [];
     for (const t of comp) { if (t === 'sniper' || !sq.length) sq.push([]); sq[sq.length - 1].push(t); }
     sq.forEach((c, i) => teamWait.push({ comp: c, t: i * 10, first: i === 0 }));
@@ -1601,7 +1606,7 @@
   const cars = [];
   let carObs = [];                            // 길 찾기용 서 있는 경찰차 원 {x, z, r} — 사이로 몸이 못 지나갈 만큼 붙은 차들은 한 원으로 합친다 (v139)
   function updateCarObs() {
-    const cs = cars.filter((c) => c.state === 'parked').map((c) => ({ x: c.x, z: c.z, r: CAR_W / 2 * PARKED_K * 0.8 * (c.wreck ? 0.2 : 1) }));   // v264: 돌아가는 원을 차 부딪힘보다 작게 — 좀비가 차에 실제로 닿아야 막힌 차를 때린다 (잔해는 1/5)
+    const cs = cars.filter((c) => c.state === 'parked').map((c) => ({ x: c.x, z: c.z, r: CAR_W * ck(c) / 2 * PARKED_K * 0.8 * (c.wreck ? 0.2 : 1) }));   // v264: 돌아가는 원을 차 부딪힘보다 작게 — 좀비가 차에 실제로 닿아야 막힌 차를 때린다 (잔해는 1/5)
     for (let merged = true; merged; ) {
       merged = false;
       for (let i = 0; i < cs.length && !merged; i++) for (let j = i + 1; j < cs.length; j++) {
@@ -1620,15 +1625,18 @@
   const glassGeo = new THREE.PlaneGeometry(0.45, CAR_W * 0.78).rotateX(-Math.PI / 2);  // 앞 유리
   const lampGeo = new THREE.PlaneGeometry(0.34, 0.5).rotateX(-Math.PI / 2);            // 지붕 경광등 (빨강·파랑)
   const carMat = (color, order) => new THREE.MeshBasicMaterial({ color, transparent: true, depthTest: false, depthWrite: false });
-  function addCar(x, z, h, site, n) {
-    const g = new THREE.Group(), red = carMat(0xff3b30), blue = carMat(0x2f6bff);
-    const body = new THREE.Mesh(carGeo, carMat(0x24305a)); body.renderOrder = -0.45;
+  const MIL_K = 1.3;                          // v447: 군인차 크기 = 경찰차의 1.3배
+  const ck = (c) => c.mil ? MIL_K : 1;
+  function addCar(x, z, h, site, n, squad) {
+    const g = new THREE.Group(), red = carMat(squad ? 0x2a3320 : 0xff3b30), blue = carMat(squad ? 0x2a3320 : 0x2f6bff);
+    const body = new THREE.Mesh(carGeo, carMat(squad ? 0x4a5a32 : 0x24305a)); body.renderOrder = -0.45;   // v447: 군인차는 국방색
     const glass = new THREE.Mesh(glassGeo, carMat(0xa9bde8)); glass.position.x = CAR_L / 2 - 0.6; glass.renderOrder = -0.44;
     const l1 = new THREE.Mesh(lampGeo, red); l1.position.set(-0.15, 0, -0.27); l1.renderOrder = -0.44;
     const l2 = new THREE.Mesh(lampGeo, blue); l2.position.set(-0.15, 0, 0.27); l2.renderOrder = -0.44;
     g.add(body, glass, l1, l2);
+    if (squad) g.scale.set(MIL_K, 1, MIL_K);
     scene.add(g);
-    cars.push({ g, red, blue, x, z, vx: 0, vz: 0, h, calls: [site], n, state: 'drive', flashT: 0, sight: SIGHT * 0.7 * rand(0.8, 1.2), foot: new THREE.Vector3(x, 0, z) });   // calls = 들를 사건 자리 (새 감염도 여기 붙는다)
+    cars.push({ g, red, blue, x, z, vx: 0, vz: 0, h, calls: site ? [site] : [], n, squad, mil: !!squad, state: 'drive', flashT: 0, sight: SIGHT * 0.7 * (squad ? 0.8 : rand(0.8, 1.2)), foot: new THREE.Vector3(x, 0, z) });   // v447: 군인차 인지거리 = 경찰차 기준의 80% 고정 (랜덤 없음)   // calls = 들를 사건 자리 (새 감염도 여기 붙는다)
   }
   function carGoal(car) {                     // 지금 갈 곳 = 들를 사건 자리 중 가장 가까운 곳 (k = 그 번호), 없으면 주인공 (k = -1). 건물 안이면 그 문 앞 밖
     let tx, tz, k = -1, best = Infinity;
@@ -1643,7 +1651,28 @@
     }
     return [tx, tz, k];
   }
+  function unloadSquad(car) {                 // v447: 군인차 — 한쪽으로 진형을 갖춰 내린다 (앞줄 군인 3, 뒷줄 저격수 + 군인 둘레). 건물·벽에 덜 끼는 쪽으로
+    const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx, row = BODY * 2 + 0.35, off = CAR_W * MIL_K / 2 + BODY + 0.3;
+    const slots = (sd) => {                   // 차에서 먼 쪽이 뒷줄 (저격수)
+      const L = [];
+      [-1, 0, 1].forEach((a) => L.push([off, a * row]));
+      L.push([off + row, 0]); [-1, 1].forEach((a) => L.push([off + row, a * row]));
+      return L.map(([o, a]) => ({ x: car.x + rx * o * sd + fx * a, z: car.z + rz * o * sd + fz * a, back: o > off }));
+    };
+    const score = (sd) => slots(sd).filter((p) => freeSpot(p.x, p.z, null) && !spaceOf(p.x, p.z)).length;
+    const sd = score(1) >= score(-1) ? 1 : -1, S = slots(sd);
+    const front = S.filter((p) => !p.back), back = S.filter((p) => p.back);
+    let sn = null; const sol = [];
+    for (const t of car.squad) {
+      const p = t === 'sniper' ? back.shift() : (front.shift() || back.pop());
+      const c = addCitizen(p.x, p.z, square(p.x, p.z), t);
+      if (t === 'sniper') sn = c; else sol.push(c);
+      c.tick = 0;
+    }
+    if (sn) sol.forEach((c) => { c.master = sn; c.slotA = Math.random() * Math.PI * 2; c.slotK = rand(0.5, 1); });
+  }
   function unload(car) {                      // 양옆 문으로 1~2명 내린다 — 한 명이면 아무 쪽이나
+    if (car.squad) { unloadSquad(car); return; }
     const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx, off = CAR_W / 2 + BODY + 0.25;
     const s0 = Math.random() < 0.5 ? 1 : -1;
     for (let i = 0; i < car.n; i++) {            // 양옆 문으로 번갈아 내린다 — 셋째부터는 그 뒤에 (v170)
@@ -1657,25 +1686,36 @@
     }
   }
   function updateCars(dt) {
+    for (let i = cars.length - 1; i >= 0; i--) {   // v447: 부서진 차 — 검은 연기가 폴폴 나다가 10초 뒤 사라진다
+      const c = cars[i];
+      if (!c.wreck) continue;
+      c.wreckT = (c.wreckT || 0) + dt;
+      if ((c.smokeT = (c.smokeT || 0) - dt) <= 0) { c.smokeT = 0.18; puff(c.x + rand(-0.4, 0.4), 0.5, c.z + rand(-0.4, 0.4), 0x141414, 0.7, rand(1.6, 2.4), rand(1.2, 1.8), rand(-0.25, 0.25), rand(0.7, 1.1), rand(-0.25, 0.25), 0.75); }
+      if (c.wreckT >= 10) {
+        scene.remove(c.g); cars.splice(i, 1);
+        const j = objs.indexOf(c.obj); if (j >= 0) { if (c.obj.hpBar) scene.remove(c.obj.hpBar); objs.splice(j, 1); }
+        updateCarObs();
+      }
+    }
     for (const car of cars) {
       if (car.state === 'parked') continue;
       car.flashT += dt;
       const on = Math.floor(car.flashT / 0.25) % 2 === 0;   // 경광등 번쩍
-      car.red.color.setHex(on ? 0xff3b30 : 0x5a1a17);
-      car.blue.color.setHex(on ? 0x1d2a55 : 0x2f6bff);
+      if (!car.mil) { car.red.color.setHex(on ? 0xff3b30 : 0x5a1a17); car.blue.color.setHex(on ? 0x1d2a55 : 0x2f6bff); }
       if (car.state === 'drive') {
         let zombie = false;                   // 경찰 시야 안에 좀비 (밖에 있는 좀비만 — 경찰차는 늘 밖)
         for (const z of zombies) if (isZombie(z) && !z.space && Math.hypot(z.foot.x - car.x, z.foot.z - car.z) <= car.sight) { zombie = true; break; }
         const goal = zombie ? null : carGoal(car);
-        if (zombie || !goal) { car.state = 'brake'; car.brakeT = CAR_BRAKE_DELAY * rand(1, 2); }   // 좀비를 봤다 (또는 좀비가 하나도 없다) → 선다. 늦게 밟는 시간 = 원래~2배 사이 랜덤 (v229)
+        if (zombie || !goal) { car.state = 'brake'; car.brakeT = CAR_BRAKE_DELAY * rand(1, 2) * (car.mil ? 0.5 : 1); }   // v447: 군인차는 늦게 밟는 시간 절반   // 좀비를 봤다 (또는 좀비가 하나도 없다) → 선다. 늦게 밟는 시간 = 원래~2배 사이 랜덤 (v229)
         else {
           const [tx, tz, k] = goal, d = Math.hypot(tx - car.x, tz - car.z);
           if (k >= 0 && d < 2.5) car.calls.splice(k, 1);   // 사건 자리에 닿았다 → 지우고 다음 곳으로 (서지 않는다)
           else if (k < 0 && d < 1.5) carSteer(car, 0, 0, CAR_BRAKE * dt);   // 주인공이 건물 안이라 문 앞까지 왔다 → 문 앞에서 기다린다 (내리지는 않는다)
           else {
-            const w = around(car.x, car.z, tx, tz, CAR_W / 2 + 0.6, CAR_L / 2 + 1.3);   // 건물은 넉넉히 돌아간다
+            const w = around(car.x, car.z, tx, tz, CAR_W * ck(car) / 2 + 0.6, CAR_L * ck(car) / 2 + 1.3);   // 건물은 넉넉히 돌아간다
             const dx = w.x - car.x, dz = w.y - car.z, l = Math.hypot(dx, dz) || 1;
-            carSteer(car, dx / l * CAR_SPEED, dz / l * CAR_SPEED, CAR_ACCEL * dt);
+            const sp = CAR_SPEED * (car.mil ? 2 / 3 : 1);   // v447: 군인차는 1/3 느리다
+            carSteer(car, dx / l * sp, dz / l * sp, CAR_ACCEL * dt);
           }
         }
       }
@@ -1702,7 +1742,7 @@
       car.x += car.vx * dt;
       car.z += car.vz * dt;
       for (const B of buildings) {            // 혹시 건물에 파고들면 가장 가까운 벽 밖으로
-        const m = CAR_W / 2 + 0.2;
+        const m = CAR_W * ck(car) / 2 + 0.2;
         if (car.x <= B.x0 - m || car.x >= B.x1 + m || car.z <= B.z0 - m || car.z >= B.z1 + m) continue;
         const l = car.x - (B.x0 - m), r = B.x1 + m - car.x, u = car.z - (B.z0 - m), w = B.z1 + m - car.z, k = Math.min(l, r, u, w);
         if (k === l) car.x = B.x0 - m; else if (k === r) car.x = B.x1 + m; else if (k === u) car.z = B.z0 - m; else car.z = B.z1 + m;
@@ -1721,10 +1761,10 @@
     function carCarPairs() {
     for (let i = 0; i < cars.length; i++) for (let j = i + 1; j < cars.length; j++) {
       const A = cars[i], B = cars[j];
-      if (Math.hypot(A.x - B.x, A.z - B.z) > CAR_L * 1.6) continue;
+      if (Math.hypot(A.x - B.x, A.z - B.z) > CAR_L * 1.6 * Math.max(ck(A), ck(B))) continue;
       const kA = A.state === 'parked' ? PARKED_K * (A.wreck ? 0.2 : 1) : MOVING_K, kB = B.state === 'parked' ? PARKED_K * (B.wreck ? 0.2 : 1) : MOVING_K;
       const ax = [[Math.cos(A.h), Math.sin(A.h)], [-Math.sin(A.h), Math.cos(A.h)]], bx = [[Math.cos(B.h), Math.sin(B.h)], [-Math.sin(B.h), Math.cos(B.h)]];
-      const ha = [CAR_L / 2 * kA, CAR_W / 2 * kA], hb = [CAR_L / 2 * kB, CAR_W / 2 * kB];
+      const ha = [CAR_L / 2 * kA * ck(A), CAR_W / 2 * kA * ck(A)], hb = [CAR_L / 2 * kB * ck(B), CAR_W / 2 * kB * ck(B)];
       const dx = B.x - A.x, dz = B.z - A.z;
       let best = Infinity, nx = 0, nz = 0;
       for (const [x, z] of [...ax, ...bx]) {   // 네 축으로 겹침을 재서 가장 얕은 쪽으로 민다
@@ -1751,7 +1791,7 @@
       for (const b of bodies) {
         if (b.fixed || b.knockT > 0) continue;
         const k = car.state === 'parked' ? PARKED_K * (car.wreck ? 0.2 : 1) : MOVING_K;   // 잔해는 1/5 (v239)   // 서 있으면 작고 (v171), 달리면 크다 (v178)
-        const dx = b.foot.x - car.x, dz = b.foot.z - car.z, hu = CAR_L / 2 * k + b.r, hv = CAR_W / 2 * k + b.r;
+        const dx = b.foot.x - car.x, dz = b.foot.z - car.z, hu = CAR_L * ck(car) / 2 * k + b.r, hv = CAR_W * ck(car) / 2 * k + b.r;
         if (b.hitT > 0 && b.hitT < clock) b.hitT = 0;
         let u = dx * fx + dz * fz, v = dx * rx + dz * rz;
         if (Math.abs(u) >= hu || Math.abs(v) >= hv) continue;
@@ -1780,7 +1820,7 @@
     for (const car of cars) {
       let vis = false;
       for (const z of eyes) {
-        if (Math.hypot(car.x - z.foot.x, car.z - z.foot.z) > z.sense + CAR_L / 2) continue;
+        if (Math.hypot(car.x - z.foot.x, car.z - z.foot.z) > z.sense + CAR_L * ck(car) / 2) continue;
         if (!blocked(z.foot.x, z.foot.z, car.x, car.z)) { vis = true; break; }
       }
       car.g.visible = vis;
@@ -3456,7 +3496,7 @@
       if (b.foot.z < MM.z0 + r) { b.foot.z = MM.z0 + r; if (b.vel.y < 0) b.vel.y = 0; } else if (b.foot.z > MM.z1 - r) { b.foot.z = MM.z1 - r; if (b.vel.y > 0) b.vel.y = 0; }
     }
     for (const car of cars) {                 // 경찰차도 (v174)
-      const m = CAR_L / 2;
+      const m = CAR_L * ck(car) / 2;
       if (car.x < MM.x0 + m || car.x > MM.x1 - m) { car.x = Math.max(MM.x0 + m, Math.min(MM.x1 - m, car.x)); car.vx = 0; }
       if (car.z < MM.z0 + m || car.z > MM.z1 - m) { car.z = Math.max(MM.z0 + m, Math.min(MM.z1 - m, car.z)); car.vz = 0; }
     }
@@ -3502,7 +3542,7 @@
   };
   const ITEM = {
     taser: { max: 3, reload: 20, icon: IC.taser, name: '테이저건', col: '#ffd34d' },   // 3발, 1발 20초 — 내 인지거리 안 적 1명 (위험도 높은 순 → 가까운 순) 4초 감전 (v195), 감전 중인 적은 다시 안 쏨 (v196)
-    cash: { max: 1, reload: 18.75, icon: IC.cash, name: '현금', col: '#43d17a' },    // v284: 15 → 18.75초 (25% 늘림) — 1번 — 내 둘레 1~2칸에 돈다발 (v201: 처음 1개 + 똑똑한 두뇌마다 1개)
+    cash: { max: 1, reload: 37.5,   /* v447: 2배 */ icon: IC.cash, name: '현금', col: '#43d17a' },    // v284: 15 → 18.75초 (25% 늘림) — 1번 — 내 둘레 1~2칸에 돈다발 (v201: 처음 1개 + 똑똑한 두뇌마다 1개)
     vest: { icon: IC.vest, name: '방탄복', passive: true },
     mutate: { max: 1, reload: 35, icon: IC.mutate, name: '변이 주사', col: '#b05cff' },   // v275: 가장 가까운 동료 하나가 체력 가득 + 변이 (갑옷 · 히드라 랜덤) — v299: 23초 + 장비 강화마다 4초
     bomb: { max: 1, reload: 40, icon: IC.bomb, name: '자폭 스위치', col: '#5fcf3a' },     // v275: 적에게 가장 많이 둘러싸인 동료가 터지며 산성 덩어리
@@ -3794,7 +3834,7 @@
   function objGap(o, z) {                     // 좀비 몸 가운데에서 사물 겉면까지
     if (o.type === 'car') {
       const c = o.car, fx = Math.cos(c.h), fz = Math.sin(c.h), dx = z.foot.x - c.x, dz = z.foot.z - c.z;
-      const u = Math.abs(dx * fx + dz * fz) - CAR_L / 2, v = Math.abs(-dx * fz + dz * fx) - CAR_W / 2;
+      const u = Math.abs(dx * fx + dz * fz) - CAR_L * ck(c) / 2, v = Math.abs(-dx * fz + dz * fx) - CAR_W * ck(c) / 2;
       return Math.hypot(Math.max(u, 0), Math.max(v, 0));
     }
     const p = nearestOn(o.seg, z.foot.x, z.foot.z);
@@ -3843,7 +3883,7 @@
       c.wreck = true;
       c.g.children[0].material.color.setHex(0x26221f); c.g.children[1].material.color.setHex(0x151515);
       c.red.color.setHex(0x1c1c1c); c.blue.color.setHex(0x1c1c1c);
-      c.g.scale.set(0.8, 1, 0.8);
+      c.g.scale.set(0.8 * ck(c), 1, 0.8 * ck(c));
       boom(c.x, c.z); dust(c.x, c.z, 14, 2);
       updateCarObs();
     }
