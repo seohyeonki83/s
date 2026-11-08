@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v466 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v467 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1596,7 +1596,7 @@
   const cars = [];
   let carObs = [];                            // 길 찾기용 서 있는 경찰차 원 {x, z, r} — 사이로 몸이 못 지나갈 만큼 붙은 차들은 한 원으로 합친다 (v139)
   function updateCarObs() {
-    const cs = cars.filter((c) => c.state === 'parked').map((c) => ({ x: c.x, z: c.z, r: CAR_W * ck(c) / 2 * PARKED_K * 0.8 * (c.wreck ? 0.2 : 1) }));   // v264: 돌아가는 원을 차 부딪힘보다 작게 — 좀비가 차에 실제로 닿아야 막힌 차를 때린다 (잔해는 1/5)
+    const cs = cars.filter((c) => c.state === 'parked' && !CAR_TEST).map((c) => ({ x: c.x, z: c.z, r: CAR_W * ck(c) / 2 * PARKED_K * 0.8 * (c.wreck ? 0.2 : 1) }));   // v264: 돌아가는 원을 차 부딪힘보다 작게 — 좀비가 차에 실제로 닿아야 막힌 차를 때린다 (잔해는 1/5)
     for (let merged = true; merged; ) {
       merged = false;
       for (let i = 0; i < cs.length && !merged; i++) for (let j = i + 1; j < cs.length; j++) {
@@ -1722,7 +1722,7 @@
           car.vx = car.vz = 0;
           car.state = 'parked';
           car.obj = { kind: 'obj', type: 'car', car, foot: new THREE.Vector3(car.x, 0, car.z), hp: OBJ_HP * 0.8, maxHp: OBJ_HP * 0.8, dead: false };   /* v315: 경찰차 20% 내림 */   // 서 있는 경찰차는 부술 수 있다 (v239)
-          addHpBar(car.obj, hpFoeMat); objs.push(car.obj);
+          if (!CAR_TEST) { addHpBar(car.obj, hpFoeMat); objs.push(car.obj); }   // v467: 차 시험 맵 — 공격 대상 아님
           updateCarObs();                     // 길 찾기에 이 차를 넣는다
           car.red.color.setHex(0x4a3a3a);
           car.blue.color.setHex(0x3a3f4a);
@@ -1806,6 +1806,10 @@
           const f = b === me || b.sniper ? 1 : (b.force || 1),   /* v465: 나·저격수는 차에 보통 몸 힘(1)만 */ sh = f / (f + CAR_MASS), ex = nx - b.foot.x, ez = nz - b.foot.z;
           b.foot.x += ex * (1 - sh); b.foot.z += ez * (1 - sh);
           car.x -= ex * sh; car.z -= ez * sh;
+          if (CAR_TEST) {                     // v467: 미는 자리에 따라 돈다 — 중심에서 민 자리까지(r) × 밀린 거리(d) = 회전
+            const px = b.foot.x - car.x, pz = b.foot.z - car.z, dx = -ex * sh, dz = -ez * sh, L = CAR_L * ck(car), W = CAR_W * ck(car);
+            car.h += (px * dz - pz * dx) / ((L * L + W * W) / 12 + px * px + pz * pz);
+          }
           carClampB(car); if (car.obj) car.obj.foot.set(car.x, 0, car.z); pushedCar = true;
           continue;
         }
@@ -3297,7 +3301,7 @@
   function carTestSetup() {                   // v466: 차 시험 맵
     me.hp = me.maxHp;                         // 시험이라 체력 가득 (빨간 경고 없이)
     const mx = me.foot.x, mz = me.foot.z;
-    addCar(mx, mz - 5, 0, null, 0); const car = cars[cars.length - 1]; car.state = 'brake'; car.brakeT = 0;   // 다음 걸음에 그 자리에 선다 (아무도 안 내림)
+    addCar(mx, mz - 16, 0, null, 0);   /* v467: 멀리 */ const car = cars[cars.length - 1]; car.state = 'brake'; car.brakeT = 0;   // 다음 걸음에 그 자리에 선다 (아무도 안 내림)
     for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; const x = mx + Math.cos(a) * 1.6, z = mz + 1.5 + Math.sin(a) * 1.2, c = addCitizen(x, z, square(x, z), ''); makeZombie(c); }
     items.push({ kind: 'mutate', ammo: itemMax('mutate'), t: 0, el: makeItemButton('mutate', items.length) }); addActiveBadge('mutate'); refreshItems();
     if (!document.getElementById('killAllies')) {
