@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v491 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v492 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1612,7 +1612,7 @@
   const cars = [];
   let carObs = [];                            // 길 찾기용 서 있는 경찰차 원 {x, z, r} — 사이로 몸이 못 지나갈 만큼 붙은 차들은 한 원으로 합친다 (v139)
   function updateCarObs() {
-    const cs = cars.filter((c) => false && c.state === 'parked')   /* v470: 좀비는 서 있는 차를 피해 돌아가지 않고 밀고 들어간다 (본편도) */.map((c) => ({ x: c.x, z: c.z, r: CAR_W * ck(c) / 2 * PARKED_K * 0.8 * (c.wreck ? 0.2 : 1) }));   // v264: 돌아가는 원을 차 부딪힘보다 작게 — 좀비가 차에 실제로 닿아야 막힌 차를 때린다 (잔해는 1/5)
+    const cs = cars.filter((c) => false && c.state === 'parked')   /* v470: 좀비는 서 있는 차를 피해 돌아가지 않고 밀고 들어간다 (본편도) */.map((c) => ({ x: c.x, z: c.z, r: CAR_W * ck(c) / 2 * PARKED_K * 0.8 * (c.wreck ? 0.16 : 1) }));   // v264: 돌아가는 원을 차 부딪힘보다 작게 — 좀비가 차에 실제로 닿아야 막힌 차를 때린다 (잔해는 1/5)
     for (let merged = true; merged; ) {
       merged = false;
       for (let i = 0; i < cs.length && !merged; i++) for (let j = i + 1; j < cs.length; j++) {
@@ -1735,7 +1735,7 @@
         if (Math.hypot(car.vx, car.vz) < 0.05) {   // 섰다 → 경찰이 내리고 차는 그 자리에 계속 서 있다
           car.vx = car.vz = 0;
           car.state = 'parked';
-          car.obj = { kind: 'obj', type: 'car', car, foot: new THREE.Vector3(car.x, 0, car.z), hp: OBJ_HP * 0.8, maxHp: OBJ_HP * 0.8, dead: false };   /* v315: 경찰차 20% 내림 */   // 서 있는 경찰차는 부술 수 있다 (v239)
+          car.obj = { kind: 'obj', type: 'car', car, foot: new THREE.Vector3(car.x, 0, car.z), hp: OBJ_HP * 0.8 * 0.8, maxHp: OBJ_HP * 0.8 * 0.8,   /* v492: 차 체력 20% 깎음 */ dead: false };   /* v315: 경찰차 20% 내림 */   // 서 있는 경찰차는 부술 수 있다 (v239)
           if (!CAR_TEST) { addHpBar(car.obj, hpFoeMat); objs.push(car.obj); }   // v467: 차 시험 맵 — 공격 대상 아님
           updateCarObs();                     // 길 찾기에 이 차를 넣는다
           car.red.color.setHex(0x4a3a3a);
@@ -1766,7 +1766,7 @@
     for (let i = 0; i < cars.length; i++) for (let j = i + 1; j < cars.length; j++) {
       const A = cars[i], B = cars[j];
       if (Math.hypot(A.x - B.x, A.z - B.z) > CAR_L * 1.6 * Math.max(ck(A), ck(B))) continue;
-      const kA = A.state === 'parked' ? PARKED_K * (A.wreck ? 0.2 : 1) : MOVING_K, kB = B.state === 'parked' ? PARKED_K * (B.wreck ? 0.2 : 1) : MOVING_K;
+      const kA = A.state === 'parked' ? PARKED_K * (A.wreck ? 0.16 : 1) : MOVING_K, kB = B.state === 'parked' ? PARKED_K * (B.wreck ? 0.16 : 1) : MOVING_K;
       const ax = [[Math.cos(A.h), Math.sin(A.h)], [-Math.sin(A.h), Math.cos(A.h)]], bx = [[Math.cos(B.h), Math.sin(B.h)], [-Math.sin(B.h), Math.cos(B.h)]];
       const ha = [CAR_L / 2 * kA * ck(A), CAR_W / 2 * kA * ck(A)], hb = [CAR_L / 2 * kB * ck(B), CAR_W / 2 * kB * ck(B)];
       const dx = B.x - A.x, dz = B.z - A.z;
@@ -1794,7 +1794,7 @@
       const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx;
       for (const b of bodies) {
         if (b.fixed || b.knockT > 0) continue;
-        const k = car.state === 'parked' ? PARKED_K * (car.wreck ? 0.2 : 1) : MOVING_K;   // 잔해는 1/5 (v239)   // 서 있으면 작고 (v171), 달리면 크다 (v178)
+        const k = car.state === 'parked' ? PARKED_K * (car.wreck ? 0.16 : 1) : MOVING_K;   // 잔해는 1/5 (v239)   // 서 있으면 작고 (v171), 달리면 크다 (v178)
         const dx = b.foot.x - car.x, dz = b.foot.z - car.z, hu = CAR_L * ck(car) / 2 * k + b.r, hv = CAR_W * ck(car) / 2 * k + b.r;
         if (b.hitT > 0 && b.hitT < clock) b.hitT = 0;
         let u = dx * fx + dz * fz, v = dx * rx + dz * rz;
@@ -2462,9 +2462,14 @@
           if (prey && !t && prey.hp <= 0) claimPrey(z, prey); else unclaim(z);   // HP 0 시민을 쫓는 동안 찜 (덮치면 marked가 대신한다)
         }
         const sf = !t ? nearSafe(z) : null;   /* v353: 동료도 금고를 때린다 */   // 나만: 금고가 가장 가까우면 가서 때린다 (v190)
-        let ob = !t ? nearObj(z) : null;       // v240: 문·경찰차도 다른 타겟과 같은 우선순위 — 더 가까우면 그걸 (대신 아주 가까이 있어야 알아챈다)
+        let forced = null;                     // v492: 공격 거리 안에서 차가 가장 가까운 상태로 2.5초 넘게 → 3명 제한·덮치기보다 먼저 그 차를 때린다
+        { let cb = null, cd = Infinity; const reach = MELEE - RADIUS + Math.max(0, (z.r || BODY) - BODY);
+          if (!z.space) for (const o of objs) if (o.type === 'car' && !o.dead) { const g = objGap(o, z); if (g <= reach && g < cd) { cd = g; cb = o; } }
+          if (cb && (!go || cd < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z) - RADIUS)) { z.carT = z.carHold === cb ? (z.carT || 0) + dt : dt; z.carHold = cb; } else { z.carT = 0; z.carHold = null; }
+          if (z.carT >= 2.5) forced = z.carHold; }
+        let ob = forced || (!t ? nearObj(z) : null);       // v240: 문·경찰차도 다른 타겟과 같은 우선순위 — 더 가까우면 그걸 (대신 아주 가까이 있어야 알아챈다)
         if (!t && !ob && !go && !sf) ob = nearObj.any;   // v245: 주변에 다음 타겟이 없으면 3명이 찬 문·경찰차에도 제한 없이 붙는다
-        if (ob && (!go || objGap(ob, z) < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z) - RADIUS) && (!sf || objGap(ob, z) < Math.hypot(sf.foot.x - z.foot.x, sf.foot.z - z.foot.z) - sf.r)) fightObj(z, ob, dt);
+        if (ob && (forced || !go || objGap(ob, z) < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z) - RADIUS) && (!sf || objGap(ob, z) < Math.hypot(sf.foot.x - z.foot.x, sf.foot.z - z.foot.z) - sf.r)) fightObj(z, ob, dt);
         else if (sf && (!go || Math.hypot(sf.foot.x - z.foot.x, sf.foot.z - z.foot.z) < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z))) fight(z, sf, dt);
         else if (go && go.hp > 0) fight(z, go, dt);     // HP가 남았으면 가서 때린다
         else if (t && dashOk(z, t)) { z.mode = 'pounce'; z.target = t; z.pounceT = 1; t.marked = true; }
