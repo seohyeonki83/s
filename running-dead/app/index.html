@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v412</div>
+  <div id="ver">v413</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -967,6 +967,10 @@
     if (c.police) {                      // 쏠 때 번쩍이는 노란 선 (원 밑에 깔린다)
       c.tracer = new THREE.Mesh(tracerGeo, new THREE.MeshBasicMaterial({ color: 0xffe14d, transparent: true, depthTest: false, depthWrite: false }));
       c.tracer.renderOrder = -0.5;
+      if (c.sniper) {                    // v413: 저격수 — 노란 선 밑에 더 굵은 빨간 선 (더 강한 이펙트)
+        c.tracer2 = new THREE.Mesh(tracerGeo, new THREE.MeshBasicMaterial({ color: 0xff2a2a, transparent: true, depthTest: false, depthWrite: false }));
+        c.tracer2.renderOrder = -0.505; c.tracer2.visible = false; scene.add(c.tracer2);
+      }
       c.tracer.visible = false;
       scene.add(c.tracer);
       c.shotT = -1;                      // 쏜 뒤 지난 시간 (-1 = 선 없음)
@@ -2110,6 +2114,7 @@
     b.icon.visible = false;
     b.gauge.visible = false;
     if (b.tracer) { scene.remove(b.tracer); b.tracer.material.dispose(); b.tracer = null; }
+    if (b.tracer2) { scene.remove(b.tracer2); b.tracer2.material.dispose(); b.tracer2 = null; }
     b.vel.set(0, 0);
     b.mode = 'free';                          // free = 조작·대기, pounce = 덮치러 가는 중, bite = 무는 중
     b.target = null;
@@ -2623,12 +2628,14 @@
     drawCars(eyes);
     for (const b of bodies) if (b.tracer) {   // v408: 총알 선 — 쏜 사람이 시야·화면 밖이어도 보인다 (어둠 위에 그린다). 저격수는 더 굵고, 맞은 자리 너머로 더 길게
       b.tracer.visible = b.shotT >= 0;
+      if (b.tracer2) b.tracer2.visible = b.shotT >= 0;
       if (b.shotT < 0) continue;
       const t = b.shotAt.foot, dx = t.x - b.foot.x, dz = t.z - b.foot.z, L = Math.hypot(dx, dz) || 1e-3, L2 = L + (b.sniper ? SNIPER_TRAIL : 0);
       b.tracer.position.set(b.foot.x + dx / L * L2 / 2, 0, b.foot.z + dz / L * L2 / 2).addScaledVector(UP, RADIUS);
       b.tracer.rotation.y = -Math.atan2(dz, dx);
       b.tracer.scale.set(L2, 1, b.sniper ? SNIPER_THICK : 1);
       b.tracer.material.opacity = 1 - b.shotT / SHOT_FLASH;
+      if (b.tracer2) { const t2 = b.tracer2; t2.visible = true; t2.position.copy(b.tracer.position); t2.rotation.y = b.tracer.rotation.y; t2.scale.set(L2, 1, SNIPER_THICK * 2.4); t2.material.opacity = 0.9 * (1 - b.shotT / SHOT_FLASH); }   // v413: 빨간 바깥 선
       if ((b.shotT += dt) >= SHOT_FLASH) b.shotT = -1;
     }
     for (const b of bodies) {
@@ -2926,6 +2933,7 @@
       if (b.hpBar) scene.remove(b.hpBar);
       if (b.mark) scene.remove(b.mark);
       if (b.tracer) { scene.remove(b.tracer); b.tracer.material.dispose(); }
+      if (b.tracer2) { scene.remove(b.tracer2); b.tracer2.material.dispose(); }
     }
     bodies.length = 0;
     dying.length = 0;
