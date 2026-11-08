@@ -223,7 +223,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v421</div>
+  <div id="ver">v422</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4166,7 +4166,7 @@
   function dropPickup(kind, x, z, space) {
     const p = { kind, x, z, space, t: 0 };
     p.s = new THREE.Sprite(new THREE.SpriteMaterial({ map: itemTex(kind, p), transparent: true, depthTest: false, depthWrite: false }));
-    p.s.renderOrder = UI - 1; p.s.scale.set(3.3, 3.3, 1);   // v417: 3배 (1.1 → 3.3)
+    p.s.renderOrder = UI - 1; p.s.scale.set(1.65, 1.65, 1);   // v422: 절반 (3.3 → 1.65) — v417: 3배
     scene.add(p.s);
     pickups.push(p);
     for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; puff(x, 0.5, z, 0xffd25a, 0.4, 1.2, 0.5, Math.cos(a) * 2.5, 0.6, Math.sin(a) * 2.5, 0.85); }
@@ -4175,7 +4175,7 @@
     for (let i = pickups.length - 1; i >= 0; i--) {
       const p = pickups[i];
       p.t += dt;
-      p.s.position.set(p.x, 0, p.z).addScaledVector(UP, 1.75 + Math.sin(p.t * 3) * 0.15);   // v417: 커진 만큼 위로 (아래 끝이 바닥 위)
+      p.s.position.set(p.x, 0, p.z).addScaledVector(UP, 1.0 + Math.sin(p.t * 3) * 0.12);   // v422: 크기에 맞춰 (아래 끝이 바닥 위)
       if (isZombie(me) && me.space === p.space && Math.hypot(me.foot.x - p.x, me.foot.z - p.z) <= PICK_R) {
         scene.remove(p.s); p.s.material.map.dispose(); p.s.material.dispose();
         pickups.splice(i, 1);
@@ -4683,20 +4683,28 @@
     for (const z of nearIn(zCells, mx, mz, R1 + R0 * 1.3, smBuf)) if (isZombie(z)) smEyes.push(z);
     const marks = [];                          // 화면 가장자리 표시 — 경찰서 보라 ! 만 (v293: 금고 건물 노란 ? 는 뺐다. 지붕 ? 는 그대로)
     for (const S of stations) if (!S.down) marks.push([S, '!', '#b44ee6', 0.12]);   // 부서진 경찰서는 안 알려 준다
-    for (const [S, ch, col, wk] of marks) {
+    for (const p of pickups) marks.push([{ x0: p.x, x1: p.x, z0: p.z, z1: p.z }, null, '#ffd25a', 0.5, p]);   // v422: 안 주운 아이템도 경찰서처럼 가장자리 표시 (금색 동그라미 + 아이콘)
+    for (const [S, ch, col, wk, pk] of marks) {
       const px = Math.max(S.x0, Math.min(S.x1, mx)), pz = Math.max(S.z0, Math.min(S.z1, mz));   // 경찰서 바깥 테두리에서 나와 가장 가까운 점
       const dx = px - mx, dz = pz - mz, d = Math.hypot(dx, dz);
       if (d <= R0 || d > R1) continue;
       const k = 1 + (BANG_MAX - 1) * (R1 - d) / (R1 - R0), size = BANG_PX * k;
       const ux = dx / d, uz = dz / d, edge = Math.min(unionEdge(mx, mz, ux, uz), d);   // 나와 모든 좀비 시야를 합친 영역의 바깥 테두리 위 그 방향
       let [x, y] = toScreen(mx + ux * edge, mz + uz * edge, W, H);
-      const mx2 = size * wk + 1, my2 = size * 0.32;   // 화면 가장자리에 걸치게 (v189 — 전엔 너무 안쪽): 느낌표가 가늘어서 양옆은 거의 붙이고, 위아래는 키의 1/3쯤
+      const mx2 = size * wk + 1, my2 = size * (ch ? 0.32 : 0.5);   // 화면 가장자리에 걸치게 (v189 — 전엔 너무 안쪽): 느낌표가 가늘어서 양옆은 거의 붙이고, 위아래는 키의 1/3쯤
       if (x < mx2 || x > W - mx2 || y < my2 || y > H - my2) {   // 화면 밖 → 나에서 그쪽으로 그은 선이 화면 가장자리에 닿는 곳
         const vx = x - ox, vy = y - oy;
         let t = 1;
         if (vx < 0) t = Math.min(t, (mx2 - ox) / vx); if (vx > 0) t = Math.min(t, (W - mx2 - ox) / vx);
         if (vy < 0) t = Math.min(t, (my2 - oy) / vy); if (vy > 0) t = Math.min(t, (H - my2 - oy) / vy);
         x = ox + vx * t; y = oy + vy * t;
+      }
+      if (!ch) {                               // v422: 아이템 — 금색 동그라미 안에 아이콘
+        const r = size * 0.5;
+        smellCtx.fillStyle = 'rgba(0, 0, 0, 0.85)'; smellCtx.beginPath(); smellCtx.arc(x, y, r + 2, 0, Math.PI * 2); smellCtx.fill();
+        smellCtx.fillStyle = col; smellCtx.beginPath(); smellCtx.arc(x, y, r, 0, Math.PI * 2); smellCtx.fill();
+        if (pk.img && pk.img.complete && pk.img.naturalWidth) smellCtx.drawImage(pk.img, x - r * 0.75, y - r * 0.75, r * 1.5, r * 1.5);
+        continue;
       }
       smellCtx.font = '900 ' + size.toFixed(1) + 'px ' + getComputedStyle(document.body).fontFamily;
       smellCtx.textAlign = 'center'; smellCtx.textBaseline = 'middle';
