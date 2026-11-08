@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v427 군인팀 시험</div>
+  <div id="ver">v428 군인팀 시험</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2963,7 +2963,7 @@
     vestEl = null;
     for (const el of stage.querySelectorAll('#pick, #win, #tut, #goal, .okBtn')) el.remove();
     hiOff();
-    rankNext = 0; rankAnim = false; fxQueue.length = 0; fxGapUntil = 0; fxBusyPrev = false; starsQueued = 0; lvQueued = 0; teamsSpawned = 0; teamsAnnounced = 0; squadAnim = false; for (const el of stage.querySelectorAll('.rank')) el.remove();   // v278: 칭호도 판마다 처음부터
+    rankNext = 0; rankAnim = false; fxQueue.length = 0; curFx = null; fxGapUntil = 0; fxBusyPrev = false; starsQueued = 0; lvQueued = 0; teamsSpawned = 0; teamsAnnounced = 0; squadAnim = false; for (const el of stage.querySelectorAll('.rank')) el.remove();   // v278: 칭호도 판마다 처음부터
     goalShown = false; tutOpen = false; spawnFrames = 0; mmBang = false; camAnim = null; tutQueue.length = 0; for (const k of Object.keys(tutSeen)) delete tutSeen[k];   // 튜토리얼도 판마다 처음부터 (v202)
     gameNo++;
     if (gameNo > TUT_GAMES || TEST_MAP) { goalShown = true; mmBang = true; for (const k of ['citizen', 'guard', 'attacker', 'police', 'station']) tutSeen[k] = true; }   // v230: 앱을 켠 뒤 처음 두 판만 목표·발견 소개 (껐다 켜면 다시)
@@ -4300,8 +4300,9 @@
     Object.assign(head.style, { left: '50%', top: 'calc(16% - 52px)', fontSize: '22px', fontWeight: '800', color: '#fff', textShadow: '0 2px 6px rgba(0,0,0,0.8)', whiteSpace: 'nowrap', transition: 'opacity 0.15s' });
     stage.appendChild(head);
     fly.getBoundingClientRect(); fly.style.fontSize = '64px'; tag.style.fontSize = '48px';   // v280: 단계 이름 2배 (24 → 48px)
-    setTimeout(() => {
-      head.style.opacity = '0'; setTimeout(() => head.remove(), 160);
+    const fx = curFx = { ev: { t: 'star' }, els: [fly, tag, head], timers: [] };   // v428: 아이템 획득이 끼어들면 멈추고 다시 줄 앞으로
+    fx.timers.push(setTimeout(() => {
+      head.style.opacity = '0'; fx.timers.push(setTimeout(() => head.remove(), 160));
       const slot = starSlots()[idx], r = slot.getBoundingClientRect();
       const lvEl = starsEl.querySelector('.lv'); lvEl.style.visibility = 'hidden'; lvEl.textContent = LEVEL_NAME[idx];   // 이름이 박힐 자리
       const lr = lvEl.getBoundingClientRect();
@@ -4309,13 +4310,13 @@
       tag.style.left = (lr.left + lr.width / 2 - sr.left) + 'px'; tag.style.top = (lr.top + lr.height / 2 - sr.top) + 'px'; tag.style.fontSize = '11px';
       fly.style.transition = 'left 0.18s ease-in, top 0.18s ease-in, font-size 0.18s ease-in';
       fly.style.left = (r.left + r.width / 2 - sr.left) + 'px'; fly.style.top = (r.top + r.height / 2 - sr.top) + 'px'; fly.style.fontSize = '19px';
-      setTimeout(() => {
+      fx.timers.push(setTimeout(() => {
         fly.remove();
         tag.remove(); starsEl.querySelector('.lv').style.visibility = '';
         shownStars = idx + 1; drawStars(); const el = starSlots()[idx]; el.classList.remove('hit'); el.getBoundingClientRect(); el.classList.add('hit');
-        starAnim = false;
-      }, 190);
-    }, 960);                                  // 크게 떠 있는 시간 0.32 → 0.96초 (v197에 3배)
+        starAnim = false; if (curFx === fx) curFx = null;
+      }, 190));
+    }, 960));                                  // 크게 떠 있는 시간 0.32 → 0.96초 (v197에 3배)
   }
   // ── 튜토리얼 (v202) — 판을 시작하면 목표를 위쪽에 크게 띄웠다가 사라지고, 처음 만난 적·경찰서는 화면 가운데에 소개 (누르면 닫힘) ──
   const TUT = {
@@ -4580,13 +4581,25 @@
     openMenu(ov, '닫기');
   }
   const fxQueue = [];                         // v420: 연출 대기열 — 생긴 순서대로 한 번에 하나, 끝나면 1초 쉬고 다음 (경보 · 특수부대 · 칭호 · 레벨업 · 아이템)
+  let curFx = null;                          // v428: 지금 나오는 배너형 연출 (경보 · 특수부대 · 칭호) {ev, els, timers}
+  function interruptFx() {                    // v428: 아이템 획득창이 끼어들면 나오던 연출을 멈추고 줄 맨 앞으로 (획득창이 닫히고 1초 뒤 처음부터 다시)
+    const fx = curFx; if (!fx) return;
+    curFx = null;
+    for (const t of fx.timers) clearTimeout(t);
+    for (const el of fx.els) el.remove();
+    if (fx.ev.t === 'star') { starAnim = false; starsEl.querySelector('.lv').style.visibility = ''; drawStars(); }
+    else if (fx.ev.t === 'rank') rankAnim = false;
+    else if (fx.ev.t === 'squad') squadAnim = false;
+    fxQueue.unshift(fx.ev);
+  }
   let fxGapUntil = 0, fxBusyPrev = false, starsQueued = 0, lvQueued = 0, teamsSpawned = 0, teamsAnnounced = 0, squadAnim = false;
   function showSquad() {                      // v420: 군인팀 출동 알림 — 칭호 자리에 빨간 글씨
     squadAnim = true;
     const el = document.createElement('div'); el.className = 'rank squad';
     el.innerHTML = '<div class="rbox"><div class="rt">특수부대 출동</div></div>';
     stage.appendChild(el);
-    setTimeout(() => { el.remove(); squadAnim = false; }, 3050);
+    const fx = curFx = { ev: { t: 'squad' }, els: [el], timers: [] };   // v428
+    fx.timers.push(setTimeout(() => { el.remove(); squadAnim = false; if (curFx === fx) curFx = null; }, 3050));
   }
   function uiTick() {                         // 매 프레임 (멈춰 있어도): 줄 서 있는 연출을 하나씩
     stage.classList.toggle('okOn', !!stage.querySelector('.okBtn'));   // v244: 확인 버튼이 떠 있으면 조이스틱 숨김
@@ -4595,6 +4608,14 @@
     while (rankNext < RANKS.length && armyN >= RANKS[rankNext].n) fxQueue.push({ t: 'rank', r: RANKS[rankNext++] });   // v278: 동료 수 칭호 (판마다 처음 한 번씩만)
     while (lvQueued < pendingLv) { fxQueue.push({ t: 'lv' }); lvQueued++; }
     while (pendingAward.length) fxQueue.push({ t: 'award', k: pendingAward.shift() });
+    const ai = fxQueue.findIndex((e) => e.t === 'award');
+    if (ai >= 0 && !acqOpen && !lvOpen && !tutOpen && !menuOv && !victoryOn && goalShown) {   // v428: 아이템을 먹으면 획득창은 바로 — 나오던 연출 · 밀린 연출은 전부 그 뒤로
+      const e = fxQueue.splice(ai, 1)[0];
+      interruptFx();
+      fxBusyPrev = true;
+      if (e.k === 'dud') showDud(); else showAward(e.k);
+      return;
+    }
     const busy = acqOpen || starAnim || lvOpen || rankAnim || squadAnim || tutOpen, now = performance.now();
     if (fxBusyPrev && !busy) fxGapUntil = now + 1000;   // v420: 연출이 끝나면 1초 쉬고 다음
     fxBusyPrev = busy;
@@ -4630,7 +4651,8 @@
     const el = document.createElement('div'); el.className = 'rank';
     el.innerHTML = `<div class="rbox"><div class="rt">${r.t}</div><div class="rd">${r.d}</div></div>`;   // v420: 검은 판 위에
     stage.appendChild(el);
-    setTimeout(() => { el.remove(); rankAnim = false; }, 4850);   // v279: 4.8초 (튀어 들어옴 0.3초 + 또렷하게 4초 + 사라짐 0.5초)
+    const fx = curFx = { ev: { t: 'rank', r }, els: [el], timers: [] };   // v428
+    fx.timers.push(setTimeout(() => { el.remove(); rankAnim = false; if (curFx === fx) curFx = null; }, 4850));   // v279: 4.8초 (튀어 들어옴 0.3초 + 또렷하게 4초 + 사라짐 0.5초)
   }
   // ── 후각 (v180) — 나만 가진다. 내 인지거리 밖 ~ 그 1.5배 안의 사람을 원으로 알려 준다 ──
   //   원 자리 = 그 사람 쪽 방향으로 내 인지거리 테두리 위 (화면 밖이면 화면 가장자리에 걸친다)
