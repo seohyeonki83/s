@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v480 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v481 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4453,7 +4453,7 @@
     attacker: { col: '#c62828', name: '만두귀', say: '좀 침' },
     police: { col: '#8e24aa', name: '짭새', say: '건법 씀' },
     soldier: { col: '#' + COLOR.soldier.toString(16).padStart(6, '0'), name: '군인', say: '훈련받은 군인입니다.' },   // v480
-    sniper: { col: '#ff2a2a', name: '저격수', say: '발빠른 저격수입니다. 제거 순위 1순위' },   // v270: 총(건) — 권법 아님
+    sniper: { col: '#ff2a2a', name: '저격수', say: '발빠른 저격수<br>제거 1순위' },   // v270: 총(건) — 권법 아님
     station: { col: '#b44ee6', name: '경찰서', say: '깝치면 개털림' },   // v223: 이름 줄에 '경찰서 발견!!!'이 있으니 설명은 짧게   // v221: 사람과 같은 방식 — 대상이 지붕 느낌표일 뿐
   };
   let goalShown = false, tutOpen = false, spawnFrames = 0, mmBang = false;
