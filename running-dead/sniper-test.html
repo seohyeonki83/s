@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v449 군인차 시험</div>
+  <div id="ver">v450 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4681,7 +4681,15 @@
     const fx = curFx = { ev: { t: 'squad' }, els: [el], timers: [] };   // v428
     fxTimer(fx, () => { el.remove(); squadAnim = false; if (curFx === fx) curFx = null; }, 3050);
   }
-  function uiTick() {                         // 매 프레임 (멈춰 있어도): 줄 서 있는 연출을 하나씩
+  const dangerEl = document.getElementById('danger');
+  function dangerTick() {                     // v450: 내 체력 20% 이하 → 화면 가장자리 빨간 경고가 깜빡인다 (0에 가까울수록 진하게)
+    const r = me && isZombie(me) && me.maxHp > 0 ? me.hp / me.maxHp : 1;
+    if (r > 0.2 || r <= 0) { if (dangerEl.style.opacity !== '0') dangerEl.style.opacity = '0'; return; }
+    const k = 0.35 + 0.65 * (0.2 - r) / 0.2, blink = 0.55 + 0.45 * Math.sin(performance.now() / 1000 * Math.PI * 2 * (1 + k));
+    dangerEl.style.opacity = (k * blink * 0.8).toFixed(3);
+  }
+  function uiTick() {
+    dangerTick();                         // 매 프레임 (멈춰 있어도): 줄 서 있는 연출을 하나씩
     stage.classList.toggle('okOn', !!stage.querySelector('.okBtn'));   // v244: 확인 버튼이 떠 있으면 조이스틱 숨김
     while (starsQueued < stars) { fxQueue.push({ t: 'star' }); starsQueued++; }   // v420: 새 연출을 생긴 순서대로 줄 세운다 (같은 순간이면 경보 → 특수부대 → 칭호 → 레벨업 → 아이템)
     while (teamsAnnounced < teamsSpawned) { fxQueue.push({ t: 'squad' }); teamsAnnounced++; }
