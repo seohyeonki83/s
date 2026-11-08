@@ -220,7 +220,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v418</div>
+  <div id="ver">v419</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1360,7 +1360,7 @@
   const SNIPER_SPEED = SPEED * 1.1;            // v396: 저격수 이동 속도 = 동료 기본 속도의 1.1배
   const copSpeed = (c) => c.sniper ? SNIPER_SPEED : PANIC_SPEED * POLICE_PACE;
   const sniperEvadeR = () => ATTACK * 1.1 * 1.05 * 1.1 * rand(0.85, 1.15);   /* v418: 10% 더 → 4.12칸 ±15% (3.5 ~ 4.7칸) */   // v409: 5% 늘림 → 3.74칸 ±15% (3.2 ~ 4.3칸) — v407: 3.56칸 ±15%
-  const accelOf = (c) => c.sniper ? ACCEL * 2 : ACCEL;   // v399: 저격수는 가감속 2배 — 최고 속도까지 절반 시간
+  const accelOf = (c) => c.sniper ? Infinity : ACCEL;   // v419: 저격수는 가감속 없이 즉시 최고 속도 (v399: 2배였음)
   const evBuf = [];
   function sniperEvade(c, dt) {               // v396: 도망 중 시야 = 시민 시야(7.2칸) — 그 안에 좀비가 없으면 바로 다시 저격
     if (c.atkT > 0) c.atkT -= dt * (c.goo ? 0.56 : 1);   // 도망치는 동안에도 쿨타임은 흐른다
