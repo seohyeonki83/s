@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v499 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v500 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1360,7 +1360,7 @@
   const SNIPER_EVADE = PANIC_SPEED * POLICE_PACE;   // v437: 회피할 때도 군인과 같은 속도 (3.06) — 저격수 속도는 하나로 통일 (v432: 4.2였음)
   const copSpeed = (c) => c.sniper ? PANIC_SPEED * POLICE_PACE :   /* v476: 저격수 평소·접근 = 군인과 같음 (3.06) — 다른 건 회피뿐 */ PANIC_SPEED * POLICE_PACE;
   const sniperEvadeR = () => ATTACK * 1.1 * 1.05 * 1.1 * 1.1 * 0.9 * 0.9 * rand(0.85, 1.15);   /* v499: 10% 더 → 3.67칸 */   /* v483: 10% 줄임 → 4.08칸 ±15% (회피 중 인지거리 = 이것의 1.2배라 같이 10% 줄어든다) */   /* v433: 10% 더 → 4.53칸 ±15% (3.85 ~ 5.21칸) */   /* v418: 10% 더 → 4.12칸 ±15% (3.5 ~ 4.7칸) */   // v409: 5% 늘림 → 3.74칸 ±15% (3.2 ~ 4.3칸) — v407: 3.56칸 ±15%
-  const accelOf = (c) => c.sniper ? ACCEL * 2 : ACCEL;   /* v426: 다시 2배 (최고 속도까지 약 0.12초) */   // v420: 저격수 즉시 최고 속도 — 무한대는 시간 0인 프레임에서 계산이 깨져서(NaN) 아주 큰 값으로 (v419)
+  const accelOf = (c) => c.sniper ? PANIC_SPEED * POLICE_PACE / 0.12 : ACCEL;   /* v500: 저격수 최고 속도(3.06)까지 0.12초 (v426: 2배, 약 0.08초) */   /* v426: 다시 2배 (최고 속도까지 약 0.12초) */   // v420: 저격수 즉시 최고 속도 — 무한대는 시간 0인 프레임에서 계산이 깨져서(NaN) 아주 큰 값으로 (v419)
   const evBuf = [];
   function sniperEvade(c, dt) {               // v396: 도망 중 시야 = 시민 시야(7.2칸) — 그 안에 좀비가 없으면 바로 다시 저격
     if (c.atkT > 0) c.atkT -= dt * (c.goo ? 0.56 : 1);   // 도망치는 동안에도 쿨타임은 흐른다
