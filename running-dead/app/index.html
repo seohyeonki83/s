@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v455</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v456</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3778,8 +3778,9 @@
     return best ? { k: best, d: bd } : null;
   }
   const CASH_PICK = 1.5;
-  function enterLured(c) { c.state = 'lured'; c.lureAlert = false; c.foe = null; c.locked = false; c.lureHit = 0; c.pickT = 0; }
+  function enterLured(c) { c.state = 'lured'; c.lureAlert = false; c.foe = null; c.locked = false; c.lureHit = 0; c.pickT = 0; c.lureT = 0; }
   function luredStep(c, dt) {                 // 유혹: 좀비는 안 보고 가장 가까운 돈다발로 달려간다. 닿으면 돈다발이 사라진다
+    if (c.military && (c.lureT = (c.lureT || 0) + dt) >= 1.5) { c.state = 'normal'; c.ignoreCash = new Set(cashes); enterNormal(c); return; }   // v456: 군인·저격수는 최대 1.5초만 홀린다
     const s = seeCash(c, c.sight * cashK());
     if (!s) { enterNormal(c); return; }      // 볼 수 있는 돈다발이 없으면 유혹 끝
     if (s.d < CASH_GET) {                    // v237: 돈다발에 닿으면 1.5초 동안 가만히 서서 줍고, 그다음 돈다발이 사라진다
