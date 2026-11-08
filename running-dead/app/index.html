@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v425</div>
+  <div id="ver">v426</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -318,7 +318,7 @@
   const STAR_MAX = 5;
   const STAR_BASE = 10, STAR_GROW = 2.1;   /* v395: 10명 시작 · 2.1배 → 누적 [10, 31, 75, 168, 362] */   // 별 사이에 더 필요한 감염 수가 2.5배씩 늘어난다: +5, +12.5, +31, +78, +195 (v135)
   const STAR_AT = (() => { let t = 0, d = STAR_BASE; return Array.from({ length: 5 }, () => { t += d; d *= STAR_GROW; return Math.round(t); }); })();   // [5, 18, 49, 127, 322]
-  const TEAM_COMP = { 1: ['sniper', 'soldier', 'soldier', 'sniper', 'soldier', 'soldier'] };   /* v418: 1팀 = 저격수 2 + 군인 4 (저격수 하나에 군인 둘씩) */   // v410: 군인팀 구성 — 1팀 = 군인 2 + 저격수 1 (2~4팀은 아직 미정 → 그 차례엔 안 나온다)
+  const TEAM_COMP = { 1: ['sniper', 'soldier', 'soldier', 'soldier', 'sniper', 'soldier', 'soldier', 'soldier'] };   /* v426: 1팀 = 저격수 2 + 군인 6 (저격수 하나에 군인 셋씩) */   /* v418: 1팀 = 저격수 2 + 군인 4 (저격수 하나에 군인 둘씩) */   // v410: 군인팀 구성 — 1팀 = 군인 2 + 저격수 1 (2~4팀은 아직 미정 → 그 차례엔 안 나온다)
   const TEAM_EVENTS = (() => {               // v410: 군인팀 출동 시점 = 경보 3단계(개판)부터 단계마다 도달할 때 + 다음 단계와의 중간 (데프콘 뒤로도 2.1배씩 계속)
     const th = []; let t = 0, d = STAR_BASE;
     for (let i = 0; i < 14; i++) { t += d; d *= STAR_GROW; th.push(Math.round(t)); }
@@ -1364,7 +1364,7 @@
   const SNIPER_SPEED = SPEED * 1.1;            // v396: 저격수 이동 속도 = 동료 기본 속도의 1.1배
   const copSpeed = (c) => c.sniper ? SNIPER_SPEED : PANIC_SPEED * POLICE_PACE;
   const sniperEvadeR = () => ATTACK * 1.1 * 1.05 * 1.1 * rand(0.85, 1.15);   /* v418: 10% 더 → 4.12칸 ±15% (3.5 ~ 4.7칸) */   // v409: 5% 늘림 → 3.74칸 ±15% (3.2 ~ 4.3칸) — v407: 3.56칸 ±15%
-  const accelOf = (c) => c.sniper ? ACCEL * 1000 : ACCEL;   // v420: 저격수 즉시 최고 속도 — 무한대는 시간 0인 프레임에서 계산이 깨져서(NaN) 아주 큰 값으로 (v419)
+  const accelOf = (c) => c.sniper ? ACCEL * 2 : ACCEL;   /* v426: 다시 2배 (최고 속도까지 약 0.12초) */   // v420: 저격수 즉시 최고 속도 — 무한대는 시간 0인 프레임에서 계산이 깨져서(NaN) 아주 큰 값으로 (v419)
   const evBuf = [];
   function sniperEvade(c, dt) {               // v396: 도망 중 시야 = 시민 시야(7.2칸) — 그 안에 좀비가 없으면 바로 다시 저격
     if (c.atkT > 0) c.atkT -= dt * (c.goo ? 0.56 : 1);   // 도망치는 동안에도 쿨타임은 흐른다
@@ -1378,7 +1378,7 @@
     steer(c.vel, wantV.copy(c.flee).multiplyScalar(SNIPER_SPEED), accelOf(c) * dt);
   }
   const BURST_GAP = 0.08;                     // v410: 군인 연사 사이 간격 (초) — 4발이 0.24초 안에
-  const GUARD_DOMAIN = DOMAIN, GUARD_DOMAIN_FIGHT = DOMAIN_FIGHT;   // v410: 저격수의 지배 · 공격 지배 거리 (나와 같은 기본값, 고정)
+  const GUARD_DOMAIN = DOMAIN * 0.9, GUARD_DOMAIN_FIGHT = DOMAIN_FIGHT * 0.8;   /* v426: 지배 −10% (5.42칸) · 공격 지배 −20% (11.5칸), 근접 거리는 그대로 */   // v410: 저격수의 지배 · 공격 지배 거리 (나와 같은 기본값, 고정)
   function muzzleFlash(c, tx, tz) {           // v410: 헛발 총구 불꽃 (맞힐 상대가 없을 때)
     const dx = tx - c.foot.x, dz = tz - c.foot.z, d = Math.hypot(dx, dz) || 1, ux = dx / d, uz = dz / d;
     const f1 = puff(c.foot.x + ux * RADIUS * 0.95, 0, c.foot.z + uz * RADIUS * 0.95, 0xfff23a, 1.0, 1.0, 0.07, 0, 0, 0, 0.7);
@@ -1412,7 +1412,7 @@
     if (!m) { c.outT = 0; return false; }
     const lim = c.inRange ? GUARD_DOMAIN_FIGHT : GUARD_DOMAIN;
     if (Math.hypot(c.foot.x - m.foot.x, c.foot.z - m.foot.z) <= lim) { c.outT = 0; return false; }
-    if (!c.outT) c.outLimit = rand(...RECALL_DELAY);
+    if (!c.outT) c.outLimit = rand(...RECALL_DELAY) / 4;   // v426: 군인 복귀 딜레이 1/4 (0.25~0.5초)
     c.outT = (c.outT || 0) + dt;
     if (c.outT < c.outLimit) return false;
     c.outT = 0; c.recall = true; c.foe = null; c.inRange = false; enterNormal(c);
