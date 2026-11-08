@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v497</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v498</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1494,8 +1494,8 @@
   function soldierHit(c, z) {                 // v478: 군인 총알도 밀어낸다 — 저격수와 같은 방식, 시간·거리 1/5 (0.08초 · 약 0.18칸)
     if (z.hp <= 0 || z.mut === 'armor' || z.mode === 'bite') return;
     if (z.mode === 'pounce') stopPounce(z);
-    const kx = z.foot.x - c.foot.x, kz = z.foot.z - c.foot.z, kl = Math.hypot(kx, kz) || 1, v = ARMOR_KB * 2 * 0.59;   // 시간 1/5에 속도 0.59배 → 거리 1/5
-    z.knockT = ARMOR_KT / 5; z.knockVX = kx / kl * v; z.knockVZ = kz / kl * v; z.knockSlide = true;
+    const kx = z.foot.x - c.foot.x, kz = z.foot.z - c.foot.z, kl = Math.hypot(kx, kz) || 1, v = ARMOR_KB * 2 * 0.59 * 0.92;   /* v498: 시간 절반에 맞춰 거리도 절반 */   // 시간 1/5에 속도 0.59배 → 거리 1/5
+    z.knockT = ARMOR_KT / 10; /* v498: 0.08 → 0.04초, 거리 약 0.18 → 0.09칸 */ z.knockVX = kx / kl * v; z.knockVZ = kz / kl * v; z.knockSlide = true;
     z.engaging = null; z.attacking = false;
   }
   function policeFight(c, dt) {
