@@ -205,7 +205,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v414 군인팀 시험</div>
+  <div id="ver">v415 군인팀 시험</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1838,6 +1838,12 @@
       }
     }
     for (const B of buildings) if (!B.station && B.safe && !B.safe.dead) drawChest(mmCtx, X((B.x0 + B.x1) / 2), Z((B.z0 + B.z1) / 2), 7 * mmDpr);   // v334: 미니맵 금고 건물 = 보물상자
+    for (const p of pickups) {                 // v415: 안 주운 아이템은 미니맵에 늘 보인다 (금색 동그라미 + 아이콘)
+      const px = X(p.x), py = Z(p.z), pr = 5.5 * mmDpr;
+      mmCtx.fillStyle = 'rgba(0, 0, 0, 0.85)'; mmCtx.beginPath(); mmCtx.arc(px, py, pr + 1.2 * mmDpr, 0, Math.PI * 2); mmCtx.fill();
+      mmCtx.fillStyle = '#ffd25a'; mmCtx.beginPath(); mmCtx.arc(px, py, pr, 0, Math.PI * 2); mmCtx.fill();
+      if (p.img && p.img.complete && p.img.naturalWidth) mmCtx.drawImage(p.img, px - pr * 0.8, py - pr * 0.8, pr * 1.6, pr * 1.6);
+    }
     const r = 2.2 * mmDpr;                                       // 나 = 빨간 점 (미니맵이 작아져서 조금 작게)
     mmCtx.beginPath(); mmCtx.arc(X(me.foot.x), Z(me.foot.z), r, 0, Math.PI * 2);
     mmCtx.fillStyle = '#ff3b30'; mmCtx.fill();
@@ -2930,6 +2936,7 @@
     explored.fill(0);                         // 미니맵 — 새 판은 다시 다 까맣게
     for (const it of items) it.el.remove();   // 기술·돈다발·연출 초기화 (v190)
     items = []; safesBroken = 0; itemOrder = pickItems();
+    for (const p of pickups) scene.remove(p.s); pickups.length = 0;   // v415
     if (FORCE_FIRST_ITEM) {                   // v294: 시험용 — 변이 주사가 든 뽑기가 나올 때까지 다시 뽑고 맨 앞으로
       while (!itemOrder.includes(FORCE_FIRST_ITEM)) itemOrder = pickItems();
       itemOrder.splice(itemOrder.indexOf(FORCE_FIRST_ITEM), 1); itemOrder.unshift(FORCE_FIRST_ITEM);
@@ -3321,6 +3328,7 @@
   function stepWorld(dt) {
     clock += dt;
     if (!TEST_MAP) trickle(dt);
+    pickupTick(dt);                           // v415: 떨어진 아이템
     zombies.length = 0;
     for (const b of bodies) if (isZombie(b)) zombies.push(b);
     while (teamQueue.length) spawnTeam(teamQueue.shift());   // v410: 군인팀 출동 (이번 걸음 좀비 목록을 만든 뒤)
@@ -4117,13 +4125,49 @@
     stepSpits(dt);
     gooTick(dt);
   }
+  const pickups = [];                         // v415: 바닥에 떨어진 아이템 {kind, x, z, space, s, img, t}
+  const PICK_R = RADIUS + 0.55;               // 내 몸이 이만큼 안에 들어오면 획득
+  function itemTex(kind, p) {                 // 아이템 아이콘(SVG) → 그림판 → 텍스처 (불러오면 그린다) — 미니맵에도 같은 그림
+    const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+    const img = new Image();
+    img.onload = () => {
+      g.clearRect(0, 0, 128, 128);
+      g.fillStyle = 'rgba(255, 210, 90, 0.95)'; g.beginPath(); g.arc(64, 64, 61, 0, Math.PI * 2); g.fill();   // 금색 테두리
+      g.fillStyle = 'rgba(28, 24, 14, 0.92)'; g.beginPath(); g.arc(64, 64, 52, 0, Math.PI * 2); g.fill();
+      g.drawImage(img, 26, 26, 76, 76); t.needsUpdate = true;
+    };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(ITEM[kind].icon.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ').replace('width="1em" height="1em"', 'width="96" height="96"'));
+    p.img = img;
+    return t;
+  }
+  function dropPickup(kind, x, z, space) {
+    const p = { kind, x, z, space, t: 0 };
+    p.s = new THREE.Sprite(new THREE.SpriteMaterial({ map: itemTex(kind, p), transparent: true, depthTest: false, depthWrite: false }));
+    p.s.renderOrder = UI - 1; p.s.scale.set(1.1, 1.1, 1);
+    scene.add(p.s);
+    pickups.push(p);
+    for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; puff(x, 0.5, z, 0xffd25a, 0.4, 1.2, 0.5, Math.cos(a) * 2.5, 0.6, Math.sin(a) * 2.5, 0.85); }
+  }
+  function pickupTick(dt) {                   // v415: 둥실둥실 + 내가 닿으면 획득 (팝업)
+    for (let i = pickups.length - 1; i >= 0; i--) {
+      const p = pickups[i];
+      p.t += dt;
+      p.s.position.set(p.x, 0, p.z).addScaledVector(UP, RADIUS + 0.45 + Math.sin(p.t * 3) * 0.12);
+      if (isZombie(me) && me.space === p.space && Math.hypot(me.foot.x - p.x, me.foot.z - p.z) <= PICK_R) {
+        scene.remove(p.s); p.s.material.map.dispose(); p.s.material.dispose();
+        pickups.splice(i, 1);
+        pendingAward.push(p.kind);
+      }
+    }
+  }
   function breakSafe(b) {
     b.dead = true;
     scene.remove(b.mesh); if (b.hpBar) scene.remove(b.hpBar);
     const i = bodies.indexOf(b); if (i >= 0) bodies.splice(i, 1);
     if (b.dud) { dust(b.foot.x, b.foot.z, 16, 1.4); for (let i = 0; i < 8; i++) { const a = Math.random() * 6.28; puff(b.foot.x, 0.8, b.foot.z, 0x6a6a6a, 0.8, rand(2, 3), rand(1.2, 2), Math.cos(a) * 0.6, rand(0.6, 1.2), Math.sin(a) * 0.6, 0.6, rand(0, 0.3)); } return; }   // v331: 꽝 = 연기만, 아무 일 없음   // v288: 꽝 금고 — 아이템 없이 '힝~ 속았지' (아이템 순서는 안 쓴다)
     safesBroken++;
-    if (safesBroken <= itemOrder.length) pendingAward.push(itemOrder[safesBroken - 1]);   // v276: 금고 4개 전부에서 하나씩 (깨는 순서대로)
+    if (safesBroken <= itemOrder.length) dropPickup(itemOrder[safesBroken - 1], b.foot.x, b.foot.z, b.space);   // v415: 금고 자리에 아이템이 떨어진다 — 내가 직접 가서 닿아야 획득 (v276: 깨는 순서대로 하나씩)
   }
   // 획득 연출: 일시정지 → 반투명 바탕 위에 큰 기술 그림 + 글자 → 화면을 누르면 바탕이 사라지고 그림이 버튼 자리로 날아가 박힘 → 다시 움직임
   function stopInput() { pid = null; joy.classList.remove('on'); knob.style.transform = 'translate(0px, 0px)'; move.set(0, 0); }
