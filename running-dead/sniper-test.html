@@ -96,6 +96,9 @@
   .rank { position: absolute; left: 0; right: 0; top: calc(11% + env(safe-area-inset-top, 0px)); z-index: 18; text-align: center; pointer-events: none; animation: rankin 4.8s ease-out forwards; }   /* v279: 약 4초 동안 또렷하게 떠 있다 */   /* v278: 동료 수 칭호 — 게임은 계속, 위쪽에 크게 팡 */
   .rank .rt { font: 900 44px/1 var(--font); white-space: nowrap; color: #fff; letter-spacing: 2px;   /* v390: 66 → 44px (2/3), 한 줄 */ text-shadow: 0 0 14px #ff5a3c, 0 0 36px #ff2a00, 0 4px 10px rgba(0, 0, 0, 0.8); }
   .rank .rd { margin-top: 12px; padding: 0 16px; font: 800 30px/1.3 var(--font);   /* v390: 20 → 30px (1.5배) */ color: #fff; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9); word-break: keep-all; }
+  .rank .rbox { display: inline-block; max-width: calc(100% - 24px); box-sizing: border-box; padding: 14px 16px 16px; border-radius: 16px; background: rgba(0, 0, 0, 0.55); }   /* v420: 칭호 글자 뒤 반투명 검은 판 */
+  .rank.squad { animation-duration: 3s; }   /* v420: 특수부대 출동 — 3초 */
+  .rank.squad .rt { color: #ff4a3a; text-shadow: 0 0 14px rgba(255, 40, 0, 0.9), 0 4px 10px rgba(0, 0, 0, 0.8); }
   @keyframes rankin { 0% { opacity: 0; transform: scale(2.2); } 6% { opacity: 1; transform: scale(0.92); } 10% { transform: scale(1.04); } 13% { transform: scale(1); } 90% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
   #tut { position: absolute; inset: 0; z-index: 22; box-sizing: border-box; touch-action: none; }   /* 처음 만난 적 소개 (v202) — 글·닫기만 (어둠은 v221부터 게임 화면 안에서) */
   #stage.hiDim > :not(#view):not(#tut) { filter: brightness(0.55); transition: filter 0.25s ease-out; }   /* 발견 연출 (v221): 화면 UI는 검은 막 45%와 같은 진하기로 — 게임 화면은 WebGL 안에서 어둠판을 깔고 대상만 그 위에 그린다 */
@@ -205,7 +208,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v419 군인팀 시험</div>
+  <div id="ver">v420 군인팀 시험</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1345,7 +1348,7 @@
   const SNIPER_SPEED = SPEED * 1.1;            // v396: 저격수 이동 속도 = 동료 기본 속도의 1.1배
   const copSpeed = (c) => c.sniper ? SNIPER_SPEED : PANIC_SPEED * POLICE_PACE;
   const sniperEvadeR = () => ATTACK * 1.1 * 1.05 * 1.1 * rand(0.85, 1.15);   /* v418: 10% 더 → 4.12칸 ±15% (3.5 ~ 4.7칸) */   // v409: 5% 늘림 → 3.74칸 ±15% (3.2 ~ 4.3칸) — v407: 3.56칸 ±15%
-  const accelOf = (c) => c.sniper ? Infinity : ACCEL;   // v419: 저격수는 가감속 없이 즉시 최고 속도 (v399: 2배였음)
+  const accelOf = (c) => c.sniper ? ACCEL * 1000 : ACCEL;   // v420: 저격수 즉시 최고 속도 — 무한대는 시간 0인 프레임에서 계산이 깨져서(NaN) 아주 큰 값으로 (v419)
   const evBuf = [];
   function sniperEvade(c, dt) {               // v396: 도망 중 시야 = 시민 시야(7.2칸) — 그 안에 좀비가 없으면 바로 다시 저격
     if (c.atkT > 0) c.atkT -= dt * (c.goo ? 0.56 : 1);   // 도망치는 동안에도 쿨타임은 흐른다
@@ -1424,6 +1427,7 @@
       if (type === 'sniper') sns.push(c); else sol.push(c);
     });
     const per = Math.ceil(sol.length / Math.max(1, sns.length));   // v418: 저격수마다 군인을 같은 수로 나눠 붙인다 (1팀: 둘씩)
+    teamsSpawned++;                           // v420: '특수부대 출동' 알림
     if (sns.length) sol.forEach((c, i) => { c.master = sns[Math.min(sns.length - 1, Math.floor(i / per))]; c.slotA = Math.random() * Math.PI * 2; c.slotK = rand(0.5, 1.5); });
   }
   function sniperSpeed(c, dt) {               // v411: 실제로 움직인 거리로 잰 속도 (0.2초 평균 — 부딪혀 밀린 한 프레임에 흔들리지 않게)
@@ -2958,7 +2962,7 @@
     vestEl = null;
     for (const el of stage.querySelectorAll('#pick, #win, #tut, #goal, .okBtn')) el.remove();
     hiOff();
-    rankNext = 0; rankAnim = false; for (const el of stage.querySelectorAll('.rank')) el.remove();   // v278: 칭호도 판마다 처음부터
+    rankNext = 0; rankAnim = false; fxQueue.length = 0; fxGapUntil = 0; fxBusyPrev = false; starsQueued = 0; lvQueued = 0; teamsSpawned = 0; teamsAnnounced = 0; squadAnim = false; for (const el of stage.querySelectorAll('.rank')) el.remove();   // v278: 칭호도 판마다 처음부터
     goalShown = false; tutOpen = false; spawnFrames = 0; mmBang = false; camAnim = null; tutQueue.length = 0; for (const k of Object.keys(tutSeen)) delete tutSeen[k];   // 튜토리얼도 판마다 처음부터 (v202)
     gameNo++;
     if (gameNo > TUT_GAMES || TEST_MAP) { goalShown = true; mmBang = true; for (const k of ['citizen', 'guard', 'attacker', 'police', 'station']) tutSeen[k] = true; }   // v230: 앱을 켠 뒤 처음 두 판만 목표·발견 소개 (껐다 켜면 다시)
@@ -3549,7 +3553,7 @@
       for (const c of ov.querySelectorAll('.card')) { c.classList.remove('on'); c.classList.add(c.dataset.k === chosen ? 'win' : 'gone'); }   // 고른 카드가 커지며 빛나고 나머지는 사라진다
       ov.querySelector('.ok').style.opacity = '0';
       applyUp(chosen);
-      pendingLv--; level++;
+      pendingLv--; lvQueued = Math.max(0, lvQueued - 1); level++;
       const box = document.getElementById('lvbox'); box.classList.remove('up'); box.getBoundingClientRect(); box.classList.add('up');
       drawLv();
       setTimeout(() => { ov.style.opacity = '0'; }, 550);
@@ -4556,16 +4560,37 @@
     ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name}</div><div class="ds">${itemDesc(kind)}<div class="up">지금 (강화 ${up.brain}단계): ${statLine(kind, up.brain)}<br>다음 강화: ${statLine(kind, up.brain + 1)}</div></div>`;   // v344: 지금 수치와 다음 강화 수치
     openMenu(ov, '닫기');
   }
+  const fxQueue = [];                         // v420: 연출 대기열 — 생긴 순서대로 한 번에 하나, 끝나면 1초 쉬고 다음 (경보 · 특수부대 · 칭호 · 레벨업 · 아이템)
+  let fxGapUntil = 0, fxBusyPrev = false, starsQueued = 0, lvQueued = 0, teamsSpawned = 0, teamsAnnounced = 0, squadAnim = false;
+  function showSquad() {                      // v420: 군인팀 출동 알림 — 칭호 자리에 빨간 글씨
+    squadAnim = true;
+    const el = document.createElement('div'); el.className = 'rank squad';
+    el.innerHTML = '<div class="rbox"><div class="rt">특수부대 출동</div></div>';
+    stage.appendChild(el);
+    setTimeout(() => { el.remove(); squadAnim = false; }, 3050);
+  }
   function uiTick() {                         // 매 프레임 (멈춰 있어도): 줄 서 있는 연출을 하나씩
     stage.classList.toggle('okOn', !!stage.querySelector('.okBtn'));   // v244: 확인 버튼이 떠 있으면 조이스틱 숨김
-    if (acqOpen || starAnim || lvOpen || victoryOn || tutOpen || menuOv) return;   // v284: 일시정지·설명창 동안도 기다린다
+    while (starsQueued < stars) { fxQueue.push({ t: 'star' }); starsQueued++; }   // v420: 새 연출을 생긴 순서대로 줄 세운다 (같은 순간이면 경보 → 특수부대 → 칭호 → 레벨업 → 아이템)
+    while (teamsAnnounced < teamsSpawned) { fxQueue.push({ t: 'squad' }); teamsAnnounced++; }
+    while (rankNext < RANKS.length && armyN >= RANKS[rankNext].n) fxQueue.push({ t: 'rank', r: RANKS[rankNext++] });   // v278: 동료 수 칭호 (판마다 처음 한 번씩만)
+    while (lvQueued < pendingLv) { fxQueue.push({ t: 'lv' }); lvQueued++; }
+    while (pendingAward.length) fxQueue.push({ t: 'award', k: pendingAward.shift() });
+    const busy = acqOpen || starAnim || lvOpen || rankAnim || squadAnim || tutOpen, now = performance.now();
+    if (fxBusyPrev && !busy) fxGapUntil = now + 1000;   // v420: 연출이 끝나면 1초 쉬고 다음
+    fxBusyPrev = busy;
+    if (busy || victoryOn || menuOv) return;   // v284: 일시정지·설명창 동안도 기다린다
     if (!goalShown) { if (spawnFrames >= 3) showGoal(); return; }   // 판 시작 → 첫 장면을 몇 프레임 그린 뒤 목표 (v202)
+    if (now < fxGapUntil) return;
     if (tutQueue.length) { showTut(tutQueue.shift()); return; }
     if (stationDown && !victoryOn) { showVictory(); return; }   // 경찰서 다 파괴 → 승리 (v201)
-    if (pendingAward.length) { const k = pendingAward.shift(); if (k === 'dud') showDud(); else showAward(k); return; }   // v288: 꽝
-    if (pendingLv > 0) { showLevelUp(); return; }
-    if (!rankAnim && rankNext < RANKS.length && armyN >= RANKS[rankNext].n) showRank(RANKS[rankNext++]);   // v278: 동료 수 칭호 (판마다 처음 한 번씩만)
-    if (stars > shownStars) playStar();
+    const e = fxQueue.shift();
+    if (!e) return;
+    if (e.t === 'star') playStar();
+    else if (e.t === 'squad') showSquad();
+    else if (e.t === 'rank') showRank(e.r);
+    else if (e.t === 'lv') showLevelUp();
+    else if (e.k === 'dud') showDud(); else showAward(e.k);   // v288: 꽝
   }
   // v278: 동료 수 칭호 — 판마다 처음 도달할 때 딱 한 번. 게임은 멈추지 않고 화면 위쪽에 큰 글씨가 팡 떴다 사라진다
   const RANKS = [   // v284: 단계마다 간격이 4마리씩 더 벌어진다 (간격 5·10·15·10… → 9·14·19·14…)
@@ -4584,7 +4609,7 @@
   function showRank(r) {
     rankAnim = true;
     const el = document.createElement('div'); el.className = 'rank';
-    el.innerHTML = `<div class="rt">${r.t}</div><div class="rd">${r.d}</div>`;
+    el.innerHTML = `<div class="rbox"><div class="rt">${r.t}</div><div class="rd">${r.d}</div></div>`;   // v420: 검은 판 위에
     stage.appendChild(el);
     setTimeout(() => { el.remove(); rankAnim = false; }, 4850);   // v279: 4.8초 (튀어 들어옴 0.3초 + 또렷하게 4초 + 사라짐 0.5초)
   }
