@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v505 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v506 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1963,7 +1963,7 @@
         mmCtx.fillStyle = '#e6b3ff'; mmCtx.fillText('!', x + w / 2, cy);
       }
     }
-    for (const B of buildings) if (!B.station && B.safe && !B.safe.dead) drawChest(mmCtx, X((B.x0 + B.x1) / 2), Z((B.z0 + B.z1) / 2), 7 * mmDpr);   // v334: 미니맵 금고 건물 = 보물상자
+    for (const B of buildings) if (!B.station && B.safe && !B.safe.dead && !B.safe.hidden) drawChest(mmCtx, X((B.x0 + B.x1) / 2), Z((B.z0 + B.z1) / 2), 7 * mmDpr);   // v334: 미니맵 금고 건물 = 보물상자
     for (const p of pickups) {                 // v415: 안 주운 아이템은 미니맵에 늘 보인다 (금색 동그라미 + 아이콘)
       const px = X(p.x), py = Z(p.z), pr = 5.5 * mmDpr;
       mmCtx.fillStyle = 'rgba(0, 0, 0, 0.85)'; mmCtx.beginPath(); mmCtx.arc(px, py, pr + 1.2 * mmDpr, 0, Math.PI * 2); mmCtx.fill();
@@ -2741,7 +2741,7 @@
       B.open = eyes.some((z) => z.space === B) || B.doors.some((D) => { const ox = D.cx + D.nx * 0.4, oz = D.cz + D.nz * 0.4; return eyes.some((z) => !z.space && Math.hypot(z.foot.x - ox, z.foot.z - oz) <= z.sense && !blocked(z.foot.x, z.foot.z, ox, oz)); });   // v357: 밖에서 열린 문을 보고 있으면 지붕도 열린다
       B.roof.visible = !B.open;
       if (B.bang) B.bang.visible = !B.open && !B.down;
-      if (B.qm) B.qm.visible = !B.open && !!B.safe && !B.safe.dead;   // v288: 금고 지붕 물음표 — 좀비가 들어가거나 금고가 깨지면 사라진다
+      if (B.qm) B.qm.visible = !B.open && !!B.safe && !B.safe.dead && !B.safe.hidden;   /* v506: 숨은 금고는 물음표 없음 */   // v288: 금고 지붕 물음표 — 좀비가 들어가거나 금고가 깨지면 사라진다
       for (const D of B.doors) if (D.see) {   // v251: 밖에서 이 문을 보는 좀비가 있으면 문틈도 시야
         const ox = D.cx + D.nx * 0.4, oz = D.cz + D.nz * 0.4;
         D.see.visible = eyes.some((z) => !z.space && Math.hypot(z.foot.x - ox, z.foot.z - oz) <= z.sense && !blocked(z.foot.x, z.foot.z, ox, oz));
@@ -3302,6 +3302,13 @@
     const starter = buildings.filter((B) => B.block === START_BLOCK && !B.big);   // v262: 큰 건물 말고 작은 건물 3채
     const dud = starter[Math.floor(Math.random() * starter.length)];   // v454: 3채 전부 금고 — 진짜 둘, 꽝 하나 (v288: 진짜 하나)
     for (const B of starter) { addSafe(B); if (B === dud) B.safe.dud = true; }
+    if (!TEST_MAP) BLOCKS.forEach((_, k) => {   // v506: 첫 마을 말고 마을마다 건물 하나에 숨은 금고 — 미니맵·지붕 물음표 없음, 깨면 패시브 아이템
+      if (k === START_BLOCK) return;
+      const hs = buildings.filter((H) => H.block === k && !H.station && !H.safe);
+      if (!hs.length) return;
+      const H = hs[Math.floor(Math.random() * hs.length)];
+      addSafe(H); H.safe.hidden = true;
+    });
     {   // v387: 첫 마을 말고 마을마다 노랑 2 · 빨강 2 · 주황 2를 지우고 그 자리에 경찰
       const Z1 = scrZone(), blockOf = (b) => { if (b.space) return b.space.block; if (b.home) return b.home.block; if (b.foot.x > Z1.x0 && b.foot.x < Z1.x1 && b.foot.z > Z1.z0 && b.foot.z < Z1.z1) return START_BLOCK; let k = 0, bd = Infinity; BLOCKS.forEach(([ox, oz], i) => { const d = Math.hypot(b.foot.x - ox, b.foot.z - oz); if (d < bd) { bd = d; k = i; } }); return k; };
       BLOCKS.forEach((_, k) => {
@@ -4362,6 +4369,12 @@
     scene.remove(b.mesh); if (b.hpBar) scene.remove(b.hpBar);
     const i = bodies.indexOf(b); if (i >= 0) bodies.splice(i, 1);
     if (b.dud) { dust(b.foot.x, b.foot.z, 16, 1.4); for (let i = 0; i < 8; i++) { const a = Math.random() * 6.28; puff(b.foot.x, 0.8, b.foot.z, 0x6a6a6a, 0.8, rand(2, 3), rand(1.2, 2), Math.cos(a) * 0.6, rand(0.6, 1.2), Math.sin(a) * 0.6, 0.6, rand(0, 0.3)); } return; }   // v331: 꽝 = 연기만, 아무 일 없음   // v288: 꽝 금고 — 아이템 없이 '힝~ 속았지' (아이템 순서는 안 쓴다)
+    if (b.hidden) {                           // v506: 숨은 금고 — 아직 없는(나올 예정도 아닌) 패시브 중 하나
+      const left = PASSIVE_ITEMS.filter((k) => !owned[k] && !pickups.some((p) => p.kind === k) && !pendingAward.includes(k) && !itemOrder.slice(safesBroken).includes(k));
+      const pool = left.length ? left : PASSIVE_ITEMS.filter((k) => !owned[k] && !pickups.some((p) => p.kind === k) && !pendingAward.includes(k));
+      if (pool.length) dropPickup(pool[Math.floor(Math.random() * pool.length)], b.foot.x, b.foot.z, b.space);
+      return;
+    }
     safesBroken++;
     if (safesBroken <= itemOrder.length) dropPickup(itemOrder[safesBroken - 1], b.foot.x, b.foot.z, b.space);   // v415: 금고 자리에 아이템이 떨어진다 — 내가 직접 가서 닿아야 획득 (v276: 깨는 순서대로 하나씩)
   }
