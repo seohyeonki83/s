@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v452 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v453 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1042,7 +1042,7 @@
     c.chaseR = 0;
     if (z) c.spot = null;
     c.locked = false;                  // 공격형: 근접 거리에 붙어 때리기 시작하면 true (그 상대로 고정)
-    c.atkT = c.sniper ? Math.max(GUARD_REACT, c.atkT || 0) : GUARD_REACT;   // v405: 저격수 반응 시간도 다른 사람처럼 0.3초 — 남은 쿨타임이 더 길면 그대로
+    c.atkT = c.military ? Math.max(GUARD_REACT, c.atkT || 0) : GUARD_REACT;   /* v453: 군인도 남은 쿨타임 유지 (싸움으로 바뀌어도 초기화 안 됨) */   // v405: 저격수 반응 시간도 다른 사람처럼 0.3초 — 남은 쿨타임이 더 길면 그대로
     c.notice = quiet || c.sniper ? 0 : NOTICE;     // 좀비를 보고 덤빌 땐 패닉처럼 머리 위 ! (맞아서 시작하면 없음)
   }
   const charges = (c) => c.police || (c.attacker && c.hp > 0);   // 패닉 대신 덤빈다 — 공격형은 HP 0이면 일반 시민처럼 도망, 경찰은 늘
