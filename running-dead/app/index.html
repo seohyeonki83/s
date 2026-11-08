@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v430</div>
+  <div id="ver">v431</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3838,7 +3838,7 @@
       o.hpBar.visible = false; o.hpDisp = o.hp;
     }
     for (const B of buildings) if (B.side) {   // v242: 건물마다 쪽문 자리 하나만 랜덤으로 — 나머지 후보는 벽 (부술 수도 없다)
-      const cand = B.locks.filter((L) => !L.front), on = cand[Math.floor(Math.random() * cand.length)];   // v358: 정문은 늘 닫힌 문으로 있고, 쪽문 후보만 뽑는다
+      const cand = B.locks.filter((L) => !L.front), on = (B.block === START_BLOCK && B.local === 0 && cand.find((L) => L.side === 'n')) || cand[Math.floor(Math.random() * cand.length)];   /* v431: 첫 마을 위쪽 작은 건물(창고 바로 아래)은 쪽문이 늘 위쪽(북) */   // v358: 정문은 늘 닫힌 문으로 있고, 쪽문 후보만 뽑는다
       for (const L of cand) if (L !== on) { L.obj.off = true; L.obj.mesh.visible = false; L.obj.fill.visible = true; }
     }
     for (const f of fx) scene.remove(f.s);
