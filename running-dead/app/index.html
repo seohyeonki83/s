@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v442</div>
+  <div id="ver">v443</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1379,7 +1379,7 @@
     if (!list.length) { c.evadeR = sniperEvadeR(); enterFight(c, null, true); return; }   // v406: 다음 회피거리는 새로 뽑는다
     if ((c.tick -= dt) <= 0) { c.tick += TICK; c.flee.copy(fleeDir(c, list)); }
     steer(c.vel, wantV.copy(c.flee).multiplyScalar(SPEED * legK()), accelOf(c) * dt);   /* v442: 회피 = 동료 속도와 같음 (v441: 1.05배) */
-    moveShoot(c);   // v442: 회피하면서도 쏜다 (공격 속도 절반)   // v437: 회피도 군인과 같은 속도 (3.06)
+    moveShoot(c, dt);   // v442: 회피하면서도 쏜다 (공격 속도 절반)   // v437: 회피도 군인과 같은 속도 (3.06)
   }
   const BURST_GAP = 0.08;                     // v410: 군인 연사 사이 간격 (초) — 4발이 0.24초 안에
   const GUARD_NEAR = NEAR * 0.9 * 0.8, GUARD_DOMAIN = GUARD_NEAR * 1.1, GUARD_DOMAIN_FIGHT = GUARD_NEAR * 1.2;   /* v436: 근접 1.89칸 (−20%) · 지배 = 근접의 1.1배 (2.08칸) · 공격 지배 = 근접의 1.2배 (2.27칸) */   /* v432: 근접 2.36칸 (−10%) · 지배 = 근접의 1.2배 (2.83칸) · 공격 지배 = 지배의 1.1배 (3.11칸) */   /* v426: 지배 −10% (5.42칸) · 공격 지배 −20% (11.5칸), 근접 거리는 그대로 */   // v410: 저격수의 지배 · 공격 지배 거리 (나와 같은 기본값, 고정)
@@ -1469,7 +1469,7 @@
     const tick = (c.tick -= dt) <= 0;
     if (tick) c.tick += TICK;
     const range = c.boostT > 0 ? c.boostSight : c.sight;   // 사거리 = 원래(1배) 시야 (v159)
-    if (c.soldier && soldierLeash(c, dt)) { moveShoot(c); return; }   // v442: 복귀하면서도 쏜다   // v410: 주인 저격수에게서 지배 거리 밖에 1~2초 → 복귀
+    if (c.soldier && soldierLeash(c, dt)) { moveShoot(c, dt); return; }   // v442: 복귀하면서도 쏜다   // v410: 주인 저격수에게서 지배 거리 밖에 1~2초 → 복귀
     if (c.sniper && !c.space && !c.isolated) {   // v396: 저격수 — 좀비가 회피거리 안이면 바로 도망 (건물 안 · 고립 중엔 안 함)
       const er = c.evadeR;                    // v406: 회피거리 = 내 덮침 거리(3.24칸)의 1.1배 = 3.56칸 ±10% (회피할 때마다 새로 뽑는다)
       for (const z of nearIn(zCells, c.foot.x, c.foot.z, er, evBuf)) if (isZombie(z) && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= er) { c.state = 'evade'; c.foe = null; c.tick = 0; c.stuckT = 0; return; }
@@ -1487,18 +1487,20 @@
     }
     if (!c.foe) { c.chaseR = 0; steer(c.vel, wantV.set(0, 0), accelOf(c) * dt); enterNormal(c); return; }
     const z = c.foe, d = far(z);
-    if (d > range || fireBlocked(c.foot.x, c.foot.z, z.foot.x, z.foot.z)) { c.inRange = false; steer(c.vel, toward(c, z.foot.x, z.foot.z, copSpeed(c)), accelOf(c) * dt); moveShoot(c); return; }   // 사거리 밖이거나 벽에 막힘 → 다가간다 (v297: 열린 문 틈으로는 쏜다)
+    if (d > range || fireBlocked(c.foot.x, c.foot.z, z.foot.x, z.foot.z)) { c.inRange = false; steer(c.vel, toward(c, z.foot.x, z.foot.z, copSpeed(c)), accelOf(c) * dt); moveShoot(c, dt); return; }   // 사거리 밖이거나 벽에 막힘 → 다가간다 (v297: 열린 문 틈으로는 쏜다)
     c.inRange = true;
     steer(c.vel, wantV.set(0, 0), accelOf(c) * dt);
     if (c.atkT <= 0) { if (c.soldier) { c.burstN = 4; c.burstT = 0; c.burstZ = z; c.burstX = z.foot.x; c.burstZz = z.foot.z; } else shoot(c, z); c.atkT = HIT_EVERY * (c.sniper ? 4 : 1); }   // v410: 군인은 4발 연사   // v401: 저격수는 경찰 공격 속도의 1/4 (3.1초마다)
   }
 
-  function moveShoot(c) {                    // v442: 군인·저격수는 움직이면서도 쏜다 — 대신 다음 발까지 2배 (공격 속도 절반)
-    if (!c.military || c.atkT > 0 || c.burstN > 0) return;
+  function moveShoot(c, dt) {                // v443: 군인·저격수는 움직이면서도 쏜다 — 움직이는 동안은 쿨타임이 절반 속도로 흐른다 (공격 속도 절반)
+    if (!c.military) return;
+    if (c.atkT > 0) { c.atkT += dt * 0.5; return; }
+    if (c.burstN > 0) return;
     const z = nearestZombie(c, c.boostT > 0 ? c.boostSight : c.sight, true);
     if (!z) return;
     if (c.soldier) { c.burstN = 4; c.burstT = 0; c.burstZ = z; c.burstX = z.foot.x; c.burstZz = z.foot.z; } else shoot(c, z);
-    c.atkT = HIT_EVERY * (c.sniper ? 4 : 1) * 2;
+    c.atkT = HIT_EVERY * (c.sniper ? 4 : 1);
   }
   function nearestZombie(c, range, clear = false) {   // clear: 공격선이 벽에 안 막힌 좀비만 (v297)
     let best = null, bd = range;
