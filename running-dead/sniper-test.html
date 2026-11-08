@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v464 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v465 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1802,7 +1802,7 @@
         if (hu - Math.abs(u) < hv - Math.abs(v)) u = (u < 0 ? -1 : 1) * hu; else v = (v < 0 ? -1 : 1) * hv;
         const nx = car.x + u * fx + v * rx, nz = car.z + u * fz + v * rz;
         if (car.state === 'parked') {         // v464: 서 있는 차는 누구에게나 밀린다 — 겹친 만큼을 힘으로 나눈다 (몸 힘 : 차 무게 10). 여럿이 밀면 쌓인다. 나는 예외로 보통 몸과 같은 힘(1)
-          const f = b === me ? 1 : (b.force || 1), sh = f / (f + CAR_MASS), ex = nx - b.foot.x, ez = nz - b.foot.z;
+          const f = b === me || b.sniper ? 1 : (b.force || 1),   /* v465: 나·저격수는 차에 보통 몸 힘(1)만 */ sh = f / (f + CAR_MASS), ex = nx - b.foot.x, ez = nz - b.foot.z;
           b.foot.x += ex * (1 - sh); b.foot.z += ez * (1 - sh);
           car.x -= ex * sh; car.z -= ez * sh;
           carClampB(car); if (car.obj) car.obj.foot.set(car.x, 0, car.z); pushedCar = true;
