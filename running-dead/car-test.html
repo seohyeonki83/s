@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v495 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v496 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -953,7 +953,7 @@
     c.sniper = type === 'sniper';        // v396: 저격수 — 경찰 바탕 (체력 같음), 시야·사거리 1.5배, 3배 데미지, 쏘는 간격 3배, 경계·반응 없이 바로 발사, 가까우면 회피        // 경찰: 공격형과 같은데, 그 자리에서 쏜다 — HP 0이 돼도 계속 쏜다
     if (type) {
       c.mesh.material.color.setHex(COLOR[type]);
-      c.hp = c.maxHp = c.sniper ? POLICE_HP * 1.5 * 0.07 : c.police ? POLICE_HP * (c.soldier ? 2 : 0.9) : GUARD_HP * (c.guard ? 0.9 : 1);   /* v495: 주황(수비형) 체력 10% 줄임 (200 → 180) */   /* v494: 경찰만 체력 10% 줄임 (168 → 151.2) */   /* v459: 군인 체력 1/3 줄임 (504 → 336) */   /* v441: 군인 체력 2배 (252 → 504), 저격수는 17.6 그대로 */   // v439: 저격수 체력 = 군인의 7% (약 17.6) — v397~v438은 0 (바로 덮치기)
+      c.hp = c.maxHp = c.sniper ? POLICE_HP * 1.5 * 0.07 : c.police ? POLICE_HP * (c.soldier ? 2 : 0.9) : GUARD_HP * (c.guard ? 0.85 : 1);   /* v496: 주황(수비형) 체력 15% 줄임 (200 → 170) */   /* v494: 경찰만 체력 10% 줄임 (168 → 151.2) */   /* v459: 군인 체력 1/3 줄임 (504 → 336) */   /* v441: 군인 체력 2배 (252 → 504), 저격수는 17.6 그대로 */   // v439: 저격수 체력 = 군인의 7% (약 17.6) — v397~v438은 0 (바로 덮치기)
       addHpBar(c, hpFoeMat);
     }
     if (c.police) {                      // 쏠 때 번쩍이는 노란 선 (원 밑에 깔린다)
