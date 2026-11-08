@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v485</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v486</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1455,13 +1455,14 @@
     if (tier >= 2) {                          // v447: 군인차 두 대 — 한 대에 한 분대씩 (가장자리에서 출발해 나를 향해 온다)
       teamsSpawned++;
       const seg = teamSeg();
-      for (let i = 0; i < 2; i++) teamWait.push({ car: comp, t: i * 3, seg });   // v482: 군인차도 같은 가장자리 구간에서 3초 간격
+      for (let i = 0; i < 2; i++) teamWait.push({ car: comp, t: i * 3, seg, hold: true });   // v482: 군인차도 같은 가장자리 구간에서 3초 간격
       return;
     }
     const sq = [];
     for (const t of comp) { if (t === 'sniper' || !sq.length) sq.push([]); sq[sq.length - 1].push(t); }
     const seg = teamSeg();
-    sq.forEach((c, i) => teamWait.push({ comp: c, t: i * 3, first: i === 0, seg }));   // v475: 3초 간격, 같은 가장자리 구간에서
+    teamsSpawned++;                           // v486: 알림을 먼저 — 분대는 알림이 사라지고 2초 뒤에 나온다
+    sq.forEach((c, i) => teamWait.push({ comp: c, t: i * 3, first: false, seg, hold: true }));   // v475: 3초 간격, 같은 가장자리 구간에서
   }
   function spawnTeam(comp, first, seg) {           // v410: 군인팀 하나 — 같은 팀 군인의 주인 = 그 팀 저격수 (v444: 분대 하나씩)
     const p = teamSpot(seg);
@@ -3511,7 +3512,7 @@
     zombies.length = 0;
     for (const b of bodies) if (isZombie(b)) zombies.push(b);
     while (teamQueue.length) queueSquads(teamQueue.shift());
-    for (let i = teamWait.length - 1; i >= 0; i--) if ((teamWait[i].t -= dt) <= 0) { const w = teamWait.splice(i, 1)[0]; if (w.car) { const p = teamSpot(w.seg); addCar(p.x, p.z, Math.atan2(me.foot.z - p.z, me.foot.x - p.x), null, 0, w.car); } else spawnTeam(w.comp, w.first, w.seg); }   // v444: 분대 10초 간격   // v410: 군인팀 출동 (이번 걸음 좀비 목록을 만든 뒤)
+    for (let i = teamWait.length - 1; i >= 0; i--) if (!teamWait[i].hold && (teamWait[i].t -= dt) <= 0) { const w = teamWait.splice(i, 1)[0]; if (w.car) { const p = teamSpot(w.seg); addCar(p.x, p.z, Math.atan2(me.foot.z - p.z, me.foot.x - p.x), null, 0, w.car); } else spawnTeam(w.comp, w.first, w.seg); }   // v444: 분대 10초 간격   // v410: 군인팀 출동 (이번 걸음 좀비 목록을 만든 뒤)
     crowd.clear();                            // 시민마다 지금 노리는 좀비 수 (v148) — 타겟을 새로 뽑을 때마다 바로 고쳐서, 같은 순간에 뽑는 좀비끼리도 겹치지 않는다
     for (const z of zombies) if (z.pick && z.pick.kind === 'citizen' && z.pick.hp > 0) crowd.set(z.pick, (crowd.get(z.pick) || 0) + 1);
     objFrame++; objCrowd.clear();             // 경찰차에 붙은 좀비 수 (v243) — 지난 걸음에 때리던 좀비
@@ -4769,7 +4770,7 @@
     el.innerHTML = '<div class="rbox"><div class="rt">특수부대 출동</div></div>';
     stage.appendChild(el);
     const fx = curFx = { ev: { t: 'squad' }, els: [el], timers: [] };   // v428
-    fxTimer(fx, () => { el.remove(); squadAnim = false; if (curFx === fx) curFx = null; }, 3050);
+    fxTimer(fx, () => { el.remove(); squadAnim = false; if (curFx === fx) curFx = null; for (const w of teamWait) if (w.hold) { w.hold = false; w.t += 2; } }, 3050);   // v486: 알림이 사라지면 2초 뒤부터 출동
   }
   const dangerEl = document.getElementById('danger');
   function dangerTick() {                     // v450: 내 체력 20% 이하 (시작 체력이 딱 20%라 시작하자마자 깜빡인다 — 위험한 상태) → 화면 가장자리 빨간 경고가 깜빡인다 (0에 가까울수록 진하게)
