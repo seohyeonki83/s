@@ -152,7 +152,7 @@
     background: #24242a; pointer-events: none;   /* 못 가 본 곳 — v129에 반투명으로 했다가 밝은 바닥 위에서 가 본 곳과 구분이 안 돼서 v140에 다시 불투명 (v125 색) */
   }
   #legend {
-    position: absolute; top: calc(66px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));   /* 위 가운데 수배 별과 안 겹치게 (v113) */
+    position: absolute; top: calc(32px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));   /* v423: 버튼이 빠져서 레벨 바로 밑으로 */   /* 위 가운데 수배 별과 안 겹치게 (v113) */
     display: flex; align-items: center; gap: 5px;
     font: 600 12px/1 var(--font); color: rgba(255, 255, 255, 0.75); pointer-events: none;   /* 어둠 위라 밝은 글씨 */
   }
@@ -172,15 +172,16 @@
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); touch-action: manipulation; cursor: pointer;
   }
   #retry[hidden] { display: none; }
-  #reset {   /* v345: 왼쪽 위 레벨 아래 */
-    position: absolute; top: calc(30px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); height: 27px;
-    padding: 7px 11px; border: 0; border-radius: 8px;
-    background: var(--btn-bg); color: var(--btn-fg); font: 600 13px/1 var(--font);
+  #reset {   /* v423: 되감기 아이콘 — 화면 오른쪽 아래, 일시정지 위 */
+    position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+    width: 36px; height: 36px; padding: 0; border: 0; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    background: var(--btn-bg); color: var(--btn-fg);
     touch-action: manipulation; cursor: pointer;
   }
+  #reset svg { width: 18px; height: 18px; fill: currentColor; display: block; }
   #pause {   /* v284: 일시정지 — 오른쪽 아래 '처음부터' 바로 위, 작게. 멈춘 동안은 ▶ */
-    position: absolute; left: calc(max(16px, env(safe-area-inset-left, 0px)) + 82px); top: calc(30px + env(safe-area-inset-top, 0px));   /* v345: 처음부터 오른쪽 */
-    width: 27px; height: 27px; padding: 0; border: 0; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(6px + env(safe-area-inset-bottom, 0px));   /* v423: 화면 오른쪽 맨 아래 (처음부터 밑) */
+    width: 36px; height: 36px; padding: 0; border: 0; border-radius: 8px; display: flex; align-items: center; justify-content: center;
     background: var(--btn-bg); color: var(--btn-fg); touch-action: manipulation; cursor: pointer;
   }
   #pause svg { width: 15px; height: 15px; fill: currentColor; display: block; }
@@ -223,14 +224,14 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v422</div>
+  <div id="ver">v423</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
   <div id="note" hidden></div>
   <div id="taunt" hidden></div>
 </div>
-<button id="reset" type="button">처음부터</button>
+<button id="reset" type="button" aria-label="처음부터"><svg viewBox="0 0 16 16"><path d="M8 3 2 8l6 5zM15 3 9 8l6 5z"/></svg></button>
 <button id="pause" type="button" aria-label="일시정지"><svg class="pa" viewBox="0 0 16 16"><rect x="3" y="2" width="3.6" height="12" rx="1"/><rect x="9.4" y="2" width="3.6" height="12" rx="1"/></svg><svg class="pl" viewBox="0 0 16 16"><path d="M4.5 2.4v11.2c0 .6.7 1 1.2.6l8-5.6c.4-.3.4-.9 0-1.2l-8-5.6c-.5-.4-1.2 0-1.2.6z"/></svg></button>
 <button id="retry" type="button" hidden>다시 하기</button>
 <div id="cmd" role="button" aria-label="명령 컨트롤키"><div id="cmdKnob"></div></div>
@@ -3928,7 +3929,7 @@
     for (const [k, el] of Object.entries(aBadges)) el.querySelector('.pc').textContent = a[k]();
     for (const [g, side] of [[pBadges, 'left'], [aBadges, 'right']]) {   // v354: 3개 넘으면 작게 · 촘촘하게 (조이스틱 안 가리게)
       const L = Object.values(g), tight = L.length >= 3, step = tight ? 40 : 54, sz = tight ? 36 : 46;
-      L.forEach((el, i) => { el.style[side] = `calc(max(16px, env(safe-area-inset-${side}, 0px)) + ${i * step}px)`; el.style.width = el.style.height = sz + 'px'; });
+      L.forEach((el, i) => { el.style[side] = `calc(max(16px, env(safe-area-inset-${side}, 0px)) + ${(side === 'right' ? 42 : 0) + i * step}px)`;   /* v423: 사용 장비는 오른쪽 버튼 줄 바로 왼쪽부터 */ el.style.width = el.style.height = sz + 'px'; });
     }
   }
   function toast(text) {                      // 화면 아래쪽에 잠깐 뜨는 글
