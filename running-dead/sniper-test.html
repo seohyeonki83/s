@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v433 군인팀 시험</div>
+  <div id="ver">v434 군인팀 시험</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1346,7 +1346,7 @@
   //   틱마다 시야 안 가장 가까운 좀비를 새로 뽑아서 쏜다 — 고정 없이 계속 바뀐다.
   //   HP가 0이 돼도 도망가지 않고 계속 쏜다 (덮칠 수는 있다). 시야 안에 좀비가 없으면 싸움 끝 → 다음 사건 자리로, 없으면 배회.
   const SNIPER_TRAIL = 2, SNIPER_THICK = 2.2;   // v408: 저격수 총알 선 — 맞은 자리 너머로 2칸 더, 굵기 2.2배
-  const SNIPER_SPEED = SPEED * 1.1;            // v396: 저격수 이동 속도 = 동료 기본 속도의 1.1배
+  const SNIPER_SPEED = PANIC_SPEED * POLICE_PACE * 1.1;   // v434: 교전 중 다가가는 속도 = 군인 속도(3.06)의 1.1배 = 3.37 (v396: 좀비 동료 속도의 1.1배 4.62였음)
   const SNIPER_EVADE = MY_SPEED;              // v432: 저격수 회피 속도 = 내 처음 속도 (4.2)
   const copSpeed = (c) => c.sniper ? SNIPER_SPEED : PANIC_SPEED * POLICE_PACE;
   const sniperEvadeR = () => ATTACK * 1.1 * 1.05 * 1.1 * 1.1 * rand(0.85, 1.15);   /* v433: 10% 더 → 4.53칸 ±15% (3.85 ~ 5.21칸) */   /* v418: 10% 더 → 4.12칸 ±15% (3.5 ~ 4.7칸) */   // v409: 5% 늘림 → 3.74칸 ±15% (3.2 ~ 4.3칸) — v407: 3.56칸 ±15%
