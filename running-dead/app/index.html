@@ -1361,7 +1361,7 @@
   //   틱마다 시야 안 가장 가까운 좀비를 새로 뽑아서 쏜다 — 고정 없이 계속 바뀐다.
   //   HP가 0이 돼도 도망가지 않고 계속 쏜다 (덮칠 수는 있다). 시야 안에 좀비가 없으면 싸움 끝 → 다음 사건 자리로, 없으면 배회.
   const SNIPER_TRAIL = 2, SNIPER_THICK = 2.2;   // v408: 저격수 총알 선 — 맞은 자리 너머로 2칸 더, 굵기 2.2배
-  const SNIPER_SPEED = PANIC_SPEED * POLICE_PACE;   // v435: 저격수 속도는 군인과 완전히 같음 (3.06) — 다른 건 회피할 때(4.2)뿐
+  const SNIPER_SPEED = PANIC_SPEED * POLICE_PACE;   // v435: 저격수 속도는 군인과 완전히 같음 (3.06) — v437부터 회피할 때도 같음
   const SNIPER_EVADE = PANIC_SPEED * POLICE_PACE;   // v437: 회피할 때도 군인과 같은 속도 (3.06) — 저격수 속도는 하나로 통일 (v432: 4.2였음)
   const copSpeed = (c) => c.sniper ? SNIPER_SPEED : PANIC_SPEED * POLICE_PACE;
   const sniperEvadeR = () => ATTACK * 1.1 * 1.05 * 1.1 * 1.1 * rand(0.85, 1.15);   /* v433: 10% 더 → 4.53칸 ±15% (3.85 ~ 5.21칸) */   /* v418: 10% 더 → 4.12칸 ±15% (3.5 ~ 4.7칸) */   // v409: 5% 늘림 → 3.74칸 ±15% (3.2 ~ 4.3칸) — v407: 3.56칸 ±15%
@@ -1376,7 +1376,7 @@
     for (const z of nearIn(zCells, c.foot.x, c.foot.z, SIGHT, evBuf)) if (isZombie(z) && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= SIGHT) list.push(z);
     if (!list.length) { c.evadeR = sniperEvadeR(); enterFight(c, null, true); return; }   // v406: 다음 회피거리는 새로 뽑는다
     if ((c.tick -= dt) <= 0) { c.tick += TICK; c.flee.copy(fleeDir(c, list)); }
-    steer(c.vel, wantV.copy(c.flee).multiplyScalar(SNIPER_EVADE), accelOf(c) * dt);   // v432: 회피는 내 처음 속도
+    steer(c.vel, wantV.copy(c.flee).multiplyScalar(SNIPER_EVADE), accelOf(c) * dt);   // v437: 회피도 군인과 같은 속도 (3.06)
   }
   const BURST_GAP = 0.08;                     // v410: 군인 연사 사이 간격 (초) — 4발이 0.24초 안에
   const GUARD_NEAR = NEAR * 0.9 * 0.8, GUARD_DOMAIN = GUARD_NEAR * 1.1, GUARD_DOMAIN_FIGHT = GUARD_NEAR * 1.2;   /* v436: 근접 1.89칸 (−20%) · 지배 = 근접의 1.1배 (2.08칸) · 공격 지배 = 근접의 1.2배 (2.27칸) */   /* v432: 근접 2.36칸 (−10%) · 지배 = 근접의 1.2배 (2.83칸) · 공격 지배 = 지배의 1.1배 (3.11칸) */   /* v426: 지배 −10% (5.42칸) · 공격 지배 −20% (11.5칸), 근접 거리는 그대로 */   // v410: 저격수의 지배 · 공격 지배 거리 (나와 같은 기본값, 고정)
