@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v476</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v477</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1388,7 +1388,7 @@
     for (const z of nearIn(zCells, c.foot.x, c.foot.z, ER, evBuf)) if (isZombie(z) && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= ER) list.push(z);
     if (!list.length) { c.evadeR = sniperEvadeR(); enterFight(c, null, true); return; }   // v406: 다음 회피거리는 새로 뽑는다
     if ((c.tick -= dt) <= 0) { c.tick += TICK; c.flee.copy(fleeDir(c, list)); }
-    steer(c.vel, wantV.copy(c.flee).multiplyScalar(SPEED * legK() * 0.95 * 0.95), accelOf(c) * dt);   /* v474: 5% 더 느리게 (동료의 90.25%) */   /* v442: 회피 = 동료 속도와 같음 (v441: 1.05배) */
+    steer(c.vel, wantV.copy(c.flee).multiplyScalar(3.7), accelOf(c) * dt);   /* v477: 회피 속도 3.7 고정 */   /* v442: 회피 = 동료 속도와 같음 (v441: 1.05배) */
     moveShoot(c, dt);   // v442: 회피하면서도 쏜다 (공격 속도 절반)   // v437: 회피도 군인과 같은 속도 (3.06)
   }
   const BURST_GAP = 0.08;                     // v410: 군인 연사 사이 간격 (초) — 4발이 0.24초 안에
