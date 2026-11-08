@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v429 군인팀 시험</div>
+  <div id="ver">v430 군인팀 시험</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1110,7 +1110,7 @@
       if (d <= reach) seen.push(z);
     }
     if (c.state === 'panic') {
-      if (cornered(c)) { enterSuper(c); return; }   // 구석에 몰렸다 → 초패닉
+      if (cornered(c) && c.space && c.space.doors.length) { enterSuper(c); return; }   // 구석에 몰렸다 → 초패닉 (v430: 열린 문이 없는 건물이면 안 함 — 전엔 여기서 게임이 멈췄다)
       if (seen.length) { c.timer = c.panicLen; c.flee.copy(fleeDir(c, seen)); }   // 볼 때마다 패닉 시간 처음부터
       else if (nearWall(c, c.sense * WALL_SENSE)) c.flee.copy(fleeDir(c, [{ foot: c.lastSeen, speed: c.lastSeenSpeed }]));   // 벽에 다가가면 마지막에 본 좀비와 그 벽을 피해 다시 고른다 (패닉 시간은 그대로)
     } else if (seen.length) {
@@ -1374,7 +1374,7 @@
     c.burstN--; c.burstT += BURST_GAP;
     const z = c.burstZ;
     if (z && bodies.includes(z) && isZombie(z) && z.hp > 0) { shoot(c, z); c.burstX = z.foot.x; c.burstZz = z.foot.z; }
-    else { c.shotT = 0; muzzleFlash(c, c.burstX, c.burstZz); }
+    else { c.shotT = 0; c.shotAt = { foot: new THREE.Vector3(c.burstX, 0, c.burstZz) }; muzzleFlash(c, c.burstX, c.burstZz); }   // v430: 헛발 선은 마지막에 노린 자리로 (전엔 첫 발부터 헛발이면 게임이 멈췄다)
   }
   function masterOf(c) {                      // v410: 군인의 주인 저격수 — 처음 정한 주인을 고정으로, 죽거나 사라지면 그때 가장 가까운 저격수
     const m = c.master;
@@ -1598,7 +1598,8 @@
     else { const z = isZombie(me) ? me : bodies.find(isZombie); if (!z) return null; tx = z.foot.x; tz = z.foot.z; }   // 내가 죽었으면 아무 좀비나
     const B = spaceOf(tx, tz);
     if (B) {
-      const D = B.doors.reduce((a, o) => Math.hypot(o.cx - car.x, o.cz - car.z) < Math.hypot(a.cx - car.x, a.cz - car.z) ? o : a);
+      const DS = B.doors.length ? B.doors : B.locks.filter((o) => !(o.obj && o.obj.off));   // v430: 열린 문이 없으면 닫힌 문 앞으로 (전엔 여기서 게임이 멈췄다)
+      const D = DS.reduce((a, o) => Math.hypot(o.cx - car.x, o.cz - car.z) < Math.hypot(a.cx - car.x, a.cz - car.z) ? o : a);
       tx = D.cx + D.nx * 2.6; tz = D.cz + D.nz * 2.6;
     }
     return [tx, tz, k];
@@ -2629,6 +2630,7 @@
       b.tracer.visible = b.shotT >= 0;
       if (b.tracer2) b.tracer2.visible = b.shotT >= 0;
       if (b.shotT < 0) continue;
+      if (!b.shotAt) { b.shotT = -1; b.tracer.visible = false; if (b.tracer2) b.tracer2.visible = false; continue; }   // v430: 쏜 대상이 없으면 선 없음
       const t = b.shotAt.foot, dx = t.x - b.foot.x, dz = t.z - b.foot.z, L = Math.hypot(dx, dz) || 1e-3, L2 = L + (b.sniper ? SNIPER_TRAIL : 0);
       b.tracer.position.set(b.foot.x + dx / L * L2 / 2, 0, b.foot.z + dz / L * L2 / 2).addScaledVector(UP, RADIUS);
       b.tracer.rotation.y = -Math.atan2(dz, dx);
