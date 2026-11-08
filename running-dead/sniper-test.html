@@ -205,7 +205,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v407 저격수 시험</div>
+  <div id="ver">v408 저격수 시험</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1320,6 +1320,7 @@
   //   사거리 안이면 그 자리에 서서 쏜다 — 사거리 = 자기 원래(1배) 시야, 1초마다, 공격력 2배. 붙어 있어도 쏜다. 늘어난 시야로 본 좀비는 사거리까지 달려간다 (v159).
   //   틱마다 시야 안 가장 가까운 좀비를 새로 뽑아서 쏜다 — 고정 없이 계속 바뀐다.
   //   HP가 0이 돼도 도망가지 않고 계속 쏜다 (덮칠 수는 있다). 시야 안에 좀비가 없으면 싸움 끝 → 다음 사건 자리로, 없으면 배회.
+  const SNIPER_TRAIL = 2, SNIPER_THICK = 2.2;   // v408: 저격수 총알 선 — 맞은 자리 너머로 2칸 더, 굵기 2.2배
   const SNIPER_SPEED = SPEED * 1.1;            // v396: 저격수 이동 속도 = 동료 기본 속도의 1.1배
   const copSpeed = (c) => c.sniper ? SNIPER_SPEED : PANIC_SPEED * POLICE_PACE;
   const sniperEvadeR = () => ATTACK * 1.1 * rand(0.85, 1.15);   // v407: 저격수 회피거리 3.56칸 ±15% (3.0 ~ 4.1칸)
@@ -2511,6 +2512,16 @@
     updateViewRect();
     drawVision(eyes);
     drawCars(eyes);
+    for (const b of bodies) if (b.tracer) {   // v408: 총알 선 — 쏜 사람이 시야·화면 밖이어도 보인다 (어둠 위에 그린다). 저격수는 더 굵고, 맞은 자리 너머로 더 길게
+      b.tracer.visible = b.shotT >= 0;
+      if (b.shotT < 0) continue;
+      const t = b.shotAt.foot, dx = t.x - b.foot.x, dz = t.z - b.foot.z, L = Math.hypot(dx, dz) || 1e-3, L2 = L + (b.sniper ? SNIPER_TRAIL : 0);
+      b.tracer.position.set(b.foot.x + dx / L * L2 / 2, 0, b.foot.z + dz / L * L2 / 2).addScaledVector(UP, RADIUS);
+      b.tracer.rotation.y = -Math.atan2(dz, dx);
+      b.tracer.scale.set(L2, 1, b.sniper ? SNIPER_THICK : 1);
+      b.tracer.material.opacity = 1 - b.shotT / SHOT_FLASH;
+      if ((b.shotT += dt) >= SHOT_FLASH) b.shotT = -1;
+    }
     for (const b of bodies) {
       if (b !== me && !onView(b.foot.x, b.foot.z, 1)) {   // 화면 밖 캐릭터는 숨기고 그림 갱신을 건너뛴다 (v172)
         if (b.offView) continue;
@@ -2519,7 +2530,7 @@
         if (b.hpBar) b.hpBar.visible = false;
         if (b.icon) b.icon.visible = false;
         if (b.gauge) b.gauge.visible = false;
-        if (b.tracer) b.tracer.visible = false;
+        if (b.mark) b.mark.visible = false;   // v408: 화면 밖으로 나간 저격수 표시도 숨김
         continue;
       }
       b.offView = false;
@@ -2554,17 +2565,6 @@
         const base = COLOR[b.sniper ? 'sniper' : b.police ? 'police' : b.attacker ? 'attacker' : b.guard ? 'guard' : 'citizen'];
         b.stunShown = b.stunT > 0;
         b.mesh.material.color.setHex(b.stunShown && Math.floor(clock * 14) % 2 ? 0xc8f0ff : base);
-      }
-      if (b.tracer) {                         // 경찰이 쏜 노란 선 — 두 원 가운데를 잇고, 흐려지며 사라진다
-        b.tracer.visible = b.shotT >= 0 && !hide;
-        if (b.shotT >= 0) {
-          const t = b.shotAt.foot, dx = t.x - b.foot.x, dz = t.z - b.foot.z;
-          b.tracer.position.set(b.foot.x + dx / 2, 0, b.foot.z + dz / 2).addScaledVector(UP, RADIUS);
-          b.tracer.rotation.y = -Math.atan2(dz, dx);
-          b.tracer.scale.x = Math.hypot(dx, dz) || 1e-3;
-          b.tracer.material.opacity = 1 - b.shotT / SHOT_FLASH;
-          if ((b.shotT += dt) >= SHOT_FLASH) b.shotT = -1;
-        }
       }
       b.arrow.visible = b.vel.length() > 0.15;
       b.arrow.rotation.z = Math.atan2(-b.vel.y * SIN_P, b.vel.x);   // 바닥 위 방향 → 화면 위 방향
