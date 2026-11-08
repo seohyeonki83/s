@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v459 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v460 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1537,7 +1537,7 @@
         f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true;
       }
     }
-    const base = POLICE_DAMAGE * (c.sniper ? 3 * 0.7 :   /* v459: 저격수 데미지 30% 줄임 */ c.soldier ? 1.2 / 4 : 1);   // v396: 저격수 3배 · v410: 군인은 경찰의 120%를 4발에 나눠서
+    const base = POLICE_DAMAGE * (c.sniper ? 3 * 0.8 :   /* v460: 저격수 데미지 20% 줄임 (v459: 30%) */ c.soldier ? 1.2 / 4 : 1);   // v396: 저격수 3배 · v410: 군인은 경찰의 120%를 4발에 나눠서
     landHit(c, z, z === me && hasVest ? base * (1 - vestPct(up.brain) / 100) : base);   // 방탄복 — 내 총알 피해 감소 (v201)
     if (c.sniper && isZombie(z)) sniperHit(c, z);
   }
