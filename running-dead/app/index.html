@@ -223,7 +223,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v420</div>
+  <div id="ver">v421</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2078,7 +2078,7 @@
   function startBite(z, t) {
     bloodBurst(t.foot.x, t.foot.z, 10, 1.5, 3.5);   // v317: 덮치는 순간 확 터진다
     z.mode = 'bite';
-    z.biteT = z.biteLen = (z === me ? INFECT / MY_INFECT : INFECT) * biteK();   // 나는 더 빨리 감염시킨다. 물어뜯기로 짧아진다 (v201)
+    z.biteT = z.biteLen = (z === me ? INFECT / MY_INFECT : INFECT) * biteK() * (z.mut ? 0.5 : 1);   // v421: 특수(변이) 좀비는 감염 속도 2배   // 나는 더 빨리 감염시킨다. 물어뜯기로 짧아진다 (v201)
     z.biteT = z.biteLen * (1 - Math.min(0.999, t.infect || 0));   // 저장된 감염 게이지에서 이어서 (v213)
     if (z.biteLen <= 0.02) {                  // 물어뜯기를 많이 찍어 감염 시간이 0 → 즉시 감염, 회복 총량은 한 번에 (v201)
       z.hp = Math.min(z.maxHp, z.hp + z.maxHp * zHeal(z) * (z === me ? INFECT / MY_INFECT : INFECT));
