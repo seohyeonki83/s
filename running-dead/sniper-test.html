@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v457 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v458 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -303,7 +303,7 @@
   const STAR_MAX = 5;
   const STAR_BASE = 10, STAR_GROW = 2.1;   /* v395: 10명 시작 · 2.1배 → 누적 [10, 31, 75, 168, 362] */   // 별 사이에 더 필요한 감염 수가 2.5배씩 늘어난다: +5, +12.5, +31, +78, +195 (v135)
   const STAR_AT = (() => { let t = 0, d = STAR_BASE; return Array.from({ length: 5 }, () => { t += d; d *= STAR_GROW; return Math.round(t); }); })();   // [5, 18, 49, 127, 322]
-  const TEAM_COMP = { 2: ['sniper', 'soldier', 'soldier', 'soldier', 'soldier'], 1: ['sniper', 'soldier', 'soldier', 'soldier', 'sniper', 'soldier', 'soldier', 'soldier'] };   /* v426: 1팀 = 저격수 2 + 군인 6 (저격수 하나에 군인 셋씩) */   /* v418: 1팀 = 저격수 2 + 군인 4 (저격수 하나에 군인 둘씩) */   // v410: 군인팀 구성 — 1팀 = 군인 2 + 저격수 1 (2~4팀은 아직 미정 → 그 차례엔 안 나온다)
+  const TEAM_COMP = { 2: ['sniper', 'soldier', 'soldier', 'soldier'], 1: ['sniper', 'soldier', 'soldier', 'sniper', 'soldier', 'soldier'] };   /* v458: 분대마다 군인 한 명씩 줄임 — 1단계 저격수 1 + 군인 2 (×2), 2단계 군인차 한 대에 저격수 1 + 군인 3 */   /* v426: 1팀 = 저격수 2 + 군인 6 (저격수 하나에 군인 셋씩) */   /* v418: 1팀 = 저격수 2 + 군인 4 (저격수 하나에 군인 둘씩) */   // v410: 군인팀 구성 — 1팀 = 군인 2 + 저격수 1 (2~4팀은 아직 미정 → 그 차례엔 안 나온다)
   const TEAM_EVENTS = (() => {               // v410: 군인팀 출동 시점 = 경보 3단계(개판)부터 단계마다 도달할 때 + 다음 단계와의 중간 (데프콘 뒤로도 2.1배씩 계속)
     const th = []; let t = 0, d = STAR_BASE;
     for (let i = 0; i < 14; i++) { t += d; d *= STAR_GROW; th.push(Math.round(t)); }
