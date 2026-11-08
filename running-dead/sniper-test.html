@@ -50,7 +50,7 @@
   .fly { position: absolute; z-index: 21; pointer-events: none; line-height: 1; transform: translate(-50%, -50%); }
   #stars .s { display: inline-block; width: 0.62em; font-weight: 900; text-align: center; font-size: 22px; }   /* v193: 수배 단계 = 보라 느낌표 */
   #stars .s.off { opacity: 0.3; }
-  #stars .cap { position: absolute; right: 100%; top: 6px; margin-right: 6px; font: 800 11px/1 var(--font); color: #e2c2fb; white-space: nowrap; }   /* v307: 느낌표 줄 왼쪽에 '경보단계' (느낌표 줄은 가운데 그대로) */
+  #stars .cap { display: block; margin: 0 0 3px; font: 800 11px/1 var(--font); color: #e2c2fb; white-space: nowrap; }   /* v424: '경보단계'를 느낌표 줄 위 가운데로 */   /* v307: 느낌표 줄 왼쪽에 '경보단계' (느낌표 줄은 가운데 그대로) */
   #stars .lv { display: block; margin-top: 2px; min-height: 11px; font: 800 11px/1 var(--font); font-style: normal; color: #e2c2fb; }   /* 수배 단계 이름 (v194) */
   #stars .s.hit { animation: starhit 0.2s ease-out; }
   @keyframes starhit { 0% { transform: scale(1.9); } 60% { transform: scale(0.85); } 100% { transform: scale(1); } }
@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v423 군인팀 시험</div>
+  <div id="ver">v424 군인팀 시험</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
