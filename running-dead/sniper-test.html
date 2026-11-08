@@ -205,7 +205,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v415 군인팀 시험</div>
+  <div id="ver">v416 군인팀 시험</div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2014,10 +2014,12 @@
 
   // 동료가 지금 바로 덮칠 수 있는 시민 = 같은 공간, HP 0, 아무도 안 덮치는 중, 덮침 거리 안 — 그중 가장 가까운 시민.
   // 이게 있으면 무조건 먼저 덮친다 — 복귀 명령·싸움·다른 동료의 찜보다 앞 (덮치기부터 감염까지를 한 덩어리로 친다)
-  function pounceYield(z, t) {                // v398: 변이 좀비 덮치기 양보 — 나 · 일반 동료 중 그 사람이 자기 인지거리 안에 있고 노릴 수 있는 좀비가 있으면 (거리와 상관없이)
+  function pounceYield(z, t) {                // v416: 변이 좀비 덮치기 양보 — 그 사람을 지금 바로 덮칠 수 있는 한가한 좀비(나 · 일반 동료)가 있을 때만
     for (const o of zombies) {
-      if (o === z || o.mut || o.mode !== 'free' || o.space !== t.space) continue;
-      if (Math.hypot(o.foot.x - t.foot.x, o.foot.z - t.foot.z) <= o.sense && huntable(o, t)) return true;
+      if (o === z || o.mut || o.mode !== 'free') continue;   // 변이 좀비끼리는 양보 안 함 · 물거나 덮치는 중이면 한가하지 않음
+      if (!stillPounceable(o, t)) continue;                  // 덮침 거리(나 3.24 · 동료 2.92칸) 안에서 지금 바로 덮칠 수 있나
+      if (o === me ? (me.aim && me.aim !== t) : (o.pcand && o.pcand !== t)) continue;   // 다른 사람을 덮치려고 노리는 중이면 한가하지 않음
+      return true;
     }
     return false;
   }
