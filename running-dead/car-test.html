@@ -62,6 +62,7 @@
   #lvbox.up .lv { animation: lvup 0.6s ease-out; }
   @keyframes lvup { 0% { transform: scale(1.8); color: #7fd4ff; } 100% { transform: scale(1); } }
   .toast { position: absolute; left: 50%; bottom: calc(220px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 30; padding: 10px 16px; border-radius: 10px; background: rgba(20, 20, 26, 0.88); color: #fff; font: 700 15px/1 var(--font); pointer-events: none; transition: opacity 0.3s; white-space: nowrap; }   /* v275 */
+  .upn { position: absolute; top: -5px; right: -5px; min-width: 15px; height: 15px; padding: 0 3px; box-sizing: border-box; border-radius: 8px; background: #f2b11c; color: #1a1205; font: 800 10px/15px var(--font); text-align: center; pointer-events: none; z-index: 2; box-shadow: 0 1px 3px rgba(0,0,0,0.6); }   /* v520: 장비 강화 단계 숫자 */
   .pbadge, #vest { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(6px + env(safe-area-inset-bottom, 0px)); width: 46px; height: 46px; border-radius: 12px; background: rgba(22, 22, 28, 0.85); border: 2px solid #8fa3b8;
     display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; pointer-events: auto; cursor: pointer; touch-action: none; z-index: 4; }   /* 방탄복 (v201) — 패시브, 왼쪽 아래. v284: 누르면 설명창 */
   .pbadge .ic, #vest .ic { font-size: 20px; line-height: 1; }
@@ -209,7 +210,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v519 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v520 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4211,20 +4212,26 @@
   }
 
   // 자폭 스위치: 내 인지거리 안 동료 중 둘레(인지거리의 1/3)에 적이 가장 많이(가까울수록 더) 붙은 동료가 터진다 — 데미지는 없고 산성 덩어리만
-  function useBomb() {                        // v504: 맵 전체 동료 중에서 — 적 종류 순(저격수 > 군인 > 경찰 > 공격형 > 수비형 > 시민)으로, 그 적과 가장 가까운 동료가 터진다 (터지는 범위 안일 때)
+  function useBomb() {                        // v520: 맵 전체 동료 중 — 터지는 범위 안에 있는 가장 높은 티어(저격수 > 군인 > 경찰 > 빨강 > 주황 > 노랑)를 맞힐 수 있는 동료들 가운데, 범위 안 적이 가장 많은 동료가 터진다
     const al = zombies.filter((z) => z !== me && isZombie(z));
     if (!al.length) return false;
     const R = me.sense / 3 * 1.5;               // v277: 효과 범위 (3.6칸)
-    const rank = [(c) => c.sniper, (c) => c.soldier, (c) => c.police && !c.military, (c) => c.attacker, (c) => c.guard, (c) => !c.police && !c.attacker && !c.guard];
-    for (const is of rank) {
-      let best = null, bd = Infinity;
-      for (const c of bodies) {
-        if (c.kind !== 'citizen' || c.dead || !is(c)) continue;
-        for (const z of al) { if (c.space !== z.space) continue; const d = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z); if (d <= R && d < bd) { bd = d; best = z; } }
+    const tier = (c) => c.sniper ? 5 : c.soldier ? 4 : c.police ? 3 : c.attacker ? 2 : c.guard ? 1 : 0;
+    let best = null, bT = -1, bN = -1, bD = Infinity;
+    for (const z of al) {
+      let top = -1, n = 0, d = Infinity;
+      for (const c of nearIn(cCells, z.foot.x, z.foot.z, R, mutBuf)) {
+        if (c.kind !== 'citizen' || c.space !== z.space) continue;
+        const e = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z);
+        if (e > R) continue;
+        n++; const t = tier(c);
+        if (t > top) { top = t; d = e; } else if (t === top && e < d) d = e;
       }
-      if (best) { explode(best, R); return true; }
+      if (top < 0) continue;
+      if (top > bT || (top === bT && (n > bN || (n === bN && d < bD)))) { best = z; bT = top; bN = n; bD = d; }
     }
-    explode(al.reduce((a, z) => Math.hypot(z.foot.x - me.foot.x, z.foot.z - me.foot.z) < Math.hypot(a.foot.x - me.foot.x, a.foot.z - me.foot.z) ? z : a), R);   // 근처에 적이 아무도 없으면 나와 가장 가까운 동료
+    if (!best) best = al.reduce((a, z) => Math.hypot(z.foot.x - me.foot.x, z.foot.z - me.foot.z) < Math.hypot(a.foot.x - me.foot.x, a.foot.z - me.foot.z) ? z : a);   // 범위 안에 적이 아무도 없으면 나와 가장 가까운 동료
+    explode(best, R);
     return true;
   }
   function screenFlash(x, z) {               // v277: 화면 섬광 — 터진 자리에서 퍼지는 흰·연두 빛이 0.3초 만에 사라진다
@@ -4326,7 +4333,7 @@
     gooTick(dt);
   }
   const pickups = [];                         // v415: 바닥에 떨어진 아이템 {kind, x, z, space, s, img, t}
-  const PICK_R = RADIUS + 0.55;               // 내 몸이 이만큼 안에 들어오면 획득
+  const PICK_R = (RADIUS + 0.55) * 1.5;   /* v520: 1.5배 (1.05 → 1.58칸) */               // 내 몸이 이만큼 안에 들어오면 획득
   function itemTex(kind, p) {                 // 아이템 아이콘(SVG) → 그림판 → 텍스처 (불러오면 그린다) — 미니맵에도 같은 그림
     const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
     const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
@@ -4799,7 +4806,18 @@
     const k = 0.35 + 0.65 * (0.3 - r) / 0.3,   /* v451: 30%부터 */ blink = 0.55 + 0.45 * Math.sin(performance.now() / 1000 * Math.PI * 2 * (1 + k));
     dangerEl.style.opacity = (k * blink * 0.8).toFixed(3);
   }
+  function upNums() {                        // v520: 모든 장비 오른쪽 위에 장비 강화 단계 (0이면 숨김)
+    const n = up.brain, els = [...items.map((it) => it.el), ...Object.values(pBadges), ...Object.values(aBadges)];
+    for (const el of els) {
+      if (!el) continue;
+      let t = el.querySelector(':scope > .upn');
+      if (!n) { if (t) t.remove(); continue; }
+      if (!t) { t = document.createElement('span'); t.className = 'upn'; el.appendChild(t); }
+      if (t.textContent !== String(n)) t.textContent = n;
+    }
+  }
   function uiTick() {
+    upNums();
     dangerTick();                         // 매 프레임 (멈춰 있어도): 줄 서 있는 연출을 하나씩
     stage.classList.toggle('okOn', !!stage.querySelector('.okBtn'));   // v244: 확인 버튼이 떠 있으면 조이스틱 숨김
     while (starsQueued < stars) { fxQueue.push({ t: 'star' }); starsQueued++; }   // v420: 새 연출을 생긴 순서대로 줄 세운다 (같은 순간이면 경보 → 특수부대 → 칭호 → 레벨업 → 아이템)
