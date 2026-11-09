@@ -225,7 +225,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v520</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v521</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4228,8 +4228,9 @@
 
   // 자폭 스위치: 내 인지거리 안 동료 중 둘레(인지거리의 1/3)에 적이 가장 많이(가까울수록 더) 붙은 동료가 터진다 — 데미지는 없고 산성 덩어리만
   function useBomb() {                        // v520: 맵 전체 동료 중 — 터지는 범위 안에 있는 가장 높은 티어(저격수 > 군인 > 경찰 > 빨강 > 주황 > 노랑)를 맞힐 수 있는 동료들 가운데, 범위 안 적이 가장 많은 동료가 터진다
-    const al = zombies.filter((z) => z !== me && isZombie(z));
-    if (!al.length) return false;
+    const all = zombies.filter((z) => z !== me && isZombie(z));
+    if (!all.length) return false;
+    const plain = all.filter((z) => !z.mut), al = plain.length ? plain : all;   // v521: 변이 좀비는 최후순위 — 일반 동료가 하나도 없을 때만
     const R = me.sense / 3 * 1.5;               // v277: 효과 범위 (3.6칸)
     const tier = (c) => c.sniper ? 5 : c.soldier ? 4 : c.police ? 3 : c.attacker ? 2 : c.guard ? 1 : 0;
     let best = null, bT = -1, bN = -1, bD = Infinity;
