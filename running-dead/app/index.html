@@ -77,8 +77,9 @@
   #lvbox.up .lv { animation: lvup 0.6s ease-out; }
   @keyframes lvup { 0% { transform: scale(1.8); color: #7fd4ff; } 100% { transform: scale(1); } }
   .toast { position: absolute; left: 50%; bottom: calc(220px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 30; padding: 10px 16px; border-radius: 10px; background: rgba(20, 20, 26, 0.88); color: #fff; font: 700 15px/1 var(--font); pointer-events: none; transition: opacity 0.3s; white-space: nowrap; }   /* v275 */
-  .item .mag { position: absolute; right: -10px; bottom: -6px; width: 20px; height: 20px; border-radius: 50%; background: rgba(22, 22, 28, 0.9); border: 1px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; z-index: 3; }
-  .item .mag svg { width: 12px; height: 12px; }
+  .item .mag, .pbadge .mag { position: absolute; right: -19px; bottom: -6px; width: 23px; height: 23px; border-radius: 50%; background: rgba(22, 22, 28, 0.9); border: 1px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; z-index: 3; }
+  .item .mag svg, .pbadge .mag svg { width: 14px; height: 14px; }
+  .pbadge .mag { right: auto; bottom: auto; left: -9px; top: -9px; width: 21px; height: 21px; pointer-events: none; }   /* v529: 패시브 배지는 배지 전체를 눌러도 설명 — 돋보기는 표시만 */
   #statBtn { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(6px + env(safe-area-inset-bottom, 0px)); width: 44px; height: 44px; margin: 0; border-radius: 50%; background: rgba(22, 22, 28, 0.85); border: 2px solid rgba(255, 255, 255, 0.35); display: none; align-items: center; justify-content: center; z-index: 5; touch-action: none; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }   /* v525: 내 능력치 돋보기 */
   #statBtn.on { display: flex; }
   #statBtn svg { width: 24px; height: 24px; }
@@ -240,7 +241,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v528</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v529</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4489,7 +4490,7 @@
       if (d.passive) {                        // 패시브: 왼쪽 아래에 배지로 박힌다 (누르는 버튼 아님) — v275: 여러 개면 오른쪽으로 줄 선다
         const el = document.createElement('div'); el.className = 'pbadge';
         el.style.left = `calc(max(16px, env(safe-area-inset-left, 0px)) + ${Object.keys(pBadges).length * 54}px)`;
-        el.innerHTML = `<span class="ic">${d.icon}</span><span class="pc"></span>`;
+        el.innerHTML = `<span class="ic">${d.icon}</span><span class="pc"></span><span class="mag"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6" fill="none" stroke="#e8eef5" stroke-width="3"/><path d="M14.5 14.5 20 20" stroke="#e8eef5" stroke-width="3.4" stroke-linecap="round"/></svg></span>`;   // v529: 작은 돋보기 표시
         el.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); showInfo(kind); });   // v284: 누르면 일시정지 + 설명창
         stage.appendChild(el); pBadges[kind] = el;
         if (kind === 'vest') vestEl = el;
