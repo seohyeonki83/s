@@ -219,7 +219,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v526 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v527 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3738,7 +3738,12 @@
   }
   function showLevelUp() {
     lvOpen = true; paused = true; stopInput();
-    const keys = Object.keys(ABIL).sort(() => Math.random() - 0.5).slice(0, 3);
+    const pool = Object.keys(ABIL).map((k) => [k, k === 'brain' && up.brain > 0 ? 0.5 : 1]), keys = [];   // v527: 장비 강화는 한 번 나온 뒤로 다른 능력치의 절반 확률
+    while (keys.length < 3 && pool.length) {
+      let r = Math.random() * pool.reduce((a, [, w]) => a + w, 0), i = 0;
+      while (i < pool.length - 1 && (r -= pool[i][1]) > 0) i++;
+      keys.push(pool.splice(i, 1)[0][0]);
+    }
     const ov = document.createElement('div');
     ov.id = 'pick';
     ov.innerHTML = `<div class="hd">LEVEL UP!</div><div class="sub">Lv ${level} → Lv ${level + 1} · 능력 하나를 고르세요</div><div class="cards">` +
