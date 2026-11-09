@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v508</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v509</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3588,7 +3588,6 @@
     collide(dt);
     carCarCollide();                          // 경찰차끼리 (v188)
     carCollide();                             // 경찰차에 겹친 몸은 밀어낸다
-    for (const b of bodies) if (b.sniper && spaceOf(b.foot.x, b.foot.z) && !spaceOf(b.px, b.pz)) { b.foot.x = b.px; b.foot.z = b.pz; b.vel.set(0, 0); }   // v441: 저격수는 건물 안에 못 들어간다
     for (const b of bodies) if (!b.fixed) wallCollide(b);   // 벽은 마지막에 — 서로 밀다가 벽을 넘지 않게
     for (const b of bodies) {                 // 지도(미니맵) 밖으로는 못 나간다 (v174)
       const r = b.r || BODY;
