@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v512</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v513</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -825,7 +825,8 @@
       if (from) return wp.set(lx - D.nx, lz - D.nz);   // 안 → 문 안쪽 앞
       tx = lx + D.nx; tz = lz + D.nz;                    // 밖 → 문 바깥 앞
     }
-    return from ? insideVia(b, from, tx, tz) : around(b.foot.x, b.foot.z, tx, tz);   // v295: 건물 안은 금고를 돌아간다
+    if (from) return insideVia(b, from, tx, tz);
+    aroundCars = b.kind === 'citizen'; const w = around(b.foot.x, b.foot.z, tx, tz); aroundCars = true; return w;   // v513: 사람만 서 있는 차를 돌아간다 (좀비는 밀고 들어간다)   // v295: 건물 안은 금고를 돌아간다
   }
   const SAFE_AVOID = 1.0;                     // v295: 금고 = 건물 안 장애물 (경찰차처럼) — 돌아가는 원은 부딪힘(1.2)보다 살짝 작게
   function insideVia(b, B, tx, tz) {
@@ -858,6 +859,7 @@
     };
     return clip(-dx, px - (B.x0 - pad)) && clip(dx, B.x1 + pad - px) && clip(-dz, pz - (B.z0 - pad)) && clip(dz, B.z1 + pad - pz) ? t0 : Infinity;
   }
+  let aroundCars = true;                      // v513: around()가 서 있는 차를 피하나
   function around(px, pz, tx, tz, pad = GAP, m = BODY + 0.3) {   // pad = 건물을 이만큼 넓혀서 막힘을 본다, m = 모서리에서 띄우는 거리 (경찰차는 크게)
     let hit = null, first = Infinity;
     for (const B of buildings) {
@@ -878,7 +880,7 @@
     // 서 있는 경찰차 (v139) — 차(붙어 선 차들은 한 덩어리)를 원으로 보고 옆으로 돌아간다. 이미 원 안(차에 붙어 있음)이면 원을 따라 목적지 쪽으로 돈다
     const L = Math.hypot(tx - px, tz - pz) || 1e-6, ux = (tx - px) / L, uz = (tz - pz) / L;
     let cHit = null, cT = Infinity;
-    for (const O of carObs) {
+    for (const O of aroundCars ? carObs : []) {
       const R = O.r + Math.max(pad, BODY) + 0.45;   // 돌아갈 원 = 차 원 + 몸 반지름 + 여유 — 모서리를 긁지 않게
       const cx = O.x - px, cz = O.z - pz, dc = Math.hypot(cx, cz);
       const along = cx * ux + cz * uz, perp = -cx * uz + cz * ux;   // 차 가운데의 앞쪽 거리, 옆으로 떨어진 거리(부호)
@@ -1640,7 +1642,7 @@
   const cars = [];
   let carObs = [];                            // 길 찾기용 서 있는 경찰차 원 {x, z, r} — 사이로 몸이 못 지나갈 만큼 붙은 차들은 한 원으로 합친다 (v139)
   function updateCarObs() {
-    const cs = cars.filter((c) => false && c.state === 'parked')   /* v470: 좀비는 서 있는 차를 피해 돌아가지 않고 밀고 들어간다 (본편도) */.map((c) => ({ x: c.x, z: c.z, r: CAR_W * ck(c) / 2 * PARKED_K * 0.8 * (c.wreck ? 0.16 : 1) }));   // v264: 돌아가는 원을 차 부딪힘보다 작게 — 좀비가 차에 실제로 닿아야 막힌 차를 때린다 (잔해는 1/5)
+    const cs = cars.filter((c) => c.state === 'parked' && !CAR_TEST)   /* v513: 다시 계산 — 사람·차만 쓴다 */   /* v470: 좀비는 서 있는 차를 피해 돌아가지 않고 밀고 들어간다 (본편도) */.map((c) => ({ x: c.x, z: c.z, r: CAR_W * ck(c) / 2 * PARKED_K * 0.8 * (c.wreck ? 0.16 : 1) }));   // v264: 돌아가는 원을 차 부딪힘보다 작게 — 좀비가 차에 실제로 닿아야 막힌 차를 때린다 (잔해는 1/5)
     for (let merged = true; merged; ) {
       merged = false;
       for (let i = 0; i < cs.length && !merged; i++) for (let j = i + 1; j < cs.length; j++) {
