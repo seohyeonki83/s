@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v518 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v519 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1530,7 +1530,7 @@
 
   function moveShoot(c, dt, own) {                // v443: 군인·저격수는 움직이면서도 쏜다 — 움직이는 동안은 쿨타임이 절반 속도로 흐른다 (공격 속도 절반)
     if (!c.military) return;
-    if (c.atkT > 0) { c.atkT += own ? -dt / 1.5 * (c.goo ? 0.56 : 1) : dt / 3; return; }   /* v518: 이동 중 공격 속도 1.5배 느리게 (v452: 3배) */   // own: 쿨타임을 여기서 직접 흘린다 (평소 이동 중)
+    if (c.atkT > 0) { c.atkT += own ? -dt / 2 * (c.goo ? 0.56 : 1) : dt / 2; return; }   /* v519: 이동 중 공격 속도 2배 느리게 */   // own: 쿨타임을 여기서 직접 흘린다 (평소 이동 중)
     if (c.burstN > 0) return;
     const z = nearestZombie(c, c.boostT > 0 ? c.boostSight : c.sight, true);
     if (!z) return;
