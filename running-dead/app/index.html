@@ -77,7 +77,9 @@
   #lvbox.up .lv { animation: lvup 0.6s ease-out; }
   @keyframes lvup { 0% { transform: scale(1.8); color: #7fd4ff; } 100% { transform: scale(1); } }
   .toast { position: absolute; left: 50%; bottom: calc(220px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 30; padding: 10px 16px; border-radius: 10px; background: rgba(20, 20, 26, 0.88); color: #fff; font: 700 15px/1 var(--font); pointer-events: none; transition: opacity 0.3s; white-space: nowrap; }   /* v275 */
-  #statBtn { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(60px + env(safe-area-inset-bottom, 0px)); width: 44px; height: 44px; margin: 0; border-radius: 50%; background: rgba(22, 22, 28, 0.85); border: 2px solid rgba(255, 255, 255, 0.35); display: none; align-items: center; justify-content: center; z-index: 5; touch-action: none; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }   /* v525: 내 능력치 돋보기 */
+  .item .mag { position: absolute; right: -10px; bottom: -6px; width: 20px; height: 20px; border-radius: 50%; background: rgba(22, 22, 28, 0.9); border: 1px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; z-index: 3; }
+  .item .mag svg { width: 12px; height: 12px; }
+  #statBtn { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(6px + env(safe-area-inset-bottom, 0px)); width: 44px; height: 44px; margin: 0; border-radius: 50%; background: rgba(22, 22, 28, 0.85); border: 2px solid rgba(255, 255, 255, 0.35); display: none; align-items: center; justify-content: center; z-index: 5; touch-action: none; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }   /* v525: 내 능력치 돋보기 */
   #statBtn.on { display: flex; }
   #statBtn svg { width: 24px; height: 24px; }
   #acq .ds .ab { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left; }
@@ -100,6 +102,10 @@
   #pick .card .nm { margin-top: 12px; font: 800 15px/1.15 var(--font); }
   #pick .card .ds { margin-top: 10px; font: 600 12px/1.35 var(--font); color: rgba(255, 255, 255, 0.78); word-break: keep-all; }
   #pick .card .vl { margin-top: 8px; font: 700 11px/1.35 var(--font); color: #7fd4ff; word-break: keep-all; }
+  #pick .card { position: relative; }
+  #pick .card.special { border: 2px solid #ffd34d; background: linear-gradient(160deg, #4a3a12, #2a2030 55%, #1c1c24); box-shadow: 0 0 14px rgba(255, 200, 60, 0.55), inset 0 0 12px rgba(255, 210, 90, 0.25); animation: spGlow 1.6s ease-in-out infinite alternate; }   /* v528: 장비 강화 = 스페셜 카드 */
+  #pick .card.special .star { position: absolute; top: -12px; right: -10px; width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(#fff3b0, #f2b11c); color: #5a3a00; font: 900 18px/28px var(--font); box-shadow: 0 0 10px rgba(255, 200, 60, 0.9); }
+  @keyframes spGlow { from { box-shadow: 0 0 10px rgba(255, 200, 60, 0.4), inset 0 0 10px rgba(255, 210, 90, 0.2); } to { box-shadow: 0 0 22px rgba(255, 210, 80, 0.85), inset 0 0 16px rgba(255, 220, 110, 0.35); } }
   #pick .card.on { border-color: #7fd4ff; transform: translateY(-8px) scale(1.04); box-shadow: 0 0 18px rgba(127, 212, 255, 0.45); }
   #pick .card.gone { opacity: 0; transform: scale(0.8); }
   #pick .card.win { transform: scale(1.18); border-color: #ffd34d; box-shadow: 0 0 28px rgba(255, 211, 77, 0.7); }
@@ -234,7 +240,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v527</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v528</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3753,7 +3759,7 @@
   }
   function showLevelUp() {
     lvOpen = true; paused = true; stopInput();
-    const pool = Object.keys(ABIL).map((k) => [k, k === 'brain' && up.brain > 0 ? 0.5 : 1]), keys = [];   // v527: 장비 강화는 한 번 나온 뒤로 다른 능력치의 절반 확률
+    const pool = Object.keys(ABIL).map((k) => [k, k === 'brain' ? 0.5 : 1]), keys = [];   // v528: 장비 강화는 처음부터 늘 다른 능력치의 절반 확률
     while (keys.length < 3 && pool.length) {
       let r = Math.random() * pool.reduce((a, [, w]) => a + w, 0), i = 0;
       while (i < pool.length - 1 && (r -= pool[i][1]) > 0) i++;
@@ -3762,7 +3768,7 @@
     const ov = document.createElement('div');
     ov.id = 'pick';
     ov.innerHTML = `<div class="hd">LEVEL UP!</div><div class="sub">Lv ${level} → Lv ${level + 1} · 능력 하나를 고르세요</div><div class="cards">` +
-      keys.map((k) => `<div class="card" data-k="${k}"><div class="ic">${ABIL[k].icon}</div><div class="nm">${ABIL[k].name}</div><div class="ds">${ABIL[k].desc}</div></div>`).join('') +
+      keys.map((k) => `<div class="card${k === 'brain' ? ' special' : ''}" data-k="${k}">${k === 'brain' ? '<div class="star">★</div>' : ''}<div class="ic">${ABIL[k].icon}</div><div class="nm">${ABIL[k].name}</div><div class="ds">${ABIL[k].desc}</div></div>`).join('') +
       `</div><button class="ok okBtn">확인</button>`;
     stage.appendChild(ov);
     let chosen = null;
@@ -3812,6 +3818,10 @@
     el.style.setProperty('--c', d.col); el.style.setProperty('--p', 100);
     el.innerHTML = `<div class="core"><span class="ic">${d.icon}</span><span class="n"></span></div>`;
     el.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); if (!paused) useItem(kind); });
+    const mag = document.createElement('span'); mag.className = 'mag';   // v528: 게이지 옆 작은 돋보기 — 누르면 그 장비 설명
+    mag.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6" fill="none" stroke="#e8eef5" stroke-width="3"/><path d="M14.5 14.5 20 20" stroke="#e8eef5" stroke-width="3.4" stroke-linecap="round"/></svg>';
+    mag.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); showInfo(kind); });
+    el.appendChild(mag);
     stage.appendChild(el);
     return el;
   }
@@ -4093,7 +4103,8 @@
   const ACTIVE_ITEMS = ['taser', 'cash', 'mutate', 'bomb'], PASSIVE_ITEMS = ['vest', 'crowbar', 'book', 'stim', 'shoes', 'revive', 'absorb'];   // v505: 충격 흡수복
   const owned = {};                           // 가진 패시브
   const aBadges = {};                         // v344: 오른쪽 아래 사용 장비 배지 (누르면 설명)
-  function addActiveBadge(kind) {
+  function addActiveBadge(kind) {             // v528: 사용 도구 배지는 없앴다 — 게이지 버튼 옆 작은 돋보기로 설명을 본다
+    return null;
     const d = ITEM[kind], el = document.createElement('div'); el.className = 'pbadge';
     el.style.left = 'auto'; el.style.right = `calc(max(16px, env(safe-area-inset-right, 0px)) + ${Object.keys(aBadges).length * 54}px)`;
     el.innerHTML = `<span class="ic">${d.icon}</span><span class="pc"></span>`;
@@ -4843,7 +4854,7 @@
   }
   const statBtn = document.createElement('div');   // v525: 능력치를 하나라도 얻으면 사용 장비 버튼 아래에 돋보기 — 누르면 지금 내 능력치
   statBtn.id = 'statBtn';
-  statBtn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6" fill="none" stroke="#e8eef5" stroke-width="2.6"/><path d="M14.5 14.5 20 20" stroke="#e8eef5" stroke-width="3" stroke-linecap="round"/></svg>';
+  statBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round"><path d="M7 2c0 6 10 6 10 10S7 16 7 22" stroke="#6fd3ff" stroke-width="2.4"/><path d="M17 2c0 6-10 6-10 10s10 4 10 10" stroke="#ff7ab8" stroke-width="2.4"/><path d="M8.5 5h7M8.5 19h7M10 9.5h4M10 14.5h4" stroke="#e8eef5" stroke-width="1.6"/></svg>';   /* v528: 유전자(DNA) — 내 능력치 */
    // v526: 자리는 CSS — 오른쪽 아래 장비 배지 바로 위, 오른쪽 끝에 붙여서
   statBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); showStats(); });
   stage.appendChild(statBtn);
