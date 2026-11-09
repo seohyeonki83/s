@@ -224,7 +224,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v511</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v512</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1243,7 +1243,7 @@
   function updateCitizen(c, dt) {
     if (c.sniper) sniperSpeed(c, dt);        // v411: 저격수 실제 이동 속도 (고립 판단)
     if (c.infect > 0 && c.state !== 'held') c.infect = Math.max(0, c.infect - INFECT_DECAY * dt);
-    c.force = c.state === 'lured' ? LURED_FORCE : c.sniper ? MY_FORCE : 1;   // v448: 저격수 미는 힘 = 나와 같음
+    c.force = c.state === 'lured' ? LURED_FORCE : c.sniper ? 5 : 1;   /* v512: 저격수 미는 힘 5 (v448: 8) */   // v448: 저격수 미는 힘 = 나와 같음
     if (c.boostT > 0) {                      // 경찰서에서 출동해 막 나온 경찰: 3배로 늘어난 인지거리·시야가 4초에 걸쳐 원래대로 (v158)
       c.boostT = Math.max(0, c.boostT - dt);
       const k = 1 + (SORTIE_SENSE - 1) * c.boostT / SORTIE_SENSE_T;
