@@ -89,7 +89,7 @@
   #acq .ds .ab .nm { font: 800 15px/1.3 var(--font); }
   #acq .ds .ab .nm span { color: #f2b11c; margin-left: 4px; }
   #acq .ds .ab .vl { font: 500 13px/1.35 var(--font); color: rgba(230, 220, 190, 0.85); }
-  .upn { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); white-space: nowrap; color: #ffd34d; font: 900 16px/1 var(--font); letter-spacing: -2px; text-shadow: 0 0 3px #000, 0 1px 2px #000, 0 0 6px rgba(255, 190, 40, 0.7); pointer-events: none; z-index: 2; }   /* v532: 장비 강화 = 상단 가운데 별 (하나씩 늘어난다) */
+  .upn { position: absolute; bottom: calc(100% - 5px); left: 50%; text-align: center; transform: translateX(-50%); white-space: nowrap; color: #ffd34d; font: 900 11px/0.95 var(--font); letter-spacing: -1px; text-shadow: 0 0 3px #000, 0 1px 2px #000, 0 0 6px rgba(255, 190, 40, 0.7); pointer-events: none; z-index: 2; }   /* v532: 장비 강화 = 상단 가운데 별 (하나씩 늘어난다) */
   .pbadge, #vest { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(6px + env(safe-area-inset-bottom, 0px)); width: 46px; height: 46px; border-radius: 12px; background: rgba(22, 22, 28, 0.85); border: 2px solid #8fa3b8;
     display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; pointer-events: auto; cursor: pointer; touch-action: none; z-index: 4; }   /* 방탄복 (v201) — 패시브, 왼쪽 아래. v284: 누르면 설명창 */
   .pbadge .ic, #vest .ic { font-size: 20px; line-height: 1; }
@@ -241,7 +241,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v534</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v535</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3760,7 +3760,7 @@
   }
   function showLevelUp() {
     lvOpen = true; paused = true; stopInput();
-    const pool = Object.keys(ABIL).map((k) => [k, k === 'brain' ? 0.5 : 1]), keys = [];   // v528: 장비 강화는 처음부터 늘 다른 능력치의 절반 확률
+    const pool = Object.keys(ABIL).map((k) => [k, k === 'brain' ? 0.25 : 1]), keys = [];   /* v535: 절반 더 (0.5 → 0.25) */   // v528: 장비 강화는 처음부터 늘 다른 능력치의 절반 확률
     while (keys.length < 3 && pool.length) {
       let r = Math.random() * pool.reduce((a, [, w]) => a + w, 0), i = 0;
       while (i < pool.length - 1 && (r -= pool[i][1]) > 0) i++;
@@ -4885,7 +4885,7 @@
       let t = el.querySelector(':scope > .upn');
       if (!n) { if (t) t.remove(); continue; }
       if (!t) { t = document.createElement('span'); t.className = 'upn'; el.appendChild(t); }
-      const st = '★'.repeat(n); if (t.textContent !== st) t.textContent = st;   // v532: 숫자 대신 별
+      const st = Array.from({ length: Math.ceil(n / 3) }, (_, i) => '★'.repeat(Math.min(3, n - i * 3))).reverse().join('<br>'); if (t.innerHTML !== st) t.innerHTML = st;   // v535: 별 3개씩 줄 — 넘치면 위로 한 줄 더
     }
   }
   function uiTick() {
