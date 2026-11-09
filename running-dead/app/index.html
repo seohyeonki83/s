@@ -77,7 +77,7 @@
   #lvbox.up .lv { animation: lvup 0.6s ease-out; }
   @keyframes lvup { 0% { transform: scale(1.8); color: #7fd4ff; } 100% { transform: scale(1); } }
   .toast { position: absolute; left: 50%; bottom: calc(220px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 30; padding: 10px 16px; border-radius: 10px; background: rgba(20, 20, 26, 0.88); color: #fff; font: 700 15px/1 var(--font); pointer-events: none; transition: opacity 0.3s; white-space: nowrap; }   /* v275 */
-  #statBtn { position: absolute; width: 44px; height: 44px; margin: 0 0 -22px -22px; border-radius: 50%; background: rgba(22, 22, 28, 0.85); border: 2px solid rgba(255, 255, 255, 0.35); display: none; align-items: center; justify-content: center; z-index: 5; touch-action: none; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }   /* v525: 내 능력치 돋보기 */
+  #statBtn { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(60px + env(safe-area-inset-bottom, 0px)); width: 44px; height: 44px; margin: 0; border-radius: 50%; background: rgba(22, 22, 28, 0.85); border: 2px solid rgba(255, 255, 255, 0.35); display: none; align-items: center; justify-content: center; z-index: 5; touch-action: none; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }   /* v525: 내 능력치 돋보기 */
   #statBtn.on { display: flex; }
   #statBtn svg { width: 24px; height: 24px; }
   #acq .ds .ab { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left; }
@@ -234,7 +234,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v525</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v526</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1923,6 +1923,10 @@
   const mmEl = document.getElementById('minimap'), mmCtx = mmEl.getContext('2d');
   const mmDpr = Math.min(window.devicePixelRatio || 1, 3);
   mmEl.style.width = MM_CW + 'px'; mmEl.style.height = MM_CH + 'px';
+  for (const [id, dx] of [['pause', 0], ['reset', 42]]) {   // v526: 일시정지·되감기 = 미니맵 바로 밑 (오른쪽부터 나란히)
+    const el = document.getElementById(id); el.style.bottom = 'auto';
+    el.style.top = `calc(${6 + MM_CH + 6}px + env(safe-area-inset-top, 0px))`; el.style.right = `calc(max(16px, env(safe-area-inset-right, 0px)) + ${dx}px)`;
+  }
   mmEl.width = Math.round(MM_CW * mmDpr); mmEl.height = Math.round(MM_CH * mmDpr);
   let mmT = 0, mmDirty = true;
   function exploreAround(x, z, R) {           // 이 둘레 R 안의 칸을 '가 본 곳'으로
@@ -3391,7 +3395,7 @@
     items.push({ kind: 'mutate', ammo: itemMax('mutate'), t: 0, el: makeItemButton('mutate', items.length) }); addActiveBadge('mutate'); refreshItems();
     if (!document.getElementById('killAllies')) {
       const bt = document.createElement('button'); bt.id = 'killAllies'; bt.textContent = '동료 처치';
-      bt.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top,0px) + 64px);right:12px;z-index:60;padding:10px 14px;font:700 15px var(--font,sans-serif);color:#fff;background:#c0392b;border:0;border-radius:10px';
+      bt.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top,0px) + 64px);left:12px;z-index:60;padding:10px 14px;font:700 15px var(--font,sans-serif);color:#fff;background:#c0392b;border:0;border-radius:10px';
       bt.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); for (const z of bodies.slice()) if (z !== me && isZombie(z) && !z.mut) killZombie(z); });   // 변이(덩치·히드라) 동료는 남긴다
       document.body.appendChild(bt);
     }
@@ -4132,7 +4136,7 @@
     for (const [k, el] of Object.entries(aBadges)) el.querySelector('.pc').textContent = a[k]();
     for (const [g, side] of [[pBadges, 'left'], [aBadges, 'right']]) {   // v354: 3개 넘으면 작게 · 촘촘하게 (조이스틱 안 가리게)
       const L = Object.values(g), tight = L.length >= 3, step = tight ? 40 : 54, sz = tight ? 36 : 46;
-      L.forEach((el, i) => { el.style[side] = `calc(max(16px, env(safe-area-inset-${side}, 0px)) + ${(side === 'right' ? 42 : 0) + i * step}px)`;   /* v423: 사용 장비는 오른쪽 버튼 줄 바로 왼쪽부터 */ el.style.width = el.style.height = sz + 'px'; });
+      L.forEach((el, i) => { el.style[side] = `calc(max(16px, env(safe-area-inset-${side}, 0px)) + ${i * step}px)`;   /* v526: 버튼 줄이 위로 가서 사용 장비 배지는 오른쪽 끝부터 */   /* v423: 사용 장비는 오른쪽 버튼 줄 바로 왼쪽부터 */ el.style.width = el.style.height = sz + 'px'; });
     }
   }
   function toast(text) {                      // 화면 아래쪽에 잠깐 뜨는 글
@@ -4835,7 +4839,7 @@
   const statBtn = document.createElement('div');   // v525: 능력치를 하나라도 얻으면 사용 장비 버튼 아래에 돋보기 — 누르면 지금 내 능력치
   statBtn.id = 'statBtn';
   statBtn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6" fill="none" stroke="#e8eef5" stroke-width="2.6"/><path d="M14.5 14.5 20 20" stroke="#e8eef5" stroke-width="3" stroke-linecap="round"/></svg>';
-  { const a = -15 * Math.PI / 180, dx = Math.cos(a) * SLOT_R, dy = Math.sin(a) * SLOT_R; statBtn.style.left = `calc(50% + ${dx}px)`; statBtn.style.bottom = `calc(118px + env(safe-area-inset-bottom, 0px) + ${dy}px)`; }
+   // v526: 자리는 CSS — 오른쪽 아래 장비 배지 바로 위, 오른쪽 끝에 붙여서
   statBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); showStats(); });
   stage.appendChild(statBtn);
   function abilNow(k, n) {                   // 지금 능력치 수치 (n번 얻음)
