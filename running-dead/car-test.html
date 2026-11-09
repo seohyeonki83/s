@@ -226,7 +226,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v530 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v531 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4864,8 +4864,7 @@
   }
   function upNums() {
     statBtn.classList.toggle('on', Object.values(up).some((v) => v > 0));                        // v520: 모든 장비 오른쪽 위에 장비 강화 단계 (0이면 숨김)
-    const n = up.brain, els = [...Object.values(pBadges), ...Object.values(aBadges)];   // v523: 사용 게이지(동그란 버튼)에는 안 붙인다
-    for (const it of items) { const t = it.el && it.el.querySelector(':scope > .upn'); if (t) t.remove(); }
+    const n = up.brain, els = [...items.map((it) => it.el), ...Object.values(pBadges), ...Object.values(aBadges)];   // v531: 사용 게이지에도 다시 붙인다
     for (const el of els) {
       if (!el) continue;
       let t = el.querySelector(':scope > .upn');
