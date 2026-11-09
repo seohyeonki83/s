@@ -77,6 +77,15 @@
   #lvbox.up .lv { animation: lvup 0.6s ease-out; }
   @keyframes lvup { 0% { transform: scale(1.8); color: #7fd4ff; } 100% { transform: scale(1); } }
   .toast { position: absolute; left: 50%; bottom: calc(220px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 30; padding: 10px 16px; border-radius: 10px; background: rgba(20, 20, 26, 0.88); color: #fff; font: 700 15px/1 var(--font); pointer-events: none; transition: opacity 0.3s; white-space: nowrap; }   /* v275 */
+  #statBtn { position: absolute; width: 44px; height: 44px; margin: 0 0 -22px -22px; border-radius: 50%; background: rgba(22, 22, 28, 0.85); border: 2px solid rgba(255, 255, 255, 0.35); display: none; align-items: center; justify-content: center; z-index: 5; touch-action: none; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }   /* v525: 내 능력치 돋보기 */
+  #statBtn.on { display: flex; }
+  #statBtn svg { width: 24px; height: 24px; }
+  #acq .ds .ab { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left; }
+  #acq .ds .ab:last-child { border-bottom: 0; }
+  #acq .ds .ab .ic { width: 26px; font-size: 22px; line-height: 1; flex: none; }
+  #acq .ds .ab .nm { font: 800 15px/1.3 var(--font); }
+  #acq .ds .ab .nm span { color: #f2b11c; margin-left: 4px; }
+  #acq .ds .ab .vl { font: 500 13px/1.35 var(--font); color: rgba(230, 220, 190, 0.85); }
   .upn { position: absolute; top: -5px; right: -5px; min-width: 15px; height: 15px; padding: 0 3px; box-sizing: border-box; border-radius: 8px; background: #f2b11c; color: #1a1205; font: 800 10px/15px var(--font); text-align: center; pointer-events: none; z-index: 2; box-shadow: 0 1px 3px rgba(0,0,0,0.6); }   /* v520: 장비 강화 단계 숫자 */
   .pbadge, #vest { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(6px + env(safe-area-inset-bottom, 0px)); width: 46px; height: 46px; border-radius: 12px; background: rgba(22, 22, 28, 0.85); border: 2px solid #8fa3b8;
     display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; pointer-events: auto; cursor: pointer; touch-action: none; z-index: 4; }   /* 방탄복 (v201) — 패시브, 왼쪽 아래. v284: 누르면 설명창 */
@@ -225,7 +234,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v524</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v525</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4823,7 +4832,32 @@
     const k = 0.35 + 0.65 * (0.3 - r) / 0.3,   /* v451: 30%부터 */ blink = 0.55 + 0.45 * Math.sin(performance.now() / 1000 * Math.PI * 2 * (1 + k));
     dangerEl.style.opacity = (k * blink * 0.8).toFixed(3);
   }
-  function upNums() {                        // v520: 모든 장비 오른쪽 위에 장비 강화 단계 (0이면 숨김)
+  const statBtn = document.createElement('div');   // v525: 능력치를 하나라도 얻으면 사용 장비 버튼 아래에 돋보기 — 누르면 지금 내 능력치
+  statBtn.id = 'statBtn';
+  statBtn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6" fill="none" stroke="#e8eef5" stroke-width="2.6"/><path d="M14.5 14.5 20 20" stroke="#e8eef5" stroke-width="3" stroke-linecap="round"/></svg>';
+  { const a = -15 * Math.PI / 180, dx = Math.cos(a) * SLOT_R, dy = Math.sin(a) * SLOT_R; statBtn.style.left = `calc(50% + ${dx}px)`; statBtn.style.bottom = `calc(118px + env(safe-area-inset-bottom, 0px) + ${dy}px)`; }
+  statBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); showStats(); });
+  stage.appendChild(statBtn);
+  function abilNow(k, n) {                   // 지금 능력치 수치 (n번 얻음)
+    return {
+      brain: () => `모든 장비 강화 ${n}단계`,
+      meat: () => `내 회복 초당 ${(MY_BITE_HEAL * 100 + n * 3).toFixed(1)}% (동료도 같은 비율로 증가)`,
+      arm: () => `공격력 +${n * 5}% (나 ${(MY_DAMAGE * (1 + n * 0.05)).toFixed(1)})`,
+      bite: () => `감염 시간 −${n * 5}% (나 ${myBiteLen(n).toFixed(2)}초)`,
+      skin: () => `최대 체력 +${n * 5}% (나 ${Math.round(MY_HP * (1 + n * 0.05))})`,
+      life: () => `내 최대 체력 +${n * 15}%`,
+      leg: () => `이동 속도 +${n * 5}% (동료 ${(SPEED * (1 + 0.05 * n)).toFixed(2)})`,
+    }[k]();
+  }
+  function showStats() {
+    if (!canMenu()) return;
+    const rows = Object.keys(ABIL).filter((k) => up[k] > 0).map((k) => `<div class="ab"><div class="ic">${ABIL[k].icon}</div><div><div class="nm">${ABIL[k].name}<span>×${up[k]}</span></div><div class="vl">${abilNow(k, up[k])}</div></div></div>`).join('');
+    const ov = document.createElement('div'); ov.id = 'acq'; ov.className = 'info';
+    ov.innerHTML = `<div class="t">내 능력치</div><div class="ds">${rows || '아직 얻은 능력치가 없습니다.'}</div>`;
+    openMenu(ov, '닫기');
+  }
+  function upNums() {
+    statBtn.classList.toggle('on', Object.values(up).some((v) => v > 0));                        // v520: 모든 장비 오른쪽 위에 장비 강화 단계 (0이면 숨김)
     const n = up.brain, els = [...Object.values(pBadges), ...Object.values(aBadges)];   // v523: 사용 게이지(동그란 버튼)에는 안 붙인다
     for (const it of items) { const t = it.el && it.el.querySelector(':scope > .upn'); if (t) t.remove(); }
     for (const el of els) {
