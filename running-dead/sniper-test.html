@@ -209,7 +209,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v509 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v510 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1364,7 +1364,6 @@
   const evBuf = [];
   function sniperEvade(c, dt) {               // v396: 도망 중 시야 = 시민 시야(7.2칸) — 그 안에 좀비가 없으면 바로 다시 저격
     if (c.atkT > 0) c.atkT -= dt * (c.goo ? 0.56 : 1);   // 도망치는 동안에도 쿨타임은 흐른다
-    if (c.space) { c.evadeR = sniperEvadeR(); enterFight(c, null, true); return; }
     if ((c.spAvg || 0) < SNIPER_EVADE * 0.3) c.stuckT = (c.stuckT || 0) + dt; else c.stuckT = 0;   // v411: 회피 속도의 30%도 못 내면 막힘
     if (c.stuckT >= 2) { c.stuckT = 0; c.isolated = true; enterFight(c, null, true); return; }   // 2초 넘게 막힘 → 고립: 회피를 버리고 제자리에서 공격
     const list = [];
@@ -1504,7 +1503,7 @@
     if (tick) c.tick += TICK;
     const range = c.boostT > 0 ? c.boostSight : c.sight;   // 사거리 = 원래(1배) 시야 (v159)
     if (c.soldier && soldierLeash(c, dt)) { moveShoot(c, dt); return; }   // v442: 복귀하면서도 쏜다   // v410: 주인 저격수에게서 지배 거리 밖에 1~2초 → 복귀
-    if (c.sniper && !c.space && !c.isolated) {   // v396: 저격수 — 좀비가 회피거리 안이면 바로 도망 (건물 안 · 고립 중엔 안 함)
+    if (c.sniper && !c.isolated) {   // v510: 건물 안에서도 회피 (벽은 그냥 막히는 것 — 막히면 고립 규칙)   // v396: 저격수 — 좀비가 회피거리 안이면 바로 도망 (건물 안 · 고립 중엔 안 함)
       const er = c.evadeR;                    // v406: 회피거리 = 내 덮침 거리(3.24칸)의 1.1배 = 3.56칸 ±10% (회피할 때마다 새로 뽑는다)
       for (const z of nearIn(zCells, c.foot.x, c.foot.z, er, evBuf)) if (isZombie(z) && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= er) { c.state = 'evade'; c.foe = null; c.tick = 0; c.stuckT = 0; return; }
     }
