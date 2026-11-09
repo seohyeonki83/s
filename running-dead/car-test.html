@@ -94,7 +94,7 @@
   #goal .g3 { margin-top: 14px; display: flex; justify-content: center; gap: 22px; font: 900 40px/1 var(--font); color: #d58cff; text-shadow: 0 0 10px rgba(180, 78, 230, 0.9), 0 2px 4px #000; }   /* 경찰서 수만큼 느낌표 (v214) */
   #goal .g1 { font: 600 14px/1 var(--font); color: rgba(255, 255, 255, 0.8); letter-spacing: 2px; }
   #goal .g2 { margin-top: 10px; padding: 0 16px; font: 900 34px/1.2 var(--font); color: #fff; text-shadow: 0 0 14px #b44ee6, 0 3px 8px rgba(0, 0, 0, 0.8); word-break: keep-all; }
-  .rank { position: absolute; left: 0; right: 0; top: calc(11% + env(safe-area-inset-top, 0px)); z-index: 18; text-align: center; pointer-events: none; animation: rankin 4.8s ease-out forwards; }   /* v279: 약 4초 동안 또렷하게 떠 있다 */   /* v278: 동료 수 칭호 — 게임은 계속, 위쪽에 크게 팡 */
+  .rank { position: absolute; left: 0; right: 0; top: calc(11% + env(safe-area-inset-top, 0px)); z-index: 18; text-align: center; pointer-events: none; animation: rankin 3.2s ease-out forwards; }   /* v522: 4.8 → 3.2초 (1/3 줄임) */   /* v279: 약 4초 동안 또렷하게 떠 있다 */   /* v278: 동료 수 칭호 — 게임은 계속, 위쪽에 크게 팡 */
   .rank .rt { font: 900 44px/1 var(--font); white-space: nowrap; color: #fff; letter-spacing: 2px;   /* v390: 66 → 44px (2/3), 한 줄 */ text-shadow: 0 0 14px #ff5a3c, 0 0 36px #ff2a00, 0 4px 10px rgba(0, 0, 0, 0.8); }
   .rank .rd { margin-top: 12px; padding: 0 16px; font: 800 30px/1.3 var(--font);   /* v390: 20 → 30px (1.5배) */ color: #fff; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9); word-break: keep-all; }
   .rank .rbox { display: inline-block; max-width: calc(100% - 24px); box-sizing: border-box; padding: 14px 16px 16px; border-radius: 16px; background: rgba(0, 0, 0, 0.55); }   /* v420: 칭호 글자 뒤 반투명 검은 판 */
@@ -210,7 +210,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v521 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v522 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4733,6 +4733,7 @@
         if (!e.target.closest('.close') || ov.dataset.done) return;
         ov.dataset.done = '1';
         ov.remove(); hiOff(); renderer.render(scene, camera);   // 닫기 → 글·어둠이 바로 사라지고 카메라가 돌아온다 (돌아오는 동안 멈춤)
+        if (tutQueue.length) { showTut(tutQueue.shift()); return; }   // v522: 줄 선 발견이 더 있으면 나에게 돌아오지 않고 바로 다음 대상으로
         panCam(0, 0, () => { tutOpen = false; paused = false; last = 0; });
       });
     });
@@ -4870,7 +4871,7 @@
     el.innerHTML = `<div class="rbox"><div class="rt">${r.t}</div><div class="rd">${r.d}</div></div>`;   // v420: 검은 판 위에
     stage.appendChild(el);
     const fx = curFx = { ev: { t: 'rank', r }, els: [el], timers: [] };   // v428
-    fxTimer(fx, () => { el.remove(); rankAnim = false; if (curFx === fx) curFx = null; }, 4850);   // v279: 4.8초 (튀어 들어옴 0.3초 + 또렷하게 4초 + 사라짐 0.5초)
+    fxTimer(fx, () => { el.remove(); rankAnim = false; if (curFx === fx) curFx = null; }, 3250);   // v522: 1/3 줄임   // v279: 4.8초 (튀어 들어옴 0.3초 + 또렷하게 4초 + 사라짐 0.5초)
   }
   // ── 후각 (v180) — 나만 가진다. 내 인지거리 밖 ~ 그 1.5배 안의 사람을 원으로 알려 준다 ──
   //   원 자리 = 그 사람 쪽 방향으로 내 인지거리 테두리 위 (화면 밖이면 화면 가장자리에 걸친다)
