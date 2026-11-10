@@ -235,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v567 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v568 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3742,7 +3742,7 @@
     arm: { icon: IC.arm, name: '강한 팔', desc: '나와 동료들의 공격력 증가',
       val: (n) => `공격력 +${n * 5}→+${(n + 1) * 5}% (나 ${(MY_DAMAGE * (1 + n * 0.05)).toFixed(1)}→${(MY_DAMAGE * (1 + (n + 1) * 0.05)).toFixed(1)})` },
     bite: { icon: IC.bite, name: '물어뜯기', desc: '나와 동료들의 감염시키는 속도 증가',
-      val: (n) => `감염 시간 −${n * 5}→−${(n + 1) * 5}% (나 ${myBiteLen(n).toFixed(2)}→${myBiteLen(n + 1).toFixed(2)}초)` },
+      val: (n) => `감염 시간 −${bitePct(n)}→−${bitePct(n + 1)}% (나 ${myBiteLen(n).toFixed(2)}→${myBiteLen(n + 1).toFixed(2)}초)` },
     skin: { icon: IC.skin, name: '단단한 피부', desc: '나와 동료들의 최대 체력을 소폭 상승시킵니다',
       val: (n) => `최대 체력 +${n * 5}→+${(n + 1) * 5}% (나 ${Math.round(MY_HP * (1 + n * 0.05))}→${Math.round(MY_HP * (1 + (n + 1) * 0.05))})` },
     life: { icon: IC.life, name: '끈질긴 생명력', desc: '나에게만 — 최대 체력을 대폭 상승시킵니다',   // v266: 내 최대 체력 레벨당 +15% (기본값 기준, 복리 아님)
@@ -3754,14 +3754,15 @@
   let level = 0, xp = 0, pendingLv = 0, lvOpen = false, hasVest = false, vestEl = null, victoryOn = false;
   const needXp = (L) => Math.round(10 * Math.pow(1.3, L));   // 레벨 L → L+1 에 새로 필요한 수 (v238: 처음 10, 1.3배씩)
   const vestPct = (n) => Math.min(90, 30 + n * 10);
-  const biteK = (n = up.bite) => Math.max(0, 1 - 0.05 * n);   // 감염 시간 배율 — 0이면 즉시 감염
+  const bitePct = (n = up.bite) => n <= 0 ? 0 : 15 + 10 * (n - 1);
+  const biteK = (n = up.bite) => Math.max(0, 1 - bitePct(n) / 100);   // 감염 시간 배율 — 0이면 즉시 감염
   const myBiteLen = (n = up.bite) => INFECT / MY_INFECT * biteK(n);
   const zDamage = (z) => (z === me ? MY_DAMAGE : ALLY_DAMAGE) * (1 + 0.05 * up.arm) * (z.mut === 'armor' && z !== me ? 1.3 * 1.3 * 2 : 1);   /* v558: 각성한 나는 내 공격력 그대로 */   /* v551: 덩치 기본 데미지 2배 */   // v275: 갑옷좀비 공격력 1.3배
   const zHeal = (z) => (z === me ? MY_BITE_HEAL : BITE_HEAL) + 0.03 * up.meat;   // 감염 시간 1배 기준 초당 회복 (최대 체력 대비)
   const allyMaxHp = () => ALLY_HP * (1 + 0.05 * up.skin);   // v267: 단단한 피부 3% → 5%
   const allyAttack = () => ALLY_ATTACK;       // v256: 튼튼한 다리는 이제 습격 거리가 아니라 이동 속도
   const legK = () => 1 + 0.05 * up.leg;      // 튼튼한 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
-  const meSpeed = () => MY_SPEED * (legK() + (owned.shoes ? 0.15 + 0.10 * up.brain : 0)   /* v567: 운동화 처음 +15%, 강화마다 +10% */) * (me && me.mut ? MUT_SPEED : 1);   // v558: 각성 중엔 변이 속도   // v275: 운동화 +10% (도구 다루기마다 +3%) — 튼튼한 다리와 더한다
+  const meSpeed = () => MY_SPEED * (legK() + (owned.shoes ? 0.10 + 0.03 * up.brain : 0)   /* v568: 운동화 처음 +15%, 강화마다 +10% */) * (me && me.mut ? MUT_SPEED : 1);   // v558: 각성 중엔 변이 속도   // v275: 운동화 +10% (도구 다루기마다 +3%) — 튼튼한 다리와 더한다
   const cashK = () => 1.2 + 0.2 * up.brain;   /* v339: 1.2 · 1.4 · 1.6 · 1.8배 */   /* v338: 20% 더 줄임 */   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
   const lureHits = () => 2 + 2 * up.brain;   /* v339: 2 · 4 · 6 · 8대 */   /* v333: 처음 4 → 3대 */    // v269: 유혹 중 4대째 맞으면 정신 차린다, 두뇌마다 +2 (4, 6, 8 …)
   function gainXp() {
@@ -4152,7 +4153,7 @@
       awaken: () => `변이 10초 · 체력 20% 회복`,
       mutate: () => `주사 ${1 + n}개 · 변이 ${23 + 4 * n}초`, bomb: () => `쿨타임 ${Math.round(Math.max(10, 40 - 3 * n) * 1.15 * 1.1)}초`,
       vest: () => `총알 피해 -${vestPct(n)}%`, absorb: () => `넉백 ${(SNIPER_KD / 4 * (1 + n)).toFixed(2)}칸 흡수 (저격수 넉백의 ${Math.min(100, 25 * (1 + n))}%${n + 1 >= 4 ? ' · 완전 무효' : ''})`, crowbar: () => `건물·사물 피해 +${40 + 10 * n}%`, book: () => `쿨타임 -${Math.min(90, 7 + 3 * n)}%`,
-      revive: () => `체력 ${Math.round(Math.min(1, 0.3 + 0.1 * n) * 100)}%로 부활 · 쿨타임 120초`, stim: () => `10초마다 1명 · 공격력·체력 x${(1.5 + 0.1 * n).toFixed(1)}`, shoes: () => `이동 속도 +${15 + 10 * n}%`,
+      revive: () => `체력 ${Math.round(Math.min(1, 0.3 + 0.1 * n) * 100)}%로 부활 · 쿨타임 120초`, stim: () => `10초마다 1명 · 공격력·체력 x${(1.5 + 0.1 * n).toFixed(1)}`, shoes: () => `이동 속도 +${10 + 3 * n}%`,
     }[kind]();
   }
   const pBadges = {};                         // 왼쪽 아래 패시브 배지
@@ -4180,7 +4181,7 @@
       book: () => '-' + Math.round(bookCut() * 100) + '%',
       stim: () => 'x' + stimMul().toFixed(1),
       revive: () => reviveT > 0 ? Math.ceil(reviveT) + '초' : '준비',
-      shoes: () => '+' + Math.round(15 + 10 * up.brain) + '%',
+      shoes: () => '+' + Math.round(10 + 3 * up.brain) + '%',
     };
     for (const [k, el] of Object.entries(pBadges)) if (t[k]) el.querySelector('.pc').textContent = t[k]();
     const n = up.brain, a = { taser: () => `${1 + n}명`, cash: () => `${(1.2 + 0.2 * n).toFixed(1)}배`, mutate: () => `${23 + 4 * n}초`, awaken: () => '10초', bomb: () => `${Math.round(Math.max(10, 40 - 3 * n) * 1.15 * 1.1)}초` };
@@ -4909,7 +4910,7 @@
       brain: () => `모든 장비/도구 강화 ${n}단계`,
       meat: () => `내 회복 초당 ${(MY_BITE_HEAL * 100 + n * 3).toFixed(1)}% (동료도 같은 비율로 증가)`,
       arm: () => `공격력 +${n * 5}% (나 ${(MY_DAMAGE * (1 + n * 0.05)).toFixed(1)})`,
-      bite: () => `감염 시간 −${n * 5}% (나 ${myBiteLen(n).toFixed(2)}초)`,
+      bite: () => `감염 시간 −${bitePct(n)}% (나 ${myBiteLen(n).toFixed(2)}초)`,
       skin: () => `최대 체력 +${n * 5}% (나 ${Math.round(MY_HP * (1 + n * 0.05))})`,
       life: () => `내 최대 체력 +${n * 15}%`,
       leg: () => `이동 속도 +${n * 5}% (동료 ${(SPEED * (1 + 0.05 * n)).toFixed(2)})`,
