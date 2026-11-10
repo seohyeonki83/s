@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>군인팀 시험 · 러닝데드 이동 테스트</title>
+<title>특공대 시험 · 러닝데드 이동 테스트</title>
 <style>
   /* 한 화면짜리 테스트 — 캔버스가 화면을 꽉 채우고, 누른 자리에만 조이스틱이 뜬다 (궁수의 전설식) */
   :root {
@@ -235,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v538 군인차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v538 특공대 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3386,7 +3386,9 @@
     const W = MM.x1 - MM.x0, cz = (MM.z0 + MM.z1) / 2;
     me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;
     if (CAR_TEST) { carTestSetup(); return; }
-    teamQueue.push(2);   // v447: 시험 맵은 군인차 (2단계)                        // v410: 시험 맵 — 시작하자마자 맵 가장자리에서 1팀 (군인 2 + 저격수 1)
+    me.hp = me.maxHp;   // 특공대 시험: 체력 가득 (무적이라 줄지 않는다)
+    teamQueue.push(1); teamQueue.push(2);   // 특공대 시험: 1팀(걸어서 분대 셋) + 2팀(군인차 2대) 둘 다 바로 출동
+    // — 시작하자마자 맵 가장자리에서 1팀 (군인 2 + 저격수 1)
   }
   function carTestSetup() {                   // v466: 차 시험 맵
     me.hp = me.maxHp;                         // 시험이라 체력 가득 (빨간 경고 없이)
