@@ -235,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v555 특공대 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v556 특공대 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4131,7 +4131,7 @@
   function statLine(kind, n) {                // v344: 장비 강화 n단계일 때 수치
     return {
       taser: () => `한 번에 ${1 + n}명 감전`, cash: () => `시야 ${(1.2 + 0.2 * n).toFixed(1)}배 · ${2 + 2 * n}대 버팀`,
-      mutate: () => `주사 ${1 + n}개 · 변이 ${23 + 4 * n}초`, bomb: () => `쿨타임 ${Math.max(10, 40 - 3 * n)}초`,
+      mutate: () => `주사 ${1 + n}개 · 변이 ${23 + 4 * n}초`, bomb: () => `쿨타임 ${Math.round(Math.max(10, 40 - 3 * n) * 1.15)}초`,
       vest: () => `총알 피해 -${vestPct(n)}%`, absorb: () => `넉백 ${(SNIPER_KD / 4 * (1 + n)).toFixed(2)}칸 흡수 (저격수 넉백의 ${Math.min(100, 25 * (1 + n))}%${n + 1 >= 4 ? ' · 완전 무효' : ''})`, crowbar: () => `건물·사물 피해 +${25 + 5 * n}%`, book: () => `쿨타임 -${Math.min(90, 7 + 3 * n)}%`,
       revive: () => `체력 ${Math.round(Math.min(1, 0.3 + 0.1 * n) * 100)}%로 부활 · 쿨타임 120초`, stim: () => `10초마다 1명 · 공격력·체력 x${(1.5 + 0.1 * n).toFixed(1)}`, shoes: () => `이동 속도 +${10 + 3 * n}%`,
     }[kind]();
@@ -4152,7 +4152,7 @@
   const MUT_T = () => 23 + 4 * up.brain;                            // 변이 유지 시간 — v299: 기본 20 → 23초, 도구 다루기마다 +2 → +4초
   const itemMax = (k) => k === 'mutate' ? 1 + up.brain : ITEM[k].max;   // 변이 주사 장탄 +1씩
   const bookCut = () => owned.book ? Math.min(0.9, 0.07 + 0.03 * up.brain) : 0;   // v286: 백과사전 — 사용 도구 쿨타임 7% 줄임, 도구 다루기마다 3%p씩 더
-  const itemReload = (k) => (k === 'bomb' ? Math.max(10, 40 - 3 * up.brain) : ITEM[k].reload) * (1 - bookCut());   // 자폭 쿨타임 −3초씩 → 그 위에 백과사전
+  const itemReload = (k) => (k === 'bomb' ? Math.max(10, 40 - 3 * up.brain) * 1.15 : ITEM[k].reload * (k === 'taser' ? 1.1 : 1))   /* v556: 자폭 +15% · 테이저 +10% */ * (1 - bookCut());   // 자폭 쿨타임 −3초씩 → 그 위에 백과사전
   function refreshBadges() {                  // 패시브 배지 아래 숫자
     const t = {
       vest: () => '-' + vestPct(up.brain) + '%',
@@ -4164,7 +4164,7 @@
       shoes: () => '+' + Math.round(10 + 3 * up.brain) + '%',
     };
     for (const [k, el] of Object.entries(pBadges)) if (t[k]) el.querySelector('.pc').textContent = t[k]();
-    const n = up.brain, a = { taser: () => `${1 + n}명`, cash: () => `${(1.2 + 0.2 * n).toFixed(1)}배`, mutate: () => `${23 + 4 * n}초`, bomb: () => `${Math.max(10, 40 - 3 * n)}초` };
+    const n = up.brain, a = { taser: () => `${1 + n}명`, cash: () => `${(1.2 + 0.2 * n).toFixed(1)}배`, mutate: () => `${23 + 4 * n}초`, bomb: () => `${Math.round(Math.max(10, 40 - 3 * n) * 1.15)}초` };
     for (const [k, el] of Object.entries(aBadges)) el.querySelector('.pc').textContent = a[k]();
     for (const [g, side] of [[pBadges, 'left'], [aBadges, 'right']]) {   // v354: 3개 넘으면 작게 · 촘촘하게 (조이스틱 안 가리게)
       const L = Object.values(g), tight = L.length >= 3, step = tight ? 40 : 54, sz = tight ? 36 : 46;
@@ -4276,7 +4276,7 @@
     const all = zombies.filter((z) => z !== me && isZombie(z));
     if (!all.length) return false;
     const plain = all.filter((z) => !z.mut), al = plain.length ? plain : all;   // v521: 변이 좀비는 최후순위 — 일반 동료가 하나도 없을 때만
-    const R = me.sense / 3 * 1.5 * 1.2;         // v555: 자폭 범위 1.2배 (3.6 → 4.32칸) — v277
+    const R = me.sense / 3 * 1.5 * 1.5;         // v556: 자폭 범위 1.5배 (3.6 → 5.4칸) — v277
     const tier = (c) => c.sniper ? 5 : c.soldier ? 4 : c.police ? 3 : c.attacker ? 2 : c.guard ? 1 : 0;
     let best = null, bT = -1, bN = -1, bD = Infinity;
     for (const z of al) {
