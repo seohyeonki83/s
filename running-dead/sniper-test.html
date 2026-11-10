@@ -3391,7 +3391,7 @@
     owned.absorb = true;   // 특공대 시험: 충격 흡수복 입고 시작
     if (!pBadges.absorb) { const el = document.createElement('div'); el.className = 'pbadge'; el.innerHTML = `<span class="ic">${ITEM.absorb.icon}</span><span class="pc"></span><span class="mag"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6" fill="none" stroke="#e8eef5" stroke-width="3"/><path d="M14.5 14.5 20 20" stroke="#e8eef5" stroke-width="3.4" stroke-linecap="round"/></svg></span>`; el.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); showInfo('absorb'); }); stage.appendChild(el); pBadges.absorb = el; }
     refreshBadges();
-    teamQueue.push(1);   // 특공대 시험: 1팀(걸어서 분대 셋)만
+    teamsSpawned++; teamWait.push({ comp: ['sniper', 'soldier', 'soldier'], t: 0, first: false, seg: null, hold: true });   // 특공대 시험: 분대 하나만 (저격수 1 + 군인 2)
     // — 시작하자마자 맵 가장자리에서 1팀 (군인 2 + 저격수 1)
   }
   function carTestSetup() {                   // v466: 차 시험 맵
