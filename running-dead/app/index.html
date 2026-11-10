@@ -250,7 +250,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v572</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v573</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2210,7 +2210,7 @@
       if (!huntable(z, b)) continue;           // 다른 좀비가 노리는 중이면 건너뛴다
       if (!inSight(z, b)) continue;            // 명령 중인 동료는 좁아진 인지 범위(1.8칸 원 + 명령 방향 부채꼴) 안만 본다
       const d = Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z);
-      if (hyd && b.hp > 0) { const t = b.sniper ? 5 : b.soldier ? 4 : b.police ? 3 : b.attacker ? 2 : b.guard ? 1 : 0; if (t > hT || (t === hT && d < hD)) { ht = b; hT = t; hD = d; } }
+      if (hyd && b.hp > 0 && d <= z.sense * 0.91 && !fireBlocked(z.foot.x, z.foot.z, b.foot.x, b.foot.z)) {   /* v573: 공격 사거리 안에서만 */ const t = b.sniper ? 5 : b.soldier ? 4 : b.police ? 3 : b.attacker ? 2 : b.guard ? 1 : 0; if (t > hT || (t === hT && d < hD)) { ht = b; hT = t; hD = d; } }
       if (z === me && b.sniper && d <= sd) { sd = d; sn = b; }   // v565: 내 덮침 거리 안 저격수는 무조건 1순위
       if (d > ad && d > bd) continue;
       if (d <= ad) { ad = d; any = b; }
