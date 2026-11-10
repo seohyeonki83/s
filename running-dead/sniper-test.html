@@ -235,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v545 특공대 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v546 특공대 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1514,6 +1514,10 @@
     const dx = z.foot.x - c.foot.x, dz = z.foot.z - c.foot.z, d = Math.hypot(dx, dz) || 1, ux = dx / d, uz = dz / d;
     const f1 = puff(c.foot.x + ux * RADIUS, 0, c.foot.z + uz * RADIUS, 0xfff23a, 2.2, 2.4, 0.12, 0, 0, 0, 0.9);
     f1.s.material.map = flashTex; f1.s.position.addScaledVector(UP, RADIUS); f1.s.renderOrder = UI - 0.5; f1.peak = true;
+    if (z.hp > 0) for (let i = 0; i < 3; i++) {   // v546: 맞은 자리에 피 안개가 팍 — 크게 부풀며 옅어진다
+      const m = puff(z.foot.x + rand(-0.25, 0.25), 0.7, z.foot.z + rand(-0.25, 0.25), i ? 0xa8101a : 0xd01c24, rand(1.1, 1.4), rand(3.2, 4), rand(0.4, 0.55), ux * 0.6, 0.2, uz * 0.6, 0.85);
+      m.s.renderOrder = UI - 0.6;
+    }
     if (z.hp > 0) for (let i = 0; i < 7; i++) {   // v544: 자잘한 피 말고 살짝 큰 피 뭉치 — 총알 나가는 쪽(뒤)으로 부채꼴로 튄다
       const a = Math.atan2(uz, ux) + rand(-0.9, 0.9), sp = rand(4.4, 10);   /* v545: 2배 넓게 */
       const f = puff(z.foot.x, 0.6, z.foot.z, i % 2 ? 0xb5121b : 0xd91e1e, rand(0.6, 0.85), rand(0.3, 0.45), rand(0.4, 0.55), Math.cos(a) * sp, rand(0.4, 1.2), Math.sin(a) * sp, 0.97);
