@@ -235,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v556 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v557 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -669,6 +669,11 @@
     drawChest(c.getContext('2d'), 96, 128, 168);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
   })();
+  const chestTex = (() => {                  // v557: 금고 그림 — 정사각 판에 보물상자
+    const c = document.createElement('canvas'); c.width = c.height = 256;
+    drawChest(c.getContext('2d'), 128, 128, 232);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  })();
   const gapMat = flatMat(0xc4c4c4), jambMat = flatMat(0x111111);   // v247: 더 밝게 + 문틀
   gapMat.opacity = 0;                         // v249: 밝은 바닥은 안 보이게 — 검은 문틀만           // v246: 문 자리 = 뚫린 벽 (바닥색) — 지붕·벽·어둠 위에 그려 어디서든 보인다
   function doorGap(D) {                       // v247: 문 자리를 벽 두께보다 훨씬 깊게(안팎 0.7칸씩) 밝은 바닥색으로 + 양쪽 문틀 — 멀리서도 '뚫린 문'으로 보이게
@@ -718,7 +723,7 @@
   let redObj = null;
   function tintTarget(o, on) {
     if (!o) return;
-    if (o.kind === 'safe') { if (!o.dead) o.mesh.material.color.setHex(on ? TARGET_RED : 0x8a7a52); return; }
+    if (o.kind === 'safe') { if (!o.dead) o.mesh.material.color.setHex(on ? TARGET_RED : 0xffffff); return; }
     if (o.type === 'door') { o.mesh.material = on ? lockRedMat : lockMat; o.mesh.children[0].material = on ? lockRedMat : lockBarMat; return; }
     if (o.type === 'car' && !o.car.wreck) o.car.g.children[0].material.color.setHex(on ? TARGET_RED : 0x24305a);   // 부서진 잔해 색은 건드리지 않는다
   }
@@ -3940,12 +3945,10 @@
     const m = 2.2, cz = (S.z0 + S.z1) / 2, spots = S.station ? [[S.x0 + m, cz], [S.x1 - m, cz], [S.x0 + m, S.z1 - m], [S.x1 - m, S.z1 - m]] : [[rand(S.x0 + 2, S.x1 - 2), rand(S.z0 + 2, S.z1 - 2)]];   // 첫 마을 건물은 안 아무 자리 (v232)
     const [x, z] = spots[Math.floor(Math.random() * spots.length)];
     const b = addBody('safe', x, z);
-    b.mesh.geometry = safeGeo; b.mesh.material.color.setHex(0x8a7a52);
-    const inner = new THREE.Mesh(safeInGeo, new THREE.MeshBasicMaterial({ color: 0x3a3d46, transparent: true, depthTest: false, depthWrite: false }));
-    inner.position.z = 0.001; inner.renderOrder = b.mesh.renderOrder; b.mesh.add(inner);
+    b.mesh.geometry = safeGeo; b.mesh.material = new THREE.MeshBasicMaterial({ map: chestTex, color: 0xffffff, transparent: true, depthTest: false, depthWrite: false });   // v557: 금고 = 지붕 위 보물상자 그림과 같은 모양
     b.mesh.scale.setScalar(0.7);              // v239: 그림만 70% (부딪힘 r 1.5는 그대로)
     const q = new THREE.Sprite(new THREE.SpriteMaterial({ map: SAFE_Q, transparent: true, depthTest: false, depthWrite: false }));   // v271: 금고 위 큰 물음표 (금고 그림에 붙어 같이 보이고 같이 사라진다)
-    q.scale.set(5, 2.5, 1); q.position.set(0, 0, 0.02); q.renderOrder = UI - 1; b.mesh.add(q);   // v272: 금고 위로 띄우지 않고 금고 그림에 겹쳐 덮는다
+    q.visible = false;   // v557: 물음표 대신 보물상자 그림   // v272: 금고 위로 띄우지 않고 금고 그림에 겹쳐 덮는다
     b.fixed = true; b.r = 1.2; b.halfH = 1.425 * 0.7;   /* v295: 1.5 → 1.2 (그림 2×2칸에 맞게) */ b.hp = b.maxHp = SAFE_HP;   // 부딪힘(콜라이더) 반지름도 같이 커진다 b.station = S;
     addHpBar(b, hpFoeMat);
     S.safe = b;
