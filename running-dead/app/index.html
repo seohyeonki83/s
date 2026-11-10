@@ -250,7 +250,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v570</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v571</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -306,7 +306,7 @@
   const INFECT = 2.8 / 0.8;   // 감염 시간 (초) — 동료 기준, v70에 감염 속도 20% 느리게 (3.5초) — 이만큼 물고 버티면 감염 (물린 시민 머리 위 게이지)
   const MY_INFECT = 2.5 / 1.2;  // 내 감염 속도 — v71에 동료의 2.5배, v95에 감염 시간 20% 늘림 (1.4초 → 1.68초)
   const BITE_HEAL = 0.03;   // v95에 초당 3%로 — 동료
-  const MY_BITE_HEAL = BITE_HEAL * 1.3 * 1.1 * 1.1 * 1.5;   /* v149에 10% 올림 (초당 3.9% → 4.29%), v155에 10% 더 (→ 4.72%), v161에 50% 더 (→ 7.08%) */ //   // 내 흡혈 = 동료의 1.3배 (초당 3.9%, v120)
+  const MY_BITE_HEAL = 0.07;   /* v571: 7% 딱 */   /* v149에 10% 올림 (초당 3.9% → 4.29%), v155에 10% 더 (→ 4.72%), v161에 50% 더 (→ 7.08%) */ //   // 내 흡혈 = 동료의 1.3배 (초당 3.9%, v120)
   // 무는 동안 초당 최대 체력의 이만큼 회복 — 나·동료 전부 (v70)
 
   // 싸움 — 수비형·공격형 시민·나·동료 좀비 같음. HP가 남은 시민은 바로 못 덮치고, 때려서 0을 만든 뒤 덮친다
