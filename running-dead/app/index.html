@@ -250,7 +250,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v552</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v553</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -373,7 +373,7 @@
   const KNOCK = 2.2, KNOCK_T = 0.6;       // 치인 몸은 차 속도의 2.2배로 튕겨 날아간다 (최대 0.6초, 점점 느려짐)
   const PARKED_K = Math.sqrt(2 / 3);   // 서 있는 경찰차 부딪힘 = 넓이 2/3 (가로·세로 각 약 82%) (v171)
   const MOVING_K = Math.sqrt(1.5);    // 달리는 경찰차 부딪힘 = 넓이 1.5배 (가로·세로 각 약 122%) — 그림 크기는 그대로 (v178)
-  const CAR_L = 2.8 * 0.8, CAR_W = 1.5 * 0.8;   /* v157에 20% 줄임 */ //   // 길이·폭 (유닛)
+  const CAR_L = 2.8 * 0.8 * 0.9, CAR_W = 1.5 * 0.8 * 0.9;   /* v553: 경찰차·군인차 10% 작게 */   /* v157에 20% 줄임 */ //   // 길이·폭 (유닛)
 
   // 동료 좀비가 나를 따르는 거리
   const NEAR = 3.24 * 1.15 * 1.1 * 0.8 * 0.8;   /* v151에 20% 더 줄임 (3.28 → 2.62) */ //   // v75에 15%, v76에 10% 올리고 v122에 20% 줄임 (약 3.28) — 동료 수에 따라 armyK배
