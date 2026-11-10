@@ -235,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v538 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v539 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1403,7 +1403,7 @@
     moveShoot(c, dt);   // v442: 회피하면서도 쏜다 (공격 속도 절반)   // v437: 회피도 군인과 같은 속도 (3.06)
   }
   const BURST_GAP = 0.08;                     // v410: 군인 연사 사이 간격 (초) — 4발이 0.24초 안에
-  const GUARD_NEAR = NEAR * 0.9 * 0.8, GUARD_DOMAIN = GUARD_NEAR * 1.1, GUARD_DOMAIN_FIGHT = GUARD_NEAR * 1.2;   /* v436: 근접 1.89칸 (−20%) · 지배 = 근접의 1.1배 (2.08칸) · 공격 지배 = 근접의 1.2배 (2.27칸) */   /* v432: 근접 2.36칸 (−10%) · 지배 = 근접의 1.2배 (2.83칸) · 공격 지배 = 지배의 1.1배 (3.11칸) */   /* v426: 지배 −10% (5.42칸) · 공격 지배 −20% (11.5칸), 근접 거리는 그대로 */   // v410: 저격수의 지배 · 공격 지배 거리 (나와 같은 기본값, 고정)
+  const GUARD_NEAR = NEAR * 0.9 * 0.8 * 0.9, GUARD_DOMAIN = GUARD_NEAR * 1.2, GUARD_DOMAIN_FIGHT = GUARD_NEAR * 1.25;   /* v539: 근접 −10% (1.70칸) · 지배 = 근접의 1.2배 · 공격 지배 = 1.25배 */   /* v436: 근접 1.89칸 (−20%) · 지배 = 근접의 1.1배 (2.08칸) · 공격 지배 = 근접의 1.2배 (2.27칸) */   /* v432: 근접 2.36칸 (−10%) · 지배 = 근접의 1.2배 (2.83칸) · 공격 지배 = 지배의 1.1배 (3.11칸) */   /* v426: 지배 −10% (5.42칸) · 공격 지배 −20% (11.5칸), 근접 거리는 그대로 */   // v410: 저격수의 지배 · 공격 지배 거리 (나와 같은 기본값, 고정)
   function muzzleFlash(c, tx, tz) {           // v410: 헛발 총구 불꽃 (맞힐 상대가 없을 때)
     const dx = tx - c.foot.x, dz = tz - c.foot.z, d = Math.hypot(dx, dz) || 1, ux = dx / d, uz = dz / d;
     const f1 = puff(c.foot.x + ux * RADIUS * 0.95, 0, c.foot.z + uz * RADIUS * 0.95, 0xfff23a, 1.0, 1.0, 0.07, 0, 0, 0, 0.7);
@@ -1437,7 +1437,7 @@
     if (!m) { c.outT = 0; return false; }
     const lim = c.inRange ? GUARD_DOMAIN_FIGHT : GUARD_DOMAIN;
     if (Math.hypot(c.foot.x - m.foot.x, c.foot.z - m.foot.z) <= lim) { c.outT = 0; return false; }
-    if (!c.outT) c.outLimit = rand(0.15, 0.75);   // v442: 군인 복귀 딜레이 0.15~0.75초 (v438: 0.3~1.5초)
+    if (!c.outT) c.outLimit = rand(0, 1);   /* v539: 군인 복귀 딜레이 0~1초 */   // v442: 군인 복귀 딜레이 0.15~0.75초 (v438: 0.3~1.5초)
     c.outT = (c.outT || 0) + dt;
     if (c.outT < c.outLimit) return false;
     c.outT = 0; c.recall = true; c.foe = null; c.inRange = false; enterNormal(c);
