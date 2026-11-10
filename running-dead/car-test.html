@@ -235,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v568 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v569 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2874,7 +2874,7 @@
       b.arrow.visible = b.vel.length() > 0.15;
       b.arrow.rotation.z = Math.atan2(-b.vel.y * SIN_P, b.vel.x);   // 바닥 위 방향 → 화면 위 방향
       const held = b.state === 'held' && !!b.biter;
-      const gauged = held || b.infect > 0.003;   // 감염 시계 — 물리는 중 + 저장된 게이지가 남아 있는 동안 (v213). 내가 문 거면 크게(내 UI 층), 동료면 3분의 2
+      const gauged = (held || b.infect > 0.003) && (held ? b.biter : b.lastBiter) === me;   // v569: 동료가 무는 게이지는 안 보인다   // 감염 시계 — 물리는 중 + 저장된 게이지가 남아 있는 동안 (v213). 내가 문 거면 크게(내 UI 층), 동료면 3분의 2
       b.gauge.visible = gauged && !hide;
       if (gauged) {                           // 둥근 시계 — 체력바 자리 위로 (물 때는 내 굵은 체력바도 바로 옆에 있어서 늘 그 위로 띄운다)
         const mine = (held ? b.biter : b.lastBiter) === me, k = mine ? CLOCK_ME : CLOCK_ME * 2 / 3;   // 내 시계 1.2배, 동료 시계는 내 것의 3분의 2 (v136)
