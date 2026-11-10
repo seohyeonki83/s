@@ -235,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v565 특공대 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v566 특공대 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3354,7 +3354,7 @@
         let g = pickGoal(area);
         for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(area);
         const c = addCitizen(g.x, g.y, area, 'police');
-        c.station = S;                        // 어느 경찰서 경찰인지
+        c.station = S; c.hp = c.maxHp = c.maxHp * 1.15;   // v566: 경찰서 경찰 체력 +15%   // 어느 경찰서 경찰인지
         c.area = area;
         enterNormal(c);
         if (inside) S.residents.push(c); else S.outer.push(c);
@@ -3496,7 +3496,7 @@
         let g = pickGoal(area);
         for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(area);
         const c = addCitizen(g.x, g.y, area, 'police');
-        c.station = S; c.area = area; enterNormal(c);
+        c.station = S; c.hp = c.maxHp = c.maxHp * 1.15; c.area = area; enterNormal(c);   // v566
         (inside ? S.residents : S.outer).push(c);
         S.members.push(c); c.lastHp = c.hp;
       }
@@ -3514,7 +3514,7 @@
         let g = pickGoal(S);
         for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(S);
         const c = addCitizen(g.x, g.y, S, 'police');
-        c.station = S; c.area = S; enterNormal(c);
+        c.station = S; c.hp = c.maxHp = c.maxHp * 1.15; c.area = S; enterNormal(c);   // v566
         S.residents.push(c); S.members.push(c); c.lastHp = c.hp;
       }
     }
@@ -3530,7 +3530,7 @@
       c.sense = c.boostSense * SORTIE_SENSE;
       c.sight = c.boostSight * SORTIE_SENSE;
     }
-    if (clock - S.callAt < 2 || S.open) S.hurt = 0;   /* v497: 출동 최소 간격 2초 (v493: 3초) */   // v374: 출동 뒤 3초 안에 받은 데미지 · 안이 드러난 동안 받은 데미지는 버린다
+    if (clock - S.callAt < 1.5 || S.open) S.hurt = 0;   /* v566: 출동 최소 간격 1.5초 (25% 빠르게) */   // v374: 출동 뒤 3초 안에 받은 데미지 · 안이 드러난 동안 받은 데미지는 버린다
     while (S.hurt >= CALL_HP) {   // v373: 출동은 최소 3초 간격
       S.hurt -= CALL_HP;
       if (S.residents.length <= 5 || zombies.some((z) => z.space === S)) continue;   // v365: 안에 5명은 늘 남는다 (3 → 5)   // 호출 무시
