@@ -235,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v560 특공대 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v561 특공대 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2053,7 +2053,7 @@
     // 특공대 시험: 나도 무적 아님
     if (a && a.stim) dmg *= a.stimK || 1.5;   // v369 · v370: 스팀팩 (강화마다 +10%p)
     if ((v.kind === 'obj' || v.kind === 'safe') && a.mut === 'armor') dmg *= 3;   // v550: 덩치만 사물(문·차·금고)에 3배   // v378: 금고도   // v344: 2 → 4배   // v295: 덩치 — 문·경찰차 피해 2배
-    if ((v.kind === 'obj' || v.kind === 'safe') && a === me && owned.crowbar) dmg *= 1.25 + 0.05 * up.brain;
+    if ((v.kind === 'obj' || v.kind === 'safe') && a === me && owned.crowbar) dmg *= 1.5 + 0.05 * up.brain;   /* v561: 빠루 처음 +50% */
     // v549: 금고도 나·동료 배율 없음 — 공격력 그대로   // v391: 금고 — 나한테는 3배, 동료(덩치·히드라 포함)한테는 2/3   // v275: 빠루 — 내가 건물·사물에 입히는 피해
     if (isZombie(v) && v.mut) dmg *= v.mut === 'armor' ? (v === me ? 1 : TEST_ARMOR ? 0 : 0.2) : 0.9;   /* v558: 각성한 나는 덩치여도 −80% 없음 */   // v275: 갑옷좀비 받는 피해 80% 줄임, 히드라 10% 줄임
     if (a.mut === 'armor' && v.kind === 'citizen' && !a.splashing) {   // v275: 갑옷좀비 — 앞쪽 80° 부채꼴, 근접 거리 1.2배 안 다른 적도 30%
@@ -4156,7 +4156,7 @@
       taser: () => `한 번에 ${1 + n}명 감전`, cash: () => `시야 ${(1.2 + 0.2 * n).toFixed(1)}배 · ${2 + 2 * n}대 버팀`,
       awaken: () => `변이 8초 · 체력 20% 회복`,
       mutate: () => `주사 ${1 + n}개 · 변이 ${23 + 4 * n}초`, bomb: () => `쿨타임 ${Math.round(Math.max(10, 40 - 3 * n) * 1.15 * 1.1)}초`,
-      vest: () => `총알 피해 -${vestPct(n)}%`, absorb: () => `넉백 ${(SNIPER_KD / 4 * (1 + n)).toFixed(2)}칸 흡수 (저격수 넉백의 ${Math.min(100, 25 * (1 + n))}%${n + 1 >= 4 ? ' · 완전 무효' : ''})`, crowbar: () => `건물·사물 피해 +${25 + 5 * n}%`, book: () => `쿨타임 -${Math.min(90, 7 + 3 * n)}%`,
+      vest: () => `총알 피해 -${vestPct(n)}%`, absorb: () => `넉백 ${(SNIPER_KD / 4 * (1 + n)).toFixed(2)}칸 흡수 (저격수 넉백의 ${Math.min(100, 25 * (1 + n))}%${n + 1 >= 4 ? ' · 완전 무효' : ''})`, crowbar: () => `건물·사물 피해 +${50 + 5 * n}%`, book: () => `쿨타임 -${Math.min(90, 7 + 3 * n)}%`,
       revive: () => `체력 ${Math.round(Math.min(1, 0.3 + 0.1 * n) * 100)}%로 부활 · 쿨타임 120초`, stim: () => `10초마다 1명 · 공격력·체력 x${(1.5 + 0.1 * n).toFixed(1)}`, shoes: () => `이동 속도 +${10 + 3 * n}%`,
     }[kind]();
   }
@@ -4181,7 +4181,7 @@
     const t = {
       vest: () => '-' + vestPct(up.brain) + '%',
       absorb: () => Math.min(100, 25 * (1 + up.brain)) + '%',
-      crowbar: () => '+' + Math.round(25 + 5 * up.brain) + '%',
+      crowbar: () => '+' + Math.round(50 + 5 * up.brain) + '%',
       book: () => '-' + Math.round(bookCut() * 100) + '%',
       stim: () => 'x' + stimMul().toFixed(1),
       revive: () => reviveT > 0 ? Math.ceil(reviveT) + '초' : '준비',
