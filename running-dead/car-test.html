@@ -65,9 +65,18 @@
   .item .mag, .pbadge .mag { position: absolute; right: -19px; bottom: -6px; width: 23px; height: 23px; border-radius: 50%; background: rgba(22, 22, 28, 0.9); border: 1px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; z-index: 3; }
   .item .mag svg, .pbadge .mag svg { width: 14px; height: 14px; }
   .pbadge .mag { right: -13px; bottom: -11px; width: 20px; height: 20px; pointer-events: none; }   /* v530: 배지 오른쪽 아래 (글자 안 가리게 바깥으로) */   /* v529: 패시브 배지는 배지 전체를 눌러도 설명 — 돋보기는 표시만 */
-  #statBtn { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(6px + env(safe-area-inset-bottom, 0px)); width: 44px; height: 44px; margin: 0; border-radius: 50%; background: rgba(22, 22, 28, 0.85); border: 2px solid rgba(255, 255, 255, 0.35); display: none; align-items: center; justify-content: center; z-index: 5; touch-action: none; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }   /* v525: 내 능력치 돋보기 */
+  #statBtn { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(6px + env(safe-area-inset-bottom, 0px)); width: 88px; height: 88px; margin: 0; border-radius: 50%;   /* v537: 2배 */ background: rgba(22, 22, 28, 0.85); border: 2px solid rgba(255, 255, 255, 0.35); display: none; align-items: center; justify-content: center; z-index: 5; touch-action: none; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }   /* v525: 내 능력치 돋보기 */
   #statBtn.on { display: flex; }
-  #statBtn svg { width: 24px; height: 24px; }
+  #statBtn svg { width: 48px; height: 48px; }
+  #acq.stats { background: rgba(0, 0, 0, 0.88); justify-content: flex-start; align-items: stretch; padding: calc(146px + env(safe-area-inset-top, 0px)) 14px 140px; }   /* 미니맵·버튼 밑에서 시작 */   /* v537: 내 능력치 — 더 어둡게, 카드를 왼쪽 위부터 */
+  #acq.stats .t { text-align: left; margin: 0 0 12px 2px; }
+  #acq.stats .cards { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-start; align-content: flex-start; }
+  #acq.stats .card { position: relative; width: calc((100% - 20px) / 3); max-width: 120px; box-sizing: border-box; padding: 10px 6px 10px; border-radius: 14px; background: linear-gradient(#2b2b36, #1c1c24); border: 2px solid #4a4a5a; color: #fff; text-align: center; }
+  #acq.stats .card.special { border-color: #ffd34d; background: linear-gradient(160deg, #4a3a12, #2a2030 55%, #1c1c24); box-shadow: 0 0 12px rgba(255, 200, 60, 0.5); }
+  #acq.stats .card .ic { font-size: 30px; line-height: 1.1; }
+  #acq.stats .card .nm { margin-top: 8px; font: 800 14px/1.15 var(--font); }
+  #acq.stats .card .cnt { position: absolute; top: -9px; right: -7px; min-width: 24px; height: 24px; padding: 0 5px; box-sizing: border-box; border-radius: 12px; background: #f2b11c; color: #1a1205; font: 900 13px/24px var(--font); }
+  #acq.stats .card .vl { margin-top: 6px; font: 600 11px/1.35 var(--font); color: #7fd4ff; word-break: keep-all; }
   #acq .ds .ab { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left; }
   #acq .ds .ab:last-child { border-bottom: 0; }
   #acq .ds .ab .ic { width: 26px; font-size: 22px; line-height: 1; flex: none; }
@@ -226,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v536 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v537 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4857,9 +4866,9 @@
   }
   function showStats() {
     if (!canMenu()) return;
-    const rows = Object.keys(ABIL).filter((k) => up[k] > 0).map((k) => `<div class="ab"><div class="ic">${ABIL[k].icon}</div><div><div class="nm">${ABIL[k].name}<span>×${up[k]}</span></div><div class="vl">${abilNow(k, up[k])}</div></div></div>`).join('');
-    const ov = document.createElement('div'); ov.id = 'acq'; ov.className = 'info';
-    ov.innerHTML = `<div class="t">내 능력치</div><div class="ds">${rows || '아직 얻은 능력치가 없습니다.'}</div>`;
+    const rows = Object.keys(ABIL).filter((k) => up[k] > 0).map((k) => `<div class="card${k === 'brain' ? ' special' : ''}"><div class="cnt">×${up[k]}</div><div class="ic">${ABIL[k].icon}</div><div class="nm">${ABIL[k].name}</div><div class="vl">${abilNow(k, up[k])}</div></div>`).join('');   // v537: 얻은 카드 그대로 왼쪽 위부터
+    const ov = document.createElement('div'); ov.id = 'acq'; ov.className = 'info stats';
+    ov.innerHTML = `<div class="t">내 능력치</div><div class="cards">${rows || '<div class="vl">아직 얻은 능력치가 없습니다.</div>'}</div>`;
     openMenu(ov, '닫기');
   }
   function upNums() {
