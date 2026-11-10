@@ -235,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v564 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v565 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2188,16 +2188,17 @@
   const CROWD_MAX = 3;
   const crowd = new Map();
   function nearestCitizen(z, range) {
-    let best = null, bd = range, any = null, ad = range;
+    let best = null, bd = range, any = null, ad = range, sn = null, sd = z.attack || ATTACK;
     for (const b of nearIn(cCells, z.foot.x, z.foot.z, range, ncBuf)) {   // 둘레 칸의 시민만 (v177)
       if (!huntable(z, b)) continue;           // 다른 좀비가 노리는 중이면 건너뛴다
       if (!inSight(z, b)) continue;            // 명령 중인 동료는 좁아진 인지 범위(1.8칸 원 + 명령 방향 부채꼴) 안만 본다
       const d = Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z);
+      if (z === me && b.sniper && d <= sd) { sd = d; sn = b; }   // v565: 내 덮침 거리 안 저격수는 무조건 1순위
       if (d > ad && d > bd) continue;
       if (d <= ad) { ad = d; any = b; }
       if (d <= bd && (z === me || b.hp <= 0 || (crowd.get(b) || 0) < CROWD_MAX)) { bd = d; best = b; }   // 나는 3명 제한 없이 늘 가장 가까운 시민 (v154)
     }
-    return best || any;
+    return sn || best || any;
   }
 
   // 동료가 지금 바로 덮칠 수 있는 시민 = 같은 공간, HP 0, 아무도 안 덮치는 중, 덮침 거리 안 — 그중 가장 가까운 시민.
