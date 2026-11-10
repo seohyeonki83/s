@@ -250,7 +250,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v571</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v572</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2204,16 +2204,19 @@
   const crowd = new Map();
   function nearestCitizen(z, range) {
     let best = null, bd = range, any = null, ad = range, sn = null, sd = z.attack || ATTACK;
+    const hyd = z === me && z.mut === 'hydra';   // v572: 히드라인 나 — 자폭과 같은 티어 순위(저격수 > 군인 > 경찰 > 빨강 > 주황 > 노랑), 같은 티어면 가까운 순
+    let ht = null, hT = -1, hD = Infinity;
     for (const b of nearIn(cCells, z.foot.x, z.foot.z, range, ncBuf)) {   // 둘레 칸의 시민만 (v177)
       if (!huntable(z, b)) continue;           // 다른 좀비가 노리는 중이면 건너뛴다
       if (!inSight(z, b)) continue;            // 명령 중인 동료는 좁아진 인지 범위(1.8칸 원 + 명령 방향 부채꼴) 안만 본다
       const d = Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z);
+      if (hyd && b.hp > 0) { const t = b.sniper ? 5 : b.soldier ? 4 : b.police ? 3 : b.attacker ? 2 : b.guard ? 1 : 0; if (t > hT || (t === hT && d < hD)) { ht = b; hT = t; hD = d; } }
       if (z === me && b.sniper && d <= sd) { sd = d; sn = b; }   // v565: 내 덮침 거리 안 저격수는 무조건 1순위
       if (d > ad && d > bd) continue;
       if (d <= ad) { ad = d; any = b; }
       if (d <= bd && (z === me || b.hp <= 0 || (crowd.get(b) || 0) < CROWD_MAX)) { bd = d; best = b; }   // 나는 3명 제한 없이 늘 가장 가까운 시민 (v154)
     }
-    return sn || best || any;
+    return ht || sn || best || any;
   }
 
   // 동료가 지금 바로 덮칠 수 있는 시민 = 같은 공간, HP 0, 아무도 안 덮치는 중, 덮침 거리 안 — 그중 가장 가까운 시민.
@@ -3154,8 +3157,9 @@
       while (!itemOrder.includes(FORCE_FIRST_ITEM)) itemOrder = pickItems();
       itemOrder.splice(itemOrder.indexOf(FORCE_FIRST_ITEM), 1); itemOrder.unshift(FORCE_FIRST_ITEM);
     }
-    while (!itemOrder.includes('mutate')) itemOrder = pickItems();   // v359: 변이 주사는 첫째나 둘째 금고에서 꼭 나온다
-    { const i = itemOrder.indexOf('mutate'); itemOrder.splice(i, 1); itemOrder.splice(Math.random() < 0.5 ? 0 : 1, 0, 'mutate'); }   // v276: 9종 중 랜덤 4개 — 금고 4개 전부에서 하나씩 (사용 아이템은 2개까지)
+    const mustInj = Math.random() < 0.5 ? 'mutate' : 'awaken';   // v572: 변이 주사 또는 각성 주사 중 하나가 첫째나 둘째 금고에서 꼭 나온다 (50:50)
+    while (!itemOrder.includes(mustInj)) itemOrder = pickItems();
+    { const i = itemOrder.indexOf(mustInj); itemOrder.splice(i, 1); itemOrder.splice(Math.random() < 0.5 ? 0 : 1, 0, mustInj); }   // v276: 9종 중 랜덤 4개 — 금고 4개 전부에서 하나씩 (사용 아이템은 2개까지)
     for (const k of Object.keys(owned)) delete owned[k];
     for (const el of Object.values(pBadges)) el.remove();
     for (const k of Object.keys(pBadges)) delete pBadges[k];
