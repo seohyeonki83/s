@@ -235,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v542 특공대 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v543 특공대 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1514,9 +1514,7 @@
     const dx = z.foot.x - c.foot.x, dz = z.foot.z - c.foot.z, d = Math.hypot(dx, dz) || 1, ux = dx / d, uz = dz / d;
     const f1 = puff(c.foot.x + ux * RADIUS, 0, c.foot.z + uz * RADIUS, 0xfff23a, 2.2, 2.4, 0.12, 0, 0, 0, 0.9);
     f1.s.material.map = flashTex; f1.s.position.addScaledVector(UP, RADIUS); f1.s.renderOrder = UI - 0.5; f1.peak = true;
-    const f2 = puff(z.foot.x - ux * 0.2, 0, z.foot.z - uz * 0.2, 0xffe6a0, 1.6, 1.9, 0.12, 0, 0, 0, 0.85);
-    f2.s.material.map = flashTex; f2.s.position.addScaledVector(UP, RADIUS); f2.s.renderOrder = UI - 0.5; f2.peak = true;
-    if (z.hp > 0) bloodBurst(z.foot.x, z.foot.z, 16, 1, 3);
+    if (z.hp > 0) { bloodBurst(z.foot.x, z.foot.z, 26, 1.5, 4.2); bloodBurst(z.foot.x, z.foot.z, 10, 0.4, 1.3); }   // v543: 맞은 자리 섬광 없이 피만 크게
   }
   function sniperHit(c, z) {
     sniperFx(c, z);                  // v396: 저격 — 죽으면 피가 팍 터지고, 살면 뒤로 쭉 밀린다 (약 0.9칸, 0.4초)
