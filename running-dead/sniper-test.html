@@ -3387,7 +3387,8 @@
     me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;
     if (CAR_TEST) { carTestSetup(); return; }
     me.hp = me.maxHp;   // 특공대 시험: 체력 가득 (무적이라 줄지 않는다)
-    teamQueue.push(1); teamQueue.push(2);   // 특공대 시험: 1팀(걸어서 분대 셋) + 2팀(군인차 2대) 둘 다 바로 출동
+    for (let i = 0; i < 4; i++) { const a = i / 4 * Math.PI * 2, x = me.foot.x + Math.cos(a) * 1.4, z = me.foot.z + Math.sin(a) * 1.4; makeZombie(addCitizen(x, z, square(x, z), '')); }   // 특공대 시험: 동료 4마리
+    teamQueue.push(1);   // 특공대 시험: 1팀(걸어서 분대 셋)만
     // — 시작하자마자 맵 가장자리에서 1팀 (군인 2 + 저격수 1)
   }
   function carTestSetup() {                   // v466: 차 시험 맵
