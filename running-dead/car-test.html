@@ -235,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v549 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v550 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2047,7 +2047,7 @@
   function landHit(a, v, dmg = DAMAGE) {
     if (TEST_MAP && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적
     if (a && a.stim) dmg *= a.stimK || 1.5;   // v369 · v370: 스팀팩 (강화마다 +10%p)
-    // v549: 사물(문·차·금고)은 덩치 배율 없음 — 공격력 그대로   // v378: 금고도   // v344: 2 → 4배   // v295: 덩치 — 문·경찰차 피해 2배
+    if ((v.kind === 'obj' || v.kind === 'safe') && a.mut === 'armor') dmg *= 3;   // v550: 덩치만 사물(문·차·금고)에 3배   // v378: 금고도   // v344: 2 → 4배   // v295: 덩치 — 문·경찰차 피해 2배
     if ((v.kind === 'obj' || v.kind === 'safe') && a === me && owned.crowbar) dmg *= 1.25 + 0.05 * up.brain;
     // v549: 금고도 나·동료 배율 없음 — 공격력 그대로   // v391: 금고 — 나한테는 3배, 동료(덩치·히드라 포함)한테는 2/3   // v275: 빠루 — 내가 건물·사물에 입히는 피해
     if (isZombie(v) && v.mut) dmg *= v.mut === 'armor' ? (TEST_ARMOR ? 0 : 0.2) : 0.9;   // v275: 갑옷좀비 받는 피해 80% 줄임, 히드라 10% 줄임
