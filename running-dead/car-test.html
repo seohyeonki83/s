@@ -235,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v546 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v547 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1497,7 +1497,7 @@
   }
   // v505: 충격 흡수복 — 넉백 거리에서 고정량을 깎는다 (단계마다 저격수 넉백의 1/4). 다 깎이면 아예 안 밀리고 멈칫도 없다
   const knockDist = (v, T) => v * (1 - Math.exp(-4 * T)) / 4;   // knockStep 감속(e^-4t)으로 밀리는 거리
-  const SNIPER_KD = knockDist(2.3 * 2, 0.4);   /* = ARMOR_KB × 2, ARMOR_KT (아래에서 선언) */            // 저격수 넉백 거리 (약 0.92칸)
+  const SNIPER_KD = knockDist(2.3 * 2 * 1.3, 0.4);   /* v547: 저격 넉백 1.3배에 맞춰 — 흡수복 4단계에 완전 무효 그대로 */   /* = ARMOR_KB × 2, ARMOR_KT (아래에서 선언) */            // 저격수 넉백 거리 (약 0.92칸)
   const absorbAmt = () => owned.absorb ? SNIPER_KD / 4 * (1 + up.brain) : 0;
   function giveKnock(z, kx, kz, v, T) {       // 방향(kx, kz), 처음 속도 v, 시간 T — 내가 흡수복을 입었으면 깎는다. 밀렸으면 true
     const kl = Math.hypot(kx, kz) || 1;
@@ -1530,7 +1530,7 @@
     if (z.mut === 'armor' || z.mode === 'bite') return;   // 덩치 · 무는(감염 중) 좀비는 안 밀린다
     if (z === me && absorbAmt() >= SNIPER_KD - 0.001) return;   // v505: 흡수복이 다 막으면 덮치기도 안 끊긴다
     if (z.mode === 'pounce') stopPounce(z);
-    giveKnock(z, z.foot.x - c.foot.x, z.foot.z - c.foot.z, ARMOR_KB * 2, ARMOR_KT);
+    giveKnock(z, z.foot.x - c.foot.x, z.foot.z - c.foot.z, ARMOR_KB * 2 * 1.3, ARMOR_KT);   // v547: 넉백 거리 1.3배
   }
   function soldierHit(c, z) {                 // v478 · v498: 군인 총알 — 저격수와 같은 방식, 약 0.09칸 · 0.04초
     if (z.hp <= 0 || z.mut === 'armor' || z.mode === 'bite') return;
@@ -1610,7 +1610,7 @@
         f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true;
       }
     }
-    const base = POLICE_DAMAGE * (c.sniper ? 3 * 0.8 * 0.9 :   /* v462: 10% 더 줄임 (v460: 20%) */ c.soldier ? 1.2 / 4 * 0.9 :   /* v462: 군인 데미지 10% 줄임 */ 0.95);   /* v494: 경찰 공격력 5% 줄임 */   // v396: 저격수 3배 · v410: 군인은 경찰의 120%를 4발에 나눠서
+    const base = POLICE_DAMAGE * (c.sniper ? 3 * 0.8 * 0.9 * 2.4 /* v547: 시험 맵 값 적용 — 공격력 2.4배 (77.5) */ :   /* v462: 10% 더 줄임 (v460: 20%) */ c.soldier ? 1.2 / 4 * 0.9 :   /* v462: 군인 데미지 10% 줄임 */ 0.95);   /* v494: 경찰 공격력 5% 줄임 */   // v396: 저격수 3배 · v410: 군인은 경찰의 120%를 4발에 나눠서
     landHit(c, z, z === me && hasVest ? base * (1 - vestPct(up.brain) / 100) : base);   // 방탄복 — 내 총알 피해 감소 (v201)
     if (c.sniper && isZombie(z)) sniperHit(c, z);
     else if (c.soldier && isZombie(z)) soldierHit(c, z);   // v478
