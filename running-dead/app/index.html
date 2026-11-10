@@ -250,7 +250,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v553</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v554</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1592,7 +1592,7 @@
     if (!z) return;
     if (c.soldier) { c.burstN = 4; c.burstT = 0; c.burstZ = z; c.burstX = z.foot.x; c.burstZz = z.foot.z; } else shoot(c, z);
     c.atkT = HIT_EVERY * (c.sniper ? 4 : 1);
-    if (c.sniper) c.shotStop = 0.2;   // v459: 저격수는 이동 중에 쏘면 0.2초 멈췄다가 다시 달린다
+    if (c.sniper) c.shotStop = 0.3;   /* v554: 0.2 → 0.3초 */   // v459: 저격수는 이동 중에 쏘면 0.2초 멈췄다가 다시 달린다
   }
   function nearestZombie(c, range, clear = false) {   // clear: 공격선이 벽에 안 막힌 좀비만 (v297)
     let best = null, bd = range;
