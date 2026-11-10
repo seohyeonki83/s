@@ -250,7 +250,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v569</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v570</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2078,7 +2078,7 @@
         if (c === v || c.kind !== 'citizen' || c.hp <= 0 || c.space !== a.space) continue;
         const dx = c.foot.x - a.foot.x, dz = c.foot.z - a.foot.z, d = Math.hypot(dx, dz);
         if (d > R || d < 1e-3 || (dx * fx + dz * fz) / (d * fl) < Math.cos(45 * Math.PI / 180)) continue;   // v378: 앞쪽 90° · 거리 2배
-        landHit(a, c, (a === me ? ALLY_DAMAGE * (1 + 0.05 * up.arm) * 1.3 * 1.3 * 2 : dmg) * 0.3);   // v558: 각성한 나의 범위 공격 = 덩치 범위 데미지
+        landHit(a, c, (a === me ? ALLY_DAMAGE * (1 + 0.07 * up.arm) * 1.3 * 1.3 * 2 : dmg) * 0.3);   // v558: 각성한 나의 범위 공격 = 덩치 범위 데미지
       }
       a.splashing = false;
     }
@@ -2317,7 +2317,7 @@
     b.target = null;
     if (b.boostT > 0) { b.sense = b.boostSense; b.sight = b.boostSight; b.boostT = 0; }   // 출동 직후 늘어난 시야는 좀비가 되면 원래대로 (v158)
     b.sense = me && me.sense ? me.sense : b.sight;   // 동료 인지거리(= 시야) = 나와 똑같이 (v183 — 전엔 시민 때 자기 시야)
-    b.speed = SPEED * legK();                 // 튼튼한 다리 = 이동 속도 (v256)
+    b.speed = SPEED * legK();                 // 빠른 다리 = 이동 속도 (v256)
     b.attack = allyAttack();
     b.tick = Math.random() * ZOMBIE_TICK;
     b.pick = null;
@@ -3753,31 +3753,31 @@
     brain: { icon: IC.tool, name: '장비/도구 강화', desc: '내가 가진 모든 장비와 도구를 강화합니다.',   // v273: 이름·아이콘 바꿈 (똑똑한 두뇌 → 장비 강화)
       val: (n) => `테이저 ${1 + n}→${2 + n}명 · 유혹 거리 +${n * 20}→+${(n + 1) * 20}% · 유혹 버팀 ${4 + 2 * n}→${6 + 2 * n}대 · 방탄복 ${vestPct(n)}→${vestPct(n + 1)}%` },
     meat: { icon: IC.meat, name: '고기 흡수율', desc: '나와 동료들의 물어뜯을 때 회복량 증가',
-      val: (n) => `내 회복 초당 ${(MY_BITE_HEAL * 100 + n * 3).toFixed(1)}→${(MY_BITE_HEAL * 100 + (n + 1) * 3).toFixed(1)}%` },
+      val: (n) => `내 회복 초당 ${(MY_BITE_HEAL * 100 + n * 4).toFixed(1)}→${(MY_BITE_HEAL * 100 + (n + 1) * 4).toFixed(1)}%` },
     arm: { icon: IC.arm, name: '강한 팔', desc: '나와 동료들의 공격력 증가',
-      val: (n) => `공격력 +${n * 5}→+${(n + 1) * 5}% (나 ${(MY_DAMAGE * (1 + n * 0.05)).toFixed(1)}→${(MY_DAMAGE * (1 + (n + 1) * 0.05)).toFixed(1)})` },
+      val: (n) => `공격력 +${n * 7}→+${(n + 1) * 7}% (나 ${(MY_DAMAGE * (1 + n * 0.07)).toFixed(1)}→${(MY_DAMAGE * (1 + (n + 1) * 0.07)).toFixed(1)})` },
     bite: { icon: IC.bite, name: '물어뜯기', desc: '나와 동료들의 감염시키는 속도 증가',
       val: (n) => `감염 시간 −${bitePct(n)}→−${bitePct(n + 1)}% (나 ${myBiteLen(n).toFixed(2)}→${myBiteLen(n + 1).toFixed(2)}초)` },
     skin: { icon: IC.skin, name: '단단한 피부', desc: '나와 동료들의 최대 체력을 소폭 상승시킵니다',
-      val: (n) => `최대 체력 +${n * 5}→+${(n + 1) * 5}% (나 ${Math.round(MY_HP * (1 + n * 0.05))}→${Math.round(MY_HP * (1 + (n + 1) * 0.05))})` },
+      val: (n) => `최대 체력 +${n * 7}→+${(n + 1) * 7}% (나 ${Math.round(MY_HP * (1 + n * 0.07))}→${Math.round(MY_HP * (1 + (n + 1) * 0.07))})` },
     life: { icon: IC.life, name: '끈질긴 생명력', desc: '나에게만 — 최대 체력을 대폭 상승시킵니다',   // v266: 내 최대 체력 레벨당 +15% (기본값 기준, 복리 아님)
       val: (n) => `내 최대 체력 +${n * 15}→+${(n + 1) * 15}%` },
-    leg: { icon: IC.leg, name: '튼튼한 다리', desc: '나와 동료들의 이동 속도 증가',
-      val: (n) => `이동 속도 +${n * 5}→+${(n + 1) * 5}%` },
+    leg: { icon: IC.leg, name: '빠른 다리', desc: '나와 동료들의 이동 속도 증가',
+      val: (n) => `이동 속도 +${n * 7}→+${(n + 1) * 7}%` },
   };
   const up = { brain: 0, meat: 0, arm: 0, bite: 0, skin: 0, leg: 0, life: 0 };
   let level = 0, xp = 0, pendingLv = 0, lvOpen = false, hasVest = false, vestEl = null, victoryOn = false;
   const needXp = (L) => Math.round(10 * Math.pow(1.3, L));   // 레벨 L → L+1 에 새로 필요한 수 (v238: 처음 10, 1.3배씩)
   const vestPct = (n) => Math.min(90, 30 + n * 10);
-  const bitePct = (n = up.bite) => n <= 0 ? 0 : 15 + 10 * (n - 1);
+  const bitePct = (n = up.bite) => 12 * Math.max(0, n);
   const biteK = (n = up.bite) => Math.max(0, 1 - bitePct(n) / 100);   // 감염 시간 배율 — 0이면 즉시 감염
   const myBiteLen = (n = up.bite) => INFECT / MY_INFECT * biteK(n);
-  const zDamage = (z) => (z === me ? MY_DAMAGE : ALLY_DAMAGE) * (1 + 0.05 * up.arm) * (z.mut === 'armor' && z !== me ? 1.3 * 1.3 * 2 : 1);   /* v558: 각성한 나는 내 공격력 그대로 */   /* v551: 덩치 기본 데미지 2배 */   // v275: 갑옷좀비 공격력 1.3배
-  const zHeal = (z) => (z === me ? MY_BITE_HEAL : BITE_HEAL) + 0.03 * up.meat;   // 감염 시간 1배 기준 초당 회복 (최대 체력 대비)
-  const allyMaxHp = () => ALLY_HP * (1 + 0.05 * up.skin);   // v267: 단단한 피부 3% → 5%
-  const allyAttack = () => ALLY_ATTACK;       // v256: 튼튼한 다리는 이제 습격 거리가 아니라 이동 속도
-  const legK = () => 1 + 0.05 * up.leg;      // 튼튼한 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
-  const meSpeed = () => MY_SPEED * (legK() + (owned.shoes ? 0.10 + 0.03 * up.brain : 0)   /* v568: 운동화 처음 +15%, 강화마다 +10% */) * (me && me.mut ? MUT_SPEED : 1);   // v558: 각성 중엔 변이 속도   // v275: 운동화 +10% (도구 다루기마다 +3%) — 튼튼한 다리와 더한다
+  const zDamage = (z) => (z === me ? MY_DAMAGE : ALLY_DAMAGE) * (1 + 0.07 * up.arm) * (z.mut === 'armor' && z !== me ? 1.3 * 1.3 * 2 : 1);   /* v558: 각성한 나는 내 공격력 그대로 */   /* v551: 덩치 기본 데미지 2배 */   // v275: 갑옷좀비 공격력 1.3배
+  const zHeal = (z) => (z === me ? MY_BITE_HEAL : BITE_HEAL) + 0.04 * up.meat;   // 감염 시간 1배 기준 초당 회복 (최대 체력 대비)
+  const allyMaxHp = () => ALLY_HP * (1 + 0.07 * up.skin);   // v267: 단단한 피부 3% → 5%
+  const allyAttack = () => ALLY_ATTACK;       // v256: 빠른 다리는 이제 습격 거리가 아니라 이동 속도
+  const legK = () => 1 + 0.07 * up.leg;      // 빠른 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
+  const meSpeed = () => MY_SPEED * (legK() + (owned.shoes ? 0.10 + 0.03 * up.brain : 0)   /* v568: 운동화 처음 +15%, 강화마다 +10% */) * (me && me.mut ? MUT_SPEED : 1);   // v558: 각성 중엔 변이 속도   // v275: 운동화 +10% (도구 다루기마다 +3%) — 빠른 다리와 더한다
   const cashK = () => 1.2 + 0.2 * up.brain;   /* v339: 1.2 · 1.4 · 1.6 · 1.8배 */   /* v338: 20% 더 줄임 */   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
   const lureHits = () => 2 + 2 * up.brain;   /* v339: 2 · 4 · 6 · 8대 */   /* v333: 처음 4 → 3대 */    // v269: 유혹 중 4대째 맞으면 정신 차린다, 두뇌마다 +2 (4, 6, 8 …)
   function gainXp() {
@@ -3795,7 +3795,7 @@
   function applyUp(key) {                     // 능력치 하나 올리기 — 이미 있는 좀비에도 바로
     up[key]++;
     if (key === 'skin') for (const z of zombies.concat(isZombie(me) && !zombies.includes(me) ? [me] : [])) {
-      const d = (z === me ? MY_HP : ALLY_HP) * 0.05;   // v267: 5%
+      const d = (z === me ? MY_HP : ALLY_HP) * 0.07;   // v570: 7%
       if (z.baseMaxHp) { z.baseMaxHp += d; z.maxHp += d * 3; z.hp = Math.min(z.maxHp, z.hp + d * 3); continue; }   // v302: 덩치 변이 중이면 3배로
       z.maxHp += d; z.hp = Math.min(z.maxHp, z.hp + d);
     }
@@ -4923,12 +4923,12 @@
   function abilNow(k, n) {                   // 지금 능력치 수치 (n번 얻음)
     return {
       brain: () => `모든 장비/도구 강화 ${n}단계`,
-      meat: () => `내 회복 초당 ${(MY_BITE_HEAL * 100 + n * 3).toFixed(1)}% (동료도 같은 비율로 증가)`,
-      arm: () => `공격력 +${n * 5}% (나 ${(MY_DAMAGE * (1 + n * 0.05)).toFixed(1)})`,
+      meat: () => `내 회복 초당 ${(MY_BITE_HEAL * 100 + n * 4).toFixed(1)}% (동료도 같은 비율로 증가)`,
+      arm: () => `공격력 +${n * 7}% (나 ${(MY_DAMAGE * (1 + n * 0.07)).toFixed(1)})`,
       bite: () => `감염 시간 −${bitePct(n)}% (나 ${myBiteLen(n).toFixed(2)}초)`,
-      skin: () => `최대 체력 +${n * 5}% (나 ${Math.round(MY_HP * (1 + n * 0.05))})`,
+      skin: () => `최대 체력 +${n * 7}% (나 ${Math.round(MY_HP * (1 + n * 0.07))})`,
       life: () => `내 최대 체력 +${n * 15}%`,
-      leg: () => `이동 속도 +${n * 5}% (동료 ${(SPEED * (1 + 0.05 * n)).toFixed(2)})`,
+      leg: () => `이동 속도 +${n * 7}% (동료 ${(SPEED * (1 + 0.07 * n)).toFixed(2)})`,
     }[k]();
   }
   function showStats() {
