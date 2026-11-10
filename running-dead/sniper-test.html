@@ -235,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v540 특공대 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v541 특공대 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -421,7 +421,7 @@
   const CAR_TEST = false;   // v466: true면 차 시험 맵 (서 있는 차 1 + 동료 10 + 변이 주사, 변이는 덩치만, 동료 처치 버튼)
   const TEST_MAP = CAR_TEST || true;   // v396: true면 저격수 시험 맵 (빈 건물 4채 + 저격수 2명, 나는 무적)
   const TEST_BLDGS = [[-15, -15], [15, -15], [-15, 15], [15, 15]].map(([x, z], i) => ({ x, z, w: 11 * MAP, d: 8 * MAP, doors: ['s'], kinds: {}, local: i, block: -1 }));
-  const BUILDINGS = TEST_MAP ? TEST_BLDGS : BLOCKS.flatMap(([ox, oz], k) => TOWN.map((s) => (k === START_BLOCK && s.station ? BIG : s)).map((s) => ({ ...s, x: s.x + ox, z: s.z + oz, block: k })));
+  const BUILDINGS = TEST_MAP ? [] /* 특공대 시험: 건물 없음 */ : BLOCKS.flatMap(([ox, oz], k) => TOWN.map((s) => (k === START_BLOCK && s.station ? BIG : s)).map((s) => ({ ...s, x: s.x + ox, z: s.z + oz, block: k })));
   const DOOR = 4 * MAP;   // 문 폭 (유닛) — 문은 그 벽 한가운데. 여럿이 나란히 지나간다
   const WALL_SENSE = 1 / 4;   // 도망칠 때 벽도 좀비처럼 피한다 — 가장 가까운 벽이 인지거리의 이만큼 안에 들어오면 (구석에 몰리지 않게)
   const CORNER = 1.0;     // 패닉 중 건물 안 구석(두 벽 다 이 거리 안)에 몰리면 초패닉 — 좀비는 안 보고 문과 가까운 쪽으로 벽을 타고 돌아 문으로 나간다
@@ -3124,7 +3124,7 @@
     rankNext = 0; rankAnim = false; fxQueue.length = 0; curFx = null; fxGapUntil = 0; fxBusyPrev = false; starsQueued = 0; lvQueued = 0; teamsSpawned = 0; teamsAnnounced = 0; squadAnim = false; for (const el of stage.querySelectorAll('.rank')) el.remove();   // v278: 칭호도 판마다 처음부터
     goalShown = false; tutOpen = false; spawnFrames = 0; mmBang = false; camAnim = null; tutQueue.length = 0; for (const k of Object.keys(tutSeen)) delete tutSeen[k];   // 튜토리얼도 판마다 처음부터 (v202)
     gameNo++;
-    if (gameNo > TUT_GAMES || TEST_MAP) { goalShown = true; mmBang = true; for (const k of ['citizen', 'guard', 'attacker', 'police', 'station']) tutSeen[k] = true; }   // v230: 앱을 켠 뒤 처음 두 판만 목표·발견 소개 (껐다 켜면 다시)
+    if (gameNo > TUT_GAMES || TEST_MAP) { goalShown = true; mmBang = true; for (const k of ['citizen', 'guard', 'attacker', 'police', 'station', 'soldier', 'sniper']) tutSeen[k] = true; }   // v230: 앱을 켠 뒤 처음 두 판만 목표·발견 소개 (껐다 켜면 다시)
     scr.st = 0; scr.on = !TEST_MAP; scr.t = 0; scr.tick = 0; scr.list.length = 0; scrLater.length = 0; scrWant.length = 0; for (const k in scr.inf) scr.inf[k] = 0;
     drawLv();
     for (const k of cashes.slice()) removeCash(k);

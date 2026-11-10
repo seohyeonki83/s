@@ -250,7 +250,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v540</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v541</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3139,7 +3139,7 @@
     rankNext = 0; rankAnim = false; fxQueue.length = 0; curFx = null; fxGapUntil = 0; fxBusyPrev = false; starsQueued = 0; lvQueued = 0; teamsSpawned = 0; teamsAnnounced = 0; squadAnim = false; for (const el of stage.querySelectorAll('.rank')) el.remove();   // v278: 칭호도 판마다 처음부터
     goalShown = false; tutOpen = false; spawnFrames = 0; mmBang = false; camAnim = null; tutQueue.length = 0; for (const k of Object.keys(tutSeen)) delete tutSeen[k];   // 튜토리얼도 판마다 처음부터 (v202)
     gameNo++;
-    if (gameNo > TUT_GAMES || TEST_MAP) { goalShown = true; mmBang = true; for (const k of ['citizen', 'guard', 'attacker', 'police', 'station']) tutSeen[k] = true; }   // v230: 앱을 켠 뒤 처음 두 판만 목표·발견 소개 (껐다 켜면 다시)
+    if (gameNo > TUT_GAMES || TEST_MAP) { goalShown = true; mmBang = true; for (const k of ['citizen', 'guard', 'attacker', 'police', 'station', 'soldier', 'sniper']) tutSeen[k] = true; }   // v230: 앱을 켠 뒤 처음 두 판만 목표·발견 소개 (껐다 켜면 다시)
     scr.st = 0; scr.on = !TEST_MAP; scr.t = 0; scr.tick = 0; scr.list.length = 0; scrLater.length = 0; scrWant.length = 0; for (const k in scr.inf) scr.inf[k] = 0;
     drawLv();
     for (const k of cashes.slice()) removeCash(k);
