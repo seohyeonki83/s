@@ -235,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v547 특공대 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v548 특공대 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3940,7 +3940,7 @@
     steer(c.vel, toward(c, s.k.x, s.k.z, sp), ACCEL * dt);
   }
   // 금고 (v190): 경찰서마다 안쪽 왼쪽·오른쪽·왼쪽 아래·오른쪽 아래 중 한 곳. 나만 때려 부술 수 있다 (체력 = 경찰의 1.5배)
-  const SAFE_HP = POLICE_HP * 1.5 * 3;   /* v353: 3배 */
+  const SAFE_HP = POLICE_HP * 1.5 * 3 / 3;   /* v353: 3배 */
   const safeGeo = new THREE.PlaneGeometry(2.85, 2.85), safeInGeo = new THREE.PlaneGeometry(1.86, 1.86);   // v195: 금고 2배, v196: 1.5배 더 (원래의 3배)
   function addSafe(S) {
     const m = 2.2, cz = (S.z0 + S.z1) / 2, spots = S.station ? [[S.x0 + m, cz], [S.x1 - m, cz], [S.x0 + m, S.z1 - m], [S.x1 - m, S.z1 - m]] : [[rand(S.x0 + 2, S.x1 - 2), rand(S.z0 + 2, S.z1 - 2)]];   // 첫 마을 건물은 안 아무 자리 (v232)
