@@ -235,7 +235,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v557 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v558 차 시험</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2055,7 +2055,7 @@
     if ((v.kind === 'obj' || v.kind === 'safe') && a.mut === 'armor') dmg *= 3;   // v550: 덩치만 사물(문·차·금고)에 3배   // v378: 금고도   // v344: 2 → 4배   // v295: 덩치 — 문·경찰차 피해 2배
     if ((v.kind === 'obj' || v.kind === 'safe') && a === me && owned.crowbar) dmg *= 1.25 + 0.05 * up.brain;
     // v549: 금고도 나·동료 배율 없음 — 공격력 그대로   // v391: 금고 — 나한테는 3배, 동료(덩치·히드라 포함)한테는 2/3   // v275: 빠루 — 내가 건물·사물에 입히는 피해
-    if (isZombie(v) && v.mut) dmg *= v.mut === 'armor' ? (TEST_ARMOR ? 0 : 0.2) : 0.9;   // v275: 갑옷좀비 받는 피해 80% 줄임, 히드라 10% 줄임
+    if (isZombie(v) && v.mut) dmg *= v.mut === 'armor' ? (v === me ? 1 : TEST_ARMOR ? 0 : 0.2) : 0.9;   /* v558: 각성한 나는 덩치여도 −80% 없음 */   // v275: 갑옷좀비 받는 피해 80% 줄임, 히드라 10% 줄임
     if (a.mut === 'armor' && v.kind === 'citizen' && !a.splashing) {   // v275: 갑옷좀비 — 앞쪽 80° 부채꼴, 근접 거리 1.2배 안 다른 적도 30%
       const R = (MELEE + (a.r - BODY)) * 1.2 * 2, fx = v.foot.x - a.foot.x, fz = v.foot.z - a.foot.z, fl = Math.hypot(fx, fz) || 1;
       a.splashing = true;
@@ -2063,7 +2063,7 @@
         if (c === v || c.kind !== 'citizen' || c.hp <= 0 || c.space !== a.space) continue;
         const dx = c.foot.x - a.foot.x, dz = c.foot.z - a.foot.z, d = Math.hypot(dx, dz);
         if (d > R || d < 1e-3 || (dx * fx + dz * fz) / (d * fl) < Math.cos(45 * Math.PI / 180)) continue;   // v378: 앞쪽 90° · 거리 2배
-        landHit(a, c, dmg * 0.3);
+        landHit(a, c, (a === me ? ALLY_DAMAGE * (1 + 0.05 * up.arm) * 1.3 * 1.3 * 2 : dmg) * 0.3);   // v558: 각성한 나의 범위 공격 = 덩치 범위 데미지
       }
       a.splashing = false;
     }
@@ -2119,6 +2119,7 @@
     unclaim(z);
     if (z === me) {                           // 내 체력바는 빈 채로 남는다
       me.mode = 'dead';
+      if (me.mut) unmutate(me);   // v558: 각성 중 죽으면 풀린다
       me.mesh.material.color.setHex(COLOR.dead);
       note.textContent = '죽었습니다';         // v308: 죽었어 → 죽었습니다
       note.hidden = false;
@@ -2138,7 +2139,17 @@
   }
 
   // 좀비가 HP 있는 시민을 노리면: 근접 거리까지 달려가서 1초마다 때린다 (HP가 0이 되면 그다음은 덮치기)
+  function hydraMe(z, c, dt) {               // v558: 히드라로 각성한 나 — 사거리 안이면 서서 토사물
+    if (z !== me || z.mut !== 'hydra' || !c || c.kind === 'citizen' && c.hp <= 0) return false;
+    const [px, pz] = c.kind === 'obj' ? objPoint(c, z) : [c.foot.x, c.foot.z];
+    const d = Math.hypot(px - z.foot.x, pz - z.foot.z) - (c.kind === 'safe' ? c.r : 0);
+    if (d > z.sense * 0.91 || fireBlocked(z.foot.x, z.foot.z, px, pz)) return false;
+    steer(z.vel, wantV.set(0, 0), ACCEL * dt);
+    if (z.atkT <= 0) { spit(z, c); z.atkT = HIT_EVERY; z.attacking = true; }
+    return true;
+  }
   function fight(z, c, dt) {
+    if (hydraMe(z, c, dt)) { z.engaging = c; return; }
     z.engaging = c;                           // 수비형은 이걸 보고 '누가 나를 노리나'를 안다
     const d = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z);
     if (d > ATTACK_HOLD) z.attacking = false; // 상대가 1.5칸 밖 = 공격 중 아님 (다가가는 중)
@@ -2487,7 +2498,7 @@
       if (z !== me) z.pcand = pounceable(z);    // 덮칠 시민도 타겟과 같이 0.1초마다만 찾는다 (v172 — 전엔 매 프레임 지도 전체를 뒤졌다)
     }
     if (z !== me) recallCheck(z, dt);            // 감염 중에도 시간은 센다 — 물기는 끝까지, 끝나면 바로 복귀
-    if (z.mut && z.mode === 'free') { mutStep(z, dt); return; }   // v275: 변이 좀비는 따로 (덮치기·물기 없음)
+    if (z.mut && z !== me && z.mode === 'free') { mutStep(z, dt); return; }   // v558: 각성한 나는 원래대로 조종 (덮치기 가능)   // v275: 변이 좀비는 따로 (덮치기·물기 없음)
     const p = z.pick;
     const ready = huntable(z, p) && p.space === z.space && Math.hypot(p.foot.x - z.foot.x, p.foot.z - z.foot.z) <= z.attack ? p : null;   // v296: 덮치기는 같은 공간에서만   // 덮치기 가능 = 타겟이 덮침 거리 안
     let jump = null;                             // 동료가 무조건 먼저 덮칠 시민 (아래에서 정한다)
@@ -3173,6 +3184,7 @@
 
     me = addBody('me', 0, 0);
     me.mode = 'free';
+    me.mut = null; me.r = MY_BODY; delete me.halfH; if (me.mesh) me.mesh.scale.setScalar(1);   // v558: 새 판은 각성 없이
     me.target = null;
     me.maxHp = MY_HP;
     me.hp = MY_HP * MY_START_HP;
@@ -3660,6 +3672,7 @@
     absorb: svgI('<path d="M8 3 5 5v15a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5l-3-2-1.5 3h-5z" fill="#3f8f86"/><path d="M7 9h10M7 12.5h10M7 16h10" stroke="#a8e6dc" stroke-width="1.6" stroke-linecap="round"/>'),   // v505: 충격 흡수복 — 누빔 조끼
     vest: svgI('<path d="M8 3 5 5v15a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5l-3-2-1.5 3h-5z" fill="#566b8a"/><rect x="7.5" y="9" width="3.6" height="5.5" rx="0.8" fill="#8fa2bd"/><rect x="12.9" y="9" width="3.6" height="5.5" rx="0.8" fill="#8fa2bd"/><rect x="7" y="16.5" width="10" height="2" rx="0.6" fill="#28333f"/>'),
     tool: svgI('<path d="M20.6 6.2a5 5 0 0 1-6.5 6.3l-7 7a2 2 0 0 1-2.8-2.8l7-7a5 5 0 0 1 6.3-6.5l-3 3 .6 2.4 2.4.6z" fill="#9fb0c8"/><circle cx="5.7" cy="18.3" r="1.1" fill="#5d6b80"/>'),   // v273: 장비 강화 = 렌치
+    awaken: svgI('<rect x="9" y="2" width="6" height="2" rx="1" fill="#cfd6e3"/><rect x="11" y="4" width="2" height="3" fill="#cfd6e3"/><rect x="7" y="7" width="10" height="13" rx="2" fill="#3a1a14" stroke="#ff7a5c" stroke-width="1.4"/><path d="M13 9 9.5 14h2.5l-1 4 4-5.5h-2.6z" fill="#ffd23a"/>'),   // v558: 각성 주사 — 번개 주사기
     mutate: svgI('<rect x="9" y="2" width="6" height="2" rx="1" fill="#cfd6e3"/><rect x="11" y="4" width="2" height="3" fill="#cfd6e3"/><rect x="8" y="7" width="8" height="11" rx="1.5" fill="#e9edf5"/><rect x="9.5" y="10" width="5" height="7" rx="1" fill="#b05cff"/><rect x="11.3" y="18" width="1.4" height="4" fill="#9aa4b5"/>'),
     bomb: svgI('<rect x="4" y="9" width="16" height="11" rx="2" fill="#7a8396"/><rect x="11" y="3" width="2" height="6" fill="#9aa4b5"/><circle cx="12" cy="3.5" r="2" fill="#5fcf3a"/><circle cx="9" cy="14.5" r="2.4" fill="#e8455a"/><rect x="13" y="12.5" width="5" height="1.6" rx="0.8" fill="#8f97a6"/><rect x="13" y="15.5" width="5" height="1.6" rx="0.8" fill="#8f97a6"/>'),
     crowbar: svgI('<path d="M6 21 17 6c.9-1.3.4-3-1-3.6l-2.2-.9" stroke="#d64545" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M13.8 1.5 12 4" stroke="#d64545" stroke-width="2.6" stroke-linecap="round"/>'),
@@ -3681,6 +3694,7 @@
     cash: { max: 1, reload: 37.5 * 1.3,   /* v514: 30% 더 (48.75초) — v447: 2배 */ icon: IC.cash, name: '현금', col: '#43d17a' },    // v284: 15 → 18.75초 (25% 늘림) — 1번 — 내 둘레 1~2칸에 돈다발 (v201: 처음 1개 + 똑똑한 두뇌마다 1개)
     vest: { icon: IC.vest, name: '방탄복', passive: true },
     absorb: { icon: IC.absorb, name: '충격 흡수복', passive: true },   // v505
+    awaken: { max: 1, reload: 37.5 * 1.3, icon: IC.awaken, name: '각성 주사', col: '#ff5a3c' },   // v558: 나 자신이 8초 동안 덩치·히드라로 변이 (쿨타임 = 현금)
     mutate: { max: 1, reload: 35, icon: IC.mutate, name: '변이 주사', col: '#b05cff' },   // v275: 가장 가까운 동료 하나가 체력 가득 + 변이 (갑옷 · 히드라 랜덤) — v299: 23초 + 장비 강화마다 4초
     bomb: { max: 1, reload: 40, icon: IC.bomb, name: '자폭 스위치', col: '#5fcf3a' },     // v275: 적에게 가장 많이 둘러싸인 동료가 터지며 산성 덩어리
     crowbar: { icon: IC.crowbar, name: '빠루', passive: true },     // v275: 내가 건물·사물에 입히는 피해 +25%
@@ -3696,6 +3710,7 @@
       absorb: ['넉백을 흡수합니다. 약한 넉백은 아예 받지 않습니다.', '장비 강화가 오르면 더 강한 넉백도 흡수합니다.'],
       taser: ['대상을 감전시킵니다.', '장비 강화가 올라가면 감전 대상이 늘어납니다.'],
       cash: ['인간들이 정신 못 차립니다.', '장비 강화가 오르면 유혹의 거리와 강도가 늘어납니다.', '훈련된 인간은 유혹에 강합니다.'],
+      awaken: ['8초 동안 내가 덩치나 히드라로 변이합니다. 쓰는 순간 최대 체력의 20%를 회복합니다.', '체력과 공격력은 그대로, 공격 방식·무게·속도가 바뀝니다.'],
       mutate: ['가장 가까운 동료 하나가 체력이 가득 차며 잠시 변이합니다.', '장비 강화가 오르면 주사를 더 들고 다니고 변이가 더 오래 갑니다.'],
       bomb: ['가장 위험한 적 곁의 동료 하나가 터지며 산성 덩어리를 뿌립니다.', '장비 강화가 오르면 다시 쓰는 시간이 짧아집니다.'],
       crowbar: ['건물과 사물에 입히는 피해가 늘어납니다.', '장비 강화가 오르면 피해가 더 늘어납니다.'],
@@ -3740,12 +3755,12 @@
   const vestPct = (n) => Math.min(90, 30 + n * 10);
   const biteK = (n = up.bite) => Math.max(0, 1 - 0.05 * n);   // 감염 시간 배율 — 0이면 즉시 감염
   const myBiteLen = (n = up.bite) => INFECT / MY_INFECT * biteK(n);
-  const zDamage = (z) => (z === me ? MY_DAMAGE : ALLY_DAMAGE) * (1 + 0.05 * up.arm) * (z.mut === 'armor' ? 1.3 * 1.3 * 2 : 1);   /* v551: 덩치 기본 데미지 2배 */   // v275: 갑옷좀비 공격력 1.3배
+  const zDamage = (z) => (z === me ? MY_DAMAGE : ALLY_DAMAGE) * (1 + 0.05 * up.arm) * (z.mut === 'armor' && z !== me ? 1.3 * 1.3 * 2 : 1);   /* v558: 각성한 나는 내 공격력 그대로 */   /* v551: 덩치 기본 데미지 2배 */   // v275: 갑옷좀비 공격력 1.3배
   const zHeal = (z) => (z === me ? MY_BITE_HEAL : BITE_HEAL) + 0.03 * up.meat;   // 감염 시간 1배 기준 초당 회복 (최대 체력 대비)
   const allyMaxHp = () => ALLY_HP * (1 + 0.05 * up.skin);   // v267: 단단한 피부 3% → 5%
   const allyAttack = () => ALLY_ATTACK;       // v256: 튼튼한 다리는 이제 습격 거리가 아니라 이동 속도
   const legK = () => 1 + 0.05 * up.leg;      // 튼튼한 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
-  const meSpeed = () => MY_SPEED * (legK() + (owned.shoes ? 0.10 + 0.03 * up.brain : 0));   // v275: 운동화 +10% (도구 다루기마다 +3%) — 튼튼한 다리와 더한다
+  const meSpeed = () => MY_SPEED * (legK() + (owned.shoes ? 0.10 + 0.03 * up.brain : 0)) * (me && me.mut ? MUT_SPEED : 1);   // v558: 각성 중엔 변이 속도   // v275: 운동화 +10% (도구 다루기마다 +3%) — 튼튼한 다리와 더한다
   const cashK = () => 1.2 + 0.2 * up.brain;   /* v339: 1.2 · 1.4 · 1.6 · 1.8배 */   /* v338: 20% 더 줄임 */   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
   const lureHits = () => 2 + 2 * up.brain;   /* v339: 2 · 4 · 6 · 8대 */   /* v333: 처음 4 → 3대 */    // v269: 유혹 중 4대째 맞으면 정신 차린다, 두뇌마다 +2 (4, 6, 8 …)
   function gainXp() {
@@ -3862,6 +3877,10 @@
   function useItem(kind) {
     const it = items.find((x) => x.kind === kind);
     if (!it || it.ammo <= 0 || !isZombie(me)) return;
+    if (kind === 'awaken') {                  // v558: 각성 주사
+      if (!isZombie(me) || me.mut) { toast(me.mut ? '이미 각성 중입니다' : '지금은 쓸 수 없습니다'); return; }
+      it.ammo--; awakenMe(); refreshItems(); return;
+    }
     if (kind === 'mutate' || kind === 'bomb') {   // v275: 근처에 동료가 없으면 탄을 안 쓰고 글만 잠깐
       if (!(kind === 'mutate' ? useMutate() : useBomb())) { toast('주변에 동료가 없습니다'); return; }
       it.ammo--; refreshItems(); return;
@@ -4007,6 +4026,7 @@
   }
   function fightObj(z, o, dt) {
     z.engaging = null; z.objT = o; z.objF = objFrame;
+    if (hydraMe(z, o, dt)) { o.hotF = objFrame; return; }
     if (z.objC !== o) { if (z.objC) objCrowd.set(z.objC, objCrowd.get(z.objC) - 1); objCrowd.set(o, (objCrowd.get(o) || 0) + 1); z.objC = o; }   // 같은 걸음에 고르는 좀비끼리도 바로 반영 (몰렸다 흩어졌다 안 하게)
     if (objGap(o, z) > MELEE - RADIUS + Math.max(0, (z.r || BODY) - BODY)) { const [px, pz] = objPoint(o, z); steer(z.vel, toward(z, px, pz, z.speed), ACCEL * dt); return; }   // v275: 커진 몸은 그만큼 멀리서 닿는다
     steer(z.vel, wantV.set(0, 0), ACCEL * dt);
@@ -4113,7 +4133,7 @@
   //   사용: 테이저건 · 현금 · 변이 주사 · 자폭 스위치 (한 판에 2개까지)
   //   패시브: 방탄복 · 빠루 · 백과사전 · 깃발 · 운동화 (v286: 권총 삭제)
   //   금고 3개에서 랜덤으로 하나씩. '업글' = 능력 장비 강화(up.brain)
-  const ACTIVE_ITEMS = ['taser', 'cash', 'mutate', 'bomb'], PASSIVE_ITEMS = ['vest', 'crowbar', 'book', 'stim', 'shoes', 'revive', 'absorb'];   // v505: 충격 흡수복
+  const ACTIVE_ITEMS = ['taser', 'cash', 'mutate', 'bomb', 'awaken'],   /* v558: 각성 주사 */ PASSIVE_ITEMS = ['vest', 'crowbar', 'book', 'stim', 'shoes', 'revive', 'absorb'];   // v505: 충격 흡수복
   const owned = {};                           // 가진 패시브
   const aBadges = {};                         // v344: 오른쪽 아래 사용 장비 배지 (누르면 설명)
   function addActiveBadge(kind) {             // v528: 사용 도구 배지는 없앴다 — 게이지 버튼 옆 작은 돋보기로 설명을 본다
@@ -4128,6 +4148,7 @@
   function statLine(kind, n) {                // v344: 장비 강화 n단계일 때 수치
     return {
       taser: () => `한 번에 ${1 + n}명 감전`, cash: () => `시야 ${(1.2 + 0.2 * n).toFixed(1)}배 · ${2 + 2 * n}대 버팀`,
+      awaken: () => `변이 8초 · 체력 20% 회복`,
       mutate: () => `주사 ${1 + n}개 · 변이 ${23 + 4 * n}초`, bomb: () => `쿨타임 ${Math.round(Math.max(10, 40 - 3 * n) * 1.15)}초`,
       vest: () => `총알 피해 -${vestPct(n)}%`, absorb: () => `넉백 ${(SNIPER_KD / 4 * (1 + n)).toFixed(2)}칸 흡수 (저격수 넉백의 ${Math.min(100, 25 * (1 + n))}%${n + 1 >= 4 ? ' · 완전 무효' : ''})`, crowbar: () => `건물·사물 피해 +${25 + 5 * n}%`, book: () => `쿨타임 -${Math.min(90, 7 + 3 * n)}%`,
       revive: () => `체력 ${Math.round(Math.min(1, 0.3 + 0.1 * n) * 100)}%로 부활 · 쿨타임 120초`, stim: () => `10초마다 1명 · 공격력·체력 x${(1.5 + 0.1 * n).toFixed(1)}`, shoes: () => `이동 속도 +${10 + 3 * n}%`,
@@ -4161,7 +4182,7 @@
       shoes: () => '+' + Math.round(10 + 3 * up.brain) + '%',
     };
     for (const [k, el] of Object.entries(pBadges)) if (t[k]) el.querySelector('.pc').textContent = t[k]();
-    const n = up.brain, a = { taser: () => `${1 + n}명`, cash: () => `${(1.2 + 0.2 * n).toFixed(1)}배`, mutate: () => `${23 + 4 * n}초`, bomb: () => `${Math.round(Math.max(10, 40 - 3 * n) * 1.15)}초` };
+    const n = up.brain, a = { taser: () => `${1 + n}명`, cash: () => `${(1.2 + 0.2 * n).toFixed(1)}배`, mutate: () => `${23 + 4 * n}초`, awaken: () => '8초', bomb: () => `${Math.round(Math.max(10, 40 - 3 * n) * 1.15)}초` };
     for (const [k, el] of Object.entries(aBadges)) el.querySelector('.pc').textContent = a[k]();
     for (const [g, side] of [[pBadges, 'left'], [aBadges, 'right']]) {   // v354: 3개 넘으면 작게 · 촘촘하게 (조이스틱 안 가리게)
       const L = Object.values(g), tight = L.length >= 3, step = tight ? 40 : 54, sz = tight ? 36 : 46;
@@ -4200,7 +4221,18 @@
     else z.force = MY_FORCE * 0.5;            // 히드라: 미는 힘 = 나의 50%
     for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; puff(z.foot.x, 0.4, z.foot.z, MUT_COL[type], 0.5, 1.4, 0.5, Math.cos(a) * 3, 0.4, Math.sin(a) * 3, 0.85); }
   }
+  function awakenMe() {                       // v558: 각성 주사 — 나 자신이 8초 동안 덩치·히드라 (체력·공격력 그대로)
+    const type = Math.random() < 0.5 ? 'armor' : 'hydra';
+    if (me.mode === 'pounce') stopPounce(me);
+    me.mut = type; me.mutT = 8;
+    me.hp = Math.min(me.maxHp, me.hp + me.maxHp * 0.2);
+    me.mesh.material.color.setHex(MUT_COL[type]);
+    if (type === 'armor') { me.r = BODY * 1.5; me.halfH = RADIUS * 1.5; me.mesh.scale.setScalar(1.5); me.force = MY_FORCE * 1.3; }
+    me.speed = meSpeed();
+    for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; puff(me.foot.x, 0.4, me.foot.z, MUT_COL[type], 0.6, 1.6, 0.55, Math.cos(a) * 3.5, 0.4, Math.sin(a) * 3.5, 0.9); }
+  }
   function unmutate(z) {
+    if (z === me) { me.mut = null; me.mesh.material.color.setHex(COLOR.me); me.r = MY_BODY; delete me.halfH; me.mesh.scale.setScalar(1); me.force = MY_FORCE; me.speed = meSpeed(); return; }   // v558: 각성 끝
     z.mut = null;
     z.mesh.material.color.setHex(COLOR.ally);   // v371: 흰색 없앰 (불꽃으로 표시)   // v369: 스팀팩 맞은 동료는 흰색으로
     z.r = BODY; delete z.halfH; z.mesh.scale.setScalar(1); z.force = 1;
@@ -4250,7 +4282,7 @@
     s.scale.setScalar(0.42); s.renderOrder = 6;
     s.position.copy(z.foot).addScaledVector(UP, RADIUS);
     scene.add(s);
-    spits.push({ s, z, t, dmg: zDamage(z) * 4 });   // v301: 2배 더 (일반 데미지의 2 → 4배)
+    spits.push({ s, z, t, dmg: z === me ? zDamage(z) : zDamage(z) * 4 });   // v558: 각성한 나는 내 데미지 그대로   // v301: 2배 더 (일반 데미지의 2 → 4배)
   }
   const sV2 = new THREE.Vector3();
   function stepSpits(dt) {
