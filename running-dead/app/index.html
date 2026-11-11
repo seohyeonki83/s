@@ -250,7 +250,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v582</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v583</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3729,21 +3729,22 @@
     shoes: { icon: IC.shoes, name: '운동화', passive: true },       // v275: 내 이동 속도 +10%                         // 패시브 (v201) — 총알 피해 30% 감소, 똑똑한 두뇌마다 10% 더
   };
   const STUN_T = 4.5, CASH_N = 3, CASH_R = [1, 2], CASH_GET = 0.7;   // v195: 감전 2 → 4초, 돈다발 뿌리는 거리 2~4 → 1~2칸
+  const ITEM_TEXT = {                         // 장비·도구 설명 — [하는 일, 강화 시 달라지는 것, (덧붙임)]. 수치는 안 쓴다 (수치는 그 아래 '지금 · 다음 강화' 줄에 나온다)
+    vest: ['원거리 공격을 감쇄합니다.', '강화 시 원거리 공격을 더 잘 막습니다.'],
+    absorb: ['넉백을 흡수합니다. 약한 넉백은 아예 받지 않습니다.', '강화 시 더 강한 넉백도 흡수합니다.'],
+    taser: ['대상을 감전시킵니다.', '강화 시 감전 대상이 늘어납니다.'],
+    cash: ['인간들이 정신 못 차립니다.', '강화 시 유혹의 거리와 강도가 늘어납니다.', '훈련된 인간은 유혹에 강합니다.'],
+    awaken: ['내가 변이 좀비로 변하고 체력을 회복합니다.', '강화 시 변이가 더 오래 갑니다.'],
+    mutate: ['가장 가까운 동료 하나가 체력이 가득 차며 잠시 변이합니다.', '강화 시 주사를 더 들고 다니고 변이가 더 오래 갑니다.'],
+    bomb: ['가장 위험한 적 곁의 동료 하나가 터지며 산성 덩어리를 뿌립니다.', '강화 시 더 빨리 다시 쓸 수 있습니다.'],
+    crowbar: ['건물과 사물에 입히는 피해가 늘어납니다.', '강화 시 피해가 더 늘어납니다.'],
+    book: ['당신이 가진 모든 도구의 쿨타임이 감소합니다.', '강화 시 쿨타임이 더 줄어듭니다.'],
+    stim: ['일정 시간마다 동료 한 마리를 강화시키는 주사를 주입합니다.', '강화 시 주사 효과가 더 강해집니다.'],
+    revive: ['죽으면 되살아납니다. 다시 쓰려면 시간이 지나야 합니다.', '강화 시 더 많은 체력으로 되살아납니다.'],
+    shoes: ['나의 이동 속도가 빨라집니다.', '강화 시 더 빨라집니다.'],
+  };
   function itemDesc(kind) {                   // 획득할 때 뜨는 설명 (v228: 사용자가 정한 문구 그대로)
-    const t = {
-      vest: ['원거리 공격을 감쇄합니다.', '장비/도구 강화가 오르면 남은 데미지를 20%씩 더 감쇄합니다.'],
-      absorb: ['넉백을 흡수합니다. 약한 넉백은 아예 받지 않습니다.', '장비/도구 강화가 오르면 더 강한 넉백도 흡수합니다.'],
-      taser: ['대상을 감전시킵니다.', '장비/도구 강화가 올라가면 감전 대상이 늘어납니다.'],
-      cash: ['인간들이 정신 못 차립니다.', '장비/도구 강화가 오르면 유혹의 거리와 강도가 늘어납니다.', '훈련된 인간은 유혹에 강합니다.'],
-      awaken: ['내가 변이 좀비로 변합니다. 쓰는 순간 최대 체력의 20%를 회복합니다.', '장비/도구 강화가 오르면 변이가 더 오래 갑니다.'],
-      mutate: ['가장 가까운 동료 하나가 체력이 가득 차며 잠시 변이합니다.', '장비/도구 강화가 오르면 주사를 더 들고 다니고 변이가 더 오래 갑니다.'],
-      bomb: ['가장 위험한 적 곁의 동료 하나가 터지며 산성 덩어리를 뿌립니다.', '장비/도구 강화가 오르면 다시 쓰는 시간이 짧아집니다.'],
-      crowbar: ['건물과 사물에 입히는 피해가 늘어납니다.', '장비/도구 강화가 오르면 피해가 더 늘어납니다.'],
-      book: ['당신이 가진 모든 장비의 쿨타임이 감소합니다.', '장비/도구 강화가 오를 때마다 남은 쿨타임이 7%씩 더 줄어듭니다.'],
-      stim: ['10초에 한 번씩 동료 한 마리를 강화시키는 주사를 주입합니다.',   /* v414: 짧게 */ '장비/도구 강화가 오르면 공격력·최대 체력이 10%씩 더 오릅니다.'],
-      revive: ['죽으면 체력 30%로 되살아납니다. 다시 쓰려면 2분이 지나야 합니다.', '장비/도구 강화가 오르면 되살아날 때 체력이 10%씩 더 찹니다.'],
-      shoes: ['나의 이동 속도가 빨라집니다.', '장비/도구 강화가 오르면 더 빨라집니다.'],
-    }[kind];
+    const t = ITEM_TEXT[kind];
     return `<div class="main">${t[0]}${t[2] ? '<br>' + t[2] : ''}</div><div class="up"><span style="display:inline-block;width:1.15em;vertical-align:-0.22em;margin-right:4px">${IC.tool}</span>${t[1]}</div>`;   // v270: 설명 속 두뇌도 플랫 아이콘
   }
 
@@ -4552,7 +4553,7 @@
     acqOpen = true; paused = true; stopInput();
     const d = ITEM[kind], ov = document.createElement('div');
     ov.id = 'acq';
-    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name} 획득</div><div class="ds">${itemDesc(kind)}</div>`;   // 자세한 설명 (v226) — v265: 꾹 누르기 대신 [획득] 버튼
+    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name} 획득</div><div class="ds">${itemDesc(kind)}<div class="up">지금 (강화 ${up.brain}단계): ${statLine(kind, up.brain)}<br>다음 강화: ${statLine(kind, up.brain + 1)}</div></div>`;   // 자세한 설명 (v226) — v265: 꾹 누르기 대신 [획득] 버튼
     stage.appendChild(ov);
     tapOk(ov, '획득', () => {                 // v265: 조이스틱 자리 [획득] 버튼을 한 번 누르면
       if (ov.dataset.done) return;
