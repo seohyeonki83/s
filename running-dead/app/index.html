@@ -250,7 +250,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v576</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v577</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4174,7 +4174,7 @@
   function statLine(kind, n) {                // v344: 장비 강화 n단계일 때 수치
     return {
       taser: () => `한 번에 ${1 + n}명 감전`, cash: () => `시야 ${(1.2 + 0.2 * n).toFixed(1)}배 · ${2 + 2 * n}대 버팀`,
-      awaken: () => `변이 ${15 + 2 * n}초 · 체력 20% 회복`,
+      awaken: () => `변이 ${12 + 2 * n}초 · 체력 20% 회복`,
       mutate: () => `주사 ${1 + n}개 · 변이 ${23 + 4 * n}초`, bomb: () => `쿨타임 ${Math.round(Math.max(10, 40 - 3 * n) * 1.15 * 1.1)}초`,
       vest: () => `총알 피해 -${vestPct(n)}%`, absorb: () => `넉백 ${(SNIPER_KD / 4 * (1 + n)).toFixed(2)}칸 흡수 (저격수 넉백의 ${Math.min(100, 25 * (1 + n))}%${n + 1 >= 4 ? ' · 완전 무효' : ''})`, crowbar: () => `건물·사물 피해 +${40 + 10 * n}%`, book: () => `쿨타임 -${Math.min(90, 7 + 3 * n)}%`,
       revive: () => `체력 ${Math.round(Math.min(1, 0.3 + 0.1 * n) * 100)}%로 부활 · 쿨타임 120초`, stim: () => `10초마다 1명 · 공격력·체력 x${(1.5 + 0.1 * n).toFixed(1)}`, shoes: () => `이동 속도 +${10 + 3 * n}%`,
@@ -4208,7 +4208,7 @@
       shoes: () => '+' + Math.round(10 + 3 * up.brain) + '%',
     };
     for (const [k, el] of Object.entries(pBadges)) if (t[k]) el.querySelector('.pc').textContent = t[k]();
-    const n = up.brain, a = { taser: () => `${1 + n}명`, cash: () => `${(1.2 + 0.2 * n).toFixed(1)}배`, mutate: () => `${23 + 4 * n}초`, awaken: () => `${15 + 2 * n}초`, bomb: () => `${Math.round(Math.max(10, 40 - 3 * n) * 1.15 * 1.1)}초` };
+    const n = up.brain, a = { taser: () => `${1 + n}명`, cash: () => `${(1.2 + 0.2 * n).toFixed(1)}배`, mutate: () => `${23 + 4 * n}초`, awaken: () => `${12 + 2 * n}초`, bomb: () => `${Math.round(Math.max(10, 40 - 3 * n) * 1.15 * 1.1)}초` };
     for (const [k, el] of Object.entries(aBadges)) el.querySelector('.pc').textContent = a[k]();
     for (const [g, side] of [[pBadges, 'left'], [aBadges, 'right']]) {   // v354: 3개 넘으면 작게 · 촘촘하게 (조이스틱 안 가리게)
       const L = Object.values(g), tight = L.length >= 3, step = tight ? 40 : 54, sz = tight ? 36 : 46;
@@ -4250,7 +4250,7 @@
   function awakenMe() {                       // v558: 각성 주사 — 나 자신이 8초 동안 덩치·히드라 (체력·공격력 그대로)
     const type = Math.random() < 0.5 ? 'armor' : 'hydra';
     if (me.mode === 'pounce') stopPounce(me);
-    me.mut = type; me.mutT = 15 + 2 * up.brain;   /* v576: 기본 15초, 강화마다 +2초 */   /* v574: 10 → 13초 */ /* v564: 8 → 10초 */
+    me.mut = type; me.mutT = 12 + 2 * up.brain;   /* v577: 기본 12초, 강화마다 +2초 */   /* v574: 10 → 13초 */ /* v564: 8 → 10초 */
     me.hp = Math.min(me.maxHp, me.hp + me.maxHp * 0.2);
     me.mesh.material.color.setHex(MUT_COL[type]);
     if (type === 'armor') { me.r = BODY * 1.5; me.halfH = RADIUS * 1.5; me.mesh.scale.setScalar(1.5); me.force = MY_FORCE * 1.3; }
