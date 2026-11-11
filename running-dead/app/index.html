@@ -250,7 +250,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v574</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v575</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2414,8 +2414,13 @@
     else for (const C of buildings) {
       if (x <= C.x0 - m || x >= C.x1 + m || y <= C.z0 - m || y >= C.z1 + m) continue;
       if (x > C.x0 && x < C.x1 && y > C.z0 && y < C.z1) {   // 근접 영역이 건물 안까지 걸치면 그 자리는 건물 안 — 동료가 문으로 들어간다 (v148)
-        x = Math.max(C.x0 + m, Math.min(C.x1 - m, x)); y = Math.max(C.z0 + m, Math.min(C.z1 - m, y));
-        break;
+        if (C.doors.length) {
+          x = Math.max(C.x0 + m, Math.min(C.x1 - m, x)); y = Math.max(C.z0 + m, Math.min(C.z1 - m, y));
+          break;
+        }
+        // v575: 열린 문이 없는(잠긴) 건물 안이면 들어갈 길이 없어서 동료가 제자리에 멈췄다 — 영역 중심에서 그 자리 쪽으로 가다 건물 벽 바깥(0.7칸)에 닿는 곳으로
+        const ax = areaX(), az = areaZ(), t = segRect(ax, az, x, y, C, m);
+        if (t > 0 && t < Infinity) { x = ax + (x - ax) * t; y = az + (y - az) * t; continue; }
       }
       const l = x - (C.x0 - m), r = C.x1 + m - x, u = y - (C.z0 - m), w = C.z1 + m - y, k = Math.min(l, r, u, w);   // 가장 가까운 벽 바깥으로
       if (k === l) x = C.x0 - m; else if (k === r) x = C.x1 + m; else if (k === u) y = C.z0 - m; else y = C.z1 + m;
