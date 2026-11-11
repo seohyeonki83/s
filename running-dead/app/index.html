@@ -250,7 +250,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v583</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v584</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3728,11 +3728,12 @@
     revive: { icon: IC.revive, name: '부활', passive: true },   // v375: 죽으면 체력 가득으로 되살아난다 (1번, 쿨타임 60초)   // v369: 깃발 대신 — 근접 거리 안 동료 하나에 자동 주사 (흰색 · 피해 1.5배 · 체력 1.5배 가득)           // v275: 복귀하는 동료 속도 +20%
     shoes: { icon: IC.shoes, name: '운동화', passive: true },       // v275: 내 이동 속도 +10%                         // 패시브 (v201) — 총알 피해 30% 감소, 똑똑한 두뇌마다 10% 더
   };
-  const STUN_T = 4.5, CASH_N = 3, CASH_R = [1, 2], CASH_GET = 0.7;   // v195: 감전 2 → 4초, 돈다발 뿌리는 거리 2~4 → 1~2칸
+  const taserN = (n) => 1 + Math.floor(n / 2), taserT = (n) => STUN_T + Math.ceil(n / 2);   // 테이저건 강화 n단계: 감전 대상 수 · 감전 시간(초) — 홀수 번째 강화는 시간 +1초, 짝수 번째는 대상 +1명
+  const STUN_T = 4.5 * 0.7, CASH_N = 3,   /* 처음 감전 시간 30% 줄임 (4.5 → 3.15초) */ CASH_R = [1, 2], CASH_GET = 0.7;   // v195: 감전 2 → 4초, 돈다발 뿌리는 거리 2~4 → 1~2칸
   const ITEM_TEXT = {                         // 장비·도구 설명 — [하는 일, 강화 시 달라지는 것, (덧붙임)]. 수치는 안 쓴다 (수치는 그 아래 '지금 · 다음 강화' 줄에 나온다)
     vest: ['원거리 공격을 감쇄합니다.', '강화 시 원거리 공격을 더 잘 막습니다.'],
     absorb: ['넉백을 흡수합니다. 약한 넉백은 아예 받지 않습니다.', '강화 시 더 강한 넉백도 흡수합니다.'],
-    taser: ['대상을 감전시킵니다.', '강화 시 감전 대상이 늘어납니다.'],
+    taser: ['대상을 감전시킵니다.', '강화 시 감전 시간과 감전 대상이 번갈아 늘어납니다.'],
     cash: ['인간들이 정신 못 차립니다.', '강화 시 유혹의 거리와 강도가 늘어납니다.', '훈련된 인간은 유혹에 강합니다.'],
     awaken: ['내가 변이 좀비로 변하고 체력을 회복합니다.', '강화 시 변이가 더 오래 갑니다.'],
     mutate: ['가장 가까운 동료 하나가 체력이 가득 차며 잠시 변이합니다.', '강화 시 주사를 더 들고 다니고 변이가 더 오래 갑니다.'],
@@ -3925,8 +3926,8 @@
         cand.push({ c, k: DANGER(c), d });
       }
       cand.sort((a, b) => b.k - a.k || a.d - b.d);
-      const hit = cand.slice(0, 1 + up.brain);  // 한 번에 맞히는 수 = 1 + 똑똑한 두뇌 (v201)
-      for (const { c } of hit) { c.stunT = STUN_T; c.vel.set(0, 0); zaps.push({ to: c, t: 0.45 }); }
+      const hit = cand.slice(0, taserN(up.brain));  // 한 번에 맞히는 수 = 1 + 똑똑한 두뇌 (v201)
+      for (const { c } of hit) { c.stunT = taserT(up.brain); c.vel.set(0, 0); zaps.push({ to: c, t: 0.45 }); }
       if (!hit.length) zaps.push({ to: null, t: 0.2 });
     } else {                                  // 돈다발 3개를 내 둘레 2~4칸에 뿌린다 (나와 같은 공간)
       const fresh = [];
@@ -4175,7 +4176,7 @@
   }
   function statLine(kind, n) {                // v344: 장비 강화 n단계일 때 수치
     return {
-      taser: () => `한 번에 ${1 + n}명 감전`, cash: () => `시야 ${(1.2 + 0.2 * n).toFixed(1)}배 · ${2 + 2 * n}대 버팀`,
+      taser: () => `한 번에 ${taserN(n)}명 · ${+taserT(n).toFixed(2)}초 감전`, cash: () => `시야 ${(1.2 + 0.2 * n).toFixed(1)}배 · ${2 + 2 * n}대 버팀`,
       awaken: () => `변이 ${10 + 1.5 * n}초 · 체력 20% 회복`,
       mutate: () => `주사 ${1 + n}개 · 변이 ${23 + 4 * n}초`, bomb: () => `쿨타임 ${Math.round(Math.max(10, 40 - 3 * n) * 1.15 * 1.1)}초`,
       vest: () => `원거리 공격 ${vestPct(n)}% 감쇄`, absorb: () => `넉백 ${(SNIPER_KD / 4 * (1 + n)).toFixed(2)}칸 흡수 (저격수 넉백의 ${Math.min(100, 25 * (1 + n))}%${n + 1 >= 4 ? ' · 완전 무효' : ''})`, crowbar: () => `건물·사물 피해 +${40 + 10 * n}%`, book: () => `쿨타임 -${Math.round((1 - Math.pow(0.93, n + 1)) * 100)}%`,
@@ -4210,7 +4211,7 @@
       shoes: () => '+' + Math.round(10 + 3 * up.brain) + '%',
     };
     for (const [k, el] of Object.entries(pBadges)) if (t[k]) el.querySelector('.pc').textContent = t[k]();
-    const n = up.brain, a = { taser: () => `${1 + n}명`, cash: () => `${(1.2 + 0.2 * n).toFixed(1)}배`, mutate: () => `${23 + 4 * n}초`, awaken: () => `${10 + 1.5 * n}초`, bomb: () => `${Math.round(Math.max(10, 40 - 3 * n) * 1.15 * 1.1)}초` };
+    const n = up.brain, a = { taser: () => `${taserN(n)}명`, cash: () => `${(1.2 + 0.2 * n).toFixed(1)}배`, mutate: () => `${23 + 4 * n}초`, awaken: () => `${10 + 1.5 * n}초`, bomb: () => `${Math.round(Math.max(10, 40 - 3 * n) * 1.15 * 1.1)}초` };
     for (const [k, el] of Object.entries(aBadges)) el.querySelector('.pc').textContent = a[k]();
     for (const [g, side] of [[pBadges, 'left'], [aBadges, 'right']]) {   // v354: 3개 넘으면 작게 · 촘촘하게 (조이스틱 안 가리게)
       const L = Object.values(g), tight = L.length >= 3, step = tight ? 40 : 54, sz = tight ? 36 : 46;
