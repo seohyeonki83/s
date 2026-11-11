@@ -250,7 +250,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">v588</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">v589</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1554,6 +1554,7 @@
   }
   function soldierHit(c, z) {                 // v478 · v498: 군인 총알 — 저격수와 같은 방식, 약 0.09칸 · 0.04초
     if (z.hp <= 0 || z.mut === 'armor' || z.mode === 'bite') return;
+    if (Math.random() < 0.5) return;           // 한 발마다 넉백 확률 50% (4발이 따로 굴린다 — 0발부터 4발까지)
     const v = ARMOR_KB * 2 * 0.59 * 0.92, T = ARMOR_KT / 10;
     if (z === me && absorbAmt() >= knockDist(v, T) - 0.001) return;   // v505: 흡수복 1단계부터 군인 넉백은 완전히 막는다
     if (z.mode === 'pounce') stopPounce(z);
