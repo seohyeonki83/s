@@ -20,6 +20,18 @@ LM = {'bank': (11.0, 8.0), 'police': (11.9, 8.5), 'fire': (12.5, 8.5), 'mart': (
 STORE = (9.4, 6.8)
 MIN_GAP = 2.4                                           # 건물 사이 골목 최소 폭
 
+# ── 구역 사이 = 산줄기 (c2). 문 없는 덩어리를 조금씩 겹쳐 이어 붙인다 — 길목(PASS)만 비운다. 길목은 구역마다 1~2곳 ──
+ZR0, ZR1 = Z0 + SMALL_H, Z0 + SMALL_H + GAP               # 가로 산줄기가 차지하는 z
+BIG_AVE = ZR1 + (BIG_H - AVE_H) / 2 + AVE_H / 2           # 큰 구역 가로 대로 한가운데 z
+PASSES = [('v', BIG_AVE), ('v', Z0 + H - 8.0),             # 남서 ↔ 남동: 대로가 만나는 곳 + 남쪽 끝 (2곳) — 앞길이 동네를 가르지 않게 가장자리로
+          ('v', Z0 + 8.0),                                 # 북서 ↔ 북동: 북쪽 끝 (1곳)
+          ('h', X0 + ZW / 2), ('h', GAP / 2 + ZW / 2)]     # 남서 ↔ 북서, 남동 ↔ 북동: 세로 대로가 지나는 곳 (1곳씩). 'v' = 다리, 'h' = 산 길목
+APPROACH = 16.0                                          # c3: 다리·길목 앞은 이만큼 길로 비워 둔다 (건물이 길목을 막지 않게)
+RESERVED = []
+for a, c in PASSES:
+    if a == 'v': RESERVED += [(-GAP / 2 - APPROACH, c - PASS / 2, -GAP / 2, c + PASS / 2), (GAP / 2, c - PASS / 2, GAP / 2 + APPROACH, c + PASS / 2)]
+    else: RESERVED += [(c - PASS / 2, ZR0 - APPROACH, c + PASS / 2, ZR0), (c - PASS / 2, ZR1, c + PASS / 2, ZR1 + APPROACH)]
+
 def house():
     w, d = rng.uniform(5.5, 10.0), rng.uniform(4.6, 7.5)
     if rng.random() < 0.2: w, d = max(d, 4.8), w        # 세로로 긴 집
@@ -37,7 +49,7 @@ def blocks_of(z):
 
 def pack(block, specs):
     bx0, bz0, bx1, bz1 = block[0] + PAD, block[1] + PAD, block[2] - PAD, block[3] - PAD
-    for attempt in range(400):
+    for attempt in range(3000):
         order = specs[:]
         rng.shuffle(order)
         order.sort(key=lambda s: -(s[1] * s[2]) if attempt % 2 == 0 else rng.random())   # 큰 것부터 (절반은 아무 순서)
@@ -64,17 +76,12 @@ def pack(block, specs):
                 out.append(dict(t=s[0], x=x + s[1] / 2, z=z + dz + s[2] / 2, w=s[1], d=s[2]))
                 x += s[1]
             z += hs[i] + (gaps[i] if i < len(gaps) else 0)
+        if any(o['x'] + o['w'] / 2 > r[0] - 1 and o['x'] - o['w'] / 2 < r[2] + 1 and o['z'] + o['d'] / 2 > r[1] - 1 and o['z'] - o['d'] / 2 < r[3] + 1 for o in out for r in RESERVED): continue   # 다리·길목 앞길에 걸치면 다시
         return out
     raise SystemExit('pack failed')
 
 types = list(LM); rng.shuffle(types)
-bld, roads = [], []
-# ── 구역 사이 = 산줄기 (c2). 문 없는 덩어리를 조금씩 겹쳐 이어 붙인다 — 길목(PASS)만 비운다. 길목은 구역마다 1~2곳 ──
-ZR0, ZR1 = Z0 + SMALL_H, Z0 + SMALL_H + GAP               # 가로 산줄기가 차지하는 z
-BIG_AVE = ZR1 + (BIG_H - AVE_H) / 2 + AVE_H / 2           # 큰 구역 가로 대로 한가운데 z
-PASSES = [('v', BIG_AVE), ('v', Z0 + H - 15.0),            # 남서 ↔ 남동: 대로가 만나는 곳 + 남쪽 끝 가까이 (2곳)
-          ('v', Z0 + SMALL_H / 2),                         # 북서 ↔ 북동 (1곳)
-          ('h', X0 + ZW / 2), ('h', GAP / 2 + ZW / 2)]     # 남서 ↔ 북서, 남동 ↔ 북동: 세로 대로가 지나는 곳 (1곳씩)
+bld, roads = [], list(RESERVED)
 hills = []
 def ridge(axis, s0, s1):                                 # 줄기 한 토막 [s0, s1] — axis 'v' = 세로 줄기(x가 폭), 'h' = 가로 줄기(z가 폭)
     c0 = -GAP / 2 if axis == 'v' else ZR0
@@ -93,11 +100,15 @@ def cut(axis, lo, hi):                                   # 그 범위에서 길�
     cs = sorted(c for a, c in PASSES if a == axis and lo < c < hi)
     edges = [lo] + [v for c in cs for v in (c - PASS / 2, c + PASS / 2)] + [hi]
     for i in range(0, len(edges), 2): ridge(axis, edges[i], edges[i + 1])
-cut('v', ZR1, Z0 + H + EDGE); cut('v', Z0 - EDGE, ZR0)     # 세로 줄기: 남쪽 · 북쪽
-cut('h', X0 - EDGE, -GAP / 2); cut('h', GAP / 2, X0 + W + EDGE)   # 가로 줄기: 서쪽 · 동쪽
-hills.append((-GAP / 2 - 0.8, ZR0 - 0.8, GAP / 2 + 0.8, ZR1 + 0.8))   # 네 줄기가 만나는 한가운데
-for a, c in PASSES:                                      # 길목 = 큰 길
-    roads.append((-GAP / 2 - 1, c - PASS / 2, GAP / 2 + 1, c + PASS / 2) if a == 'v' else (c - PASS / 2, ZR0 - 1, c + PASS / 2, ZR1 + 1))
+# c3: 세로 경계 = 강 (지도를 북에서 남으로 가로지른다, 다리로만 건넌다 · 건너편이 보인다), 가로 경계 = 산 (길목으로만 넘는다 · 시야도 막힌다)
+rivers, bridges = [], []
+vs = sorted(c for a, c in PASSES if a == 'v')
+edges = [Z0 - EDGE] + [v for c in vs for v in (c - PASS / 2, c + PASS / 2)] + [Z0 + H + EDGE]
+for i in range(0, len(edges), 2): rivers.append((-GAP / 2, edges[i], GAP / 2, edges[i + 1]))
+for c in vs: bridges.append((-GAP / 2 - 1.5, c - PASS / 2, GAP / 2 + 1.5, c + PASS / 2))
+cut('h', X0 - EDGE, -GAP / 2 + 0.5); cut('h', GAP / 2 - 0.5, X0 + W + EDGE)   # 가로 산줄기: 서쪽 · 동쪽 (강가까지, 반 칸 겹쳐 틈 없이)
+for a, c in PASSES:                                      # 산 길목 = 큰 길
+    if a == 'h': roads.append((c - PASS / 2, ZR0 - 1, c + PASS / 2, ZR1 + 1))
 for z in ZONES:
     nL, nW, nH = COUNTS[z['id']]
     blocks, rds = blocks_of(z); roads += rds
@@ -111,7 +122,7 @@ for z in ZONES:
 
 def clear(b, side):                                    # 그 벽 문 앞이 얼마나 트여 있나
     lim = {'n': b['z'] - b['d'] / 2 - Z0, 's': Z0 + H - (b['z'] + b['d'] / 2), 'w': b['x'] - b['w'] / 2 - X0, 'e': X0 + W - (b['x'] + b['w'] / 2)}[side]
-    for o in bld + HILLS:
+    for o in bld + HILLS + RIVERS:
         if o is b: continue
         if side in 'ns':
             if abs(o['x'] - b['x']) > o['w'] / 2 + 1.9: continue
@@ -121,6 +132,7 @@ def clear(b, side):                                    # 그 벽 문 앞이 얼�
             g = (b['x'] - b['w'] / 2) - (o['x'] + o['w'] / 2) if side == 'w' else (o['x'] - o['w'] / 2) - (b['x'] + b['w'] / 2)
         if g >= 0: lim = min(lim, g)
     return lim
+RIVERS = [dict(x=(h[0] + h[2]) / 2, z=(h[1] + h[3]) / 2, w=h[2] - h[0], d=h[3] - h[1]) for h in rivers]
 HILLS = [dict(x=(h[0] + h[2]) / 2, z=(h[1] + h[3]) / 2, w=h[2] - h[0], d=h[3] - h[1]) for h in hills]   # 문 앞 트임을 잴 때 산도 막힌 것으로 본다
 for b in bld:
     ok = [s for s in 'nesw' if (b['w'] if s in 'ns' else b['d']) >= 4.6]   # 문 폭 3.4칸이 들어가는 벽만
@@ -137,12 +149,12 @@ for i, a in enumerate(bld):
 from collections import Counter
 print('건물', len(bld), dict(Counter(b['t'] for b in bld)))
 for z in ZONES: print(' 구역', z['id'], '큰' if z['big'] else '작은', dict(Counter(b['t'] for b in bld if b['zone'] == z['id'])))
-print(' 산 덩어리', len(hills), ' 길목', len(PASSES))
+print(' 산 덩어리', len(hills), ' 강 토막', len(rivers), ' 다리', len(bridges), ' 산 길목', sum(1 for a, c in PASSES if a == 'h'))
 print(' 정문 방향', dict(Counter(b['doors'][0] for b in bld)), ' 가장 좁은 정문 앞', round(min(clear(b, b['doors'][0]) for b in bld), 2))
 A = ZONES[0]['r']
 out = dict(seed=SEED, mm=dict(x0=X0 - 3, z0=Z0 - 3, x1=X0 + W + 3, z1=Z0 + H + 3), start=[(A[0] + A[2]) / 2, A[3] - 3],
            zones=[[round(v, 2) for v in z['r']] for z in ZONES], roads=[[round(v, 2) for v in r] for r in roads],
-           passes=[[a, round(c, 2)] for a, c in PASSES],
+           passes=[[a, round(c, 2)] for a, c in PASSES], rivers=[[round(v, 2) for v in r] for r in rivers], bridges=[[round(v, 2) for v in r] for r in bridges],
            b=[dict(x=b['x'], z=b['z'], w=b['w'], d=b['d'], doors=b['doors'], kinds={}, local=i, block=-1, t=b['t'], zone=b['zone'], sideK=b['sideK']) for i, b in enumerate(bld)] +
              [dict(x=round((h[0] + h[2]) / 2, 2), z=round((h[1] + h[3]) / 2, 2), w=round(h[2] - h[0], 2), d=round(h[3] - h[1], 2), doors=[], locks=[], kinds={}, local=len(bld) + i, block=-1, t='hill', zone=-1) for i, h in enumerate(hills)])
 json.dump(out, open('map.json', 'w'), ensure_ascii=False, separators=(',', ':'))
@@ -153,6 +165,8 @@ im = Image.new('RGB', (int((W + 6) * S), int((H + 6) * S)), (150, 150, 150)); dr
 P = lambda x, z: ((x - X0 + 3) * S, (z - Z0 + 3) * S)
 for r in roads: dr.rectangle([P(r[0], r[1]), P(r[2], r[3])], fill=(120, 120, 120))
 for h in hills: dr.rectangle([P(h[0], h[1]), P(h[2], h[3])], fill=(70, 100, 62))
+for h in rivers: dr.rectangle([P(h[0], h[1]), P(h[2], h[3])], fill=(60, 120, 170))
+for h in bridges: dr.rectangle([P(h[0], h[1]), P(h[2], h[3])], fill=(150, 130, 105))
 COL = {'house': (45, 42, 40), 'store': (125, 110, 90), 'bank': (46, 158, 91), 'police': (59, 111, 212), 'fire': (226, 69, 44), 'mart': (240, 138, 36), 'hospital': (244, 244, 246),
        'army': (91, 107, 47), 'library': (139, 90, 43), 'conv': (24, 166, 166), 'gym': (176, 64, 143)}
 for b in bld:
