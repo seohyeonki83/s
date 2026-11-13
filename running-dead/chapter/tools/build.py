@@ -58,6 +58,30 @@ ICONS = r'''
       else if (m === dn) { b.foot.z = z0 - r; if (b.vel.y > 0) b.vel.y = 0; } else { b.foot.z = z1 + r; if (b.vel.y < 0) b.vel.y = 0; }
     }
   }
+  // ── c11: 인간(하양) 깔기 + 먼 사람 재우기 ──
+  const CH_WAKE = 40;                         // 재우기 격자 한 칸 (칸) — 좀비가 있는 칸과 이웃 칸만 깨어 있으니 좀비에서 40~80칸 안이 깨어 있다. 화면과 시야보다 넉넉히 넓다
+  let chHot = null, CH_GW = 0, CH_GH = 0;
+  const chNearRiver = (x, z, m) => CH_MAP.rivers.some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
+  function chPopulate() {                     // 인간 200명을 맵 전체에 — 건물 안에 떨어지면 그 건물 사람(갇혀 있다), 밖이면 그 자리 둘레를 돌아다닌다
+    let n = 0;
+    for (let t = 0; t < 40000 && n < 200; t++) {
+      const x = rand(MM.x0 + 3, MM.x1 - 3), z = rand(MM.z0 + 3, MM.z1 - 3), B = spaceOf(x, z);
+      if (B ? B.type === 'hill' : chNearRiver(x, z, AREA / 2 + 1)) continue;                 // 산 속 · 강가(돌아다니다 물에 막히는 자리)는 뺀다
+      if (!freeSpot(x, z, B) || Math.hypot(x - me.foot.x, z - me.foot.z) < 14) continue;     // 벽에 붙은 자리 · 시작 자리 둘레도 뺀다
+      if (bodies.some((b) => Math.hypot(b.foot.x - x, b.foot.z - z) < 1.2)) continue;
+      const c = addCitizen(x, z, B || square(x, z), '');
+      if (B) c.home = B;
+      n++;
+    }
+  }
+  const chRiverSegs = CHAPTER ? CH_MAP.rivers.flatMap(([x0, z0, x1, z1]) => [[x0, z0, x1, z0], [x0, z1, x1, z1], [x0, z0, x0, z1], [x1, z0, x1, z1]]) : [];
+  const chNearBuf = [];
+  function chWallsNear(x, z, R) {             // 도망 방향을 잴 때 볼 벽 — 둘레 R칸 안 건물 벽(닫힌 문 포함)과 강가. 강도 벽처럼 막힌 것으로 본다
+    chNearBuf.length = 0;
+    for (const B of buildings) if (x > B.x0 - R && x < B.x1 + R && z > B.z0 - R && z < B.z1 + R) for (const w of B.walls) chNearBuf.push(w);
+    for (const g of chRiverSegs) if (x > Math.min(g[0], g[2]) - R && x < Math.max(g[0], g[2]) + R && z > Math.min(g[1], g[3]) - R && z < Math.max(g[1], g[3]) + R) chNearBuf.push(g);
+    return chNearBuf;
+  }
   const CH_ICON = {}, CH_TEX = {};
   const CH_HOUSE_ROOF = [0x26231f, 0x2a2622, 0x22252a, 0x2c241f, 0x25282b, 0x302a24, 0x1f2226];   // 집 지붕은 조금씩 다르게
   if (CHAPTER) {
@@ -156,6 +180,20 @@ MINIMAP = r'''
     g.fillStyle = '#ff3b30'; g.fill(); g.lineWidth = 1 * mmDpr; g.strokeStyle = 'rgba(255, 255, 255, 0.9)'; g.stroke();
   }
 '''
+SLEEP = r'''    if (CHAPTER) {                            // c11: 좀비에서 먼 사람은 재운다 — 지도를 40칸 격자로 나눠, 좀비가 있는 칸과 그 이웃 칸에 있는 사람만 깨어 있다 (나머지는 생각·이동·부딪힘을 다 건너뛴다)
+      if (!chHot) { CH_GW = Math.ceil((MM.x1 - MM.x0) / CH_WAKE); CH_GH = Math.ceil((MM.z1 - MM.z0) / CH_WAKE); chHot = new Uint8Array(CH_GW * CH_GH); }
+      const col = (x) => Math.max(0, Math.min(CH_GW - 1, Math.floor((x - MM.x0) / CH_WAKE))), row = (z) => Math.max(0, Math.min(CH_GH - 1, Math.floor((z - MM.z0) / CH_WAKE)));
+      chHot.fill(0); chHot[row(me.foot.z) * CH_GW + col(me.foot.x)] = 1;
+      for (const z of zombies) chHot[row(z.foot.z) * CH_GW + col(z.foot.x)] = 1;
+      for (const b of bodies) if (b.kind === 'citizen') {
+        const cx = col(b.foot.x), cz = row(b.foot.z); let hot = false;
+        for (let dz = -1; dz <= 1 && !hot; dz++) for (let dx = -1; dx <= 1; dx++) { const X = cx + dx, Z = cz + dz; if (X >= 0 && X < CH_GW && Z >= 0 && Z < CH_GH && chHot[Z * CH_GW + X]) { hot = true; break; } }
+        const far = b.spaceSet && !hot;
+        if (far && !b.sleep) b.vel.set(0, 0);
+        b.sleep = far;
+      }
+    }
+'''
 R = [
   ('<title>러닝데드 이동 테스트</title>', '<title>러닝데드 챕터</title>'),
   ('<div id="ver">v589</div>', f'<div id="ver">챕터 {VER}</div>'),
@@ -168,6 +206,16 @@ R = [
   ("    position: absolute; left: calc(50% + 54px); bottom: calc(172px + env(safe-area-inset-bottom, 0px));", "    position: absolute; left: calc(50% + 54px); bottom: calc(172px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px));"),
   ("    el.style.bottom = `calc(118px + env(safe-area-inset-bottom, 0px) + ${dy}px)`;", "    el.style.bottom = `calc(118px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px) + ${dy}px)`;"),
   ("    const el = document.getElementById(id); el.style.bottom = 'auto';", "    const el = document.getElementById(id); el.style.bottom = 'auto'; if (CHAPTER) el.style.opacity = '0';   /* c9: 되감기·일시정지 버튼은 안 보이게 (자리와 누르는 건 그대로) */"),
+  ("citizen: 0xffcf33, guard:", "citizen: CHAPTER ? 0xf2f2f2 : 0xffcf33, guard:"),   # c11: 인간 = 하양
+  ("    citizen: { col: '#ffcf33', name: '좃밥',", "    citizen: { col: CHAPTER ? '#f2f2f2' : '#ffcf33', name: CHAPTER ? '인간' : '좃밥',"),
+  ("    for (const b of bodies) if (isZombie(b)) zombies.push(b);\n    while (teamQueue.length)", "    for (const b of bodies) if (isZombie(b)) zombies.push(b);\n" + SLEEP + "    while (teamQueue.length)"),
+  ("      b.px = b.foot.x; b.pz = b.foot.z;\n      const sp0 = spaceOf(b.foot.x, b.foot.z);", "      if (b.sleep) continue;\n      b.px = b.foot.x; b.pz = b.foot.z; b.spaceSet = true;\n      const sp0 = spaceOf(b.foot.x, b.foot.z);"),
+  ("    for (const b of bodies) if (b.kind === 'citizen') {   // 화면 밖·좀비와 먼 조용한 시민은 판단을 4프레임에 한 번 (v177)", "    for (const b of bodies) if (b.kind === 'citizen' && !b.sleep) {   // 화면 밖·좀비와 먼 조용한 시민은 판단을 4프레임에 한 번 (v177)"),
+  ("      if (!b.fixed) { const gk = b.goo ? 0.56 : 1;", "      if (!b.fixed && !b.sleep) { const gk = b.goo ? 0.56 : 1;"),
+  ("    for (const b of bodies) byX.push(b);", "    for (const b of bodies) if (!b.sleep) byX.push(b);"),
+  ("    for (const b of bodies) {                 // 지도(미니맵) 밖으로는 못 나간다 (v174)\n      const r = b.r || BODY;", "    for (const b of bodies) {                 // 지도(미니맵) 밖으로는 못 나간다 (v174)\n      if (b.sleep) continue;\n      const r = b.r || BODY;"),
+  ("    const sp = c.vel.length();\n    let best = -Infinity, bx = 1, bz = 0;", "    const sp = c.vel.length();\n    const chNear = CHAPTER ? chWallsNear(c.foot.x, c.foot.z, PANIC_SPEED * LOOK + BODY + 1) : walls;   // c11: 가까운 벽과 강가만\n    let best = -Infinity, bx = 1, bz = 0;"),
+  ("      const room = wallRay(c.foot.x, c.foot.z, dx, dz, PANIC_SPEED * LOOK + BODY) - BODY;", "      const room = wallRay(c.foot.x, c.foot.z, dx, dz, PANIC_SPEED * LOOK + BODY, chNear) - BODY;"),
   ("    B.doors = [].map((side) => {", "    B.doors = (s.open || []).map((side) => {   /* c5: 차고 — 한쪽 벽이 처음부터 통째로 뚫려 있다 */"),
   ("w: s.station ? DOOR * 4 / 9 : DOOR };", "w: s.garage ? (nx ? s.d : s.w) - 0.5 : s.station ? DOOR * 4 / 9 : DOOR };"),
   ("o.hp = o.maxHp = B.side ? MY_DAMAGE * 3.5 : MY_DAMAGE * 19.5;", "o.hp = o.maxHp = B.side || B.garage ? MY_DAMAGE * 3.5 : MY_DAMAGE * 19.5;   /* c5: 차고 문도 집 문과 같다 */"),
@@ -176,11 +224,11 @@ R = [
   ("  const MM_S = Math.min(128 * 2 / 3 / (MM.x1 - MM.x0), 136 * 2 / 3 / (MM.z1 - MM.z0));", "  const MM_S = Math.min((CHAPTER ? 88 : 128 * 2 / 3) / (MM.x1 - MM.x0), (CHAPTER ? 107 : 136 * 2 / 3) / (MM.z1 - MM.z0));   /* c6: 미니맵을 3분의 1 줄여 테스트맵 크기쯤으로 (132×160 → 88×107) */"),
   ("  function updateMinimap(dt) {                // 0.1초마다", MINIMAP.strip('\n') + "\n  function updateMinimap(dt) {                // 0.1초마다"),
   ("    mmCtx.clearRect(0, 0, W, H);", "    if (CHAPTER) { chMinimap(eyes, W, H, X, Z, sx, sz); return; }\n    mmCtx.clearRect(0, 0, W, H);"),
-  ("    me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;", "    if (CHAPTER) { me.foot.set(CH_MAP.start[0], 0, CH_MAP.start[1]); me.space = null; me.hp = me.maxHp; return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작, 아무도 없다\n    me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;"),
+  ("    me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;", "    if (CHAPTER) { me.foot.set(CH_MAP.start[0], 0, CH_MAP.start[1]); me.space = null; me.hp = me.maxHp; chPopulate(); return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작 · c11: 인간 200명\n    me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;"),
   ("      if (B.qm) B.qm.visible = !B.open && !!B.safe && !B.safe.dead && !B.safe.hidden;", "      if (B.sign) { B.sign.visible = !B.open; const tx = CH_TEX[B.done ? 'x' : B.type]; if (B.sign.material.map !== tx) { B.sign.material.map = tx; B.sign.material.needsUpdate = true; } }   // c1: 지붕 아이콘 — 들어가면 사라지고, 잠식하면 X\n      if (B.qm) B.qm.visible = !B.open && !!B.safe && !B.safe.dead && !B.safe.hidden;"),
   ("    for (const B of buildings) if (!B.station) B.found = false;", "    for (const B of buildings) if (!B.station) { B.found = false; B.done = false; }\n    if (CHAPTER) for (const P of CH_MAP.passPts) P.found = false;"),
   ("  const starsEl = document.getElementById('stars');", "  const starsEl = document.getElementById('stars');\n  if (CHAPTER) { starsEl.style.display = 'none'; document.getElementById('lvbox').style.display = 'none'; const v = document.getElementById('ver'); v.style.setProperty('display', 'block', 'important'); v.style.fontSize = '10px'; v.style.opacity = '0.55'; }   // c1: 맵만 보는 판 — 경보·레벨 표시는 가린다. c10: 왼쪽 위에 버전 글자 (새 버전이 떴는지 보려고)"),
-  ("    for (const b of bodies) if (!b.fixed) wallCollide(b);   // 벽은 마지막에 — 서로 밀다가 벽을 넘지 않게", "    for (const b of bodies) if (!b.fixed) wallCollide(b);   // 벽은 마지막에 — 서로 밀다가 벽을 넘지 않게\n    if (CHAPTER) for (const b of bodies) if (!b.fixed) riverCollide(b);   // c3: 강"),
+  ("    for (const b of bodies) if (!b.fixed) wallCollide(b);   // 벽은 마지막에 — 서로 밀다가 벽을 넘지 않게", "    for (const b of bodies) if (!b.fixed && !b.sleep) wallCollide(b);   // 벽은 마지막에 — 서로 밀다가 벽을 넘지 않게\n    if (CHAPTER) for (const b of bodies) if (!b.fixed && !b.sleep) riverCollide(b);   // c3: 강"),
   ("  for (const [ax, az, bx, bz] of walls) flat(", "  for (const [ax, az, bx, bz] of buildings.flatMap((B) => (B.type === 'hill' ? [] : B.walls))) flat("),   # c2: 산은 벽 선을 안 그린다
   ("|| cand[Math.floor(Math.random() * cand.length)];   /* v431", "|| cand[B.sideK !== undefined ? B.sideK % cand.length : Math.floor(Math.random() * cand.length)];   /* c1: 챕터 맵은 쪽문 자리도 고정 */   /* v431"),
   ("bodies, spawn, fleeDir, step: stepWorld };", "bodies, spawn, fleeDir, step: stepWorld, buildings, explored };"),

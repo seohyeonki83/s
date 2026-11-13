@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c10</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c11</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -453,7 +453,7 @@
   const BITE_GAP = RADIUS;   // 물 때 두 원 중심 거리 = 반지름 → 반쯤 겹친다
   const SPLIT = 1.5;      // 물기가 끝나고 둘이 떨어지는 속도 (유닛/초)
   const ICON_H = 0.55;    // 머리 위 ? ! !!! 높이 (유닛)
-  const COLOR = { me: 0x3366f2, citizen: 0xffcf33, guard: 0xff8c1a, attacker: 0xc62828, police: 0x8e24aa, sniper: 0x556b2f, soldier: 0x556b2f, ally: 0x8aa4f5, dead: 0x555555 };   // 나 = 유니티 큐브 파랑, 시민 = 노랑, 수비형 = 주황, 공격형 = 진한 빨강, 경찰 = 보라, 동료 좀비 = 연한 파랑
+  const COLOR = { me: 0x3366f2, citizen: CHAPTER ? 0xf2f2f2 : 0xffcf33, guard: 0xff8c1a, attacker: 0xc62828, police: 0x8e24aa, sniper: 0x556b2f, soldier: 0x556b2f, ally: 0x8aa4f5, dead: 0x555555 };   // 나 = 유니티 큐브 파랑, 시민 = 노랑, 수비형 = 주황, 공격형 = 진한 빨강, 경찰 = 보라, 동료 좀비 = 연한 파랑
 
   // 그리는 층 (v132) — 바닥·벽·어둠·경찰차·캐릭터 < 모든 UI(체력바·머리 위 표시) < 내 UI(내 체력바·감염 시계·조준 테두리·명령 화살표)
   const UI = 10, UI_ME = 20;
@@ -777,6 +777,30 @@
       if (m === dl) { b.foot.x = x0 - r; if (b.vel.x > 0) b.vel.x = 0; } else if (m === dr) { b.foot.x = x1 + r; if (b.vel.x < 0) b.vel.x = 0; }
       else if (m === dn) { b.foot.z = z0 - r; if (b.vel.y > 0) b.vel.y = 0; } else { b.foot.z = z1 + r; if (b.vel.y < 0) b.vel.y = 0; }
     }
+  }
+  // ── c11: 인간(하양) 깔기 + 먼 사람 재우기 ──
+  const CH_WAKE = 40;                         // 재우기 격자 한 칸 (칸) — 좀비가 있는 칸과 이웃 칸만 깨어 있으니 좀비에서 40~80칸 안이 깨어 있다. 화면과 시야보다 넉넉히 넓다
+  let chHot = null, CH_GW = 0, CH_GH = 0;
+  const chNearRiver = (x, z, m) => CH_MAP.rivers.some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
+  function chPopulate() {                     // 인간 200명을 맵 전체에 — 건물 안에 떨어지면 그 건물 사람(갇혀 있다), 밖이면 그 자리 둘레를 돌아다닌다
+    let n = 0;
+    for (let t = 0; t < 40000 && n < 200; t++) {
+      const x = rand(MM.x0 + 3, MM.x1 - 3), z = rand(MM.z0 + 3, MM.z1 - 3), B = spaceOf(x, z);
+      if (B ? B.type === 'hill' : chNearRiver(x, z, AREA / 2 + 1)) continue;                 // 산 속 · 강가(돌아다니다 물에 막히는 자리)는 뺀다
+      if (!freeSpot(x, z, B) || Math.hypot(x - me.foot.x, z - me.foot.z) < 14) continue;     // 벽에 붙은 자리 · 시작 자리 둘레도 뺀다
+      if (bodies.some((b) => Math.hypot(b.foot.x - x, b.foot.z - z) < 1.2)) continue;
+      const c = addCitizen(x, z, B || square(x, z), '');
+      if (B) c.home = B;
+      n++;
+    }
+  }
+  const chRiverSegs = CHAPTER ? CH_MAP.rivers.flatMap(([x0, z0, x1, z1]) => [[x0, z0, x1, z0], [x0, z1, x1, z1], [x0, z0, x0, z1], [x1, z0, x1, z1]]) : [];
+  const chNearBuf = [];
+  function chWallsNear(x, z, R) {             // 도망 방향을 잴 때 볼 벽 — 둘레 R칸 안 건물 벽(닫힌 문 포함)과 강가. 강도 벽처럼 막힌 것으로 본다
+    chNearBuf.length = 0;
+    for (const B of buildings) if (x > B.x0 - R && x < B.x1 + R && z > B.z0 - R && z < B.z1 + R) for (const w of B.walls) chNearBuf.push(w);
+    for (const g of chRiverSegs) if (x > Math.min(g[0], g[2]) - R && x < Math.max(g[0], g[2]) + R && z > Math.min(g[1], g[3]) - R && z < Math.max(g[1], g[3]) + R) chNearBuf.push(g);
+    return chNearBuf;
   }
   const CH_ICON = {}, CH_TEX = {};
   const CH_HOUSE_ROOF = [0x26231f, 0x2a2622, 0x22252a, 0x2c241f, 0x25282b, 0x302a24, 0x1f2226];   // 집 지붕은 조금씩 다르게
@@ -1290,10 +1314,11 @@
     const wall = nearWall(c, c.sense * WALL_SENSE);
     if (wall) spots = [...spots, wall];
     const sp = c.vel.length();
+    const chNear = CHAPTER ? chWallsNear(c.foot.x, c.foot.z, PANIC_SPEED * LOOK + BODY + 1) : walls;   // c11: 가까운 벽과 강가만
     let best = -Infinity, bx = 1, bz = 0;
     for (let k = 0; k < DIRS; k++) {
       const a = (k / DIRS) * Math.PI * 2, dx = Math.cos(a), dz = Math.sin(a);
-      const room = wallRay(c.foot.x, c.foot.z, dx, dz, PANIC_SPEED * LOOK + BODY) - BODY;   // 이 방향으로 벽까지 뛸 수 있는 거리
+      const room = wallRay(c.foot.x, c.foot.z, dx, dz, PANIC_SPEED * LOOK + BODY, chNear) - BODY;   // 이 방향으로 벽까지 뛸 수 있는 거리
       let worst = Infinity;
       for (const z of spots) {
         for (let s = 1; s <= 4; s++) {
@@ -2746,7 +2771,7 @@
   function collide(dt) {
     const give = 0.5 / WEIGHT;                 // 밀린 쪽이 비켜 주는 몫 (WEIGHT 1 = 반반 = 예전) — 힘이 같을 때
     byX.length = 0;                            // x 순서로 늘어놓고, x 차이가 몸 두 개 폭보다 크면 그 뒤는 안 본다 (지도가 커져서, v121)
-    for (const b of bodies) byX.push(b);
+    for (const b of bodies) if (!b.sleep) byX.push(b);
     byX.sort((p, q) => p.foot.x - q.foot.x);
     let rBig = MY_BODY; for (const z of zombies) if (z.mut && z.r > rBig) rBig = z.r;
     for (const B of buildings) if (B.safe && !B.safe.dead && B.safe.r > rBig) rBig = B.safe.r;   // v295: 금고도 — 안 그러면 옆에서 붙은 몸을 건너뛰어 겹친다   // v275: 갑옷좀비는 2.5배
@@ -3599,7 +3624,7 @@
   //   경찰서·경찰은 START_COP_CLEAR(15칸) 안에 없어야 하고, 밖에 있는 시민(일반·수비형·공격형)은 내 인지거리 밖이면 된다
   function testPopulate() {                   // v396: 시험 맵 — 저격수 2명을 세로 가운데, 가로로 고르게 / 나는 아래 가운데
     const W = MM.x1 - MM.x0, cz = (MM.z0 + MM.z1) / 2;
-    if (CHAPTER) { me.foot.set(CH_MAP.start[0], 0, CH_MAP.start[1]); me.space = null; me.hp = me.maxHp; return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작, 아무도 없다
+    if (CHAPTER) { me.foot.set(CH_MAP.start[0], 0, CH_MAP.start[1]); me.space = null; me.hp = me.maxHp; chPopulate(); return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작 · c11: 인간 200명
     me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;
     if (CAR_TEST) { carTestSetup(); return; }
     teamQueue.push(1);                        // v410: 시험 맵 — 시작하자마자 맵 가장자리에서 1팀 (군인 2 + 저격수 1)
@@ -3771,6 +3796,19 @@
     pickupTick(dt);                           // v415: 떨어진 아이템
     zombies.length = 0;
     for (const b of bodies) if (isZombie(b)) zombies.push(b);
+    if (CHAPTER) {                            // c11: 좀비에서 먼 사람은 재운다 — 지도를 40칸 격자로 나눠, 좀비가 있는 칸과 그 이웃 칸에 있는 사람만 깨어 있다 (나머지는 생각·이동·부딪힘을 다 건너뛴다)
+      if (!chHot) { CH_GW = Math.ceil((MM.x1 - MM.x0) / CH_WAKE); CH_GH = Math.ceil((MM.z1 - MM.z0) / CH_WAKE); chHot = new Uint8Array(CH_GW * CH_GH); }
+      const col = (x) => Math.max(0, Math.min(CH_GW - 1, Math.floor((x - MM.x0) / CH_WAKE))), row = (z) => Math.max(0, Math.min(CH_GH - 1, Math.floor((z - MM.z0) / CH_WAKE)));
+      chHot.fill(0); chHot[row(me.foot.z) * CH_GW + col(me.foot.x)] = 1;
+      for (const z of zombies) chHot[row(z.foot.z) * CH_GW + col(z.foot.x)] = 1;
+      for (const b of bodies) if (b.kind === 'citizen') {
+        const cx = col(b.foot.x), cz = row(b.foot.z); let hot = false;
+        for (let dz = -1; dz <= 1 && !hot; dz++) for (let dx = -1; dx <= 1; dx++) { const X = cx + dx, Z = cz + dz; if (X >= 0 && X < CH_GW && Z >= 0 && Z < CH_GH && chHot[Z * CH_GW + X]) { hot = true; break; } }
+        const far = b.spaceSet && !hot;
+        if (far && !b.sleep) b.vel.set(0, 0);
+        b.sleep = far;
+      }
+    }
     while (teamQueue.length) queueSquads(teamQueue.shift());
     for (let i = teamWait.length - 1; i >= 0; i--) if (!teamWait[i].hold && (teamWait[i].t -= dt) <= 0) { const w = teamWait.splice(i, 1)[0]; if (w.car) { const p = teamSpot(w.seg); addCar(p.x, p.z, Math.atan2(me.foot.z - p.z, me.foot.x - p.x), null, 0, w.car); } else spawnTeam(w.comp, w.first, w.seg); }   // v444: 분대 10초 간격   // v410: 군인팀 출동 (이번 걸음 좀비 목록을 만든 뒤)
     crowd.clear();                            // 시민마다 지금 노리는 좀비 수 (v148) — 타겟을 새로 뽑을 때마다 바로 고쳐서, 같은 순간에 뽑는 좀비끼리도 겹치지 않는다
@@ -3786,7 +3824,8 @@
     meMoving = moving;
     updateArea(dt);                           // 영역 중심을 내 이동 방향으로 밀거나 나에게로 되돌린다
     for (const b of bodies) {                 // 걸음 전 자리·공간 — 건물 사람이 문 밖으로 나가면 그때부터 활동 영역 제한이 풀린다
-      b.px = b.foot.x; b.pz = b.foot.z;
+      if (b.sleep) continue;
+      b.px = b.foot.x; b.pz = b.foot.z; b.spaceSet = true;
       const sp0 = spaceOf(b.foot.x, b.foot.z);
       b.space = b.kind === 'citizen' ? doorwaySpace(b, sp0) : sp0;   // v264: 문틈에 낀 사람은 밖에 있는 걸로 — 밖 좀비가 보고 노릴 수 있게
       if (b.home && sp0 !== b.home) b.freed = true;
@@ -3794,7 +3833,7 @@
     buildGrids();                             // 근처 찾기 칸 (v177)
     for (const b of bodies) if (isZombie(b)) updateZombie(b, dt);
     lazyFrame++;
-    for (const b of bodies) if (b.kind === 'citizen') {   // 화면 밖·좀비와 먼 조용한 시민은 판단을 4프레임에 한 번 (v177) — 그 사이엔 걷던 대로 걷는다
+    for (const b of bodies) if (b.kind === 'citizen' && !b.sleep) {   // 화면 밖·좀비와 먼 조용한 시민은 판단을 4프레임에 한 번 (v177) — 그 사이엔 걷던 대로 걷는다
       if (b.lazyK === undefined) b.lazyK = Math.floor(Math.random() * 4);
       if (((lazyFrame + b.lazyK) & 3) === 0) {   // 4프레임에 한 번: 다시 따져 보고, 모아 둔 시간만큼 한 번에 판단
         const acc = (b.lazyDt || 0) + dt;
@@ -3805,7 +3844,7 @@
       else updateCitizen(b, dt);
     }
     for (const b of bodies) {
-      if (!b.fixed) { const gk = b.goo ? 0.56 : 1;   /* v344: 20% → 44% 느리게 (0.8 × 0.7) */ b.foot.x += b.vel.x * dt * gk; b.foot.z += b.vel.y * dt * gk; }   // v275: 산성 덩어리 묻으면 이동 20% 느리게
+      if (!b.fixed && !b.sleep) { const gk = b.goo ? 0.56 : 1;   /* v344: 20% → 44% 느리게 (0.8 × 0.7) */ b.foot.x += b.vel.x * dt * gk; b.foot.z += b.vel.y * dt * gk; }   // v275: 산성 덩어리 묻으면 이동 20% 느리게
       if (b.split && (b.splitT -= dt) <= 0) b.split = null;
       if (b.lungeT >= 0) {                    // 때리는 모션 시간 — 붙는 순간 데미지
         const before = b.lungeT;
@@ -3820,9 +3859,10 @@
     collide(dt);
     carCarCollide();                          // 경찰차끼리 (v188)
     carCollide();                             // 경찰차에 겹친 몸은 밀어낸다
-    for (const b of bodies) if (!b.fixed) wallCollide(b);   // 벽은 마지막에 — 서로 밀다가 벽을 넘지 않게
-    if (CHAPTER) for (const b of bodies) if (!b.fixed) riverCollide(b);   // c3: 강
+    for (const b of bodies) if (!b.fixed && !b.sleep) wallCollide(b);   // 벽은 마지막에 — 서로 밀다가 벽을 넘지 않게
+    if (CHAPTER) for (const b of bodies) if (!b.fixed && !b.sleep) riverCollide(b);   // c3: 강
     for (const b of bodies) {                 // 지도(미니맵) 밖으로는 못 나간다 (v174)
+      if (b.sleep) continue;
       const r = b.r || BODY;
       if (b.foot.x < MM.x0 + r) { b.foot.x = MM.x0 + r; if (b.vel.x < 0) b.vel.x = 0; } else if (b.foot.x > MM.x1 - r) { b.foot.x = MM.x1 - r; if (b.vel.x > 0) b.vel.x = 0; }
       if (b.foot.z < MM.z0 + r) { b.foot.z = MM.z0 + r; if (b.vel.y < 0) b.vel.y = 0; } else if (b.foot.z > MM.z1 - r) { b.foot.z = MM.z1 - r; if (b.vel.y > 0) b.vel.y = 0; }
@@ -4786,7 +4826,7 @@
   }
   // ── 튜토리얼 (v202) — 판을 시작하면 목표를 위쪽에 크게 띄웠다가 사라지고, 처음 만난 적·경찰서는 화면 가운데에 소개 (누르면 닫힘) ──
   const TUT = {
-    citizen: { col: '#ffcf33', name: '좃밥', say: '살점을 뜯어먹어 체력을 회복하세요' },   // 이름 (v204) — 원 위에 뜬다
+    citizen: { col: CHAPTER ? '#f2f2f2' : '#ffcf33', name: CHAPTER ? '인간' : '좃밥', say: '살점을 뜯어먹어 체력을 회복하세요' },   // 이름 (v204) — 원 위에 뜬다
     guard: { col: '#ff8c1a', name: '헬창', say: '깝침' },
     attacker: { col: '#c62828', name: '만두귀', say: '좀 침' },
     police: { col: '#8e24aa', name: '짭새', say: '건법 씀' },
