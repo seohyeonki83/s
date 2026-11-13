@@ -14,13 +14,18 @@ ICONS = r'''
   function chIcon(type) {                     // 둥근 네모 배지 + 흰 그림 (128px) — 지붕 위 표시와 미니맵 아이콘에 같이 쓴다
     const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
     const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
-    const col = type === 'x' ? '#4a4a52' : CH_DEF[type].col, ink = type === 'hospital' ? '#e02b2b' : '#ffffff';
+    const pass = type === 'passH' || type === 'passV';   // c4: 다른 구역으로 가는 길목 (다리 · 산 길목) — 노란 배지에 양쪽 화살표
+    const col = type === 'x' ? '#4a4a52' : pass ? '#f2c230' : CH_DEF[type].col, ink = type === 'hospital' ? '#e02b2b' : pass ? '#17171a' : '#ffffff';
     rr(6, 6, 116, 116, 26); g.fillStyle = 'rgba(0, 0, 0, 0.88)'; g.fill();
     rr(14, 14, 100, 100, 19); g.fillStyle = col; g.fill();
     g.fillStyle = g.strokeStyle = ink; g.lineCap = 'round'; g.lineJoin = 'round';
     const text = (t, px, y) => { g.font = `900 ${px}px system-ui, -apple-system, "Segoe UI", sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, 64, y || 68); };
     const star = (cx, cy, R) => { g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? R * 0.42 : R; g[i ? 'lineTo' : 'moveTo'](cx + Math.cos(a) * r, cy + Math.sin(a) * r); } g.closePath(); g.fill(); };
-    if (type === 'bank') text('₩', 78);
+    if (pass) {                               // 양쪽을 가리키는 화살표 — 가로(동서로 건넌다) · 세로(남북으로 넘는다)
+      if (type === 'passV') { g.translate(64, 64); g.rotate(Math.PI / 2); g.translate(-64, -64); }
+      g.lineWidth = 13; g.beginPath(); g.moveTo(42, 64); g.lineTo(86, 64); g.stroke();
+      for (const k of [-1, 1]) { g.beginPath(); g.moveTo(64 + k * 42, 64); g.lineTo(64 + k * 19, 41); g.lineTo(64 + k * 19, 87); g.closePath(); g.fill(); }
+    } else if (type === 'bank') text('₩', 78);
     else if (type === 'conv') text('24', 60);
     else if (type === 'army') star(64, 66, 38);
     else if (type === 'police') {             // 방패 + 별
@@ -56,7 +61,7 @@ ICONS = r'''
   const CH_ICON = {}, CH_TEX = {};
   const CH_HOUSE_ROOF = [0x26231f, 0x2a2622, 0x22252a, 0x2c241f, 0x25282b, 0x302a24, 0x1f2226];   // 집 지붕은 조금씩 다르게
   if (CHAPTER) {
-    for (const k of [...Object.keys(CH_DEF), 'x']) { CH_ICON[k] = chIcon(k); CH_TEX[k] = new THREE.CanvasTexture(CH_ICON[k]); CH_TEX[k].colorSpace = THREE.SRGBColorSpace; }
+    for (const k of [...Object.keys(CH_DEF), 'x', 'passH', 'passV']) { CH_ICON[k] = chIcon(k); CH_TEX[k] = new THREE.CanvasTexture(CH_ICON[k]); CH_TEX[k].colorSpace = THREE.SRGBColorSpace; }
     const roadMat = flatMat(0x858585);
     for (const [x0, z0, x1, z1] of CH_MAP.roads) flat(x1 - x0, z1 - z0, (x0 + x1) / 2, (z0 + z1) / 2, roadMat, -0.9);   // 대로 — 어둠 밑에 깔린다
     // c3: 강 — 못 건너지만 건너편은 보인다 (벽이 아니라 시야를 안 가린다). 물 무늬는 땅 기준, 어둠 밑에 깔린다. 다리 = 상판 + 양쪽 난간
@@ -141,6 +146,10 @@ MINIMAP = r'''
       }
       if (B.found) g.drawImage(CH_ICON[B.done ? 'x' : B.type], X((B.x0 + B.x1) / 2) - sz2 / 2, Z((B.z0 + B.z1) / 2) - sz2 / 2, sz2, sz2);
     }
+    for (const P of CH_MAP.passPts) {                                     // c4: 길목 — 그 자리를 밝혔으면 양쪽 화살표
+      if (!P.found && explored[Math.floor((P.z - MM.z0) / MM_CELL) * mmW + Math.floor((P.x - MM.x0) / MM_CELL)]) P.found = true;
+      if (P.found) g.drawImage(CH_ICON[P.dir === 'h' ? 'passH' : 'passV'], X(P.x) - sz2 / 2, Z(P.z) - sz2 / 2, sz2, sz2);
+    }
     const r = 2.4 * mmDpr;                                                // 나 = 빨간 점
     g.beginPath(); g.arc(X(me.foot.x), Z(me.foot.z), r, 0, Math.PI * 2);
     g.fillStyle = '#ff3b30'; g.fill(); g.lineWidth = 1 * mmDpr; g.strokeStyle = 'rgba(255, 255, 255, 0.9)'; g.stroke();
@@ -150,7 +159,7 @@ R = [
   ('<title>러닝데드 이동 테스트</title>', '<title>러닝데드 챕터</title>'),
   ('<div id="ver">v589</div>', f'<div id="ver">챕터 {VER}</div>'),
   ("  const TEST_MAP = CAR_TEST || false;", "  const CHAPTER = true;   // 챕터 줄기 (c1~): 구역 4개짜리 맵, 지금은 건물만 — 사람·경찰·금고 없음\n  const TEST_MAP = CAR_TEST || CHAPTER;"),
-  ("  const BUILDINGS = TEST_MAP ? TEST_BLDGS : ", "  const CH_MAP = " + MAP + ";   // 생성기(씨앗 7)가 만든 고정 맵 — c2: 건물 71채 (랜드마크 9 · 창고 8 · 집 54) · c3: 세로 경계 = 강(다리 3곳), 가로 경계 = 산(길목 2곳)\n  const BUILDINGS = CHAPTER ? CH_MAP.b : TEST_MAP ? TEST_BLDGS : "),
+  ("  const BUILDINGS = TEST_MAP ? TEST_BLDGS : ", "  const CH_MAP = " + MAP + ";   // 생성기(씨앗 7)가 만든 고정 맵 — c2: 건물 71채 (랜드마크 9 · 창고 8 · 집 54) · c3: 세로 경계 = 강(다리 3곳), 가로 경계 = 산(길목 2곳) · c4: 집을 작게, 1~3채씩 뭉쳐서\n  const BUILDINGS = CHAPTER ? CH_MAP.b : TEST_MAP ? TEST_BLDGS : "),
   ("local: s.local, block: s.block };", "local: s.local, block: s.block, type: s.t || '', zone: s.zone, sideK: s.sideK };"),
   ("  // 잠긴 문 (v239) — 문 자리를 막는 벽 한 토막 + 철문 그림.", ICONS.strip('\n') + "\n  // 잠긴 문 (v239) — 문 자리를 막는 벽 한 토막 + 철문 그림."),
   ("  const MM = TEST_MAP ? {", "  const MM = CHAPTER ? CH_MAP.mm : TEST_MAP ? {"),
@@ -159,7 +168,7 @@ R = [
   ("    mmCtx.clearRect(0, 0, W, H);", "    if (CHAPTER) { chMinimap(eyes, W, H, X, Z, sx, sz); return; }\n    mmCtx.clearRect(0, 0, W, H);"),
   ("    me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;", "    if (CHAPTER) { me.foot.set(CH_MAP.start[0], 0, CH_MAP.start[1]); me.space = null; me.hp = me.maxHp; return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작, 아무도 없다\n    me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;"),
   ("      if (B.qm) B.qm.visible = !B.open && !!B.safe && !B.safe.dead && !B.safe.hidden;", "      if (B.sign) { B.sign.visible = !B.open; const tx = CH_TEX[B.done ? 'x' : B.type]; if (B.sign.material.map !== tx) { B.sign.material.map = tx; B.sign.material.needsUpdate = true; } }   // c1: 지붕 아이콘 — 들어가면 사라지고, 잠식하면 X\n      if (B.qm) B.qm.visible = !B.open && !!B.safe && !B.safe.dead && !B.safe.hidden;"),
-  ("    for (const B of buildings) if (!B.station) B.found = false;", "    for (const B of buildings) if (!B.station) { B.found = false; B.done = false; }"),
+  ("    for (const B of buildings) if (!B.station) B.found = false;", "    for (const B of buildings) if (!B.station) { B.found = false; B.done = false; }\n    if (CHAPTER) for (const P of CH_MAP.passPts) P.found = false;"),
   ("  const starsEl = document.getElementById('stars');", "  const starsEl = document.getElementById('stars');\n  if (CHAPTER) { starsEl.style.display = 'none'; document.getElementById('lvbox').style.display = 'none'; }   // c1: 맵만 보는 판 — 경보·레벨 표시는 가린다"),
   ("    for (const b of bodies) if (!b.fixed) wallCollide(b);   // 벽은 마지막에 — 서로 밀다가 벽을 넘지 않게", "    for (const b of bodies) if (!b.fixed) wallCollide(b);   // 벽은 마지막에 — 서로 밀다가 벽을 넘지 않게\n    if (CHAPTER) for (const b of bodies) if (!b.fixed) riverCollide(b);   // c3: 강"),
   ("  for (const [ax, az, bx, bz] of walls) flat(", "  for (const [ax, az, bx, bz] of buildings.flatMap((B) => (B.type === 'hill' ? [] : B.walls))) flat("),   # c2: 산은 벽 선을 안 그린다

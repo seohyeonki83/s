@@ -33,8 +33,8 @@ for a, c in PASSES:
     else: RESERVED += [(c - PASS / 2, ZR0 - APPROACH, c + PASS / 2, ZR0), (c - PASS / 2, ZR1, c + PASS / 2, ZR1 + APPROACH)]
 
 def house():
-    w, d = rng.uniform(5.5, 10.0), rng.uniform(4.6, 7.5)
-    if rng.random() < 0.2: w, d = max(d, 4.8), w        # 세로로 긴 집
+    w, d = rng.uniform(4.8, 7.4), rng.uniform(3.8, 5.6)   # c4: 집만 한 변을 4분의 1쯤 줄였다 (평균 7.8×6.1 → 6.1×4.7). 문 폭 3.4칸이 들어가게 긴 변은 4.8 이상
+    if rng.random() < 0.2: w, d = d, w                  # 세로로 긴 집
     return ('house', round(w * 2) / 2, round(d * 2) / 2)
 
 def blocks_of(z):
@@ -47,38 +47,49 @@ def blocks_of(z):
     roads = [(cx - AVE_V / 2, z0, cx + AVE_V / 2, z1)] + [(x0, rows[i][1], x1, rows[i + 1][0]) for i in range(n - 1)]
     return [(c[0], r[0], c[1], r[1]) for r in rows for c in cols], roads
 
-def pack(block, specs):
+def unit_of(specs):                                       # c4: 한 덩어리 — 랜드마크·창고는 혼자, 집은 1~3채를 바짝 붙여서 (모양은 줄 · 기둥 · ㄱ자)
+    g = lambda: rng.uniform(MIN_GAP, 2.9)
+    n = len(specs)
+    if n == 1: rects = [(specs[0], 0.0, 0.0)]
+    else:
+        shape = rng.choice(['row', 'col']) if n == 2 else rng.choice(['row', 'col', 'L', 'L'])
+        rects, x, z = [], 0.0, 0.0
+        if shape == 'row':
+            for sp in specs: rects.append((sp, x, rng.uniform(0, 1.5))); x += sp[1] + g()
+        elif shape == 'col':
+            for sp in specs: rects.append((sp, rng.uniform(0, 1.5), z)); z += sp[2] + g()
+        else:                                             # ㄱ자: 둘은 나란히, 하나는 그중 한 채의 아래나 위
+            a, b, c = specs
+            rects = [(a, 0.0, 0.0), (b, a[1] + g(), rng.uniform(0, 1.2))]
+            under = rng.choice([0, 1]); bx = rects[under][1]; bz = max(a[2], b[2] + 1.2) + g()
+            rects.append((c, bx + rng.uniform(-0.6, 0.6), bz))
+    mx, mz = min(r[1] for r in rects), min(r[2] for r in rects)
+    rects = [(sp, x - mx, z - mz) for sp, x, z in rects]
+    return dict(rects=rects, W=max(x + sp[1] for sp, x, z in rects), D=max(z + sp[2] for sp, x, z in rects))
+
+def pack(block, specs):                                  # 덩어리들을 블록 안 아무 자리에 — 덩어리끼리는 넉넉히 띄운다 (고르게 줄 세우지 않는다)
     bx0, bz0, bx1, bz1 = block[0] + PAD, block[1] + PAD, block[2] - PAD, block[3] - PAD
-    for attempt in range(3000):
-        order = specs[:]
-        rng.shuffle(order)
-        order.sort(key=lambda s: -(s[1] * s[2]) if attempt % 2 == 0 else rng.random())   # 큰 것부터 (절반은 아무 순서)
-        rows, cur, curw, maxw = [], [], 0.0, (bx1 - bx0) * rng.uniform(0.72, 1.0)   # 동네마다 폭이 다르게
-        for s in order:
-            g = rng.uniform(MIN_GAP, 3.6) if cur else 0.0
-            if cur and curw + g + s[1] > maxw:
-                rows.append(cur); cur, curw, g = [], 0.0, 0.0
-            cur.append((s, g)); curw += g + s[1]
-        if cur: rows.append(cur)
-        rng.shuffle(rows)
-        gaps = [rng.uniform(MIN_GAP, 3.6) for _ in rows[1:]]
-        hs = [max(s[2] for s, _ in r) for r in rows]
-        total = sum(hs) + sum(gaps)
-        if total > bz1 - bz0: continue
-        out, z = [], bz0 + rng.uniform(0, bz1 - bz0 - total)
-        for i, r in enumerate(rows):
-            roww = sum(g + s[1] for s, g in r)
-            x = bx0 + rng.uniform(0, bx1 - bx0 - roww)
-            align = rng.choice(['n', 's', 'c'])
-            for s, g in r:
-                x += g
-                dz = 0 if align == 'n' else hs[i] - s[2] if align == 's' else (hs[i] - s[2]) / 2
-                out.append(dict(t=s[0], x=x + s[1] / 2, z=z + dz + s[2] / 2, w=s[1], d=s[2]))
-                x += s[1]
-            z += hs[i] + (gaps[i] if i < len(gaps) else 0)
-        if any(o['x'] + o['w'] / 2 > r[0] - 1 and o['x'] - o['w'] / 2 < r[2] + 1 and o['z'] + o['d'] / 2 > r[1] - 1 and o['z'] - o['d'] / 2 < r[3] + 1 for o in out for r in RESERVED): continue   # 다리·길목 앞길에 걸치면 다시
-        return out
-    raise SystemExit('pack failed')
+    solo = [sp for sp in specs if sp[0] != 'house']; houses = [sp for sp in specs if sp[0] == 'house']
+    hit = lambda r, q, m: r[0] < q[2] + m and r[2] > q[0] - m and r[1] < q[3] + m and r[3] > q[1] - m
+    for attempt in range(1500):
+        hs = houses[:]; rng.shuffle(hs)
+        groups = []
+        while hs:                                         # 집을 1 · 2 · 3채 묶음으로 (2~3채가 흔하고 가끔 한 채만 따로)
+            k = min(len(hs), rng.choices([1, 2, 3], [0.22, 0.4, 0.38])[0]); groups.append(hs[:k]); hs = hs[k:]
+        units = [unit_of([sp]) for sp in solo] + [unit_of(gp) for gp in groups]
+        if any(u['W'] > bx1 - bx0 or u['D'] > bz1 - bz0 for u in units): continue
+        sep = rng.uniform(4.2, 7.0) if attempt < 900 else rng.uniform(3.4, 4.5)   # 덩어리 사이 간격 — 안 들어가면 조금 좁힌다
+        placed, ok = [], True
+        for u in sorted(units, key=lambda u: -u['W'] * u['D']):
+            for t in range(120):
+                x, z = rng.uniform(bx0, bx1 - u['W']), rng.uniform(bz0, bz1 - u['D'])
+                r = (x, z, x + u['W'], z + u['D'])
+                if any(hit(r, p, sep * rng.uniform(0.75, 1.3)) for p in placed) or any(hit(r, q, 1.0) for q in RESERVED): continue
+                placed.append(r); u['x'], u['z'] = x, z; break
+            else: ok = False; break
+        if not ok: continue
+        return [dict(t=sp[0], x=u['x'] + x + sp[1] / 2, z=u['z'] + z + sp[2] / 2, w=sp[1], d=sp[2]) for u in units for sp, x, z in u['rects']]
+    return None
 
 types = list(LM); rng.shuffle(types)
 bld, roads = [], list(RESERVED)
@@ -113,12 +124,20 @@ for z in ZONES:
     nL, nW, nH = COUNTS[z['id']]
     blocks, rds = blocks_of(z); roads += rds
     order = list(range(len(blocks))); rng.shuffle(order)
-    load = {i: [] for i in order}
-    for k in range(nL): t = types.pop(); load[order[k % len(order)]].append((t,) + LM[t])
-    for k in range(nW): load[order[(nL + k) % len(order)]].append(('store',) + STORE)
-    for k in range(nH): load[min(order, key=lambda i: (len(load[i]), rng.random()))].append(house())
-    for i in order:
-        for b in pack(blocks[i], load[i]): b['zone'] = z['id']; bld.append(b)
+    base = {i: [] for i in order}
+    for k in range(nL): t = types.pop(); base[order[k % len(order)]].append((t,) + LM[t])
+    for k in range(nW): base[order[(nL + k) % len(order)]].append(('store',) + STORE)
+    for tries in range(200):                               # c4: 집은 블록마다 고르게 나누지 않는다 — 많은 동네와 적은 동네가 생기게
+        load = {i: base[i][:] for i in order}
+        cap = {i: 7 - 1 * len(base[i]) for i in order}
+        for k in range(nH):
+            free = [i for i in order if sum(1 for sp in load[i] if sp[0] == 'house') < cap[i]]
+            load[rng.choices(free, [1.6 - 0.45 * len(base[i]) for i in free])[0]].append(house())
+        res = [pack(blocks[i], load[i]) for i in order]
+        if all(r is not None for r in res): break
+    else: raise SystemExit('zone pack failed')
+    for r in res:
+        for b in r: b['zone'] = z['id']; bld.append(b)
 
 def clear(b, side):                                    # 그 벽 문 앞이 얼마나 트여 있나
     lim = {'n': b['z'] - b['d'] / 2 - Z0, 's': Z0 + H - (b['z'] + b['d'] / 2), 'w': b['x'] - b['w'] / 2 - X0, 'e': X0 + W - (b['x'] + b['w'] / 2)}[side]
@@ -136,6 +155,7 @@ RIVERS = [dict(x=(h[0] + h[2]) / 2, z=(h[1] + h[3]) / 2, w=h[2] - h[0], d=h[3] -
 HILLS = [dict(x=(h[0] + h[2]) / 2, z=(h[1] + h[3]) / 2, w=h[2] - h[0], d=h[3] - h[1]) for h in hills]   # 문 앞 트임을 잴 때 산도 막힌 것으로 본다
 for b in bld:
     ok = [s for s in 'nesw' if (b['w'] if s in 'ns' else b['d']) >= 4.6]   # 문 폭 3.4칸이 들어가는 벽만
+    assert len(ok) >= 2, b
     front = max(ok, key=lambda s: (clear(b, s), s == 's'))
     cand = [s for s in 'nesw' if s != front]
     side = max(cand, key=lambda s: (clear(b, s) if s in ok else -1))
@@ -154,7 +174,7 @@ print(' 정문 방향', dict(Counter(b['doors'][0] for b in bld)), ' 가장 좁�
 A = ZONES[0]['r']
 out = dict(seed=SEED, mm=dict(x0=X0 - 3, z0=Z0 - 3, x1=X0 + W + 3, z1=Z0 + H + 3), start=[(A[0] + A[2]) / 2, A[3] - 3],
            zones=[[round(v, 2) for v in z['r']] for z in ZONES], roads=[[round(v, 2) for v in r] for r in roads],
-           passes=[[a, round(c, 2)] for a, c in PASSES], rivers=[[round(v, 2) for v in r] for r in rivers], bridges=[[round(v, 2) for v in r] for r in bridges],
+           passes=[[a, round(c, 2)] for a, c in PASSES], passPts=[dict(x=0.0 if a == 'v' else round(c, 2), z=round(c, 2) if a == 'v' else round((ZR0 + ZR1) / 2, 2), dir='h' if a == 'v' else 'v') for a, c in PASSES], rivers=[[round(v, 2) for v in r] for r in rivers], bridges=[[round(v, 2) for v in r] for r in bridges],
            b=[dict(x=b['x'], z=b['z'], w=b['w'], d=b['d'], doors=b['doors'], kinds={}, local=i, block=-1, t=b['t'], zone=b['zone'], sideK=b['sideK']) for i, b in enumerate(bld)] +
              [dict(x=round((h[0] + h[2]) / 2, 2), z=round((h[1] + h[3]) / 2, 2), w=round(h[2] - h[0], 2), d=round(h[3] - h[1], 2), doors=[], locks=[], kinds={}, local=len(bld) + i, block=-1, t='hill', zone=-1) for i, h in enumerate(hills)])
 json.dump(out, open('map.json', 'w'), ensure_ascii=False, separators=(',', ':'))
