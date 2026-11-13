@@ -382,15 +382,16 @@ MINIMAP = r'''
     g.save(); g.beginPath();
     for (const z of eyes) { if (!isZombie(z)) continue; const cx = X(z.foot.x), cz = Z(z.foot.z), r = z.sense * sx; g.moveTo(cx + r, cz); g.arc(cx, cz, r, 0, Math.PI * 2); }
     g.clip(); g.drawImage(chLit, 0, 0); g.restore();                      // 지금 보이는 곳 = 밝게
-    const sz2 = 8 * mmDpr;   /* c6: 미니맵이 작아진 만큼 아이콘도 (10.5 → 8) */
-    for (const B of buildings) {
+    const sz2 = 8 * mmDpr, szB = 16 * mmDpr;   /* c14: 건물 아이콘 2배 (8 → 16) — 미니맵은 건물이 나에게서 어느 쪽에 있는지만 보이면 된다 (자세한 지형은 가려져도 된다). 길목 화살표는 그대로 */   /* c6: 미니맵이 작아진 만큼 아이콘도 (10.5 → 8) */
+    for (let pass = 0; pass < 3; pass++) for (const B of buildings) {   // 커진 아이콘이 겹치면 중요한 것이 위로 — 잠식한 건물(X) → 창고 → 랜드마크 순으로 그린다
       if (B.type === 'house' || B.type === 'hill') continue;             // 집과 산은 표시 없음
-      if (!B.found) {                                                    // 건물 자리를 한 칸이라도 밝혔으면 그때부터 표시
+      if (pass === 0 && !B.found) {                                      // 건물 자리를 한 칸이라도 밝혔으면 그때부터 표시
         const cx0 = Math.max(0, Math.floor((B.x0 - MM.x0) / MM_CELL)), cx1 = Math.min(mmW - 1, Math.floor((B.x1 - MM.x0) / MM_CELL));
         const cz0 = Math.max(0, Math.floor((B.z0 - MM.z0) / MM_CELL)), cz1 = Math.min(mmH - 1, Math.floor((B.z1 - MM.z0) / MM_CELL));
         for (let cz = cz0; cz <= cz1 && !B.found; cz++) for (let cx = cx0; cx <= cx1; cx++) if (explored[cz * mmW + cx]) { B.found = true; break; }
       }
-      if (B.found) g.drawImage(CH_ICON[B.done ? 'x' : B.type], X((B.x0 + B.x1) / 2) - sz2 / 2, Z((B.z0 + B.z1) / 2) - sz2 / 2, sz2, sz2);
+      if (!B.found || (B.done ? 0 : B.type === 'store' ? 1 : 2) !== pass) continue;
+      g.drawImage(CH_ICON[B.done ? 'x' : B.type], Math.max(0, Math.min(W - szB, X((B.x0 + B.x1) / 2) - szB / 2)), Math.max(0, Math.min(H - szB, Z((B.z0 + B.z1) / 2) - szB / 2)), szB, szB);   // 가장자리 건물은 미니맵 안쪽으로 당겨서 잘리지 않게
     }
     for (const P of CH_MAP.passPts) {                                     // c4: 길목 — 그 자리를 밝혔으면 양쪽 화살표
       if (!P.found && explored[Math.floor((P.z - MM.z0) / MM_CELL) * mmW + Math.floor((P.x - MM.x0) / MM_CELL)]) P.found = true;
