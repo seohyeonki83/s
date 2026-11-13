@@ -374,3 +374,18 @@ STAR_R = [   # c26: 유전자(능력치) 버튼은 챕터에서 안 쓴다
 XP_R = [   # c28: 레벨업에 필요한 감염 수 — 처음 20명, 그다음부터 1.2배씩
   ("const needXp = (L) => Math.round(10 * Math.pow(1.3, L));", "const needXp = (L) => CHAPTER ? Math.round(20 * Math.pow(1.2, L)) : Math.round(10 * Math.pow(1.3, L));   /* c28: 챕터는 처음 20명, 1.2배씩 */"),
 ]
+
+AWAKE_R = [   # c29: 각성 주사 — 쓰는 동안은 게이지가 줄어들고(남은 변이 시간), 0이 되면 변이가 끝나고 그때부터 다시 모인다
+  ("      awakenMe(it.acc); it.acc = 0; refreshItems(); return;   // c21: 모인 시간을 한 번에 다 쓴다 (다 안 찼어도 된다)",
+   "      awakenMe(it.acc); it.drain = true; refreshItems(); return;   // c21: 모인 시간을 한 번에 다 쓴다 (다 안 찼어도 된다) · c29: 쓰는 동안 게이지가 줄어든다"),
+  ("      if (it.kind === 'awaken') { const m = chAccMax(); it.acc = Math.min(m, (it.acc || 0) + dt * m / (40 * (1 - bookCut()))); continue; }   // c21: 각성 주사 — 가득 차는 데 늘 40초 (백과사전이 줄여 준다)",
+   "      if (it.kind === 'awaken') {\n"
+   "        if (it.drain) { if (me.mut) { it.acc = Math.max(0, me.mutT); continue; } it.drain = false; it.acc = 0; }   // c29: 변이하는 동안은 남은 시간만큼 게이지가 줄어든다 (모이지 않는다). 변이가 끝나면 0에서 다시 모인다\n"
+   "        const m = chAccMax(); it.acc = Math.min(m, (it.acc || 0) + dt * m / (40 * (1 - bookCut()))); continue;   // c21: 가득 차는 데 늘 40초 (백과사전이 줄여 준다)\n"
+   "      }"),
+  ("it.el.querySelector('.n').textContent = Math.floor(it.acc); it.el.classList.toggle('empty', it.acc < 1); }   // 각성 주사는 모인 시간(초)",
+   "it.el.querySelector('.n').textContent = it.drain ? Math.ceil(it.acc) : Math.floor(it.acc); it.el.classList.toggle('empty', !it.drain && it.acc < 1); }   // 각성 주사는 모인 시간(초) — c29: 쓰는 동안은 남은 시간이 거꾸로 줄어든다"),
+  ("    awaken: ['모아 둔 시간만큼 내가 변이 좀비로 변합니다. 쓰지 않는 동안 시간이 모입니다.', '강화 시 모을 수 있는 시간이 늘어납니다.'],",
+   "    awaken: ['모아 둔 시간만큼 내가 변이 좀비로 변합니다. 변이가 끝나면 다시 시간이 모입니다.', '강화 시 모을 수 있는 시간이 늘어납니다.'],"),
+  ("    awaken: (n) => `최대 ${10 + 3 * n}초 변이 · 가득 모이는 데 40초`,", "    awaken: (n) => `최대 ${10 + 3 * n}초 변이 · 변이가 끝나고 가득 모이는 데 40초`,"),
+]
