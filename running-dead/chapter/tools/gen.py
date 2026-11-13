@@ -2,7 +2,7 @@
 import json, random, sys
 SEED = int(sys.argv[1]) if len(sys.argv) > 1 else 7
 rng = random.Random(SEED)
-ZW, BIG_H, SMALL_H, GAP = 60.0, 96.0, 48.0, 10.0       # c2: 넓이를 3분의 2로 (한 변 0.816배) — 큰 구역 60×96, 작은 구역은 그 절반. 구역 사이 = 산줄기 10칸
+ZW, BIG_H, SMALL_H, GAP = 60.0, 96.0, 48.0, 13.0       # c2: 넓이를 3분의 2로 (한 변 0.816배) — 큰 구역 60×96, 작은 구역은 그 절반. 구역 사이 = 산줄기 10칸
 PASS, EDGE = 8.0, 3.5                                   # 산을 넘는 길목 폭, 지도 가장자리 여유 (산은 가장자리 끝까지 막는다)
 ZPAD = 2.0
 AVE_V, AVE_H, PAD = 6.0, 5.0, 1.5                      # 구역 안 대로 폭 (세로·가로), 블록 안쪽 여백
@@ -111,7 +111,7 @@ def ridge(axis, s0, s1):                                 # 줄기 한 토막 [s0
         L = rng.uniform(7, 12)
         if s1 - (p + L) < 5: L = s1 - p                   # 끝에 자투리가 남지 않게
         last = p + L >= s1 - 0.01
-        wd = GAP if first or last else rng.uniform(7.5, GAP)   # 길목 옆은 폭을 꽉 채워 깔끔한 절벽으로
+        wd = GAP if first or last else rng.uniform(GAP * 0.75, GAP)   # 길목 옆은 폭을 꽉 채워 깔끔한 절벽으로
         off = rng.uniform(0, GAP - wd)
         a0, a1 = p - (0 if first else 0.8), p + L          # 앞 덩어리와 0.8칸 겹쳐 틈이 없게
         if axis == 'v': hills.append((c0 + off, a0, c0 + off + wd, a1))
@@ -196,7 +196,11 @@ print(' 정문 방향', dict(Counter(b['doors'][0] for b in bld)), ' 가장 좁�
 A = ZONES[0]['r']
 out = dict(seed=SEED, mm=dict(x0=X0 - 3, z0=Z0 - 3, x1=X0 + W + 3, z1=Z0 + H + 3), start=[(A[0] + A[2]) / 2, A[3] - 3],
            zones=[[round(v, 2) for v in z['r']] for z in ZONES], roads=[[round(v, 2) for v in r] for r in roads],
-           passes=[[a, round(c, 2)] for a, c in PASSES], passPts=[dict(x=0.0 if a == 'v' else round(c, 2), z=round(c, 2) if a == 'v' else round((ZR0 + ZR1) / 2, 2), dir='h' if a == 'v' else 'v') for a, c in PASSES], rivers=[[round(v, 2) for v in r] for r in rivers], bridges=[[round(v, 2) for v in r] for r in bridges],
+           passes=[[a, round(c, 2)] for a, c in PASSES], gap=GAP, passW=PASS, zrMid=round((ZR0 + ZR1) / 2, 2),
+           passes2=[dict(axis=a, c=round(c, 2), len=GAP + 5.0,
+                         **(dict(ax=-GAP / 2 - 2.5, az=round(c, 2), bx=GAP / 2 + 2.5, bz=round(c, 2), za=0 if c > (ZR0 + ZR1) / 2 else 2, zb=1 if c > (ZR0 + ZR1) / 2 else 3) if a == 'v' else
+                            dict(ax=round(c, 2), az=ZR1 + 2.5, bx=round(c, 2), bz=ZR0 - 2.5, za=0 if c < 0 else 1, zb=2 if c < 0 else 3))) for a, c in PASSES],   # 먼 길 찾기용 — 길목의 양 끝과 이어진 두 구역 (구역 0 남서 · 1 남동 · 2 북서 · 3 북동)
+           passPts=[dict(x=0.0 if a == 'v' else round(c, 2), z=round(c, 2) if a == 'v' else round((ZR0 + ZR1) / 2, 2), dir='h' if a == 'v' else 'v') for a, c in PASSES], rivers=[[round(v, 2) for v in r] for r in rivers], bridges=[[round(v, 2) for v in r] for r in bridges],
            lots=[[round(v, 2) for v in l] for l in LOTS],
            b=[dict(dict(x=b['x'], z=b['z'], w=b['w'], d=b['d'], doors=b['doors'], kinds={}, local=i, block=-1, t=b['t'], zone=b['zone']), **(dict(garage=True, open=b['open'], locks=[]) if b.get('garage') else dict(sideK=b['sideK']))) for i, b in enumerate(bld)] +
              [dict(x=round((h[0] + h[2]) / 2, 2), z=round((h[1] + h[3]) / 2, 2), w=round(h[2] - h[0], 2), d=round(h[3] - h[1], 2), doors=[], locks=[], kinds={}, local=len(bld) + i, block=-1, t='hill', zone=-1) for i, h in enumerate(hills)])

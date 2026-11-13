@@ -77,6 +77,201 @@ ICONS = r'''
     }
   }
   const chRiverSegs = CHAPTER ? CH_MAP.rivers.flatMap(([x0, z0, x1, z1]) => [[x0, z0, x1, z0], [x0, z1, x1, z1], [x0, z0, x0, z1], [x1, z0, x1, z1]]) : [];
+  // ── c13: 먼 길 찾기 — 목적지가 강·산 건너 다른 구역이면 길목(다리·산 길목)을 거쳐 간다. 같은 구역 안에서는 지금까지의 길 찾기 그대로 ──
+  //    구역 넷(0 남서 · 1 남동 · 2 북서 · 3 북동)은 땅이 네모반듯해서, 같은 구역 땅 위의 두 자리는 강·산을 안 건너고 곧장 이어진다.
+  //    길목마다 양 끝에 마디를 하나씩 두고 (다리 3 + 산 길목 2 = 마디 10개) 마디 사이 가장 짧은 거리를 미리 구해 둔다.
+  //    걸음마다: 목적지가 곧장 닿는 곳이면 그대로, 아니면 '내가 곧장 닿는 마디 → … → 목적지에 곧장 닿는 마디'가 가장 짧은 길의 첫 마디로 간다
+  const chZoneOf = (x, z) => (x > 0 ? 1 : 0) + (z < CH_MAP.zrMid ? 2 : 0);   // 강 한가운데 x = 0, 산줄기 한가운데 z = zrMid 기준
+  const CH_PH = CH_MAP.passW / 2, CH_PIN = CH_MAP.gap / 2, CH_PEND = CH_MAP.gap / 2 + 2.5;   // 길목 반폭 · 강/산 한가운데에서 그 가장자리까지 · 마디(길목 끝)까지
+  const chNode = [];                          // 마디 {x, z, zone: 닿는 구역, p: 길목 번호}
+  CH_MAP.passes2.forEach((P, i) => { chNode.push({ x: P.ax, z: P.az, zone: P.za, p: i }, { x: P.bx, z: P.bz, zone: P.zb, p: i }); });
+  const chND = chNode.map((a, i) => chNode.map((b, j) => i === j ? 0 : a.p === b.p || a.zone === b.zone ? Math.hypot(a.x - b.x, a.z - b.z) : Infinity));   // 같은 길목의 두 끝, 같은 구역의 두 마디는 곧장 이어진다
+  for (let k = 0; k < chNode.length; k++) for (let i = 0; i < chNode.length; i++) for (let j = 0; j < chNode.length; j++) if (chND[i][k] + chND[k][j] < chND[i][j]) chND[i][j] = chND[i][k] + chND[k][j];
+  // 자리 하나가 어디에 속하나 — corr = 길목 번호 (길목 통로와 그 어귀. 아니면 -1), land = 구역 땅 위인가 (강 위 다리·산 사이 통로 한가운데면 false)
+  const chS = { zone: 0, corr: -1, land: true }, chT = { zone: 0, corr: -1, land: true };
+  function chClass(x, z, o) {
+    o.corr = -1; o.land = true; o.zone = chZoneOf(x, z);
+    for (let i = 0; i < CH_MAP.passes2.length; i++) {
+      const P = CH_MAP.passes2[i], v = P.axis === 'v', s = Math.abs(v ? x : z - CH_MAP.zrMid), l = Math.abs((v ? z : x) - P.c);
+      if (l < CH_PH && s < CH_PEND + 0.5) { o.corr = i; o.land = s >= CH_PIN; return o; }
+    }
+    return o;
+  }
+  const chSees = (o, n) => o.corr === n.p || (o.land && o.zone === n.zone);   // 그 자리에서 이 마디까지 곧장 갈 수 있나
+  const chRouteOut = [0, 0], chTD = [];
+  function chRoute(b, tx, tz) {
+    const px = b.foot.x, pz = b.foot.z;
+    chRouteOut[0] = tx; chRouteOut[1] = tz;
+    chClass(px, pz, chS); chClass(tx, tz, chT);
+    if ((chS.corr >= 0 && chS.corr === chT.corr) || (chS.land && chT.land && chS.zone === chT.zone)) return chRouteOut;   // 곧장 닿는다 (같은 구역 땅 · 같은 길목)
+    const N = chNode.length;
+    for (let j = 0; j < N; j++) chTD[j] = chSees(chT, chNode[j]) ? Math.hypot(chNode[j].x - tx, chNode[j].z - tz) : Infinity;
+    let best = Infinity, bi = -1;
+    for (let i = 0; i < N; i++) {
+      const n = chNode[i]; if (!chSees(chS, n)) continue;
+      const d0 = Math.hypot(n.x - px, n.z - pz), d = d0 + (d0 < 0.6 ? 0.05 : 0);   // 이미 그 마디에 와 있으면 다음 마디가 이기게 (제자리에 서지 않게)
+      for (let j = 0; j < N; j++) { const c = d + chND[i][j] + chTD[j]; if (c < best) { best = c; bi = i; } }
+    }
+    if (bi < 0) return chRouteOut;
+    const n = chNode[bi], v = CH_MAP.passes2[n.p].axis === 'v';
+    if (b.laneK === undefined) b.laneK = Math.random() * 2 - 1;   // 길목 폭 안에서 저마다 다른 줄로 — 한 줄로 몰리지 않게
+    const off = b.laneK * (CH_PH - 1.3);
+    chRouteOut[0] = n.x + (v ? 0 : off); chRouteOut[1] = n.z + (v ? off : 0);
+    return chRouteOut;
+  }
+  // 동료 자리가 강물·산 속에 걸리거나 그 너머로 넘어가면 내 쪽 물가·산기슭으로 당긴다 — 자리가 건너편이 돼서 동료가 길목을 돌아 반대편으로 가 버리지 않게
+  let chBlocks = null;
+  const chSlotOut = [0, 0];
+  function chSlotFix(x, y) {
+    if (!chBlocks) chBlocks = CH_MAP.rivers.map(([x0, z0, x1, z1]) => ({ x0, z0, x1, z1 })).concat(buildings.filter((B) => B.type === 'hill'));
+    const mx = me.foot.x, mz = me.foot.z, m = 0.7;
+    for (let k = 0; k < 2; k++) for (const R of chBlocks) {
+      const t = segRect(mx, mz, x, y, R, 0);  // 나 → 자리 선이 강·산에 처음 닿는 곳
+      if (t < Infinity) { x = mx + (x - mx) * t; y = mz + (y - mz) * t; }
+      if (x <= R.x0 - m || x >= R.x1 + m || y <= R.z0 - m || y >= R.z1 + m) continue;
+      const l = x - (R.x0 - m), r = R.x1 + m - x, u = y - (R.z0 - m), w = R.z1 + m - y, q = Math.min(l, r, u, w);   // 가장 가까운 가장자리 밖으로 (0.7칸)
+      if (q === l) x = R.x0 - m; else if (q === r) x = R.x1 + m; else if (q === u) y = R.z0 - m; else y = R.z1 + m;
+    }
+    chSlotOut[0] = x; chSlotOut[1] = y; return chSlotOut;
+  }
+  // ── c13: 나에게 가는 흐름 — 멀리 있는 동료는 멀리 있는 자기 자리까지 길을 따로 찾지 않고, 내 자리에서 맵 전체로 퍼뜨린 '걸어서 가는 거리'를 따라 내려온다 ──
+  //    거리는 한 번만 계산해서 전원이 같이 읽는다 (동료가 몇 명이든 계산은 한 번). 강·산·막다른 길처럼 건물 하나보다 큰 장애물도 크기와 상관없이 돌아 나온다.
+  //    가까이 와서 자기 자리까지 곧게 뚫리면 그때부터는 지금까지처럼 자기 자리로 간다 (무리가 커서 자리가 멀수록 '일단 나한테'가 먼저)
+  const CF = 1, CF_INF = 65535;               // 칸 크기 (칸) · 못 닿는 칸
+  let cfW = 0, cfH = 0, cfBlock = null, cfD = null, cfN8 = null, cfNA = null, cfNB = null, cfAt = -1e9, cfKey = '', cfReady = false, cfRuns = 0;
+  const cfQ = [[], [], [], [], [], [], [], []], cfSeedI = [], cfSeedD = [];
+  function cfInit() {
+    cfW = Math.ceil((MM.x1 - MM.x0) / CF) + 2; cfH = Math.ceil((MM.z1 - MM.z0) / CF) + 2;   // 둘레 한 줄은 늘 막힌 칸 — 이웃을 볼 때 가장자리 검사를 안 하려고
+    cfBlock = new Uint8Array(cfW * cfH); cfD = new Uint16Array(cfW * cfH);
+    cfN8 = [-1, 1, -cfW, cfW, -cfW - 1, -cfW + 1, cfW - 1, cfW + 1]; cfNA = [0, 0, 0, 0, -1, 1, -1, 1]; cfNB = [0, 0, 0, 0, -cfW, -cfW, cfW, cfW];   // 대각선 이웃은 그 옆 두 칸이 다 비어야 지난다 (모서리를 가로지르지 않게)
+    for (let cz = 0; cz < cfH; cz++) { cfBlock[cz * cfW] = 1; cfBlock[cz * cfW + cfW - 1] = 1; }
+    for (let cx = 0; cx < cfW; cx++) { cfBlock[cx] = 1; cfBlock[(cfH - 1) * cfW + cx] = 1; }
+    const m = BODY + 0.05;                    // 칸 가운데가 벽·물가에서 몸 반지름 넘게 떨어져야 빈 칸
+    const mark = (x0, z0, x1, z1) => {
+      const a = Math.max(1, Math.ceil((x0 - m - MM.x0) / CF + 0.5)), b = Math.min(cfW - 2, Math.floor((x1 + m - MM.x0) / CF + 0.5));
+      const c = Math.max(1, Math.ceil((z0 - m - MM.z0) / CF + 0.5)), d = Math.min(cfH - 2, Math.floor((z1 + m - MM.z0) / CF + 0.5));
+      for (let cz = c; cz <= d; cz++) for (let cx = a; cx <= b; cx++) cfBlock[cz * cfW + cx] = 1;
+    };
+    for (const B of buildings) mark(B.x0, B.z0, B.x1, B.z1);
+    for (const [x0, z0, x1, z1] of CH_MAP.rivers) mark(x0, z0, x1, z1);
+  }
+  const cfCell = (x, z) => { const cx = Math.floor((x - MM.x0) / CF) + 1, cz = Math.floor((z - MM.z0) / CF) + 1; return cx < 1 || cz < 1 || cx >= cfW - 1 || cz >= cfH - 1 ? -1 : cz * cfW + cx; };
+  const cfX = (i) => MM.x0 + ((i % cfW) - 0.5) * CF, cfZ = (i) => MM.z0 + (((i / cfW) | 0) - 0.5) * CF;   // 칸 가운데
+  function cfSeed(x, z, c0) {                 // (x, z) 둘레의 빈 칸을 출발 칸으로 — 처음 거리 = c0 + 그 칸 가운데까지 (내 칸이 벽 옆이라 막힌 칸이어도 출발할 수 있게 둘레를 같이 넣는다)
+    const cx0 = Math.floor((x - MM.x0) / CF) + 1, cz0 = Math.floor((z - MM.z0) / CF) + 1;
+    for (let dz = -2; dz <= 2; dz++) for (let dx = -2; dx <= 2; dx++) {
+      const cx = cx0 + dx, cz = cz0 + dz; if (cx < 1 || cz < 1 || cx >= cfW - 1 || cz >= cfH - 1) continue;
+      const i = cz * cfW + cx; if (cfBlock[i]) continue;
+      const d = Math.hypot(cfX(i) - x, cfZ(i) - z); if (d > 1.6 * CF) continue;
+      cfSeedI.push(i); cfSeedD.push(Math.round((c0 + d) / CF * 5));
+    }
+  }
+  function cfCompute() {                      // 나(안에 있으면 그 건물의 열린 문 앞)에서 모든 빈 칸까지 걸어서 가는 거리 — 곧은 걸음 5, 대각선 7
+    if (!cfBlock) cfInit();
+    cfD.fill(CF_INF); for (const q of cfQ) q.length = 0; cfSeedI.length = 0; cfSeedD.length = 0; cfReady = false; cfRuns++;
+    const S = me.space;
+    if (!S) cfSeed(me.foot.x, me.foot.z, 0);
+    else for (const D of S.doors) cfSeed(D.cx + D.nx * 1.2, D.cz + D.nz * 1.2, Math.hypot(D.cx - me.foot.x, D.cz - me.foot.z) + 1.2);
+    if (!cfSeedI.length) return;
+    const order = cfSeedI.map((_, k) => k).sort((a, b) => cfSeedD[a] - cfSeedD[b]), W = cfW, blk = cfBlock, D = cfD;
+    let si = 0, cur = cfSeedD[order[0]], pend = 0;
+    for (;;) {
+      while (si < order.length && cfSeedD[order[si]] <= cur) { const k = order[si++], i = cfSeedI[k], d = cfSeedD[k]; if (d < D[i]) { D[i] = d; cfQ[d & 7].push(i); pend++; } }
+      const q = cfQ[cur & 7], o5 = cur + 5, o7 = cur + 7, q5 = cfQ[o5 & 7], q7 = cfQ[o7 & 7];
+      for (let k = 0; k < q.length; k++) {
+        const i = q[k]; if (D[i] !== cur) continue;   // 더 가까운 길로 이미 다시 들어간 칸
+        const l = !blk[i - 1], r = !blk[i + 1], u = !blk[i - W], d = !blk[i + W];
+        if (l && D[i - 1] > o5) { D[i - 1] = o5; q5.push(i - 1); pend++; }
+        if (r && D[i + 1] > o5) { D[i + 1] = o5; q5.push(i + 1); pend++; }
+        if (u && D[i - W] > o5) { D[i - W] = o5; q5.push(i - W); pend++; }
+        if (d && D[i + W] > o5) { D[i + W] = o5; q5.push(i + W); pend++; }
+        if (l && u && !blk[i - W - 1] && D[i - W - 1] > o7) { D[i - W - 1] = o7; q7.push(i - W - 1); pend++; }
+        if (r && u && !blk[i - W + 1] && D[i - W + 1] > o7) { D[i - W + 1] = o7; q7.push(i - W + 1); pend++; }
+        if (l && d && !blk[i + W - 1] && D[i + W - 1] > o7) { D[i + W - 1] = o7; q7.push(i + W - 1); pend++; }
+        if (r && d && !blk[i + W + 1] && D[i + W + 1] > o7) { D[i + W + 1] = o7; q7.push(i + W + 1); pend++; }
+      }
+      pend -= q.length; q.length = 0;
+      if (pend <= 0 && si >= order.length) break;
+      cur++;
+    }
+    cfReady = true;
+  }
+  function cfFresh() {                        // 내가 다른 칸으로 옮겼을 때만, 많아야 0.25초에 한 번 다시 계산한다 (곧게 못 오는 동료가 있을 때만 불린다)
+    if (clock < cfAt) cfAt = -1e9;            // 새 판
+    const S = me.space, key = S ? 'b' + S.local + ':' + S.doors.length : 'c' + cfCell(me.foot.x, me.foot.z);
+    if (cfReady && (key === cfKey || clock - cfAt < 0.25)) return;
+    if (!cfReady && clock - cfAt < 0.25 && key === cfKey) return;   // 출발 칸을 못 잡은 채면 같은 자리에서 되풀이하지 않는다
+    cfCompute(); cfKey = key; cfAt = clock;
+  }
+  function cfDist(x, z) {                     // 그 자리에서 나까지 걸어서 가는 거리 (칸) — 막힌 칸(벽에 바짝)이면 둘레 빈 칸 값으로, 닿는 길이 없으면 Infinity
+    const i = cfCell(x, z); if (i < 0) return Infinity;
+    if (cfD[i] !== CF_INF) return cfD[i] / 5 * CF;
+    let m = CF_INF; for (let n = 0; n < 8; n++) if (cfD[i + cfN8[n]] < m) m = cfD[i + cfN8[n]];
+    return m === CF_INF ? Infinity : m / 5 * CF + CF;
+  }
+  function cfLos(ax, az, bx, bz) {            // 칸 지도에서 두 자리가 곧게 이어지나 (출발 쪽 0.75칸은 안 본다 — 벽에 붙어 서 있을 수 있다)
+    const L = Math.hypot(bx - ax, bz - az), n = Math.ceil(L / (0.45 * CF));
+    for (let k = 1; k <= n; k++) {
+      const t = k / n; if (t * L < 0.75) continue;
+      const i = cfCell(ax + (bx - ax) * t, az + (bz - az) * t); if (i < 0 || cfBlock[i]) return false;
+    }
+    return true;
+  }
+  const cfOut = [0, 0];
+  function cfStep(b) {                        // 흐름을 따라 내려가는 길 위에서, 지금 자리에서 곧게 보이는 가장 먼 칸 (최대 14칸 앞) — 칸마다 꺾지 않고 길게 보고 간다
+    const px = b.foot.x, pz = b.foot.z;
+    let i = cfCell(px, pz); if (i < 0) return null;
+    let first = true;
+    if (cfD[i] === CF_INF) {                  // 벽에 바짝 붙어 막힌 칸에 서 있으면 둘레에서 나에게 가장 가까운 빈 칸부터
+      let m = CF_INF, bi = -1; for (let n = 0; n < 8; n++) { const j = i + cfN8[n]; if (cfD[j] < m) { m = cfD[j]; bi = j; } }
+      if (bi < 0) return null; i = bi; first = false; cfOut[0] = cfX(i); cfOut[1] = cfZ(i);
+    }
+    for (let k = 0; k < 14; k++) {
+      let m = cfD[i], ni = -1;
+      for (let n = 0; n < 8; n++) { const j = i + cfN8[n]; if (cfD[j] >= m) continue; if (n >= 4 && (cfBlock[i + cfNA[n]] || cfBlock[i + cfNB[n]])) continue; m = cfD[j]; ni = j; }
+      if (ni < 0) break;                      // 출발 칸(내 자리)에 닿았다
+      i = ni;
+      const x = cfX(i), z = cfZ(i);
+      if (!first && !cfLos(px, pz, x, z)) break;   // 첫 칸은 바로 옆 빈 칸이라 그냥 간다
+      first = false; cfOut[0] = x; cfOut[1] = z;
+    }
+    return first ? null : cfOut;
+  }
+  let chBlk = null;                           // 길을 막는 것 전부 — 건물(산 포함) + 강 토막
+  function chLos(px, pz, tx, tz) {            // 두 자리가 곧게 이어지나 — around()와 같은 기준 (0.2칸 넓혀서 보고, 내가 그 둘레 안이면 그 건물은 뺀다)
+    for (const R of chBlk) {
+      if (px > R.x0 - GAP && px < R.x1 + GAP && pz > R.z0 - GAP && pz < R.z1 + GAP) continue;
+      if (segRect(px, pz, tx, tz, R, GAP) < Infinity) return false;
+    }
+    return true;
+  }
+  // c13 길잡이 — 밖에 있는 몸이 (tx, tz)로 갈 때 이번에 향할 자리. null이면 목적지 그대로 (곧게 뚫렸거나, 건물 모서리 돌아가기에 맡긴다)
+  //   ① 목적지까지 곧게 뚫렸으면 그대로
+  //   ② 강·산 건너면 길목(다리·산 길목)을 거쳐서 — 길목 폭 안에서 저마다 다른 줄로 (큰 무리가 한 줄로 몰리지 않게)
+  //   ③ 같은 구역인데 막혔고 나에게서 멀면 (걸어서 목적지보다 4칸 넘게 멀다) 자기 자리 대신 '나에게 가는 흐름'을 따라온다
+  //   ④ 어느 경우든 1.5초 동안 제자리에서 못 움직이면 (모서리 하나로 안 풀리는 막다른 곳·낀 곳) 3초 동안 흐름을 타고 빠져나온다
+  function chGuide(b, tx, tz) {
+    const px = b.foot.x, pz = b.foot.z;
+    if (Math.hypot(tx - me.foot.x, tz - me.foot.z) > DOMAIN * armyK * 1.5 + 6) {   // 내 둘레가 아닌 목적지 — 흐름('나에게 가는 길')은 못 쓴다. 다른 구역이면 길목만 거친다
+      const r = chRoute(b, tx, tz); return r[0] === tx && r[1] === tz ? null : r;
+    }
+    if (!chBlk) chBlk = buildings.concat(CH_MAP.rivers.map(([x0, z0, x1, z1]) => ({ x0, z0, x1, z1 })));
+    if (chLos(px, pz, tx, tz)) { b.flow = false; b.cfForce = 0; b.cfSeen = -1; return null; }
+    const r = chRoute(b, tx, tz), cross = r[0] !== tx || r[1] !== tz;
+    cfFresh();
+    const fb = cfReady ? cfDist(px, pz) : Infinity;
+    if (fb === Infinity) return cross ? r : null;           // 흐름을 못 쓰는 자리 (칸 지도에서 닿는 길이 없다)
+    if (b.cfForce > clock && fb > 2) { const w = cfStep(b); if (w) return w; }
+    if (!(clock - b.cfSeen < 0.5) || Math.hypot(px - b.cfAx, pz - b.cfAz) > 1.2) { b.cfAx = px; b.cfAz = pz; b.cfSince = clock; }   // 제자리에 묶여 있나 — 1.2칸 넘게 움직일 때마다 다시 잰다
+    b.cfSeen = clock;
+    if (clock - b.cfSince > 1.5 && fb > 2.5) { b.cfForce = clock + 3; b.cfSince = clock; const w = cfStep(b); if (w) return w; }
+    if (cross) { b.flow = false; return r; }
+    const fT = cfDist(tx, tz); if (fT > DOMAIN * armyK * 1.5 + 6) return null;   // 곧은 거리는 가까워도 걸어서는 먼 목적지
+    if (fb <= fT + (b.flow ? 1.5 : 4)) { b.flow = false; return null; }           // 이미 내 둘레 — 여기서부터는 건물 모서리 돌아가기
+    const w = cfStep(b); if (!w) return null;
+    b.flow = true; return w;
+  }
+  let chShadow = () => {};
   const chNearBuf = [];
   function chWallsNear(x, z, R) {             // 도망 방향을 잴 때 볼 벽 — 둘레 R칸 안 건물 벽(닫힌 문 포함)과 강가. 강도 벽처럼 막힌 것으로 본다
     chNearBuf.length = 0;
@@ -122,7 +317,31 @@ ICONS = r'''
       scene.remove(B.roof);
       const w = B.x1 - B.x0 + 0.3, d = B.z1 - B.z0 + 0.3, geo = new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2), uv = geo.attributes.uv;
       for (let i = 0; i < uv.count; i++) uv.setXY(i, (B.x0 + uv.getX(i) * w) / 14, (B.z0 + (1 - uv.getY(i)) * d) / 14);   // 땅 기준 무늬 (14칸마다 반복)
-      B.roof = new THREE.Mesh(geo, hillMat); B.roof.position.set((B.x0 + B.x1) / 2, 0.03, (B.z0 + B.z1) / 2); B.roof.renderOrder = -0.51; scene.add(B.roof);
+      B.roof = new THREE.Mesh(geo, hillMat); B.roof.position.set((B.x0 + B.x1) / 2, 0.03, (B.z0 + B.z1) / 2); B.roof.renderOrder = -0.46; scene.add(B.roof);   // c13: 산 그림자(-0.47) 위 — 산 자체는 늘 보인다
+    }
+    // c13: 산 그림자 — 산 너머(나에게서 산에 가려진 쪽)는 안 보인다. 산 덩어리마다 나를 기준으로 그 뒤쪽을 검게 덮는다 (지붕·아이콘 위, 캐릭터 밑).
+    //      지금 좀비들이 보고 있는 자리는 덮지 않는다 (시야 표시와 같은 스텐실). 강은 그림자가 없어서 건너편이 그대로 보인다
+    {
+      const hs = buildings.filter((B) => B.type === 'hill'), pos = new Float32Array(hs.length * 18), geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
+        stencilWrite: true, stencilRef: 1, stencilFunc: THREE.NotEqualStencilFunc, stencilFail: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp, stencilZPass: THREE.KeepStencilOp }));
+      mesh.frustumCulled = false; mesh.renderOrder = -0.47; scene.add(mesh);   // 지붕(-0.51)·아이콘·벽 위, 거리 원(-0.45)·캐릭터 밑
+      chShadow = () => {
+        const px = me.foot.x, pz = me.foot.z, L = 400; let o = 0;
+        for (const B of hs) {
+          const cs = [[B.x0, B.z0], [B.x1, B.z0], [B.x1, B.z1], [B.x0, B.z1]];
+          let bi = 0, bj = 1, low = 2;                // 나에게서 가장 벌어져 보이는 두 모서리 = 그 덩어리의 윤곽
+          for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) {
+            const ax = cs[i][0] - px, az = cs[i][1] - pz, bx = cs[j][0] - px, bz = cs[j][1] - pz, c = (ax * bx + az * bz) / ((Math.hypot(ax, az) || 1e-6) * (Math.hypot(bx, bz) || 1e-6));
+            if (c < low) { low = c; bi = i; bj = j; }
+          }
+          const [ax, az] = cs[bi], [bx, bz] = cs[bj], da = Math.hypot(ax - px, az - pz) || 1e-6, db = Math.hypot(bx - px, bz - pz) || 1e-6;
+          const ax2 = ax + (ax - px) / da * L, az2 = az + (az - pz) / da * L, bx2 = bx + (bx - px) / db * L, bz2 = bz + (bz - pz) / db * L;
+          pos.set([ax, 0.05, az, bx, 0.05, bz, bx2, 0.05, bz2, ax, 0.05, az, bx2, 0.05, bz2, ax2, 0.05, az2], o); o += 18;
+        }
+        geo.attributes.position.needsUpdate = true;
+      };
     }
     buildings.forEach((B, i) => {
       if (B.type === 'hill') return;
@@ -218,6 +437,9 @@ R = [
   ("    for (const b of bodies) {                 // 지도(미니맵) 밖으로는 못 나간다 (v174)\n      const r = b.r || BODY;", "    for (const b of bodies) {                 // 지도(미니맵) 밖으로는 못 나간다 (v174)\n      if (b.sleep) continue;\n      const r = b.r || BODY;"),
   ("    const sp = c.vel.length();\n    let best = -Infinity, bx = 1, bz = 0;", "    const sp = c.vel.length();\n    const chNear = CHAPTER ? chWallsNear(c.foot.x, c.foot.z, PANIC_SPEED * LOOK + BODY + 1) : walls;   // c11: 가까운 벽과 강가만\n    let best = -Infinity, bx = 1, bz = 0;"),
   ("      const room = wallRay(c.foot.x, c.foot.z, dx, dz, PANIC_SPEED * LOOK + BODY) - BODY;", "      const room = wallRay(c.foot.x, c.foot.z, dx, dz, PANIC_SPEED * LOOK + BODY, chNear) - BODY;"),
+  ("    aroundCars = b.kind === 'citizen'; const w = around(b.foot.x, b.foot.z, tx, tz); aroundCars = true; return w;", "    if (CHAPTER) { const g = chGuide(b, tx, tz); if (g) { tx = g[0]; tz = g[1]; } }   // c13: 강·산 건너면 길목을 거쳐서, 멀리서 막혔으면 '나에게 가는 흐름'을 따라\n    aroundCars = b.kind === 'citizen'; const w = around(b.foot.x, b.foot.z, tx, tz); aroundCars = true; return w;"),
+  ("    draw(dt);\n    checkTut();", "    draw(dt);\n    if (CHAPTER) chShadow();                  // c13: 산 그림자\n    checkTut();"),
+  ("    const B = me.space, m = 0.7;\n    if (B) { x = Math.max(B.x0 + m,", "    if (CHAPTER && !me.space) { const f = chSlotFix(x, y); x = f[0]; y = f[1]; }   // c13: 강물·산 속 자리는 내 쪽으로\n    const B = me.space, m = 0.7;\n    if (B) { x = Math.max(B.x0 + m,"),
   ("    B.doors = [].map((side) => {", "    B.doors = (s.open || []).map((side) => {   /* c5: 차고 — 한쪽 벽이 처음부터 통째로 뚫려 있다 */"),
   ("w: s.station ? DOOR * 4 / 9 : DOOR };", "w: s.garage ? (nx ? s.d : s.w) - 0.5 : s.station ? DOOR * 4 / 9 : DOOR };"),
   ("o.hp = o.maxHp = B.side ? MY_DAMAGE * 3.5 : MY_DAMAGE * 19.5;", "o.hp = o.maxHp = B.side || B.garage ? MY_DAMAGE * 3.5 : MY_DAMAGE * 19.5;   /* c5: 차고 문도 집 문과 같다 */"),
@@ -233,7 +455,7 @@ R = [
   ("    for (const b of bodies) if (!b.fixed) wallCollide(b);   // 벽은 마지막에 — 서로 밀다가 벽을 넘지 않게", "    for (const b of bodies) if (!b.fixed && !b.sleep) wallCollide(b);   // 벽은 마지막에 — 서로 밀다가 벽을 넘지 않게\n    if (CHAPTER) for (const b of bodies) if (!b.fixed && !b.sleep) riverCollide(b);   // c3: 강"),
   ("  for (const [ax, az, bx, bz] of walls) flat(", "  for (const [ax, az, bx, bz] of buildings.flatMap((B) => (B.type === 'hill' ? [] : B.walls))) flat("),   # c2: 산은 벽 선을 안 그린다
   ("|| cand[Math.floor(Math.random() * cand.length)];   /* v431", "|| cand[B.sideK !== undefined ? B.sideK % cand.length : Math.floor(Math.random() * cand.length)];   /* c1: 챕터 맵은 쪽문 자리도 고정 */   /* v431"),
-  ("bodies, spawn, fleeDir, step: stepWorld };", "bodies, spawn, fleeDir, step: stepWorld, buildings, explored };"),
+  ("bodies, spawn, fleeDir, step: stepWorld };", "bodies, spawn, fleeDir, step: stepWorld, buildings, explored, ch: CHAPTER ? CH_MAP : null, zombify: makeZombie, slotOf, route: CHAPTER ? chRoute : null, cf: () => ({ D: cfD, W: cfW, H: cfH, block: cfBlock, ready: cfReady, runs: cfRuns, dist: cfDist }), get armyK() { return armyK; } };"),
 ]
 for a, b in R:
     assert s.count(a) == 1, (s.count(a), a[:70])

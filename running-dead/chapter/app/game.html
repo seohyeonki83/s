@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c12</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c13</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -439,7 +439,7 @@
   const CHAPTER = true;   // 챕터 줄기 (c1~): 구역 4개짜리 맵, 지금은 건물만 — 사람·경찰·금고 없음
   const TEST_MAP = CAR_TEST || CHAPTER;   // v396: true면 저격수 시험 맵 (빈 건물 4채 + 저격수 2명, 나는 무적)
   const TEST_BLDGS = [[-15, -15], [15, -15], [-15, 15], [15, 15]].map(([x, z], i) => ({ x, z, w: 11 * MAP, d: 8 * MAP, doors: ['s'], kinds: {}, local: i, block: -1 }));
-  const CH_MAP = {"seed":7,"mm":{"x0":-68.0,"z0":-80.0,"x1":68.0,"z1":80.0},"start":[-35.0,74.0],"zones":[[-65.0,-19.0,-5.0,77.0],[5.0,-19.0,65.0,77.0],[-65.0,-77.0,-5.0,-29.0],[5.0,-77.0,65.0,-29.0]],"roads":[[-21.0,25.0,-5.0,33.0],[5.0,25.0,21.0,33.0],[-21.0,65.0,-5.0,73.0],[5.0,65.0,21.0,73.0],[-21.0,-73.0,-5.0,-65.0],[5.0,-73.0,21.0,-65.0],[-39.0,-45.0,-31.0,-29.0],[-39.0,-19.0,-31.0,-3.0],[31.0,-45.0,39.0,-29.0],[31.0,-19.0,39.0,-3.0],[-39.0,-30.0,-31.0,-18.0],[31.0,-30.0,39.0,-18.0],[-38.0,-19.0,-32.0,77.0],[-65.0,26.5,-5.0,31.5],[32.0,-19.0,38.0,77.0],[5.0,26.5,65.0,31.5],[-38.0,-77.0,-32.0,-29.0],[32.0,-77.0,38.0,-29.0]],"passes":[["v",29.0],["v",69.0],["v",-69.0],["h",-35.0],["h",35.0]],"passPts":[{"x":0.0,"z":29.0,"dir":"h"},{"x":0.0,"z":69.0,"dir":"h"},{"x":0.0,"z":-69.0,"dir":"h"},{"x":-35.0,"z":-24.0,"dir":"v"},{"x":35.0,"z":-24.0,"dir":"v"}],"rivers":[[-5.0,-80.5,5.0,-73.0],[-5.0,-65.0,5.0,25.0],[-5.0,33.0,5.0,65.0],[-5.0,73.0,5.0,80.5]],"bridges":[[-6.5,-73.0,6.5,-65.0],[-6.5,25.0,6.5,33.0],[-6.5,65.0,6.5,73.0]],"lots":[[-31.5,0.79,-7.5,10.33],[-31.5,46.74,-7.5,55.86],[-62.5,47.37,-38.5,55.0],[-62.5,6.64,-38.5,16.48],[7.5,45.36,31.5,54.53],[38.5,1.7,62.5,12.53],[38.5,40.44,62.5,49.57],[7.5,1.9,31.5,13.52],[-62.5,-55.51,-38.5,-45.33],[-31.5,-54.56,-7.5,-47.01],[38.5,-59.85,62.5,-50.0],[7.5,-64.49,31.5,-54.32]],"b":[{"x":-19.99,"z":17.24,"w":14.0,"d":10.2,"doors":["w"],"kinds":{},"local":0,"block":-1,"t":"army","zone":0,"sideK":0},{"x":-24.17,"z":-11.8,"w":9.4,"d":6.8,"doors":["w"],"kinds":{},"local":1,"block":-1,"t":"store","zone":0,"sideK":1},{"x":-20.47,"z":-2.86,"w":7.0,"d":4.0,"doors":["s"],"kinds":{},"local":2,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-11.872743698002509,"z":-2.9238752966259387,"w":6.0,"d":4.0,"doors":["n"],"kinds":{},"local":3,"block":-1,"t":"house","zone":0,"garage":true,"open":["s"],"locks":[]},{"x":-11.07,"z":-11.34,"w":5.0,"d":5.5,"doors":["w"],"kinds":{},"local":4,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-23.96,"z":39.58,"w":12.5,"d":8.5,"doors":["s"],"kinds":{},"local":5,"block":-1,"t":"fire","zone":0,"sideK":0},{"x":-14.18,"z":60.33,"w":9.4,"d":6.8,"doors":["n"],"kinds":{},"local":6,"block":-1,"t":"store","zone":0,"sideK":1},{"x":-11.78,"z":39.55,"w":5.5,"d":5.0,"doors":["s"],"kinds":{},"local":7,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-26.28,"z":62.09,"w":5.0,"d":6.0,"doors":["n"],"kinds":{},"local":8,"block":-1,"t":"house","zone":0,"sideK":2},{"x":-25.44,"z":69.14,"w":5.0,"d":4.0,"doors":["s"],"kinds":{},"local":9,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-47.82,"z":68.28,"w":13.6,"d":9.5,"doors":["e"],"kinds":{},"local":10,"block":-1,"t":"mart","zone":0,"sideK":2},{"x":-56.75,"z":58.32,"w":5.5,"d":4.5,"doors":["s"],"kinds":{},"local":11,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-49.32,"z":58.24,"w":5.0,"d":4.5,"doors":["n"],"kinds":{},"local":12,"block":-1,"t":"house","zone":0,"sideK":1},{"x":-53.98563882735918,"z":35.75106424011956,"w":6.5,"d":5.5,"doors":["s"],"kinds":{},"local":13,"block":-1,"t":"house","zone":0,"garage":true,"open":["n"],"locks":[]},{"x":-45.16,"z":35.76,"w":6.0,"d":5.0,"doors":["n"],"kinds":{},"local":14,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-53.81,"z":43.37,"w":7.0,"d":5.5,"doors":["s"],"kinds":{},"local":15,"block":-1,"t":"house","zone":0,"sideK":2},{"x":-44.12,"z":43.39,"w":7.0,"d":4.5,"doors":["s"],"kinds":{},"local":16,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-53.86,"z":21.51,"w":9.4,"d":6.8,"doors":["e"],"kinds":{},"local":17,"block":-1,"t":"store","zone":0,"sideK":0},{"x":-45.66,"z":-11.12,"w":5.5,"d":5.0,"doors":["e"],"kinds":{},"local":18,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-45.12,"z":-4.47,"w":6.0,"d":4.0,"doors":["n"],"kinds":{},"local":19,"block":-1,"t":"house","zone":0,"sideK":1},{"x":-45.73110016741947,"z":2.037742786138221,"w":5.5,"d":5.0,"doors":["w"],"kinds":{},"local":20,"block":-1,"t":"house","zone":0,"garage":true,"open":["e"],"locks":[]},{"x":-57.43,"z":-12.78,"w":7.5,"d":5.0,"doors":["e"],"kinds":{},"local":21,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-58.24,"z":-5.01,"w":5.5,"d":6.0,"doors":["e"],"kinds":{},"local":22,"block":-1,"t":"house","zone":0,"sideK":2},{"x":-56.84,"z":2.09,"w":7.0,"d":4.0,"doors":["s"],"kinds":{},"local":23,"block":-1,"t":"house","zone":0,"sideK":0},{"x":14.25,"z":38.01,"w":10.5,"d":7.5,"doors":["s"],"kinds":{},"local":24,"block":-1,"t":"gym","zone":1,"sideK":0},{"x":13.92,"z":59.25,"w":9.4,"d":6.8,"doors":["e"],"kinds":{},"local":25,"block":-1,"t":"store","zone":1,"sideK":1},{"x":26.63,"z":64.22,"w":5.0,"d":6.0,"doors":["n"],"kinds":{},"local":26,"block":-1,"t":"house","zone":1,"sideK":0},{"x":27.18,"z":71.39,"w":5.5,"d":4.0,"doors":["s"],"kinds":{},"local":27,"block":-1,"t":"house","zone":1,"sideK":0},{"x":27.2,"z":35.96,"w":5.5,"d":5.0,"doors":["s"],"kinds":{},"local":28,"block":-1,"t":"house","zone":1,"sideK":1},{"x":55.55,"z":17.4,"w":11.0,"d":8.0,"doors":["n"],"kinds":{},"local":29,"block":-1,"t":"bank","zone":1,"sideK":1},{"x":45.25,"z":-6.83,"w":9.4,"d":6.8,"doors":["s"],"kinds":{},"local":30,"block":-1,"t":"store","zone":1,"sideK":2},{"x":57.88,"z":-3.16,"w":6.5,"d":4.5,"doors":["s"],"kinds":{},"local":31,"block":-1,"t":"house","zone":1,"sideK":0},{"x":57.01,"z":-11.57,"w":7.0,"d":5.0,"doors":["n"],"kinds":{},"local":32,"block":-1,"t":"house","zone":1,"sideK":0},{"x":43.75,"z":17.88,"w":4.5,"d":5.5,"doors":["w"],"kinds":{},"local":33,"block":-1,"t":"house","zone":1,"sideK":1},{"x":47.3,"z":67.4,"w":13.6,"d":10.2,"doors":["w"],"kinds":{},"local":34,"block":-1,"t":"hospital","zone":1,"sideK":1},{"x":45.04,"z":35.91,"w":5.5,"d":5.5,"doors":["s"],"kinds":{},"local":35,"block":-1,"t":"house","zone":1,"sideK":0},{"x":51.951029277202615,"z":36.63387264875127,"w":4.0,"d":6.0,"doors":["w"],"kinds":{},"local":36,"block":-1,"t":"house","zone":1,"garage":true,"open":["e"],"locks":[]},{"x":58.47,"z":36.26,"w":4.5,"d":5.5,"doors":["e"],"kinds":{},"local":37,"block":-1,"t":"house","zone":1,"sideK":2},{"x":43.43,"z":54.02,"w":7.5,"d":5.5,"doors":["w"],"kinds":{},"local":38,"block":-1,"t":"house","zone":1,"sideK":0},{"x":51.83,"z":53.2,"w":5.0,"d":4.5,"doors":["n"],"kinds":{},"local":39,"block":-1,"t":"house","zone":1,"sideK":1},{"x":58.97994038247018,"z":53.90510577851337,"w":5.0,"d":4.5,"doors":["n"],"kinds":{},"local":40,"block":-1,"t":"house","zone":1,"garage":true,"open":["s"],"locks":[]},{"x":13.56,"z":19.77,"w":9.4,"d":6.8,"doors":["n"],"kinds":{},"local":41,"block":-1,"t":"store","zone":1,"sideK":1},{"x":14.06,"z":-9.32,"w":6.0,"d":4.0,"doors":["n"],"kinds":{},"local":42,"block":-1,"t":"house","zone":1,"sideK":1},{"x":21.879166344455236,"z":-8.703197941176766,"w":5.5,"d":5.0,"doors":["w"],"kinds":{},"local":43,"block":-1,"t":"house","zone":1,"garage":true,"open":["e"],"locks":[]},{"x":14.1,"z":-1.96,"w":5.0,"d":4.5,"doors":["s"],"kinds":{},"local":44,"block":-1,"t":"house","zone":1,"sideK":0},{"x":23.09,"z":-1.59,"w":7.0,"d":5.0,"doors":["e"],"kinds":{},"local":45,"block":-1,"t":"house","zone":1,"sideK":1},{"x":25.33,"z":16.45,"w":5.0,"d":4.0,"doors":["n"],"kinds":{},"local":46,"block":-1,"t":"house","zone":1,"sideK":1},{"x":26.46,"z":22.73,"w":7.5,"d":4.5,"doors":["s"],"kinds":{},"local":47,"block":-1,"t":"house","zone":1,"sideK":0},{"x":-55.08,"z":-60.69,"w":8.5,"d":6.5,"doors":["s"],"kinds":{},"local":48,"block":-1,"t":"conv","zone":2,"sideK":2},{"x":-55.45,"z":-37.02,"w":9.4,"d":6.8,"doors":["e"],"kinds":{},"local":49,"block":-1,"t":"store","zone":2,"sideK":0},{"x":-44.2,"z":-70.89,"w":6.0,"d":4.5,"doors":["n"],"kinds":{},"local":50,"block":-1,"t":"house","zone":2,"sideK":1},{"x":-44.18,"z":-63.98,"w":5.5,"d":5.0,"doors":["s"],"kinds":{},"local":51,"block":-1,"t":"house","zone":2,"sideK":1},{"x":-55.36,"z":-70.5,"w":5.5,"d":4.5,"doors":["s"],"kinds":{},"local":52,"block":-1,"t":"house","zone":2,"sideK":0},{"x":-14.7,"z":-59.74,"w":11.9,"d":8.5,"doors":["n"],"kinds":{},"local":53,"block":-1,"t":"library","zone":2,"sideK":1},{"x":-26.258943909907252,"z":-71.0514296954452,"w":7.5,"d":4.0,"doors":["n"],"kinds":{},"local":54,"block":-1,"t":"house","zone":2,"garage":true,"open":["s"],"locks":[]},{"x":-20.54,"z":-42.58,"w":4.5,"d":5.0,"doors":["w"],"kinds":{},"local":55,"block":-1,"t":"house","zone":2,"sideK":1},{"x":-12.39,"z":-42.21,"w":6.5,"d":5.5,"doors":["n"],"kinds":{},"local":56,"block":-1,"t":"house","zone":2,"sideK":0},{"x":-20.66,"z":-35.49,"w":5.5,"d":4.0,"doors":["s"],"kinds":{},"local":57,"block":-1,"t":"house","zone":2,"sideK":0},{"x":-11.85,"z":-35.17,"w":6.5,"d":4.5,"doors":["s"],"kinds":{},"local":58,"block":-1,"t":"house","zone":2,"sideK":0},{"x":-26.76,"z":-57.89,"w":6.5,"d":4.5,"doors":["s"],"kinds":{},"local":59,"block":-1,"t":"house","zone":2,"sideK":0},{"x":46.99,"z":-65.93,"w":11.9,"d":8.5,"doors":["s"],"kinds":{},"local":60,"block":-1,"t":"police","zone":3,"sideK":1},{"x":45.79,"z":-44.24,"w":4.0,"d":7.5,"doors":["w"],"kinds":{},"local":61,"block":-1,"t":"house","zone":3,"sideK":1},{"x":46.78,"z":-36.07,"w":6.5,"d":4.5,"doors":["s"],"kinds":{},"local":62,"block":-1,"t":"house","zone":3,"sideK":0},{"x":57.15579042374771,"z":-44.31122534301815,"w":6.5,"d":4.5,"doors":["s"],"kinds":{},"local":63,"block":-1,"t":"house","zone":3,"garage":true,"open":["n"],"locks":[]},{"x":57.36,"z":-37.33,"w":6.0,"d":5.0,"doors":["s"],"kinds":{},"local":64,"block":-1,"t":"house","zone":3,"sideK":1},{"x":14.28,"z":-38.96,"w":9.4,"d":6.8,"doors":["s"],"kinds":{},"local":65,"block":-1,"t":"store","zone":3,"sideK":1},{"x":26.76,"z":-38.89,"w":5.5,"d":5.0,"doors":["e"],"kinds":{},"local":66,"block":-1,"t":"house","zone":3,"sideK":1},{"x":12.18,"z":-49.61,"w":6.0,"d":4.5,"doors":["n"],"kinds":{},"local":67,"block":-1,"t":"house","zone":3,"sideK":1},{"x":20.14,"z":-49.95,"w":5.5,"d":4.0,"doors":["n"],"kinds":{},"local":68,"block":-1,"t":"house","zone":3,"sideK":1},{"x":27.69,"z":-49.84,"w":5.5,"d":5.5,"doors":["n"],"kinds":{},"local":69,"block":-1,"t":"house","zone":3,"sideK":0},{"x":26.09,"z":-68.97,"w":7.5,"d":5.5,"doors":["w"],"kinds":{},"local":70,"block":-1,"t":"house","zone":3,"sideK":2},{"x":-64.09,"z":-24.0,"w":8.83,"d":10.0,"doors":[],"locks":[],"kinds":{},"local":71,"block":-1,"t":"hill","zone":-1},{"x":-55.3,"z":-24.16,"w":10.34,"d":7.59,"doors":[],"locks":[],"kinds":{},"local":72,"block":-1,"t":"hill","zone":-1},{"x":-44.97,"z":-24.0,"w":11.93,"d":10.0,"doors":[],"locks":[],"kinds":{},"local":73,"block":-1,"t":"hill","zone":-1},{"x":-26.44,"z":-24.0,"w":9.12,"d":10.0,"doors":[],"locks":[],"kinds":{},"local":74,"block":-1,"t":"hill","zone":-1},{"x":-18.47,"z":-23.75,"w":8.42,"d":8.06,"doors":[],"locks":[],"kinds":{},"local":75,"block":-1,"t":"hill","zone":-1},{"x":-9.78,"z":-24.0,"w":10.56,"d":10.0,"doors":[],"locks":[],"kinds":{},"local":76,"block":-1,"t":"hill","zone":-1},{"x":8.99,"z":-24.0,"w":8.98,"d":10.0,"doors":[],"locks":[],"kinds":{},"local":77,"block":-1,"t":"hill","zone":-1},{"x":16.7,"z":-24.07,"w":8.03,"d":9.65,"doors":[],"locks":[],"kinds":{},"local":78,"block":-1,"t":"hill","zone":-1},{"x":25.46,"z":-24.0,"w":11.08,"d":10.0,"doors":[],"locks":[],"kinds":{},"local":79,"block":-1,"t":"hill","zone":-1},{"x":43.27,"z":-24.0,"w":8.54,"d":10.0,"doors":[],"locks":[],"kinds":{},"local":80,"block":-1,"t":"hill","zone":-1},{"x":51.09,"z":-23.85,"w":8.7,"d":8.95,"doors":[],"locks":[],"kinds":{},"local":81,"block":-1,"t":"hill","zone":-1},{"x":61.57,"z":-24.0,"w":13.85,"d":10.0,"doors":[],"locks":[],"kinds":{},"local":82,"block":-1,"t":"hill","zone":-1}]};   // 생성기(씨앗 7)가 만든 고정 맵 — c2: 건물 71채 (랜드마크 9 · 창고 8 · 집 54) · c3: 세로 경계 = 강(다리 3곳), 가로 경계 = 산(길목 2곳) · c4·c5: 집을 작게, 1~4채씩 바짝 뭉치고 블록마다 공터, 집 8채는 차고
+  const CH_MAP = {"seed":7,"mm":{"x0":-69.5,"z0":-81.5,"x1":69.5,"z1":81.5},"start":[-36.5,75.5],"zones":[[-66.5,-17.5,-6.5,78.5],[6.5,-17.5,66.5,78.5],[-66.5,-78.5,-6.5,-30.5],[6.5,-78.5,66.5,-30.5]],"roads":[[-22.5,26.5,-6.5,34.5],[6.5,26.5,22.5,34.5],[-22.5,66.5,-6.5,74.5],[6.5,66.5,22.5,74.5],[-22.5,-74.5,-6.5,-66.5],[6.5,-74.5,22.5,-66.5],[-40.5,-46.5,-32.5,-30.5],[-40.5,-17.5,-32.5,-1.5],[32.5,-46.5,40.5,-30.5],[32.5,-17.5,40.5,-1.5],[-40.5,-31.5,-32.5,-16.5],[32.5,-31.5,40.5,-16.5],[-39.5,-17.5,-33.5,78.5],[-66.5,28.0,-6.5,33.0],[33.5,-17.5,39.5,78.5],[6.5,28.0,66.5,33.0],[-39.5,-78.5,-33.5,-30.5],[33.5,-78.5,39.5,-30.5]],"passes":[["v",30.5],["v",70.5],["v",-70.5],["h",-36.5],["h",36.5]],"gap":13.0,"passW":8.0,"zrMid":-24.0,"passes2":[{"axis":"v","c":30.5,"len":18.0,"ax":-9.0,"az":30.5,"bx":9.0,"bz":30.5,"za":0,"zb":1},{"axis":"v","c":70.5,"len":18.0,"ax":-9.0,"az":70.5,"bx":9.0,"bz":70.5,"za":0,"zb":1},{"axis":"v","c":-70.5,"len":18.0,"ax":-9.0,"az":-70.5,"bx":9.0,"bz":-70.5,"za":2,"zb":3},{"axis":"h","c":-36.5,"len":18.0,"ax":-36.5,"az":-15.0,"bx":-36.5,"bz":-33.0,"za":0,"zb":2},{"axis":"h","c":36.5,"len":18.0,"ax":36.5,"az":-15.0,"bx":36.5,"bz":-33.0,"za":1,"zb":3}],"passPts":[{"x":0.0,"z":30.5,"dir":"h"},{"x":0.0,"z":70.5,"dir":"h"},{"x":0.0,"z":-70.5,"dir":"h"},{"x":-36.5,"z":-24.0,"dir":"v"},{"x":36.5,"z":-24.0,"dir":"v"}],"rivers":[[-6.5,-82.0,6.5,-74.5],[-6.5,-66.5,6.5,26.5],[-6.5,34.5,6.5,66.5],[-6.5,74.5,6.5,82.0]],"bridges":[[-8.0,-74.5,8.0,-66.5],[-8.0,26.5,8.0,34.5],[-8.0,66.5,8.0,74.5]],"lots":[[-33.0,2.29,-9.0,11.83],[-33.0,48.24,-9.0,57.36],[-64.0,48.87,-40.0,56.5],[-64.0,8.14,-40.0,17.98],[9.0,46.86,33.0,56.03],[40.0,3.2,64.0,14.03],[40.0,41.94,64.0,51.07],[9.0,3.4,33.0,15.02],[-64.0,-57.01,-40.0,-46.83],[-33.0,-56.06,-9.0,-48.51],[40.0,-61.35,64.0,-51.5],[9.0,-65.99,33.0,-55.82]],"b":[{"x":-21.49,"z":18.74,"w":14.0,"d":10.2,"doors":["w"],"kinds":{},"local":0,"block":-1,"t":"army","zone":0,"sideK":0},{"x":-25.67,"z":-10.3,"w":9.4,"d":6.8,"doors":["w"],"kinds":{},"local":1,"block":-1,"t":"store","zone":0,"sideK":1},{"x":-21.97,"z":-1.36,"w":7.0,"d":4.0,"doors":["s"],"kinds":{},"local":2,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-13.372743698002509,"z":-1.4238752966259387,"w":6.0,"d":4.0,"doors":["n"],"kinds":{},"local":3,"block":-1,"t":"house","zone":0,"garage":true,"open":["s"],"locks":[]},{"x":-12.57,"z":-9.84,"w":5.0,"d":5.5,"doors":["w"],"kinds":{},"local":4,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-25.46,"z":41.08,"w":12.5,"d":8.5,"doors":["s"],"kinds":{},"local":5,"block":-1,"t":"fire","zone":0,"sideK":0},{"x":-15.68,"z":61.83,"w":9.4,"d":6.8,"doors":["n"],"kinds":{},"local":6,"block":-1,"t":"store","zone":0,"sideK":1},{"x":-13.28,"z":41.05,"w":5.5,"d":5.0,"doors":["s"],"kinds":{},"local":7,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-27.78,"z":63.59,"w":5.0,"d":6.0,"doors":["n"],"kinds":{},"local":8,"block":-1,"t":"house","zone":0,"sideK":2},{"x":-26.94,"z":70.64,"w":5.0,"d":4.0,"doors":["s"],"kinds":{},"local":9,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-49.32,"z":69.78,"w":13.6,"d":9.5,"doors":["e"],"kinds":{},"local":10,"block":-1,"t":"mart","zone":0,"sideK":2},{"x":-58.25,"z":59.82,"w":5.5,"d":4.5,"doors":["s"],"kinds":{},"local":11,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-50.82,"z":59.74,"w":5.0,"d":4.5,"doors":["n"],"kinds":{},"local":12,"block":-1,"t":"house","zone":0,"sideK":1},{"x":-55.48563882735918,"z":37.25106424011956,"w":6.5,"d":5.5,"doors":["s"],"kinds":{},"local":13,"block":-1,"t":"house","zone":0,"garage":true,"open":["n"],"locks":[]},{"x":-46.66,"z":37.26,"w":6.0,"d":5.0,"doors":["n"],"kinds":{},"local":14,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-55.31,"z":44.87,"w":7.0,"d":5.5,"doors":["s"],"kinds":{},"local":15,"block":-1,"t":"house","zone":0,"sideK":2},{"x":-45.62,"z":44.89,"w":7.0,"d":4.5,"doors":["s"],"kinds":{},"local":16,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-55.36,"z":23.01,"w":9.4,"d":6.8,"doors":["e"],"kinds":{},"local":17,"block":-1,"t":"store","zone":0,"sideK":0},{"x":-47.16,"z":-9.62,"w":5.5,"d":5.0,"doors":["e"],"kinds":{},"local":18,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-46.62,"z":-2.97,"w":6.0,"d":4.0,"doors":["n"],"kinds":{},"local":19,"block":-1,"t":"house","zone":0,"sideK":1},{"x":-47.23110016741947,"z":3.537742786138221,"w":5.5,"d":5.0,"doors":["w"],"kinds":{},"local":20,"block":-1,"t":"house","zone":0,"garage":true,"open":["e"],"locks":[]},{"x":-58.93,"z":-11.28,"w":7.5,"d":5.0,"doors":["n"],"kinds":{},"local":21,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-59.74,"z":-3.51,"w":5.5,"d":6.0,"doors":["e"],"kinds":{},"local":22,"block":-1,"t":"house","zone":0,"sideK":2},{"x":-58.34,"z":3.59,"w":7.0,"d":4.0,"doors":["s"],"kinds":{},"local":23,"block":-1,"t":"house","zone":0,"sideK":0},{"x":15.75,"z":39.51,"w":10.5,"d":7.5,"doors":["s"],"kinds":{},"local":24,"block":-1,"t":"gym","zone":1,"sideK":0},{"x":15.42,"z":60.75,"w":9.4,"d":6.8,"doors":["e"],"kinds":{},"local":25,"block":-1,"t":"store","zone":1,"sideK":1},{"x":28.13,"z":65.72,"w":5.0,"d":6.0,"doors":["n"],"kinds":{},"local":26,"block":-1,"t":"house","zone":1,"sideK":0},{"x":28.68,"z":72.89,"w":5.5,"d":4.0,"doors":["s"],"kinds":{},"local":27,"block":-1,"t":"house","zone":1,"sideK":0},{"x":28.7,"z":37.46,"w":5.5,"d":5.0,"doors":["s"],"kinds":{},"local":28,"block":-1,"t":"house","zone":1,"sideK":1},{"x":57.05,"z":18.9,"w":11.0,"d":8.0,"doors":["n"],"kinds":{},"local":29,"block":-1,"t":"bank","zone":1,"sideK":1},{"x":46.75,"z":-5.33,"w":9.4,"d":6.8,"doors":["s"],"kinds":{},"local":30,"block":-1,"t":"store","zone":1,"sideK":2},{"x":59.38,"z":-1.66,"w":6.5,"d":4.5,"doors":["s"],"kinds":{},"local":31,"block":-1,"t":"house","zone":1,"sideK":0},{"x":58.51,"z":-10.07,"w":7.0,"d":5.0,"doors":["n"],"kinds":{},"local":32,"block":-1,"t":"house","zone":1,"sideK":0},{"x":45.25,"z":19.38,"w":4.5,"d":5.5,"doors":["w"],"kinds":{},"local":33,"block":-1,"t":"house","zone":1,"sideK":1},{"x":48.8,"z":68.9,"w":13.6,"d":10.2,"doors":["w"],"kinds":{},"local":34,"block":-1,"t":"hospital","zone":1,"sideK":1},{"x":46.54,"z":37.41,"w":5.5,"d":5.5,"doors":["s"],"kinds":{},"local":35,"block":-1,"t":"house","zone":1,"sideK":0},{"x":53.451029277202615,"z":38.13387264875127,"w":4.0,"d":6.0,"doors":["w"],"kinds":{},"local":36,"block":-1,"t":"house","zone":1,"garage":true,"open":["e"],"locks":[]},{"x":59.97,"z":37.76,"w":4.5,"d":5.5,"doors":["e"],"kinds":{},"local":37,"block":-1,"t":"house","zone":1,"sideK":2},{"x":44.93,"z":55.52,"w":7.5,"d":5.5,"doors":["w"],"kinds":{},"local":38,"block":-1,"t":"house","zone":1,"sideK":0},{"x":53.33,"z":54.7,"w":5.0,"d":4.5,"doors":["n"],"kinds":{},"local":39,"block":-1,"t":"house","zone":1,"sideK":1},{"x":60.47994038247018,"z":55.40510577851337,"w":5.0,"d":4.5,"doors":["n"],"kinds":{},"local":40,"block":-1,"t":"house","zone":1,"garage":true,"open":["s"],"locks":[]},{"x":15.06,"z":21.27,"w":9.4,"d":6.8,"doors":["n"],"kinds":{},"local":41,"block":-1,"t":"store","zone":1,"sideK":1},{"x":15.56,"z":-7.82,"w":6.0,"d":4.0,"doors":["n"],"kinds":{},"local":42,"block":-1,"t":"house","zone":1,"sideK":1},{"x":23.379166344455236,"z":-7.203197941176766,"w":5.5,"d":5.0,"doors":["w"],"kinds":{},"local":43,"block":-1,"t":"house","zone":1,"garage":true,"open":["e"],"locks":[]},{"x":15.6,"z":-0.46,"w":5.0,"d":4.5,"doors":["s"],"kinds":{},"local":44,"block":-1,"t":"house","zone":1,"sideK":0},{"x":24.59,"z":-0.09,"w":7.0,"d":5.0,"doors":["e"],"kinds":{},"local":45,"block":-1,"t":"house","zone":1,"sideK":1},{"x":26.83,"z":17.95,"w":5.0,"d":4.0,"doors":["n"],"kinds":{},"local":46,"block":-1,"t":"house","zone":1,"sideK":1},{"x":27.96,"z":24.23,"w":7.5,"d":4.5,"doors":["s"],"kinds":{},"local":47,"block":-1,"t":"house","zone":1,"sideK":0},{"x":-56.58,"z":-62.19,"w":8.5,"d":6.5,"doors":["s"],"kinds":{},"local":48,"block":-1,"t":"conv","zone":2,"sideK":2},{"x":-56.95,"z":-38.52,"w":9.4,"d":6.8,"doors":["e"],"kinds":{},"local":49,"block":-1,"t":"store","zone":2,"sideK":0},{"x":-45.7,"z":-72.39,"w":6.0,"d":4.5,"doors":["n"],"kinds":{},"local":50,"block":-1,"t":"house","zone":2,"sideK":1},{"x":-45.68,"z":-65.48,"w":5.5,"d":5.0,"doors":["s"],"kinds":{},"local":51,"block":-1,"t":"house","zone":2,"sideK":1},{"x":-56.86,"z":-72.0,"w":5.5,"d":4.5,"doors":["s"],"kinds":{},"local":52,"block":-1,"t":"house","zone":2,"sideK":0},{"x":-16.2,"z":-61.24,"w":11.9,"d":8.5,"doors":["n"],"kinds":{},"local":53,"block":-1,"t":"library","zone":2,"sideK":1},{"x":-27.758943909907252,"z":-72.5514296954452,"w":7.5,"d":4.0,"doors":["n"],"kinds":{},"local":54,"block":-1,"t":"house","zone":2,"garage":true,"open":["s"],"locks":[]},{"x":-22.04,"z":-44.08,"w":4.5,"d":5.0,"doors":["w"],"kinds":{},"local":55,"block":-1,"t":"house","zone":2,"sideK":1},{"x":-13.89,"z":-43.71,"w":6.5,"d":5.5,"doors":["n"],"kinds":{},"local":56,"block":-1,"t":"house","zone":2,"sideK":0},{"x":-22.16,"z":-36.99,"w":5.5,"d":4.0,"doors":["s"],"kinds":{},"local":57,"block":-1,"t":"house","zone":2,"sideK":0},{"x":-13.35,"z":-36.67,"w":6.5,"d":4.5,"doors":["s"],"kinds":{},"local":58,"block":-1,"t":"house","zone":2,"sideK":0},{"x":-28.26,"z":-59.39,"w":6.5,"d":4.5,"doors":["s"],"kinds":{},"local":59,"block":-1,"t":"house","zone":2,"sideK":0},{"x":48.49,"z":-67.43,"w":11.9,"d":8.5,"doors":["s"],"kinds":{},"local":60,"block":-1,"t":"police","zone":3,"sideK":1},{"x":47.29,"z":-45.74,"w":4.0,"d":7.5,"doors":["w"],"kinds":{},"local":61,"block":-1,"t":"house","zone":3,"sideK":1},{"x":48.28,"z":-37.57,"w":6.5,"d":4.5,"doors":["s"],"kinds":{},"local":62,"block":-1,"t":"house","zone":3,"sideK":0},{"x":58.65579042374771,"z":-45.81122534301815,"w":6.5,"d":4.5,"doors":["s"],"kinds":{},"local":63,"block":-1,"t":"house","zone":3,"garage":true,"open":["n"],"locks":[]},{"x":58.86,"z":-38.83,"w":6.0,"d":5.0,"doors":["s"],"kinds":{},"local":64,"block":-1,"t":"house","zone":3,"sideK":1},{"x":15.78,"z":-40.46,"w":9.4,"d":6.8,"doors":["s"],"kinds":{},"local":65,"block":-1,"t":"store","zone":3,"sideK":1},{"x":28.26,"z":-40.39,"w":5.5,"d":5.0,"doors":["e"],"kinds":{},"local":66,"block":-1,"t":"house","zone":3,"sideK":1},{"x":13.68,"z":-51.11,"w":6.0,"d":4.5,"doors":["n"],"kinds":{},"local":67,"block":-1,"t":"house","zone":3,"sideK":1},{"x":21.64,"z":-51.45,"w":5.5,"d":4.0,"doors":["n"],"kinds":{},"local":68,"block":-1,"t":"house","zone":3,"sideK":1},{"x":29.19,"z":-51.34,"w":5.5,"d":5.5,"doors":["n"],"kinds":{},"local":69,"block":-1,"t":"house","zone":3,"sideK":0},{"x":27.59,"z":-70.47,"w":7.5,"d":5.5,"doors":["w"],"kinds":{},"local":70,"block":-1,"t":"house","zone":3,"sideK":2},{"x":-65.59,"z":-24.0,"w":8.83,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":71,"block":-1,"t":"hill","zone":-1},{"x":-56.8,"z":-24.21,"w":10.34,"d":9.87,"doors":[],"locks":[],"kinds":{},"local":72,"block":-1,"t":"hill","zone":-1},{"x":-46.47,"z":-24.0,"w":11.93,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":73,"block":-1,"t":"hill","zone":-1},{"x":-27.94,"z":-24.0,"w":9.12,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":74,"block":-1,"t":"hill","zone":-1},{"x":-19.97,"z":-23.68,"w":8.42,"d":10.48,"doors":[],"locks":[],"kinds":{},"local":75,"block":-1,"t":"hill","zone":-1},{"x":-11.28,"z":-24.0,"w":10.56,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":76,"block":-1,"t":"hill","zone":-1},{"x":10.49,"z":-24.0,"w":8.98,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":77,"block":-1,"t":"hill","zone":-1},{"x":18.2,"z":-24.1,"w":8.03,"d":12.54,"doors":[],"locks":[],"kinds":{},"local":78,"block":-1,"t":"hill","zone":-1},{"x":26.96,"z":-24.0,"w":11.08,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":79,"block":-1,"t":"hill","zone":-1},{"x":44.77,"z":-24.0,"w":8.54,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":80,"block":-1,"t":"hill","zone":-1},{"x":52.59,"z":-23.81,"w":8.7,"d":11.64,"doors":[],"locks":[],"kinds":{},"local":81,"block":-1,"t":"hill","zone":-1},{"x":63.07,"z":-24.0,"w":13.85,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":82,"block":-1,"t":"hill","zone":-1}]};   // 생성기(씨앗 7)가 만든 고정 맵 — c2: 건물 71채 (랜드마크 9 · 창고 8 · 집 54) · c3: 세로 경계 = 강(다리 3곳), 가로 경계 = 산(길목 2곳) · c4·c5: 집을 작게, 1~4채씩 바짝 뭉치고 블록마다 공터, 집 8채는 차고
   const BUILDINGS = CHAPTER ? CH_MAP.b : TEST_MAP ? TEST_BLDGS : BLOCKS.flatMap(([ox, oz], k) => TOWN.map((s) => (k === START_BLOCK && s.station ? BIG : s)).map((s) => ({ ...s, x: s.x + ox, z: s.z + oz, block: k })));
   const DOOR = 4 * MAP;   // 문 폭 (유닛) — 문은 그 벽 한가운데. 여럿이 나란히 지나간다
   const WALL_SENSE = 1 / 4;   // 도망칠 때 벽도 좀비처럼 피한다 — 가장 가까운 벽이 인지거리의 이만큼 안에 들어오면 (구석에 몰리지 않게)
@@ -797,6 +797,201 @@
     }
   }
   const chRiverSegs = CHAPTER ? CH_MAP.rivers.flatMap(([x0, z0, x1, z1]) => [[x0, z0, x1, z0], [x0, z1, x1, z1], [x0, z0, x0, z1], [x1, z0, x1, z1]]) : [];
+  // ── c13: 먼 길 찾기 — 목적지가 강·산 건너 다른 구역이면 길목(다리·산 길목)을 거쳐 간다. 같은 구역 안에서는 지금까지의 길 찾기 그대로 ──
+  //    구역 넷(0 남서 · 1 남동 · 2 북서 · 3 북동)은 땅이 네모반듯해서, 같은 구역 땅 위의 두 자리는 강·산을 안 건너고 곧장 이어진다.
+  //    길목마다 양 끝에 마디를 하나씩 두고 (다리 3 + 산 길목 2 = 마디 10개) 마디 사이 가장 짧은 거리를 미리 구해 둔다.
+  //    걸음마다: 목적지가 곧장 닿는 곳이면 그대로, 아니면 '내가 곧장 닿는 마디 → … → 목적지에 곧장 닿는 마디'가 가장 짧은 길의 첫 마디로 간다
+  const chZoneOf = (x, z) => (x > 0 ? 1 : 0) + (z < CH_MAP.zrMid ? 2 : 0);   // 강 한가운데 x = 0, 산줄기 한가운데 z = zrMid 기준
+  const CH_PH = CH_MAP.passW / 2, CH_PIN = CH_MAP.gap / 2, CH_PEND = CH_MAP.gap / 2 + 2.5;   // 길목 반폭 · 강/산 한가운데에서 그 가장자리까지 · 마디(길목 끝)까지
+  const chNode = [];                          // 마디 {x, z, zone: 닿는 구역, p: 길목 번호}
+  CH_MAP.passes2.forEach((P, i) => { chNode.push({ x: P.ax, z: P.az, zone: P.za, p: i }, { x: P.bx, z: P.bz, zone: P.zb, p: i }); });
+  const chND = chNode.map((a, i) => chNode.map((b, j) => i === j ? 0 : a.p === b.p || a.zone === b.zone ? Math.hypot(a.x - b.x, a.z - b.z) : Infinity));   // 같은 길목의 두 끝, 같은 구역의 두 마디는 곧장 이어진다
+  for (let k = 0; k < chNode.length; k++) for (let i = 0; i < chNode.length; i++) for (let j = 0; j < chNode.length; j++) if (chND[i][k] + chND[k][j] < chND[i][j]) chND[i][j] = chND[i][k] + chND[k][j];
+  // 자리 하나가 어디에 속하나 — corr = 길목 번호 (길목 통로와 그 어귀. 아니면 -1), land = 구역 땅 위인가 (강 위 다리·산 사이 통로 한가운데면 false)
+  const chS = { zone: 0, corr: -1, land: true }, chT = { zone: 0, corr: -1, land: true };
+  function chClass(x, z, o) {
+    o.corr = -1; o.land = true; o.zone = chZoneOf(x, z);
+    for (let i = 0; i < CH_MAP.passes2.length; i++) {
+      const P = CH_MAP.passes2[i], v = P.axis === 'v', s = Math.abs(v ? x : z - CH_MAP.zrMid), l = Math.abs((v ? z : x) - P.c);
+      if (l < CH_PH && s < CH_PEND + 0.5) { o.corr = i; o.land = s >= CH_PIN; return o; }
+    }
+    return o;
+  }
+  const chSees = (o, n) => o.corr === n.p || (o.land && o.zone === n.zone);   // 그 자리에서 이 마디까지 곧장 갈 수 있나
+  const chRouteOut = [0, 0], chTD = [];
+  function chRoute(b, tx, tz) {
+    const px = b.foot.x, pz = b.foot.z;
+    chRouteOut[0] = tx; chRouteOut[1] = tz;
+    chClass(px, pz, chS); chClass(tx, tz, chT);
+    if ((chS.corr >= 0 && chS.corr === chT.corr) || (chS.land && chT.land && chS.zone === chT.zone)) return chRouteOut;   // 곧장 닿는다 (같은 구역 땅 · 같은 길목)
+    const N = chNode.length;
+    for (let j = 0; j < N; j++) chTD[j] = chSees(chT, chNode[j]) ? Math.hypot(chNode[j].x - tx, chNode[j].z - tz) : Infinity;
+    let best = Infinity, bi = -1;
+    for (let i = 0; i < N; i++) {
+      const n = chNode[i]; if (!chSees(chS, n)) continue;
+      const d0 = Math.hypot(n.x - px, n.z - pz), d = d0 + (d0 < 0.6 ? 0.05 : 0);   // 이미 그 마디에 와 있으면 다음 마디가 이기게 (제자리에 서지 않게)
+      for (let j = 0; j < N; j++) { const c = d + chND[i][j] + chTD[j]; if (c < best) { best = c; bi = i; } }
+    }
+    if (bi < 0) return chRouteOut;
+    const n = chNode[bi], v = CH_MAP.passes2[n.p].axis === 'v';
+    if (b.laneK === undefined) b.laneK = Math.random() * 2 - 1;   // 길목 폭 안에서 저마다 다른 줄로 — 한 줄로 몰리지 않게
+    const off = b.laneK * (CH_PH - 1.3);
+    chRouteOut[0] = n.x + (v ? 0 : off); chRouteOut[1] = n.z + (v ? off : 0);
+    return chRouteOut;
+  }
+  // 동료 자리가 강물·산 속에 걸리거나 그 너머로 넘어가면 내 쪽 물가·산기슭으로 당긴다 — 자리가 건너편이 돼서 동료가 길목을 돌아 반대편으로 가 버리지 않게
+  let chBlocks = null;
+  const chSlotOut = [0, 0];
+  function chSlotFix(x, y) {
+    if (!chBlocks) chBlocks = CH_MAP.rivers.map(([x0, z0, x1, z1]) => ({ x0, z0, x1, z1 })).concat(buildings.filter((B) => B.type === 'hill'));
+    const mx = me.foot.x, mz = me.foot.z, m = 0.7;
+    for (let k = 0; k < 2; k++) for (const R of chBlocks) {
+      const t = segRect(mx, mz, x, y, R, 0);  // 나 → 자리 선이 강·산에 처음 닿는 곳
+      if (t < Infinity) { x = mx + (x - mx) * t; y = mz + (y - mz) * t; }
+      if (x <= R.x0 - m || x >= R.x1 + m || y <= R.z0 - m || y >= R.z1 + m) continue;
+      const l = x - (R.x0 - m), r = R.x1 + m - x, u = y - (R.z0 - m), w = R.z1 + m - y, q = Math.min(l, r, u, w);   // 가장 가까운 가장자리 밖으로 (0.7칸)
+      if (q === l) x = R.x0 - m; else if (q === r) x = R.x1 + m; else if (q === u) y = R.z0 - m; else y = R.z1 + m;
+    }
+    chSlotOut[0] = x; chSlotOut[1] = y; return chSlotOut;
+  }
+  // ── c13: 나에게 가는 흐름 — 멀리 있는 동료는 멀리 있는 자기 자리까지 길을 따로 찾지 않고, 내 자리에서 맵 전체로 퍼뜨린 '걸어서 가는 거리'를 따라 내려온다 ──
+  //    거리는 한 번만 계산해서 전원이 같이 읽는다 (동료가 몇 명이든 계산은 한 번). 강·산·막다른 길처럼 건물 하나보다 큰 장애물도 크기와 상관없이 돌아 나온다.
+  //    가까이 와서 자기 자리까지 곧게 뚫리면 그때부터는 지금까지처럼 자기 자리로 간다 (무리가 커서 자리가 멀수록 '일단 나한테'가 먼저)
+  const CF = 1, CF_INF = 65535;               // 칸 크기 (칸) · 못 닿는 칸
+  let cfW = 0, cfH = 0, cfBlock = null, cfD = null, cfN8 = null, cfNA = null, cfNB = null, cfAt = -1e9, cfKey = '', cfReady = false, cfRuns = 0;
+  const cfQ = [[], [], [], [], [], [], [], []], cfSeedI = [], cfSeedD = [];
+  function cfInit() {
+    cfW = Math.ceil((MM.x1 - MM.x0) / CF) + 2; cfH = Math.ceil((MM.z1 - MM.z0) / CF) + 2;   // 둘레 한 줄은 늘 막힌 칸 — 이웃을 볼 때 가장자리 검사를 안 하려고
+    cfBlock = new Uint8Array(cfW * cfH); cfD = new Uint16Array(cfW * cfH);
+    cfN8 = [-1, 1, -cfW, cfW, -cfW - 1, -cfW + 1, cfW - 1, cfW + 1]; cfNA = [0, 0, 0, 0, -1, 1, -1, 1]; cfNB = [0, 0, 0, 0, -cfW, -cfW, cfW, cfW];   // 대각선 이웃은 그 옆 두 칸이 다 비어야 지난다 (모서리를 가로지르지 않게)
+    for (let cz = 0; cz < cfH; cz++) { cfBlock[cz * cfW] = 1; cfBlock[cz * cfW + cfW - 1] = 1; }
+    for (let cx = 0; cx < cfW; cx++) { cfBlock[cx] = 1; cfBlock[(cfH - 1) * cfW + cx] = 1; }
+    const m = BODY + 0.05;                    // 칸 가운데가 벽·물가에서 몸 반지름 넘게 떨어져야 빈 칸
+    const mark = (x0, z0, x1, z1) => {
+      const a = Math.max(1, Math.ceil((x0 - m - MM.x0) / CF + 0.5)), b = Math.min(cfW - 2, Math.floor((x1 + m - MM.x0) / CF + 0.5));
+      const c = Math.max(1, Math.ceil((z0 - m - MM.z0) / CF + 0.5)), d = Math.min(cfH - 2, Math.floor((z1 + m - MM.z0) / CF + 0.5));
+      for (let cz = c; cz <= d; cz++) for (let cx = a; cx <= b; cx++) cfBlock[cz * cfW + cx] = 1;
+    };
+    for (const B of buildings) mark(B.x0, B.z0, B.x1, B.z1);
+    for (const [x0, z0, x1, z1] of CH_MAP.rivers) mark(x0, z0, x1, z1);
+  }
+  const cfCell = (x, z) => { const cx = Math.floor((x - MM.x0) / CF) + 1, cz = Math.floor((z - MM.z0) / CF) + 1; return cx < 1 || cz < 1 || cx >= cfW - 1 || cz >= cfH - 1 ? -1 : cz * cfW + cx; };
+  const cfX = (i) => MM.x0 + ((i % cfW) - 0.5) * CF, cfZ = (i) => MM.z0 + (((i / cfW) | 0) - 0.5) * CF;   // 칸 가운데
+  function cfSeed(x, z, c0) {                 // (x, z) 둘레의 빈 칸을 출발 칸으로 — 처음 거리 = c0 + 그 칸 가운데까지 (내 칸이 벽 옆이라 막힌 칸이어도 출발할 수 있게 둘레를 같이 넣는다)
+    const cx0 = Math.floor((x - MM.x0) / CF) + 1, cz0 = Math.floor((z - MM.z0) / CF) + 1;
+    for (let dz = -2; dz <= 2; dz++) for (let dx = -2; dx <= 2; dx++) {
+      const cx = cx0 + dx, cz = cz0 + dz; if (cx < 1 || cz < 1 || cx >= cfW - 1 || cz >= cfH - 1) continue;
+      const i = cz * cfW + cx; if (cfBlock[i]) continue;
+      const d = Math.hypot(cfX(i) - x, cfZ(i) - z); if (d > 1.6 * CF) continue;
+      cfSeedI.push(i); cfSeedD.push(Math.round((c0 + d) / CF * 5));
+    }
+  }
+  function cfCompute() {                      // 나(안에 있으면 그 건물의 열린 문 앞)에서 모든 빈 칸까지 걸어서 가는 거리 — 곧은 걸음 5, 대각선 7
+    if (!cfBlock) cfInit();
+    cfD.fill(CF_INF); for (const q of cfQ) q.length = 0; cfSeedI.length = 0; cfSeedD.length = 0; cfReady = false; cfRuns++;
+    const S = me.space;
+    if (!S) cfSeed(me.foot.x, me.foot.z, 0);
+    else for (const D of S.doors) cfSeed(D.cx + D.nx * 1.2, D.cz + D.nz * 1.2, Math.hypot(D.cx - me.foot.x, D.cz - me.foot.z) + 1.2);
+    if (!cfSeedI.length) return;
+    const order = cfSeedI.map((_, k) => k).sort((a, b) => cfSeedD[a] - cfSeedD[b]), W = cfW, blk = cfBlock, D = cfD;
+    let si = 0, cur = cfSeedD[order[0]], pend = 0;
+    for (;;) {
+      while (si < order.length && cfSeedD[order[si]] <= cur) { const k = order[si++], i = cfSeedI[k], d = cfSeedD[k]; if (d < D[i]) { D[i] = d; cfQ[d & 7].push(i); pend++; } }
+      const q = cfQ[cur & 7], o5 = cur + 5, o7 = cur + 7, q5 = cfQ[o5 & 7], q7 = cfQ[o7 & 7];
+      for (let k = 0; k < q.length; k++) {
+        const i = q[k]; if (D[i] !== cur) continue;   // 더 가까운 길로 이미 다시 들어간 칸
+        const l = !blk[i - 1], r = !blk[i + 1], u = !blk[i - W], d = !blk[i + W];
+        if (l && D[i - 1] > o5) { D[i - 1] = o5; q5.push(i - 1); pend++; }
+        if (r && D[i + 1] > o5) { D[i + 1] = o5; q5.push(i + 1); pend++; }
+        if (u && D[i - W] > o5) { D[i - W] = o5; q5.push(i - W); pend++; }
+        if (d && D[i + W] > o5) { D[i + W] = o5; q5.push(i + W); pend++; }
+        if (l && u && !blk[i - W - 1] && D[i - W - 1] > o7) { D[i - W - 1] = o7; q7.push(i - W - 1); pend++; }
+        if (r && u && !blk[i - W + 1] && D[i - W + 1] > o7) { D[i - W + 1] = o7; q7.push(i - W + 1); pend++; }
+        if (l && d && !blk[i + W - 1] && D[i + W - 1] > o7) { D[i + W - 1] = o7; q7.push(i + W - 1); pend++; }
+        if (r && d && !blk[i + W + 1] && D[i + W + 1] > o7) { D[i + W + 1] = o7; q7.push(i + W + 1); pend++; }
+      }
+      pend -= q.length; q.length = 0;
+      if (pend <= 0 && si >= order.length) break;
+      cur++;
+    }
+    cfReady = true;
+  }
+  function cfFresh() {                        // 내가 다른 칸으로 옮겼을 때만, 많아야 0.25초에 한 번 다시 계산한다 (곧게 못 오는 동료가 있을 때만 불린다)
+    if (clock < cfAt) cfAt = -1e9;            // 새 판
+    const S = me.space, key = S ? 'b' + S.local + ':' + S.doors.length : 'c' + cfCell(me.foot.x, me.foot.z);
+    if (cfReady && (key === cfKey || clock - cfAt < 0.25)) return;
+    if (!cfReady && clock - cfAt < 0.25 && key === cfKey) return;   // 출발 칸을 못 잡은 채면 같은 자리에서 되풀이하지 않는다
+    cfCompute(); cfKey = key; cfAt = clock;
+  }
+  function cfDist(x, z) {                     // 그 자리에서 나까지 걸어서 가는 거리 (칸) — 막힌 칸(벽에 바짝)이면 둘레 빈 칸 값으로, 닿는 길이 없으면 Infinity
+    const i = cfCell(x, z); if (i < 0) return Infinity;
+    if (cfD[i] !== CF_INF) return cfD[i] / 5 * CF;
+    let m = CF_INF; for (let n = 0; n < 8; n++) if (cfD[i + cfN8[n]] < m) m = cfD[i + cfN8[n]];
+    return m === CF_INF ? Infinity : m / 5 * CF + CF;
+  }
+  function cfLos(ax, az, bx, bz) {            // 칸 지도에서 두 자리가 곧게 이어지나 (출발 쪽 0.75칸은 안 본다 — 벽에 붙어 서 있을 수 있다)
+    const L = Math.hypot(bx - ax, bz - az), n = Math.ceil(L / (0.45 * CF));
+    for (let k = 1; k <= n; k++) {
+      const t = k / n; if (t * L < 0.75) continue;
+      const i = cfCell(ax + (bx - ax) * t, az + (bz - az) * t); if (i < 0 || cfBlock[i]) return false;
+    }
+    return true;
+  }
+  const cfOut = [0, 0];
+  function cfStep(b) {                        // 흐름을 따라 내려가는 길 위에서, 지금 자리에서 곧게 보이는 가장 먼 칸 (최대 14칸 앞) — 칸마다 꺾지 않고 길게 보고 간다
+    const px = b.foot.x, pz = b.foot.z;
+    let i = cfCell(px, pz); if (i < 0) return null;
+    let first = true;
+    if (cfD[i] === CF_INF) {                  // 벽에 바짝 붙어 막힌 칸에 서 있으면 둘레에서 나에게 가장 가까운 빈 칸부터
+      let m = CF_INF, bi = -1; for (let n = 0; n < 8; n++) { const j = i + cfN8[n]; if (cfD[j] < m) { m = cfD[j]; bi = j; } }
+      if (bi < 0) return null; i = bi; first = false; cfOut[0] = cfX(i); cfOut[1] = cfZ(i);
+    }
+    for (let k = 0; k < 14; k++) {
+      let m = cfD[i], ni = -1;
+      for (let n = 0; n < 8; n++) { const j = i + cfN8[n]; if (cfD[j] >= m) continue; if (n >= 4 && (cfBlock[i + cfNA[n]] || cfBlock[i + cfNB[n]])) continue; m = cfD[j]; ni = j; }
+      if (ni < 0) break;                      // 출발 칸(내 자리)에 닿았다
+      i = ni;
+      const x = cfX(i), z = cfZ(i);
+      if (!first && !cfLos(px, pz, x, z)) break;   // 첫 칸은 바로 옆 빈 칸이라 그냥 간다
+      first = false; cfOut[0] = x; cfOut[1] = z;
+    }
+    return first ? null : cfOut;
+  }
+  let chBlk = null;                           // 길을 막는 것 전부 — 건물(산 포함) + 강 토막
+  function chLos(px, pz, tx, tz) {            // 두 자리가 곧게 이어지나 — around()와 같은 기준 (0.2칸 넓혀서 보고, 내가 그 둘레 안이면 그 건물은 뺀다)
+    for (const R of chBlk) {
+      if (px > R.x0 - GAP && px < R.x1 + GAP && pz > R.z0 - GAP && pz < R.z1 + GAP) continue;
+      if (segRect(px, pz, tx, tz, R, GAP) < Infinity) return false;
+    }
+    return true;
+  }
+  // c13 길잡이 — 밖에 있는 몸이 (tx, tz)로 갈 때 이번에 향할 자리. null이면 목적지 그대로 (곧게 뚫렸거나, 건물 모서리 돌아가기에 맡긴다)
+  //   ① 목적지까지 곧게 뚫렸으면 그대로
+  //   ② 강·산 건너면 길목(다리·산 길목)을 거쳐서 — 길목 폭 안에서 저마다 다른 줄로 (큰 무리가 한 줄로 몰리지 않게)
+  //   ③ 같은 구역인데 막혔고 나에게서 멀면 (걸어서 목적지보다 4칸 넘게 멀다) 자기 자리 대신 '나에게 가는 흐름'을 따라온다
+  //   ④ 어느 경우든 1.5초 동안 제자리에서 못 움직이면 (모서리 하나로 안 풀리는 막다른 곳·낀 곳) 3초 동안 흐름을 타고 빠져나온다
+  function chGuide(b, tx, tz) {
+    const px = b.foot.x, pz = b.foot.z;
+    if (Math.hypot(tx - me.foot.x, tz - me.foot.z) > DOMAIN * armyK * 1.5 + 6) {   // 내 둘레가 아닌 목적지 — 흐름('나에게 가는 길')은 못 쓴다. 다른 구역이면 길목만 거친다
+      const r = chRoute(b, tx, tz); return r[0] === tx && r[1] === tz ? null : r;
+    }
+    if (!chBlk) chBlk = buildings.concat(CH_MAP.rivers.map(([x0, z0, x1, z1]) => ({ x0, z0, x1, z1 })));
+    if (chLos(px, pz, tx, tz)) { b.flow = false; b.cfForce = 0; b.cfSeen = -1; return null; }
+    const r = chRoute(b, tx, tz), cross = r[0] !== tx || r[1] !== tz;
+    cfFresh();
+    const fb = cfReady ? cfDist(px, pz) : Infinity;
+    if (fb === Infinity) return cross ? r : null;           // 흐름을 못 쓰는 자리 (칸 지도에서 닿는 길이 없다)
+    if (b.cfForce > clock && fb > 2) { const w = cfStep(b); if (w) return w; }
+    if (!(clock - b.cfSeen < 0.5) || Math.hypot(px - b.cfAx, pz - b.cfAz) > 1.2) { b.cfAx = px; b.cfAz = pz; b.cfSince = clock; }   // 제자리에 묶여 있나 — 1.2칸 넘게 움직일 때마다 다시 잰다
+    b.cfSeen = clock;
+    if (clock - b.cfSince > 1.5 && fb > 2.5) { b.cfForce = clock + 3; b.cfSince = clock; const w = cfStep(b); if (w) return w; }
+    if (cross) { b.flow = false; return r; }
+    const fT = cfDist(tx, tz); if (fT > DOMAIN * armyK * 1.5 + 6) return null;   // 곧은 거리는 가까워도 걸어서는 먼 목적지
+    if (fb <= fT + (b.flow ? 1.5 : 4)) { b.flow = false; return null; }           // 이미 내 둘레 — 여기서부터는 건물 모서리 돌아가기
+    const w = cfStep(b); if (!w) return null;
+    b.flow = true; return w;
+  }
+  let chShadow = () => {};
   const chNearBuf = [];
   function chWallsNear(x, z, R) {             // 도망 방향을 잴 때 볼 벽 — 둘레 R칸 안 건물 벽(닫힌 문 포함)과 강가. 강도 벽처럼 막힌 것으로 본다
     chNearBuf.length = 0;
@@ -842,7 +1037,31 @@
       scene.remove(B.roof);
       const w = B.x1 - B.x0 + 0.3, d = B.z1 - B.z0 + 0.3, geo = new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2), uv = geo.attributes.uv;
       for (let i = 0; i < uv.count; i++) uv.setXY(i, (B.x0 + uv.getX(i) * w) / 14, (B.z0 + (1 - uv.getY(i)) * d) / 14);   // 땅 기준 무늬 (14칸마다 반복)
-      B.roof = new THREE.Mesh(geo, hillMat); B.roof.position.set((B.x0 + B.x1) / 2, 0.03, (B.z0 + B.z1) / 2); B.roof.renderOrder = -0.51; scene.add(B.roof);
+      B.roof = new THREE.Mesh(geo, hillMat); B.roof.position.set((B.x0 + B.x1) / 2, 0.03, (B.z0 + B.z1) / 2); B.roof.renderOrder = -0.46; scene.add(B.roof);   // c13: 산 그림자(-0.47) 위 — 산 자체는 늘 보인다
+    }
+    // c13: 산 그림자 — 산 너머(나에게서 산에 가려진 쪽)는 안 보인다. 산 덩어리마다 나를 기준으로 그 뒤쪽을 검게 덮는다 (지붕·아이콘 위, 캐릭터 밑).
+    //      지금 좀비들이 보고 있는 자리는 덮지 않는다 (시야 표시와 같은 스텐실). 강은 그림자가 없어서 건너편이 그대로 보인다
+    {
+      const hs = buildings.filter((B) => B.type === 'hill'), pos = new Float32Array(hs.length * 18), geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
+        stencilWrite: true, stencilRef: 1, stencilFunc: THREE.NotEqualStencilFunc, stencilFail: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp, stencilZPass: THREE.KeepStencilOp }));
+      mesh.frustumCulled = false; mesh.renderOrder = -0.47; scene.add(mesh);   // 지붕(-0.51)·아이콘·벽 위, 거리 원(-0.45)·캐릭터 밑
+      chShadow = () => {
+        const px = me.foot.x, pz = me.foot.z, L = 400; let o = 0;
+        for (const B of hs) {
+          const cs = [[B.x0, B.z0], [B.x1, B.z0], [B.x1, B.z1], [B.x0, B.z1]];
+          let bi = 0, bj = 1, low = 2;                // 나에게서 가장 벌어져 보이는 두 모서리 = 그 덩어리의 윤곽
+          for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) {
+            const ax = cs[i][0] - px, az = cs[i][1] - pz, bx = cs[j][0] - px, bz = cs[j][1] - pz, c = (ax * bx + az * bz) / ((Math.hypot(ax, az) || 1e-6) * (Math.hypot(bx, bz) || 1e-6));
+            if (c < low) { low = c; bi = i; bj = j; }
+          }
+          const [ax, az] = cs[bi], [bx, bz] = cs[bj], da = Math.hypot(ax - px, az - pz) || 1e-6, db = Math.hypot(bx - px, bz - pz) || 1e-6;
+          const ax2 = ax + (ax - px) / da * L, az2 = az + (az - pz) / da * L, bx2 = bx + (bx - px) / db * L, bz2 = bz + (bz - pz) / db * L;
+          pos.set([ax, 0.05, az, bx, 0.05, bz, bx2, 0.05, bz2, ax, 0.05, az, bx2, 0.05, bz2, ax2, 0.05, az2], o); o += 18;
+        }
+        geo.attributes.position.needsUpdate = true;
+      };
     }
     buildings.forEach((B, i) => {
       if (B.type === 'hill') return;
@@ -992,6 +1211,7 @@
       tx = lx + D.nx; tz = lz + D.nz;                    // 밖 → 문 바깥 앞
     }
     if (from) return insideVia(b, from, tx, tz);
+    if (CHAPTER) { const g = chGuide(b, tx, tz); if (g) { tx = g[0]; tz = g[1]; } }   // c13: 강·산 건너면 길목을 거쳐서, 멀리서 막혔으면 '나에게 가는 흐름'을 따라
     aroundCars = b.kind === 'citizen'; const w = around(b.foot.x, b.foot.z, tx, tz); aroundCars = true; return w;   // v513: 사람만 서 있는 차를 돌아간다 (좀비는 밀고 들어간다)   // v295: 건물 안은 금고를 돌아간다
   }
   const SAFE_AVOID = 1.0;                     // v295: 금고 = 건물 안 장애물 (경찰차처럼) — 돌아가는 원은 부딪힘(1.2)보다 살짝 작게
@@ -2592,6 +2812,7 @@
     const r = z.slotK * NEAR * armyK;          // 자리 거리 — 부대가 커지면 같이 넓어진다 (v122)
     let x = areaX() + Math.cos(z.slotA + z.slotOff) * r, y = areaZ() + Math.sin(z.slotA + z.slotOff) * r;   // 영역 중심 둘레 (v110)
     if (z.mut === 'armor') { const f = armorFront(z); x = f.x; y = f.y; }   // v305: 덩치는 앞쪽 (다른 동료와 섞여서)
+    if (CHAPTER && !me.space) { const f = chSlotFix(x, y); x = f[0]; y = f[1]; }   // c13: 강물·산 속 자리는 내 쪽으로
     const B = me.space, m = 0.7;
     if (B) { x = Math.max(B.x0 + m, Math.min(B.x1 - m, x)); y = Math.max(B.z0 + m, Math.min(B.z1 - m, y)); }
     else for (const C of buildings) {
@@ -3877,6 +4098,7 @@
     tickItems(dt);                            // 기술 다시 채우기 (v190)
     dispatchTick(dt);                         // 수배 별에 따라 경찰서에서 출동
     draw(dt);
+    if (CHAPTER) chShadow();                  // c13: 산 그림자
     checkTut();                               // 처음 만난 적 소개 (v202)
     stepFx(dt); drawObjBars(dt);              // 사물 이펙트·체력바 (v239)
     itemsTick(dt);                            // v275: 변이 시간 · 히드라 토사물 · 산성 덩어리 (v286: 권총 삭제)
@@ -5321,7 +5543,7 @@
     window.__rdReady = true;
   }
 
-  window.__rd = { get me() { return me; }, bodies, spawn, fleeDir, step: stepWorld, buildings, explored };   // 확인용 (콘솔에서 상태 보기·한 걸음씩 돌리기)
+  window.__rd = { get me() { return me; }, bodies, spawn, fleeDir, step: stepWorld, buildings, explored, ch: CHAPTER ? CH_MAP : null, zombify: makeZombie, slotOf, route: CHAPTER ? chRoute : null, cf: () => ({ D: cfD, W: cfW, H: cfH, block: cfBlock, ready: cfReady, runs: cfRuns, dist: cfDist }), get armyK() { return armyK; } };   // 확인용 (콘솔에서 상태 보기·한 걸음씩 돌리기)
   // 내가 고쳐 올리면 열려 있는 화면이 저절로 바뀐다 — 새 버전은 판을 새로 깐다
   window.claude?.hot?.ready ? window.claude.hot.ready(start) : start();
 </script>
