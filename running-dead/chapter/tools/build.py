@@ -477,8 +477,11 @@ R = [
   ("|| cand[Math.floor(Math.random() * cand.length)];   /* v431", "|| cand[B.sideK !== undefined ? B.sideK % cand.length : Math.floor(Math.random() * cand.length)];   /* c1: 챕터 맵은 쪽문 자리도 고정 */   /* v431"),
   ("bodies, spawn, fleeDir, step: stepWorld };", "bodies, spawn, fleeDir, step: stepWorld, buildings, explored, ch: CHAPTER ? CH_MAP : null, zombify: makeZombie, slotOf, route: CHAPTER ? chRoute : null, cf: () => ({ D: cfD, W: cfW, H: cfH, block: cfBlock, ready: cfReady, runs: cfRuns, dist: cfDist }), get armyK() { return armyK; } };"),
 ]
-for a, b in R:
-    assert s.count(a) == 1, (s.count(a), a[:70])
+from loot_patch import LOOT_R   # c19: 금고와 아이템
+R += LOOT_R
+for e in R:
+    a, b, n = (e + (1,))[:3]
+    assert s.count(a) == n, (s.count(a), n, a[:70])
     s = s.replace(a, b)
 OUT.parent.mkdir(exist_ok=True); OUT.write_text(s, encoding='utf8')
 import re

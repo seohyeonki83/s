@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c18</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c19</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1873,7 +1873,7 @@
   // v505: 충격 흡수복 — 넉백 거리에서 고정량을 깎는다 (단계마다 저격수 넉백의 1/4). 다 깎이면 아예 안 밀리고 멈칫도 없다
   const knockDist = (v, T) => v * (1 - Math.exp(-4 * T)) / 4;   // knockStep 감속(e^-4t)으로 밀리는 거리
   const SNIPER_KD = knockDist(2.3 * 2 * 1.3, 0.4);   /* v547: 저격 넉백 1.3배에 맞춰 — 흡수복 4단계에 완전 무효 그대로 */   /* = ARMOR_KB × 2, ARMOR_KT (아래에서 선언) */            // 저격수 넉백 거리 (약 0.92칸)
-  const absorbAmt = () => owned.absorb ? SNIPER_KD / 4 * (1 + up.brain) : 0;
+  const absorbAmt = () => owned.absorb ? SNIPER_KD / 4 * (1 + lv('absorb')) : 0;
   function giveKnock(z, kx, kz, v, T) {       // 방향(kx, kz), 처음 속도 v, 시간 T — 내가 흡수복을 입었으면 깎는다. 밀렸으면 true
     const kl = Math.hypot(kx, kz) || 1;
     if (z === me && owned.absorb) {
@@ -1987,7 +1987,7 @@
       }
     }
     const base = POLICE_DAMAGE * (c.sniper ? 3 * 0.8 * 0.9 * 2.4 * 0.9 * 0.9 /* v578: 10% 하강 (62.8) */ /* v552: 10% 하강 (69.8) */ /* v547: 시험 맵 값 적용 — 공격력 2.4배 (77.5) */ :   /* v462: 10% 더 줄임 (v460: 20%) */ c.soldier ? 1.2 / 4 * 0.9 * 0.9 /* v578: 10% 하강 */ :   /* v462: 군인 데미지 10% 줄임 */ 0.95);   /* v494: 경찰 공격력 5% 줄임 */   // v396: 저격수 3배 · v410: 군인은 경찰의 120%를 4발에 나눠서
-    landHit(c, z, z === me && hasVest ? base * vestK(up.brain) : base);   // 방탄복 — 내 총알 피해 감소 (v201)
+    landHit(c, z, z === me && hasVest ? base * vestK(lv('vest')) : base);   // 방탄복 — 내 총알 피해 감소 (v201)
     if (c.sniper && isZombie(z)) sniperHit(c, z);
     else if (c.soldier && isZombie(z)) soldierHit(c, z);   // v478
   }
@@ -2491,7 +2491,7 @@
     if (TEST_MAP && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적
     if (a && a.stim) dmg *= a.stimK || 1.5;   // v369 · v370: 스팀팩 (강화마다 +10%p)
     if ((v.kind === 'obj' || v.kind === 'safe') && a.mut === 'armor') dmg *= 3;   // v550: 덩치만 사물(문·차·금고)에 3배   // v378: 금고도   // v344: 2 → 4배   // v295: 덩치 — 문·경찰차 피해 2배
-    if ((v.kind === 'obj' || v.kind === 'safe') && a === me && owned.crowbar) dmg *= 1.4 + 0.1 * up.brain;   /* v563: 빠루 처음 +40%, 강화마다 +10% */
+    if ((v.kind === 'obj' || v.kind === 'safe') && a === me && owned.crowbar) dmg *= 1.4 + 0.1 * lv('crowbar');   /* v563: 빠루 처음 +40%, 강화마다 +10% */
     // v549: 금고도 나·동료 배율 없음 — 공격력 그대로   // v391: 금고 — 나한테는 3배, 동료(덩치·히드라 포함)한테는 2/3   // v275: 빠루 — 내가 건물·사물에 입히는 피해
     if (isZombie(v) && v.mut) dmg *= v.mut === 'armor' ? (v === me ? 0.5 /* v581: 덩치로 각성한 나 받는 피해 −50% */ : TEST_ARMOR ? 0 : 0.2) : 0.9;   /* v558: 각성한 나는 덩치여도 −80% 없음 */   // v275: 갑옷좀비 받는 피해 80% 줄임, 히드라 10% 줄임
     if (a.mut === 'armor' && v.kind === 'citizen' && !a.splashing) {   // v275: 갑옷좀비 — 앞쪽 80° 부채꼴, 근접 거리 1.2배 안 다른 적도 30%
@@ -2935,7 +2935,7 @@
     z.aim = null;
     z.engaging = null;                           // 이번 걸음에 HP 있는 시민을 공격 대상으로 잡으면 fight()가 다시 채운다
     if (z !== me) cmdTick(z);                    // 명령 시간이 다 됐으면 풀고, 아니면 지배 거리 배율·부채꼴 각도 갱신
-    if (z.atkT > 0) z.atkT -= dt;
+    if (z.atkT > 0) z.atkT -= dt * (z.rage ? 1.05 : 1);   /* c19: 분노 바이러스 — 공격 속도 +5% */
     if (z.skipT > 0) z.skipT -= dt;
     if ((z.tick -= dt) <= 0) {                   // 시민처럼 틱마다 타겟을 새로 뽑는다 = 인지거리 안 가장 가까운 시민 (때리던 상대도 더 가까운 시민이 있으면 바뀐다)
       z.tick += ZOMBIE_TICK;
@@ -3591,13 +3591,14 @@
     while (!itemOrder.includes(mustInj)) itemOrder = pickItems();
     { const i = itemOrder.indexOf(mustInj); itemOrder.splice(i, 1); itemOrder.splice(Math.random() < 0.5 ? 0 : 1, 0, mustInj); }   // v276: 9종 중 랜덤 4개 — 금고 4개 전부에서 하나씩 (사용 아이템은 2개까지)
     for (const k of Object.keys(owned)) delete owned[k];
+    for (const k of Object.keys(ilv)) delete ilv[k];   // c19
     for (const el of Object.values(pBadges)) el.remove();
     for (const k of Object.keys(pBadges)) delete pBadges[k];
     for (const el of Object.values(aBadges)) el.remove();
     for (const k of Object.keys(aBadges)) delete aBadges[k];
     for (const sp of spits) scene.remove(sp.s); spits.length = 0;
     for (const k of Object.keys(up)) up[k] = 0;   // 레벨·능력치·방탄복 초기화 (v201)
-    trickleT = TRICKLE_T; stimT = 0; reviveT = 0; dispatchN = 0; for (const z of stimmed) scene.remove(z.flame); stimmed.length = 0;   // v355 · v369
+    trickleT = TRICKLE_T; stimT = 0; reviveT = 0; rageT = 0; dispatchN = 0; for (const z of stimmed) scene.remove(z.flame); stimmed.length = 0;   // v355 · v369
     level = 0; xp = 0; pendingLv = 0; lvOpen = false; victoryOn = false; hasVest = false;
     vestEl = null;
     for (const el of stage.querySelectorAll('#pick, #win, #tut, #goal, .okBtn')) el.remove();
@@ -3867,7 +3868,7 @@
   //   경찰서·경찰은 START_COP_CLEAR(15칸) 안에 없어야 하고, 밖에 있는 시민(일반·수비형·공격형)은 내 인지거리 밖이면 된다
   function testPopulate() {                   // v396: 시험 맵 — 저격수 2명을 세로 가운데, 가로로 고르게 / 나는 아래 가운데
     const W = MM.x1 - MM.x0, cz = (MM.z0 + MM.z1) / 2;
-    if (CHAPTER) { me.foot.set(CH_MAP.start[0], 0, CH_MAP.start[1]); me.space = null; me.hp = me.maxHp; chPopulate(); return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작 · c11: 인간 200명
+    if (CHAPTER) { me.foot.set(CH_MAP.start[0], 0, CH_MAP.start[1]); me.space = null; me.hp = me.maxHp; chPopulate(); chSafes(); return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작 · c11: 인간 200명
     me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;
     if (CAR_TEST) { carTestSetup(); return; }
     teamQueue.push(1);                        // v410: 시험 맵 — 시작하자마자 맵 가장자리에서 1팀 (군인 2 + 저격수 1)
@@ -4087,7 +4088,7 @@
       else updateCitizen(b, dt);
     }
     for (const b of bodies) {
-      if (!b.fixed && !b.sleep) { const gk = b.goo ? 0.56 : 1;   /* v344: 20% → 44% 느리게 (0.8 × 0.7) */ b.foot.x += b.vel.x * dt * gk; b.foot.z += b.vel.y * dt * gk; }   // v275: 산성 덩어리 묻으면 이동 20% 느리게
+      if (!b.fixed && !b.sleep) { const gk = (b.goo ? 0.56 : 1) * (b.rage ? 1.05 : 1);   /* c19: 분노 바이러스 — 이동 속도 +5% */   /* v344: 20% → 44% 느리게 (0.8 × 0.7) */ b.foot.x += b.vel.x * dt * gk; b.foot.z += b.vel.y * dt * gk; }   // v275: 산성 덩어리 묻으면 이동 20% 느리게
       if (b.split && (b.splitT -= dt) <= 0) b.split = null;
       if (b.lungeT >= 0) {                    // 때리는 모션 시간 — 붙는 순간 데미지
         const before = b.lungeT;
@@ -4158,6 +4159,10 @@
     life: svgI('<path d="M12 21C5 16 2 12.5 2 8.5 2 5.4 4.4 3 7.3 3c1.9 0 3.6 1 4.7 2.6C13.1 4 14.8 3 16.7 3 19.6 3 22 5.4 22 8.5c0 4-3 7.5-10 12.5z" fill="#e8455a"/>'),
     leg: svgI('<path d="M9 2h5v11l1 3h5a2 2 0 0 1 2 2v2H7.5a1.5 1.5 0 0 1-1.5-1.5V15l3-2z" fill="#7d9bd8"/><rect x="6" y="18" width="16" height="3" rx="1" fill="#4b6aa8"/>'),
   };
+  IC.bag = svgI('<path d="M8 7V5.5A2.5 2.5 0 0 1 10.5 3h3A2.5 2.5 0 0 1 16 5.5V7" fill="none" stroke="#c9a06a" stroke-width="2"/><rect x="4" y="7" width="16" height="14" rx="3" fill="#a9763f"/><rect x="7" y="12" width="10" height="5" rx="1.5" fill="#c9965a"/><rect x="11" y="11" width="2" height="3" rx="0.6" fill="#f2d9a8"/>');   // c19: 가방
+  IC.rage = svgI('<circle cx="12" cy="12" r="6" fill="#d8342c"/><g stroke="#d8342c" stroke-width="2.2" stroke-linecap="round"><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></g><circle cx="10" cy="11" r="1.5" fill="#ffd9d4"/><circle cx="14.2" cy="13.4" r="1.1" fill="#ffd9d4"/>');   // c19: 분노 바이러스
+  IC.catalyst = svgI('<path d="M9.5 3h5v2h-1v5l5 8.5a1.7 1.7 0 0 1-1.5 2.5H7a1.7 1.7 0 0 1-1.5-2.5l5-8.5V5h-1z" fill="#dfe7f2"/><path d="M8.2 15h7.6l2 3.5a1 1 0 0 1-.9 1.5H7.1a1 1 0 0 1-.9-1.5z" fill="#4fd08a"/><circle cx="11" cy="17.5" r="0.9" fill="#d9ffe9"/><circle cx="14" cy="16.3" r="0.6" fill="#d9ffe9"/>');   // c19: 촉매제
+  IC.blood = svgI('<rect x="10" y="2" width="4" height="3" rx="1" fill="#cfd6e3"/><path d="M7 5h10a2 2 0 0 1 2 2v10a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V7a2 2 0 0 1 2-2z" fill="#f4e9e9"/><path d="M6.5 11h11v6a3 3 0 0 1-3 3h-5a3 3 0 0 1-3-3z" fill="#d8342c"/><rect x="11" y="12.5" width="2" height="5.5" fill="#fff"/><rect x="9.25" y="14.25" width="5.5" height="2" fill="#fff"/>');   // c19: 혈액팩
   const ITEM = {
     taser: { max: 3, reload: 20, icon: IC.taser, name: '테이저건', col: '#ffd34d' },   // 3발, 1발 20초 — 내 인지거리 안 적 1명 (위험도 높은 순 → 가까운 순) 4초 감전 (v195), 감전 중인 적은 다시 안 쏨 (v196)
     cash: { max: 1, reload: 37.5 * 1.3,   /* v514: 30% 더 (48.75초) — v447: 2배 */ icon: IC.cash, name: '현금', col: '#43d17a' },    // v284: 15 → 18.75초 (25% 늘림) — 1번 — 내 둘레 1~2칸에 돈다발 (v201: 처음 1개 + 똑똑한 두뇌마다 1개)
@@ -4170,6 +4175,7 @@
     book: { icon: IC.book, name: '백과사전', passive: true },      // v286: 권총 대신 — 사용 도구 쿨타임 7% 줄임 (장비 강화마다 3%씩 더)
     stim: { icon: IC.stim, name: '스팀팩', passive: true },
     revive: { icon: IC.revive, name: '부활', passive: true },   // v375: 죽으면 체력 가득으로 되살아난다 (1번, 쿨타임 60초)   // v369: 깃발 대신 — 근접 거리 안 동료 하나에 자동 주사 (흰색 · 피해 1.5배 · 체력 1.5배 가득)           // v275: 복귀하는 동료 속도 +20%
+    bag: { icon: IC.bag, name: '가방', passive: true }, rage: { icon: IC.rage, name: '분노 바이러스', passive: true }, catalyst: { icon: IC.catalyst, name: '촉매제', passive: true }, blood: { icon: IC.blood, name: '혈액팩', passive: true },   // c19: 챕터 장비 4종
     shoes: { icon: IC.shoes, name: '운동화', passive: true },       // v275: 내 이동 속도 +10%                         // 패시브 (v201) — 총알 피해 30% 감소, 똑똑한 두뇌마다 10% 더
   };
   const taserN = (n) => 1 + Math.floor(n / 2), taserT = (n) => STUN_T + Math.ceil(n / 2);   // 테이저건 강화 n단계: 감전 대상 수 · 감전 시간(초) — 홀수 번째 강화는 시간 +1초, 짝수 번째는 대상 +1명
@@ -4187,13 +4193,17 @@
     stim: ['일정 시간마다 동료 한 마리를 강화시키는 주사를 주입합니다.', '강화 시 주사 효과가 더 강해집니다.'],
     revive: ['죽으면 되살아납니다. 다시 쓰려면 시간이 지나야 합니다.', '강화 시 더 많은 체력으로 되살아납니다.'],
     shoes: ['나의 이동 속도가 빨라집니다.', '강화 시 더 빨라집니다.'],
+    bag: ['들 수 있는 도구가 하나 늘어납니다.', '강화 시 하나 더 늘어납니다.'],
+    rage: ['일정 시간마다 동료 한 명의 공격 속도와 이동 속도가 오릅니다.', '강화 시 더 자주 퍼집니다.'],
+    catalyst: ['변이한 좀비의 공격력이 오릅니다.', '강화 시 더 오릅니다.'],
+    blood: ['나의 최대 체력이 늘어납니다.', '강화 시 더 늘어납니다.'],
   };
   function itemDesc(kind) {                   // 획득할 때 뜨는 설명 (v228: 사용자가 정한 문구 그대로)
     const t = ITEM_TEXT[kind];
     return `<div class="main">${t[0]}${t[2] ? '<br>' + t[2] : ''}</div><div class="up"><span style="display:inline-block;width:1.15em;vertical-align:-0.22em;margin-right:4px">${IC.tool}</span>${t[1]}</div>`;   // v270: 설명 속 두뇌도 플랫 아이콘
   }
 
-  const SLOT_A = [45, 15, 75], SLOT_R = 125;   // 버튼 자리 = 조이스틱 가운데에서 이 각도(오른쪽 0°, 위 90°)·거리(px)
+  const SLOT_A = CHAPTER ? [45, 15, 75, 105, 135] : [45, 15, 75], SLOT_R = 125;   /* c19: 가방을 얻으면 도구 칸이 5개까지 */   // 버튼 자리 = 조이스틱 가운데에서 이 각도(오른쪽 0°, 위 90°)·거리(px)
   const FORCE_FIRST_ITEM = null;   /* v330: 다시 완전 랜덤 */           // v294: 시험용 — 첫 진짜 금고에서 이 아이템 (null이면 원래대로 완전 랜덤)
   let items = [], itemOrder = [], safesBroken = 0, paused = false, acqOpen = false, starAnim = false, shownStars = 0;
   const pendingAward = [];
@@ -4221,6 +4231,9 @@
       val: (n) => `이동 속도 +${n * 7}→+${(n + 1) * 7}%` },
   };
   const up = { brain: 0, meat: 0, arm: 0, bite: 0, skin: 0, leg: 0, life: 0 };
+  const ilv = {};                             // c19: 아이템마다 강화 단계 (챕터) — 같은 걸 또 얻으면 그것만 +1. 테스트맵은 지금까지처럼 '장비/도구 강화' 한 값을 다 같이 쓴다
+  const lv = (k) => CHAPTER ? (ilv[k] || 0) : up.brain;
+  const lvText = (kind) => { const n = lv(kind), max = CHAPTER && n >= chLvMax(kind); return `지금 (강화 ${n}단계${max ? ' · 최대' : ''}): ${statLine(kind, n)}` + (max ? '' : `<br>다음 강화: ${statLine(kind, n + 1)}`); };
   let level = 0, xp = 0, pendingLv = 0, lvOpen = false, hasVest = false, vestEl = null, victoryOn = false;
   const needXp = (L) => Math.round(10 * Math.pow(1.3, L));   // 레벨 L → L+1 에 새로 필요한 수 (v238: 처음 10, 1.3배씩)
   const vestK = (n) => Math.pow(0.8, n + 1);   // v582: 원거리 20% 감쇄, 강화마다 남은 데미지에서 20%씩 더
@@ -4228,14 +4241,14 @@
   const bitePct = (n = up.bite) => 12 * Math.max(0, n);
   const biteK = (n = up.bite) => Math.max(0, 1 - bitePct(n) / 100);   // 감염 시간 배율 — 0이면 즉시 감염
   const myBiteLen = (n = up.bite) => INFECT / MY_INFECT * biteK(n);
-  const zDamage = (z) => (z === me ? MY_DAMAGE : ALLY_DAMAGE) * (1 + 0.07 * up.arm) * (z.mut === 'armor' && z !== me ? 1.3 * 1.3 * 2 : 1);   /* v558: 각성한 나는 내 공격력 그대로 */   /* v551: 덩치 기본 데미지 2배 */   // v275: 갑옷좀비 공격력 1.3배
+  const zDamage = (z) => (z === me ? MY_DAMAGE : ALLY_DAMAGE) * (1 + 0.07 * up.arm) * (z.mut === 'armor' && z !== me ? 1.3 * 1.3 * 2 : 1) * (CHAPTER && z.mut && owned.catalyst ? 1 + 0.05 * (1 + lv('catalyst')) : 1);   /* c19: 촉매제 */   /* v558: 각성한 나는 내 공격력 그대로 */   /* v551: 덩치 기본 데미지 2배 */   // v275: 갑옷좀비 공격력 1.3배
   const zHeal = (z) => (z === me ? MY_BITE_HEAL : BITE_HEAL) + 0.04 * up.meat;   // 감염 시간 1배 기준 초당 회복 (최대 체력 대비)
   const allyMaxHp = () => ALLY_HP * (1 + 0.07 * up.skin);   // v267: 단단한 피부 3% → 5%
   const allyAttack = () => ALLY_ATTACK;       // v256: 빠른 다리는 이제 습격 거리가 아니라 이동 속도
   const legK = () => 1 + 0.07 * up.leg;      // 빠른 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
-  const meSpeed = () => MY_SPEED * (legK() + (owned.shoes ? 0.10 + 0.03 * up.brain : 0)   /* v568: 운동화 처음 +15%, 강화마다 +10% */) * (me && me.mut ? MUT_SPEED : 1);   // v558: 각성 중엔 변이 속도   // v275: 운동화 +10% (도구 다루기마다 +3%) — 빠른 다리와 더한다
-  const cashK = () => 1.2 + 0.2 * up.brain;   /* v339: 1.2 · 1.4 · 1.6 · 1.8배 */   /* v338: 20% 더 줄임 */   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
-  const lureHits = () => 2 + 2 * up.brain;   /* v339: 2 · 4 · 6 · 8대 */   /* v333: 처음 4 → 3대 */    // v269: 유혹 중 4대째 맞으면 정신 차린다, 두뇌마다 +2 (4, 6, 8 …)
+  const meSpeed = () => MY_SPEED * (legK() + (owned.shoes ? 0.10 + 0.03 * lv('shoes') : 0)   /* v568: 운동화 처음 +15%, 강화마다 +10% */) * (me && me.mut ? MUT_SPEED : 1);   // v558: 각성 중엔 변이 속도   // v275: 운동화 +10% (도구 다루기마다 +3%) — 빠른 다리와 더한다
+  const cashK = () => 1.2 + 0.2 * lv('cash');   /* v339: 1.2 · 1.4 · 1.6 · 1.8배 */   /* v338: 20% 더 줄임 */   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
+  const lureHits = () => 2 + 2 * lv('cash');   /* v339: 2 · 4 · 6 · 8대 */   /* v333: 처음 4 → 3대 */    // v269: 유혹 중 4대째 맞으면 정신 차린다, 두뇌마다 +2 (4, 6, 8 …)
   function gainXp() {
     xp++;
     if (xp >= needXp(level + pendingLv)) { xp -= needXp(level + pendingLv); pendingLv++; }
@@ -4262,7 +4275,7 @@
   }
   function showLevelUp() {
     lvOpen = true; paused = true; stopInput();
-    const pool = Object.keys(ABIL).map((k) => [k, k === 'brain' ? 0.25 : 1]), keys = [];   /* v535: 절반 더 (0.5 → 0.25) */   // v528: 장비 강화는 처음부터 늘 다른 능력치의 절반 확률
+    const pool = Object.keys(ABIL).filter((k) => !(CHAPTER && k === 'brain')).map((k) => [k, k === 'brain' ? 0.25 : 1]), keys = [];   /* c19: 챕터는 '장비/도구 강화' 카드 없음 */   /* v535: 절반 더 (0.5 → 0.25) */   // v528: 장비 강화는 처음부터 늘 다른 능력치의 절반 확률
     while (keys.length < 3 && pool.length) {
       let r = Math.random() * pool.reduce((a, [, w]) => a + w, 0), i = 0;
       while (i < pool.length - 1 && (r -= pool[i][1]) > 0) i++;
@@ -4370,8 +4383,8 @@
         cand.push({ c, k: DANGER(c), d });
       }
       cand.sort((a, b) => b.k - a.k || a.d - b.d);
-      const hit = cand.slice(0, taserN(up.brain));  // 한 번에 맞히는 수 = 1 + 똑똑한 두뇌 (v201)
-      for (const { c } of hit) { c.stunT = taserT(up.brain); c.vel.set(0, 0); zaps.push({ to: c, t: 0.45 }); }
+      const hit = cand.slice(0, taserN(lv('taser')));  // 한 번에 맞히는 수 = 1 + 똑똑한 두뇌 (v201)
+      for (const { c } of hit) { c.stunT = taserT(lv('taser')); c.vel.set(0, 0); zaps.push({ to: c, t: 0.45 }); }
       if (!hit.length) zaps.push({ to: null, t: 0.2 });
     } else {                                  // 돈다발 3개를 내 둘레 2~4칸에 뿌린다 (나와 같은 공간)
       const fresh = [];
@@ -4444,7 +4457,7 @@
     b.fixed = true; b.r = 1.2; b.halfH = 1.425 * 0.7;   /* v295: 1.5 → 1.2 (그림 2×2칸에 맞게) */ b.hp = b.maxHp = SAFE_HP;   // 부딪힘(콜라이더) 반지름도 같이 커진다 b.station = S;
     addHpBar(b, hpFoeMat);
     S.safe = b;
-    if (!S.station && !S.qm) {                // v288: 일반 건물 금고 — 지붕 가운데 물음표 (경찰서 느낌표처럼, 어둠 위)
+    if (!CHAPTER && !S.station && !S.qm) {   // c19: 챕터는 지붕 물음표 없음 (건물 아이콘이 이미 있고, 집은 열어 봐야 안다)                // v288: 일반 건물 금고 — 지붕 가운데 물음표 (경찰서 느낌표처럼, 어둠 위)
       S.qm = new THREE.Mesh(new THREE.PlaneGeometry(BANG_W * 1.5, BANG_H), new THREE.MeshBasicMaterial({ map: qmTex, transparent: true, depthTest: false, depthWrite: false }));
       S.qm.quaternion.copy(camera.quaternion);
       S.qm.position.set((S.x0 + S.x1) / 2, 0.06, (S.z0 + S.z1) / 2);
@@ -4625,6 +4638,7 @@
       mutate: () => `주사 ${1 + n}개 · 변이 ${23 + 4 * n}초`, bomb: () => `쿨타임 ${Math.round(Math.max(10, 40 - 3 * n) * 1.15 * 1.1)}초`,
       vest: () => `원거리 공격 ${vestPct(n)}% 감쇄`, absorb: () => `넉백 ${(SNIPER_KD / 4 * (1 + n)).toFixed(2)}칸 흡수 (저격수 넉백의 ${Math.min(100, 25 * (1 + n))}%${n + 1 >= 4 ? ' · 완전 무효' : ''})`, crowbar: () => `건물·사물 피해 +${40 + 10 * n}%`, book: () => `도구 쿨타임 -${Math.round((1 - Math.pow(0.93, n + 1)) * 100)}%`,
       revive: () => `체력 ${Math.round(Math.min(1, 0.3 + 0.1 * n) * 100)}%로 부활 · 쿨타임 120초`, stim: () => `${stimCd()}초마다 1명 · 공격력·체력 x${(1.5 + 0.1 * n).toFixed(1)}`, shoes: () => `이동 속도 +${10 + 3 * n}%`,
+      bag: () => `도구 ${Math.min(5, 3 + n)}칸`, rage: () => `${25 - n}초마다 동료 1명 · 공격 속도·이동 속도 +5%`, catalyst: () => `변이 좀비 공격력 +${5 * (1 + n)}%`, blood: () => `내 최대 체력 +${10 * (1 + n)}%`,   // c19
     }[kind]();
   }
   const pBadges = {};                         // 왼쪽 아래 패시브 배지
@@ -4640,19 +4654,20 @@
     return out;
   }
   const MUT_SPEED = 1.25 * 1.15;   /* v347: 15% 더 */                     // v304: 변이 좀비 이동 속도 배율
-  const MUT_T = () => 23 + 4 * up.brain;                            // 변이 유지 시간 — v299: 기본 20 → 23초, 도구 다루기마다 +2 → +4초
-  const itemMax = (k) => k === 'mutate' ? 1 + up.brain : ITEM[k].max;   // 변이 주사 장탄 +1씩
-  const bookCut = () => owned.book ? 1 - Math.pow(0.93, up.brain + 1) : 0;   /* v582: 7%, 강화마다 남은 쿨타임에서 7%씩 */   // v286: 백과사전 — 사용 도구 쿨타임 7% 줄임, 도구 다루기마다 3%p씩 더
-  const itemReload = (k) => (k === 'bomb' ? Math.max(10, 40 - 3 * up.brain) * 1.15 * 1.1 /* v559: +10% 더 */ : ITEM[k].reload * (k === 'taser' ? 1.1 : 1))   /* v556: 자폭 +15% · 테이저 +10% */ * (1 - bookCut());   // 자폭 쿨타임 −3초씩 → 그 위에 백과사전
+  const MUT_T = () => 23 + 4 * lv('mutate');                            // 변이 유지 시간 — v299: 기본 20 → 23초, 도구 다루기마다 +2 → +4초
+  const itemMax = (k) => k === 'mutate' ? 1 + lv('mutate') : ITEM[k].max;   // 변이 주사 장탄 +1씩
+  const bookCut = () => owned.book ? 1 - Math.pow(0.93, lv('book') + 1) : 0;   /* v582: 7%, 강화마다 남은 쿨타임에서 7%씩 */   // v286: 백과사전 — 사용 도구 쿨타임 7% 줄임, 도구 다루기마다 3%p씩 더
+  const itemReload = (k) => (k === 'bomb' ? Math.max(10, 40 - 3 * lv('bomb')) * 1.15 * 1.1 /* v559: +10% 더 */ : ITEM[k].reload * (k === 'taser' ? 1.1 : 1))   /* v556: 자폭 +15% · 테이저 +10% */ * (1 - bookCut());   // 자폭 쿨타임 −3초씩 → 그 위에 백과사전
   function refreshBadges() {                  // 패시브 배지 아래 숫자
     const t = {
-      vest: () => '-' + vestPct(up.brain) + '%',
-      absorb: () => Math.min(100, 25 * (1 + up.brain)) + '%',
-      crowbar: () => '+' + Math.round(40 + 10 * up.brain) + '%',
+      vest: () => '-' + vestPct(lv('vest')) + '%',
+      absorb: () => Math.min(100, 25 * (1 + lv('absorb'))) + '%',
+      crowbar: () => '+' + Math.round(40 + 10 * lv('crowbar')) + '%',
       book: () => '-' + Math.round(bookCut() * 100) + '%',
       stim: () => 'x' + stimMul().toFixed(1),
       revive: () => reviveT > 0 ? Math.ceil(reviveT) + '초' : '준비',
-      shoes: () => '+' + Math.round(10 + 3 * up.brain) + '%',
+      shoes: () => '+' + Math.round(10 + 3 * lv('shoes')) + '%',
+      bag: () => chToolCap() + '칸', rage: () => (25 - lv('rage')) + '초', catalyst: () => '+' + 5 * (1 + lv('catalyst')) + '%', blood: () => '+' + 10 * (1 + lv('blood')) + '%',   // c19
     };
     for (const [k, el] of Object.entries(pBadges)) if (t[k]) el.querySelector('.pc').textContent = t[k]();
     const n = up.brain, a = { taser: () => `${taserN(n)}명`, cash: () => `${(1.2 + 0.2 * n).toFixed(1)}배`, mutate: () => `${23 + 4 * n}초`, awaken: () => `${15 + 1.5 * n}초`, bomb: () => `${Math.round(Math.max(10, 40 - 3 * n) * 1.15 * 1.1)}초` };
@@ -4661,6 +4676,7 @@
       const L = Object.values(g), tight = L.length >= 3, step = tight ? 40 : 54, sz = tight ? 36 : 46;
       L.forEach((el, i) => { el.style[side] = `calc(max(16px, env(safe-area-inset-${side}, 0px)) + ${i * step}px)`;   /* v526: 버튼 줄이 위로 가서 사용 장비 배지는 오른쪽 끝부터 */   /* v423: 사용 장비는 오른쪽 버튼 줄 바로 왼쪽부터 */ el.style.width = el.style.height = sz + 'px'; });
     }
+    if (CHAPTER) chBadgeGrid();
   }
   function toast(text) {                      // 화면 아래쪽에 잠깐 뜨는 글
     const el = document.createElement('div'); el.className = 'toast'; el.textContent = text;
@@ -4697,7 +4713,7 @@
   function awakenMe() {                       // v558: 각성 주사 — 나 자신이 8초 동안 덩치·히드라 (체력·공격력 그대로)
     const type = Math.random() < 0.5 ? 'armor' : 'hydra';
     if (me.mode === 'pounce') stopPounce(me);
-    me.mut = type; me.mutT = 15 + 1.5 * up.brain;   /* v582: 기본 10초, 강화마다 +1.5초 */   /* v574: 10 → 13초 */ /* v564: 8 → 10초 */
+    me.mut = type; me.mutT = 15 + 1.5 * lv('awaken');   /* v582: 기본 10초, 강화마다 +1.5초 */   /* v574: 10 → 13초 */ /* v564: 8 → 10초 */
     me.hp = Math.min(me.maxHp, me.hp + me.maxHp * 0.2);
     me.mesh.material.color.setHex(MUT_COL[type]);
     if (type === 'armor') { me.r = BODY * 1.5; me.halfH = RADIUS * 1.5; me.mesh.scale.setScalar(1.5); me.force = MY_FORCE * 1.3; }
@@ -4891,6 +4907,7 @@
   function itemsTick(dt) {
     if (reviveT > 0) { const p = Math.ceil(reviveT); reviveT = Math.max(0, reviveT - dt); if (Math.ceil(reviveT) !== p) refreshBadges(); }
     stimTick(dt);
+    if (CHAPTER) rageTick(dt);
     for (const z of zombies) if (z.mut && !(TEST_ARMOR && z.mut === 'armor') && (z.mutT -= dt) <= 0) unmutate(z);   // 변이 끝
     stepSpits(dt);
     gooTick(dt);
@@ -4925,6 +4942,7 @@
       p.t += dt;
       p.s.position.set(p.x, 0, p.z).addScaledVector(UP, 1.0 + Math.sin(p.t * 3) * 0.12);   // v422: 크기에 맞춰 (아래 끝이 바닥 위)
       if (isZombie(me) && me.space === p.space && Math.hypot(me.foot.x - p.x, me.foot.z - p.z) <= PICK_R) {
+        if (CHAPTER && !chCanTake(p.kind)) { if (!(p.warn > clock)) { p.warn = clock + 4; toast('도구 칸이 꽉 찼습니다 — 가방이 있어야 더 들 수 있습니다'); } continue; }   // c19: 새 도구는 칸이 남아야 줍는다 (바닥에 그대로 남는다)
         scene.remove(p.s); p.s.material.map.dispose(); p.s.material.dispose();
         pickups.splice(i, 1);
         pendingAward.push(p.kind);
@@ -4935,7 +4953,9 @@
     b.dead = true;
     scene.remove(b.mesh); if (b.hpBar) scene.remove(b.hpBar);
     const i = bodies.indexOf(b); if (i >= 0) bodies.splice(i, 1);
+    if (CHAPTER && b.B) b.B.done = true;       // c19: 금고를 깬 건물 = 잠식 (지붕·미니맵 아이콘이 X로)
     if (b.dud) { dust(b.foot.x, b.foot.z, 16, 1.4); for (let i = 0; i < 8; i++) { const a = Math.random() * 6.28; puff(b.foot.x, 0.8, b.foot.z, 0x6a6a6a, 0.8, rand(2, 3), rand(1.2, 2), Math.cos(a) * 0.6, rand(0.6, 1.2), Math.sin(a) * 0.6, 0.6, rand(0, 0.3)); } return; }   // v331: 꽝 = 연기만, 아무 일 없음   // v288: 꽝 금고 — 아이템 없이 '힝~ 속았지' (아이템 순서는 안 쓴다)
+    if (CHAPTER) { dropPickup(b.loot, b.foot.x, b.foot.z, b.space); return; }   // c19: 그 금고에 든 아이템이 떨어진다
     if (b.hidden) {                           // v506: 숨은 금고 — 아직 없는(나올 예정도 아닌) 패시브 중 하나
       const left = PASSIVE_ITEMS.filter((k) => !owned[k] && !pickups.some((p) => p.kind === k) && !pendingAward.includes(k) && !itemOrder.slice(safesBroken).includes(k));
       const pool = left.length ? left : PASSIVE_ITEMS.filter((k) => !owned[k] && !pickups.some((p) => p.kind === k) && !pendingAward.includes(k));
@@ -4982,6 +5002,100 @@
     ov.addEventListener('pointermove', block);
     for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) ov.addEventListener(ev, (e) => { block(e); if (e.pointerId === pidH && !fired) cancel(); });
   }
+  // ── c19: 금고와 아이템 (챕터) ──
+  //   건물마다 금고: 집 말고는 전부 하나씩, 집은 5%만 (지붕 표시 없음 — 문을 열고 들어가 봐야 안다. 집 금고에는 꽝이 없다)
+  //   금고를 깨면 건물 종류에 따라 아이템 하나 또는 꽝. 아이템은 그 자리에 떨어지고 내가 가서 닿아야 얻는다 (테스트맵과 같다)
+  //   아이템 14종 = 도구 5 (자폭 스위치 · 변이 주사 · 테이저건 · 각성 주사 · 현금) + 장비 9 (백과사전 · 가방 · 분노 바이러스 · 빠루 · 충격 흡수복 · 방탄복 · 운동화 · 촉매제 · 혈액팩)
+  //   같은 아이템을 또 얻으면 그 아이템만 강화 +1 (최대 5단계, 가방은 2단계)
+  const CH_ITEMS = ['bomb', 'mutate', 'taser', 'awaken', 'cash', 'book', 'bag', 'rage', 'crowbar', 'absorb', 'vest', 'shoes', 'catalyst', 'blood'];
+  const CH_RARE = ['cash', 'book', 'bomb'];   // '나머지' 안에서 다른 아이템의 10분의 1 확률 (집·창고는 균등)
+  const CH_SPEC_1 = 46.1893, CH_SPEC_2 = 19.8265;   // 지정 아이템 하나의 확률(%) — 랜드마크를 하나씩 다 털면 14종이 똑같이 나오게 맞춘 값 (표의 46.2 · 19.8)
+  const CH_DROP = {                           // spec = 지정 아이템, p = 지정 하나의 확률(%), rest = 나머지 전체(%), 남는 것 = 꽝
+    bank: { spec: ['cash'], p: CH_SPEC_1, rest: 90 - CH_SPEC_1 }, library: { spec: ['book'], p: CH_SPEC_1, rest: 90 - CH_SPEC_1 }, army: { spec: ['bomb'], p: CH_SPEC_1, rest: 90 - CH_SPEC_1 },
+    police: { spec: ['taser', 'vest'], p: CH_SPEC_2, rest: 90 - 2 * CH_SPEC_2 }, fire: { spec: ['crowbar', 'absorb'], p: CH_SPEC_2, rest: 90 - 2 * CH_SPEC_2 }, mart: { spec: ['shoes', 'bag'], p: CH_SPEC_2, rest: 90 - 2 * CH_SPEC_2 },
+    hospital: { spec: ['mutate', 'awaken', 'catalyst', 'rage', 'blood'], p: 16, rest: 10 },
+    store: { spec: [], p: 0, rest: 90, flat: true }, conv: { spec: [], p: 0, rest: 30 }, gym: { spec: [], p: 0, rest: 30 },
+    house: { spec: [], p: 0, rest: 100, flat: true },   // 집: 금고가 있는 집(5%)이면 꽝 없이 14종 균등
+  };
+  const CH_HOUSE_SAFE = 0.05;
+  function chLoot(type) {                     // 그 건물 금고에서 나올 것 — 아이템 이름, 꽝이면 null
+    const T = CH_DROP[type]; let r = Math.random() * 100;
+    for (const k of T.spec) if ((r -= T.p) < 0) return k;
+    if (r >= T.rest) return null;
+    const pool = CH_ITEMS.filter((k) => !T.spec.includes(k)), w = pool.map((k) => T.flat || !CH_RARE.includes(k) ? 1 : 0.1);
+    let q = Math.random() * w.reduce((a, c) => a + c, 0);
+    for (let i = 0; i < pool.length; i++) if ((q -= w[i]) < 0) return pool[i];
+    return pool[pool.length - 1];
+  }
+  function chSafes() {
+    for (const B of buildings) {
+      B.safe = null;
+      if (B.type === 'hill' || (B.type === 'house' && Math.random() >= CH_HOUSE_SAFE)) continue;
+      addSafe(B);
+      const s = B.safe; s.B = B; s.loot = chLoot(B.type); s.dud = !s.loot;
+      for (const c of bodies) {               // 금고 자리에 겹친 사람은 옆으로 (자는 사람은 부딪힘 계산을 안 해서 겹친 채 남는다)
+        if (c.kind !== 'citizen' || c.space !== B) continue;
+        const dx = c.foot.x - s.foot.x, dz = c.foot.z - s.foot.z, d = Math.hypot(dx, dz), R = s.r + BODY + 0.1;
+        if (d >= R) continue;
+        const ux = d > 1e-6 ? dx / d : 1, uz = d > 1e-6 ? dz / d : 0;
+        c.foot.x = Math.max(B.x0 + 0.6, Math.min(B.x1 - 0.6, s.foot.x + ux * R)); c.foot.z = Math.max(B.z0 + 0.6, Math.min(B.z1 - 0.6, s.foot.z + uz * R));
+      }
+    }
+  }
+  const chLvMax = (k) => k === 'bag' ? 2 : 5;
+  const chHas = (k) => ITEM[k].passive ? !!owned[k] : items.some((x) => x.kind === k);
+  const chToolCap = () => Math.min(SLOT_A.length, 2 + (owned.bag ? 1 + lv('bag') : 0));   // 도구는 2개까지 (테스트맵과 같다) — 가방 하나마다 +1, 최대 5
+  function chCanTake(kind) {                  // 바닥의 아이템을 지금 주울 수 있나 — 새 도구는 칸이 남아야 한다 (장비와, 이미 가진 것의 강화는 늘 된다)
+    if (ITEM[kind].passive || chHas(kind)) return true;
+    const waiting = pendingAward.concat(fxQueue.filter((e) => e.t === 'award').map((e) => e.k)).filter((k, i, a) => ITEM[k] && !ITEM[k].passive && !chHas(k) && a.indexOf(k) === i);
+    return waiting.includes(kind) || items.length + waiting.length < chToolCap();
+  }
+  function chItemChanged(kind) {              // 얻었거나 강화한 바로 그때 적용할 것
+    if (kind === 'blood' && isZombie(me)) {   // 혈액팩: 나만 최대 체력 +10% (기본 체력 기준 — 얻을 때, 그리고 강화할 때마다)
+      const d = MY_HP * 0.10;
+      if (me.baseMaxHp) { me.baseMaxHp += d; me.maxHp += d * 3; me.hp = Math.min(me.maxHp, me.hp + d * 3); } else { me.maxHp += d; me.hp = Math.min(me.maxHp, me.hp + d); }
+    }
+    if (kind === 'shoes' && isZombie(me)) me.speed = meSpeed();
+    refreshBadges(); refreshItems();
+  }
+  function chUpgrade(kind) {                  // 가진 아이템을 또 얻었다 → 그 아이템만 강화 +1 (획득창과 같은 모양)
+    acqOpen = true; paused = true; stopInput();
+    const d = ITEM[kind], n = lv(kind), max = n >= chLvMax(kind), ov = document.createElement('div');
+    ov.id = 'acq';
+    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name} ${max ? '(이미 최대 강화)' : '강화'}</div><div class="ds">${itemDesc(kind)}<div class="up">` +
+      (max ? `지금 (강화 ${n}단계 · 최대): ${statLine(kind, n)}` : `지금 (강화 ${n}단계): ${statLine(kind, n)}<br>강화 뒤 (${n + 1}단계): ${statLine(kind, n + 1)}`) + `</div></div>`;
+    stage.appendChild(ov);
+    tapOk(ov, max ? '확인' : '강화', () => {
+      if (ov.dataset.done) return;
+      ov.dataset.done = '1';
+      if (!max) {
+        ilv[kind] = n + 1; chItemChanged(kind);
+        const el = ITEM[kind].passive ? pBadges[kind] : (items.find((x) => x.kind === kind) || {}).el;
+        if (el) { el.classList.remove('pop'); el.getBoundingClientRect(); el.classList.add('pop'); }
+      }
+      ov.remove(); acqOpen = false; paused = false; last = 0;
+    });
+  }
+  function chBadgeGrid() {                    // 장비 배지 = 왼쪽 아래에 3칸씩 위로 쌓는다 (최대 9개 — 한 줄로 늘어놓으면 조이스틱과 능력치 버튼에 닿는다)
+    Object.values(pBadges).forEach((el, i) => {
+      el.style.left = `calc(max(16px, env(safe-area-inset-left, 0px)) + ${(i % 3) * 40}px)`;
+      el.style.bottom = `calc(6px + env(safe-area-inset-bottom, 0px) + ${Math.floor(i / 3) * 48}px)`;
+      el.style.width = el.style.height = '36px';
+      const m = el.querySelector('.mag'); if (m) m.style.display = 'none';
+    });
+  }
+  let rageT = 0;
+  function rageTick(dt) {                     // 분노 바이러스: 일정 시간마다 아직 안 걸린 동료 한 명 — 공격 속도·이동 속도 +5% (그 동료가 살아 있는 동안 계속)
+    if (!owned.rage || !isZombie(me)) return;
+    const cand = zombies.filter((z) => z !== me && isZombie(z) && !z.rage);
+    if (!cand.length) return;                 // 걸 동료가 없으면 시간도 멈춘다
+    if ((rageT += dt) < 25 - lv('rage')) return;
+    rageT = 0;
+    const z = cand[Math.floor(Math.random() * cand.length)];
+    z.rage = true;
+    z.flame = new THREE.Sprite(flameMat); z.flame.scale.set(0.6, 0.6, 1); z.flame.renderOrder = UI; scene.add(z.flame); stimmed.push(z);   // 머리 위 작은 불꽃 (따라다니기·지우기는 스팀팩 코드가 한다)
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; puff(z.foot.x, 0.4, z.foot.z, 0xff5a3c, 0.4, 1.1, 0.4, Math.cos(a) * 2.2, 0.4, Math.sin(a) * 2.2, 0.85); }
+  }
   function showDud() {                        // v288: 꽝 금고 — 멈추고 '꽝!' + 놀리는 글, 조이스틱 자리 [확인]
     acqOpen = true; paused = true; stopInput();
     const ov = document.createElement('div');
@@ -4998,7 +5112,7 @@
     acqOpen = true; paused = true; stopInput();
     const d = ITEM[kind], ov = document.createElement('div');
     ov.id = 'acq';
-    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name} 획득</div><div class="ds">${itemDesc(kind)}<div class="up">지금 (강화 ${up.brain}단계): ${statLine(kind, up.brain)}<br>다음 강화: ${statLine(kind, up.brain + 1)}</div></div>`;   // 자세한 설명 (v226) — v265: 꾹 누르기 대신 [획득] 버튼
+    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name} 획득</div><div class="ds">${itemDesc(kind)}<div class="up">${lvText(kind)}</div></div>`;   // 자세한 설명 (v226) — v265: 꾹 누르기 대신 [획득] 버튼
     stage.appendChild(ov);
     tapOk(ov, '획득', () => {                 // v265: 조이스틱 자리 [획득] 버튼을 한 번 누르면
       if (ov.dataset.done) return;
@@ -5009,7 +5123,7 @@
         el.style.left = `calc(max(16px, env(safe-area-inset-left, 0px)) + ${Object.keys(pBadges).length * 54}px)`;
         el.innerHTML = `<span class="ic">${d.icon}</span><span class="pc"></span><span class="mag"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6" fill="none" stroke="#e8eef5" stroke-width="3"/><path d="M14.5 14.5 20 20" stroke="#e8eef5" stroke-width="3.4" stroke-linecap="round"/></svg></span>`;   // v529: 작은 돋보기 표시
         el.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); showInfo(kind); });   // v284: 누르면 일시정지 + 설명창
-        stage.appendChild(el); pBadges[kind] = el;
+        stage.appendChild(el); pBadges[kind] = el; if (CHAPTER) chBadgeGrid();
         if (kind === 'vest') vestEl = el;
         it = { el, passive: true };
       } else it = { kind, ammo: itemMax(kind), t: 0, el: makeItemButton(kind, items.length) };
@@ -5027,6 +5141,7 @@
       setTimeout(() => {
         fly.remove(); ov.remove();
         if (it.passive) { owned[kind] = true; if (kind === 'vest') hasVest = true; if (kind === 'shoes' && isZombie(me)) me.speed = meSpeed(); refreshBadges(); } else { items.push(it); addActiveBadge(kind); }
+        if (CHAPTER) chItemChanged(kind);
         it.el.style.visibility = ''; it.el.classList.add('pop'); refreshItems();
         acqOpen = false; paused = false; last = 0;
       }, 470);
@@ -5330,7 +5445,7 @@
     if (!canMenu()) return;
     const d = ITEM[kind], ov = document.createElement('div');
     ov.id = 'acq'; ov.className = 'info';
-    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name}</div><div class="ds">${itemDesc(kind)}<div class="up">지금 (강화 ${up.brain}단계): ${statLine(kind, up.brain)}<br>다음 강화: ${statLine(kind, up.brain + 1)}</div></div>`;   // v344: 지금 수치와 다음 강화 수치
+    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name}</div><div class="ds">${itemDesc(kind)}<div class="up">${lvText(kind)}</div></div>`;   // v344: 지금 수치와 다음 강화 수치
     openMenu(ov, '닫기');
   }
   const fxQueue = [];                         // v420: 연출 대기열 — 생긴 순서대로 한 번에 하나, 끝나면 1초 쉬고 다음 (경보 · 특수부대 · 칭호 · 레벨업 · 아이템)
@@ -5396,13 +5511,14 @@
   }
   function upNums() {
     statBtn.classList.toggle('on', Object.values(up).some((v) => v > 0));                        // v520: 모든 장비 오른쪽 위에 장비 강화 단계 (0이면 숨김)
-    const n = up.brain, els = [...items.map((it) => it.el), ...Object.values(pBadges), ...Object.values(aBadges)];   // v531: 사용 게이지에도 다시 붙인다
+    let n = up.brain; const els = [...items.map((it) => it.el), ...Object.values(pBadges), ...Object.values(aBadges)], kd = [...items.map((it) => it.kind), ...Object.keys(pBadges), ...Object.keys(aBadges)];   // v531: 사용 게이지에도 다시 붙인다
     for (const el of els) {
       if (!el) continue;
+      if (CHAPTER) n = lv(kd[els.indexOf(el)]);   // c19: 아이템마다 자기 강화 단계
       let t = el.querySelector(':scope > .upn');
       if (!n) { if (t) t.remove(); continue; }
       if (!t) { t = document.createElement('span'); t.className = 'upn'; el.appendChild(t); }
-      const st = Array.from({ length: Math.ceil(n / 3) }, (_, i) => '★'.repeat(Math.min(3, n - i * 3))).reverse().join('<br>'); if (t.innerHTML !== st) t.innerHTML = st;   // v535: 별 3개씩 줄 — 넘치면 위로 한 줄 더
+      const st = CHAPTER ? '★' + n : Array.from({ length: Math.ceil(n / 3) }, (_, i) => '★'.repeat(Math.min(3, n - i * 3))).reverse().join('<br>');   /* c19: 배지가 촘촘해서 별 하나 + 숫자 */ if (t.innerHTML !== st) t.innerHTML = st;   // v535: 별 3개씩 줄 — 넘치면 위로 한 줄 더
     }
   }
   function uiTick() {
@@ -5418,7 +5534,7 @@
     if (ai >= 0 && !acqOpen && !lvOpen && !tutOpen && !menuOv && !victoryOn && goalShown) {   // v428 · v429: 아이템을 먹으면 획득창은 바로 — 나오던 연출은 멈췄다가 확인 뒤 이어짐, 밀린 연출은 그 뒤로
       const e = fxQueue.splice(ai, 1)[0];
       pauseFx();                              // v429: 나오던 연출은 그 자리에 멈춤
-      if (e.k === 'dud') showDud(); else showAward(e.k);
+      if (e.k === 'dud') showDud(); else if (CHAPTER && chHas(e.k)) chUpgrade(e.k); else showAward(e.k);
       return;
     }
     if (curFx && curFx.paused && !acqOpen && !lvOpen && !tutOpen && !menuOv) resumeFx();   // v429: 획득창을 확인하면 멈췄던 연출이 그대로 이어진다
@@ -5436,7 +5552,7 @@
     else if (e.t === 'squad') showSquad();
     else if (e.t === 'rank') showRank(e.r);
     else if (e.t === 'lv') showLevelUp();
-    else if (e.k === 'dud') showDud(); else showAward(e.k);   // v288: 꽝
+    else if (e.k === 'dud') showDud(); else if (CHAPTER && chHas(e.k)) chUpgrade(e.k); else showAward(e.k);   // v288: 꽝
   }
   // v278: 동료 수 칭호 — 판마다 처음 도달할 때 딱 한 번. 게임은 멈추지 않고 화면 위쪽에 큰 글씨가 팡 떴다 사라진다
   const RANKS = [   // v284: 단계마다 간격이 4마리씩 더 벌어진다 (간격 5·10·15·10… → 9·14·19·14…)
@@ -5563,7 +5679,7 @@
     window.__rdReady = true;
   }
 
-  window.__rd = { get me() { return me; }, bodies, spawn, fleeDir, step: stepWorld, buildings, explored, ch: CHAPTER ? CH_MAP : null, zombify: makeZombie, slotOf, route: CHAPTER ? chRoute : null, cf: () => ({ D: cfD, W: cfW, H: cfH, block: cfBlock, ready: cfReady, runs: cfRuns, dist: cfDist }), get armyK() { return armyK; } };   // 확인용 (콘솔에서 상태 보기·한 걸음씩 돌리기)
+  window.__rd = { get me() { return me; }, bodies, spawn, fleeDir, step: stepWorld, buildings, explored, ch: CHAPTER ? CH_MAP : null, zombify: makeZombie, slotOf, loot: CHAPTER ? chLoot : null, breakSafe, give: (k) => pendingAward.push(k), inv: () => ({ tools: items.map((x) => x.kind + ':' + x.ammo), owned: Object.keys(owned), lv: Object.assign({}, ilv), cap: chToolCap(), pickups: pickups.map((p) => [p.kind, +p.x.toFixed(1), +p.z.toFixed(1)]), acq: acqOpen }), zDamage, route: CHAPTER ? chRoute : null, cf: () => ({ D: cfD, W: cfW, H: cfH, block: cfBlock, ready: cfReady, runs: cfRuns, dist: cfDist }), get armyK() { return armyK; } };   // 확인용 (콘솔에서 상태 보기·한 걸음씩 돌리기)
   // 내가 고쳐 올리면 열려 있는 화면이 저절로 바뀐다 — 새 버전은 판을 새로 깐다
   window.claude?.hot?.ready ? window.claude.hot.ready(start) : start();
 </script>
