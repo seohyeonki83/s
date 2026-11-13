@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c11</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c12</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -779,7 +779,8 @@
     }
   }
   // ── c11: 인간(하양) 깔기 + 먼 사람 재우기 ──
-  const CH_WAKE = 40;                         // 재우기 격자 한 칸 (칸) — 좀비가 있는 칸과 이웃 칸만 깨어 있으니 좀비에서 40~80칸 안이 깨어 있다. 화면과 시야보다 넉넉히 넓다
+  const CH_WAKE = 40;                         // 깨울 사람을 고를 때 쓰는 굵은 격자 한 칸 (칸)
+  const CH_MEET = 14;                         // c12: 좀비가 이만큼(칸) 안에 오면 깨어난다 — 좀비 시야(7.2칸)의 두 배쯤이라, 내 눈에 들어올 땐 이미 돌아다니고 있다
   let chHot = null, CH_GW = 0, CH_GH = 0;
   const chNearRiver = (x, z, m) => CH_MAP.rivers.some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
   function chPopulate() {                     // 인간 200명을 맵 전체에 — 건물 안에 떨어지면 그 건물 사람(갇혀 있다), 밖이면 그 자리 둘레를 돌아다닌다
@@ -791,6 +792,7 @@
       if (bodies.some((b) => Math.hypot(b.foot.x - x, b.foot.z - z) < 1.2)) continue;
       const c = addCitizen(x, z, B || square(x, z), '');
       if (B) c.home = B;
+      c.space = B; c.sleep = true;            // 처음엔 전부 잔다 (어느 건물 안인지는 미리 적어 둔다)
       n++;
     }
   }
@@ -3796,17 +3798,17 @@
     pickupTick(dt);                           // v415: 떨어진 아이템
     zombies.length = 0;
     for (const b of bodies) if (isZombie(b)) zombies.push(b);
-    if (CHAPTER) {                            // c11: 좀비에서 먼 사람은 재운다 — 지도를 40칸 격자로 나눠, 좀비가 있는 칸과 그 이웃 칸에 있는 사람만 깨어 있다 (나머지는 생각·이동·부딪힘을 다 건너뛴다)
+    if (CHAPTER) {                            // c12: 사람은 좀비가 CH_MEET칸 안으로 다가오기 전까지 잔다 — 스폰된 자리에 그대로 (생각·이동·부딪힘 없음). 한 번 깨어난 사람은 그 뒤로 멀어져도 계속 움직인다
       if (!chHot) { CH_GW = Math.ceil((MM.x1 - MM.x0) / CH_WAKE); CH_GH = Math.ceil((MM.z1 - MM.z0) / CH_WAKE); chHot = new Uint8Array(CH_GW * CH_GH); }
       const col = (x) => Math.max(0, Math.min(CH_GW - 1, Math.floor((x - MM.x0) / CH_WAKE))), row = (z) => Math.max(0, Math.min(CH_GH - 1, Math.floor((z - MM.z0) / CH_WAKE)));
-      chHot.fill(0); chHot[row(me.foot.z) * CH_GW + col(me.foot.x)] = 1;
+      chHot.fill(0); chHot[row(me.foot.z) * CH_GW + col(me.foot.x)] = 1;   // 먼저 굵은 격자로 거른다 — 좀비가 있는 칸과 이웃 칸에 있는 사람만 거리를 잰다
       for (const z of zombies) chHot[row(z.foot.z) * CH_GW + col(z.foot.x)] = 1;
-      for (const b of bodies) if (b.kind === 'citizen') {
+      const near = (b, z) => { const dx = z.foot.x - b.foot.x, dz = z.foot.z - b.foot.z; return dx * dx + dz * dz < CH_MEET * CH_MEET; };
+      for (const b of bodies) if (b.kind === 'citizen' && !b.met) {
         const cx = col(b.foot.x), cz = row(b.foot.z); let hot = false;
         for (let dz = -1; dz <= 1 && !hot; dz++) for (let dx = -1; dx <= 1; dx++) { const X = cx + dx, Z = cz + dz; if (X >= 0 && X < CH_GW && Z >= 0 && Z < CH_GH && chHot[Z * CH_GW + X]) { hot = true; break; } }
-        const far = b.spaceSet && !hot;
-        if (far && !b.sleep) b.vel.set(0, 0);
-        b.sleep = far;
+        if (hot && (near(b, me) || zombies.some((z) => near(b, z)))) b.met = true;
+        b.sleep = !b.met;
       }
     }
     while (teamQueue.length) queueSquads(teamQueue.shift());
@@ -3825,7 +3827,7 @@
     updateArea(dt);                           // 영역 중심을 내 이동 방향으로 밀거나 나에게로 되돌린다
     for (const b of bodies) {                 // 걸음 전 자리·공간 — 건물 사람이 문 밖으로 나가면 그때부터 활동 영역 제한이 풀린다
       if (b.sleep) continue;
-      b.px = b.foot.x; b.pz = b.foot.z; b.spaceSet = true;
+      b.px = b.foot.x; b.pz = b.foot.z;
       const sp0 = spaceOf(b.foot.x, b.foot.z);
       b.space = b.kind === 'citizen' ? doorwaySpace(b, sp0) : sp0;   // v264: 문틈에 낀 사람은 밖에 있는 걸로 — 밖 좀비가 보고 노릴 수 있게
       if (b.home && sp0 !== b.home) b.freed = true;

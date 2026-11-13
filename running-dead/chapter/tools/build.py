@@ -59,7 +59,8 @@ ICONS = r'''
     }
   }
   // ── c11: 인간(하양) 깔기 + 먼 사람 재우기 ──
-  const CH_WAKE = 40;                         // 재우기 격자 한 칸 (칸) — 좀비가 있는 칸과 이웃 칸만 깨어 있으니 좀비에서 40~80칸 안이 깨어 있다. 화면과 시야보다 넉넉히 넓다
+  const CH_WAKE = 40;                         // 깨울 사람을 고를 때 쓰는 굵은 격자 한 칸 (칸)
+  const CH_MEET = 14;                         // c12: 좀비가 이만큼(칸) 안에 오면 깨어난다 — 좀비 시야(7.2칸)의 두 배쯤이라, 내 눈에 들어올 땐 이미 돌아다니고 있다
   let chHot = null, CH_GW = 0, CH_GH = 0;
   const chNearRiver = (x, z, m) => CH_MAP.rivers.some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
   function chPopulate() {                     // 인간 200명을 맵 전체에 — 건물 안에 떨어지면 그 건물 사람(갇혀 있다), 밖이면 그 자리 둘레를 돌아다닌다
@@ -71,6 +72,7 @@ ICONS = r'''
       if (bodies.some((b) => Math.hypot(b.foot.x - x, b.foot.z - z) < 1.2)) continue;
       const c = addCitizen(x, z, B || square(x, z), '');
       if (B) c.home = B;
+      c.space = B; c.sleep = true;            // 처음엔 전부 잔다 (어느 건물 안인지는 미리 적어 둔다)
       n++;
     }
   }
@@ -180,17 +182,17 @@ MINIMAP = r'''
     g.fillStyle = '#ff3b30'; g.fill(); g.lineWidth = 1 * mmDpr; g.strokeStyle = 'rgba(255, 255, 255, 0.9)'; g.stroke();
   }
 '''
-SLEEP = r'''    if (CHAPTER) {                            // c11: 좀비에서 먼 사람은 재운다 — 지도를 40칸 격자로 나눠, 좀비가 있는 칸과 그 이웃 칸에 있는 사람만 깨어 있다 (나머지는 생각·이동·부딪힘을 다 건너뛴다)
+SLEEP = r'''    if (CHAPTER) {                            // c12: 사람은 좀비가 CH_MEET칸 안으로 다가오기 전까지 잔다 — 스폰된 자리에 그대로 (생각·이동·부딪힘 없음). 한 번 깨어난 사람은 그 뒤로 멀어져도 계속 움직인다
       if (!chHot) { CH_GW = Math.ceil((MM.x1 - MM.x0) / CH_WAKE); CH_GH = Math.ceil((MM.z1 - MM.z0) / CH_WAKE); chHot = new Uint8Array(CH_GW * CH_GH); }
       const col = (x) => Math.max(0, Math.min(CH_GW - 1, Math.floor((x - MM.x0) / CH_WAKE))), row = (z) => Math.max(0, Math.min(CH_GH - 1, Math.floor((z - MM.z0) / CH_WAKE)));
-      chHot.fill(0); chHot[row(me.foot.z) * CH_GW + col(me.foot.x)] = 1;
+      chHot.fill(0); chHot[row(me.foot.z) * CH_GW + col(me.foot.x)] = 1;   // 먼저 굵은 격자로 거른다 — 좀비가 있는 칸과 이웃 칸에 있는 사람만 거리를 잰다
       for (const z of zombies) chHot[row(z.foot.z) * CH_GW + col(z.foot.x)] = 1;
-      for (const b of bodies) if (b.kind === 'citizen') {
+      const near = (b, z) => { const dx = z.foot.x - b.foot.x, dz = z.foot.z - b.foot.z; return dx * dx + dz * dz < CH_MEET * CH_MEET; };
+      for (const b of bodies) if (b.kind === 'citizen' && !b.met) {
         const cx = col(b.foot.x), cz = row(b.foot.z); let hot = false;
         for (let dz = -1; dz <= 1 && !hot; dz++) for (let dx = -1; dx <= 1; dx++) { const X = cx + dx, Z = cz + dz; if (X >= 0 && X < CH_GW && Z >= 0 && Z < CH_GH && chHot[Z * CH_GW + X]) { hot = true; break; } }
-        const far = b.spaceSet && !hot;
-        if (far && !b.sleep) b.vel.set(0, 0);
-        b.sleep = far;
+        if (hot && (near(b, me) || zombies.some((z) => near(b, z)))) b.met = true;
+        b.sleep = !b.met;
       }
     }
 '''
@@ -209,7 +211,7 @@ R = [
   ("citizen: 0xffcf33, guard:", "citizen: CHAPTER ? 0xf2f2f2 : 0xffcf33, guard:"),   # c11: 인간 = 하양
   ("    citizen: { col: '#ffcf33', name: '좃밥',", "    citizen: { col: CHAPTER ? '#f2f2f2' : '#ffcf33', name: CHAPTER ? '인간' : '좃밥',"),
   ("    for (const b of bodies) if (isZombie(b)) zombies.push(b);\n    while (teamQueue.length)", "    for (const b of bodies) if (isZombie(b)) zombies.push(b);\n" + SLEEP + "    while (teamQueue.length)"),
-  ("      b.px = b.foot.x; b.pz = b.foot.z;\n      const sp0 = spaceOf(b.foot.x, b.foot.z);", "      if (b.sleep) continue;\n      b.px = b.foot.x; b.pz = b.foot.z; b.spaceSet = true;\n      const sp0 = spaceOf(b.foot.x, b.foot.z);"),
+  ("      b.px = b.foot.x; b.pz = b.foot.z;\n      const sp0 = spaceOf(b.foot.x, b.foot.z);", "      if (b.sleep) continue;\n      b.px = b.foot.x; b.pz = b.foot.z;\n      const sp0 = spaceOf(b.foot.x, b.foot.z);"),
   ("    for (const b of bodies) if (b.kind === 'citizen') {   // 화면 밖·좀비와 먼 조용한 시민은 판단을 4프레임에 한 번 (v177)", "    for (const b of bodies) if (b.kind === 'citizen' && !b.sleep) {   // 화면 밖·좀비와 먼 조용한 시민은 판단을 4프레임에 한 번 (v177)"),
   ("      if (!b.fixed) { const gk = b.goo ? 0.56 : 1;", "      if (!b.fixed && !b.sleep) { const gk = b.goo ? 0.56 : 1;"),
   ("    for (const b of bodies) byX.push(b);", "    for (const b of bodies) if (!b.sleep) byX.push(b);"),
