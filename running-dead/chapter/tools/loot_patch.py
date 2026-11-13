@@ -370,3 +370,7 @@ LVUP_R = [   # c25: 레벨업 화면에 능력치 대신 가진 도구·장비
 STAR_R = [   # c26: 유전자(능력치) 버튼은 챕터에서 안 쓴다
   ("    statBtn.classList.toggle('on', Object.values(up).some((v) => v > 0));", "    statBtn.classList.toggle('on', !CHAPTER && Object.values(up).some((v) => v > 0));   // c26: 챕터는 능력치 카드가 없어서 유전자 버튼도 없다"),
 ]
+
+XP_R = [   # c28: 레벨업에 필요한 감염 수 — 처음 20명, 그다음부터 1.2배씩
+  ("const needXp = (L) => Math.round(10 * Math.pow(1.3, L));", "const needXp = (L) => CHAPTER ? Math.round(20 * Math.pow(1.2, L)) : Math.round(10 * Math.pow(1.3, L));   /* c28: 챕터는 처음 20명, 1.2배씩 */"),
+]
