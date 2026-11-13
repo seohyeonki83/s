@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c15</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c16</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -734,17 +734,16 @@
   function chIcon(type) {                     // 둥근 네모 배지 + 흰 그림 (128px) — 지붕 위 표시와 미니맵 아이콘에 같이 쓴다
     const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
     const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
-    const pass = type === 'passH' || type === 'passV';   // c4: 다른 구역으로 가는 길목 (다리 · 산 길목) — 노란 배지에 양쪽 화살표
+    const pass = type === 'passH' || type === 'passV';   // c4: 다른 구역으로 가는 길목 (다리 · 산 길목) — c16: 배지·테두리 없이 노란 양쪽 화살표만 (건물의 둥근 네모와 모양부터 다르게)
     const col = type === 'x' ? '#4a4a52' : pass ? '#f2c230' : CH_DEF[type].col, ink = type === 'hospital' ? '#e02b2b' : pass ? '#17171a' : '#ffffff';
-    rr(6, 6, 116, 116, 26); g.fillStyle = 'rgba(0, 0, 0, 0.88)'; g.fill();
-    rr(14, 14, 100, 100, 19); g.fillStyle = col; g.fill();
-    g.fillStyle = g.strokeStyle = ink; g.lineCap = 'round'; g.lineJoin = 'round';
+    if (!pass) { rr(6, 6, 116, 116, 26); g.fillStyle = 'rgba(0, 0, 0, 0.88)'; g.fill(); rr(14, 14, 100, 100, 19); g.fillStyle = col; g.fill(); }
+    g.fillStyle = g.strokeStyle = pass ? col : ink; g.lineCap = 'round'; g.lineJoin = 'round';
     const text = (t, px, y) => { g.font = `900 ${px}px system-ui, -apple-system, "Segoe UI", sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, 64, y || 68); };
     const star = (cx, cy, R) => { g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? R * 0.42 : R; g[i ? 'lineTo' : 'moveTo'](cx + Math.cos(a) * r, cy + Math.sin(a) * r); } g.closePath(); g.fill(); };
     if (pass) {                               // 양쪽을 가리키는 화살표 — 가로(동서로 건넌다) · 세로(남북으로 넘는다)
       if (type === 'passV') { g.translate(64, 64); g.rotate(Math.PI / 2); g.translate(-64, -64); }
-      g.lineWidth = 13; g.beginPath(); g.moveTo(42, 64); g.lineTo(86, 64); g.stroke();
-      for (const k of [-1, 1]) { g.beginPath(); g.moveTo(64 + k * 42, 64); g.lineTo(64 + k * 19, 41); g.lineTo(64 + k * 19, 87); g.closePath(); g.fill(); }
+      g.fillRect(40, 45, 48, 38);             // 그림 칸을 꽉 채운다 — 가운데 막대 + 양 끝 세모
+      for (const k of [-1, 1]) { g.beginPath(); g.moveTo(64 + k * 62, 64); g.lineTo(64 + k * 20, 12); g.lineTo(64 + k * 20, 116); g.closePath(); g.fill(); }
     } else if (type === 'bank') text('₩', 78);
     else if (type === 'conv') text('24', 60);
     else if (type === 'army') star(64, 66, 38);
