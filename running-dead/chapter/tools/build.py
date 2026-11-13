@@ -49,7 +49,22 @@ ICONS = r'''
     for (const k of [...Object.keys(CH_DEF), 'x']) { CH_ICON[k] = chIcon(k); CH_TEX[k] = new THREE.CanvasTexture(CH_ICON[k]); CH_TEX[k].colorSpace = THREE.SRGBColorSpace; }
     const roadMat = flatMat(0x858585);
     for (const [x0, z0, x1, z1] of CH_MAP.roads) flat(x1 - x0, z1 - z0, (x0 + x1) / 2, (z0 + z1) / 2, roadMat, -0.9);   // 대로 — 어둠 밑에 깔린다
+    // c2: 산 — 구역 사이를 막는 문 없는 덩어리. 벽 선은 안 그리고(겹친 자리에 줄이 생긴다), 덩어리끼리 무늬가 이어지게 땅 기준으로 무늬를 입힌다
+    const hillTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+      g.fillStyle = '#3e5a36'; g.fillRect(0, 0, 256, 256);
+      let sd = 11; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+      for (let i = 0; i < 46; i++) { const x = rnd() * 256, y = rnd() * 256, r = 14 + rnd() * 26, lit = rnd() < 0.5;
+        for (const [ox, oy] of [[0, 0], [256, 0], [-256, 0], [0, 256], [0, -256]]) { g.fillStyle = lit ? 'rgba(98, 134, 78, 0.5)' : 'rgba(30, 48, 28, 0.5)'; g.beginPath(); g.ellipse(x + ox, y + oy, r, r * 0.7, 0, 0, Math.PI * 2); g.fill(); } }
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; })();
+    const hillMat = new THREE.MeshBasicMaterial({ map: hillTex, transparent: true, depthTest: false, depthWrite: false });
+    for (const B of buildings) if (B.type === 'hill') {
+      scene.remove(B.roof);
+      const w = B.x1 - B.x0 + 0.3, d = B.z1 - B.z0 + 0.3, geo = new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2), uv = geo.attributes.uv;
+      for (let i = 0; i < uv.count; i++) uv.setXY(i, (B.x0 + uv.getX(i) * w) / 14, (B.z0 + (1 - uv.getY(i)) * d) / 14);   // 땅 기준 무늬 (14칸마다 반복)
+      B.roof = new THREE.Mesh(geo, hillMat); B.roof.position.set((B.x0 + B.x1) / 2, 0.03, (B.z0 + B.z1) / 2); B.roof.renderOrder = -0.51; scene.add(B.roof);
+    }
     buildings.forEach((B, i) => {
+      if (B.type === 'hill') return;
       B.roof.material = flatMat(B.type === 'house' ? CH_HOUSE_ROOF[i % CH_HOUSE_ROOF.length] : CH_DEF[B.type].roof);
       if (B.type === 'house') return;
       B.sign = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), new THREE.MeshBasicMaterial({ map: CH_TEX[B.type], transparent: true, depthTest: false, depthWrite: false }));
@@ -64,17 +79,17 @@ MINIMAP = r'''
   // ── 챕터 미니맵 (c1) — 스타크래프트처럼 세 겹: 못 가 본 곳 = 새까맣게 · 가 본 곳 = 안개(어두운 땅과 건물) · 지금 보이는 곳 = 밝게.
   //    집 말고 모든 건물(랜드마크·창고)은 한 번 밝혀지면 그 자리에 아이콘이 남는다. 잠식한 건물은 X ──
   let chDim = null, chLit = null, chMask = null;
-  function chLayer(W, H, X, Z, sx, sz, ground, road, house, other) {
+  function chLayer(W, H, X, Z, sx, sz, ground, road, house, other, hill) {
     const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
     g.fillStyle = ground; g.fillRect(0, 0, W, H);
     g.fillStyle = road; for (const [x0, z0, x1, z1] of CH_MAP.roads) g.fillRect(X(x0), Z(z0), (x1 - x0) * sx, (z1 - z0) * sz);
-    for (const B of buildings) { g.fillStyle = B.type === 'house' ? house : other; g.fillRect(X(B.x0), Z(B.z0), (B.x1 - B.x0) * sx, (B.z1 - B.z0) * sz); }
+    for (const B of buildings) { g.fillStyle = B.type === 'hill' ? hill : B.type === 'house' ? house : other; g.fillRect(X(B.x0), Z(B.z0), (B.x1 - B.x0) * sx, (B.z1 - B.z0) * sz); }
     return c;
   }
   function chMinimap(eyes, W, H, X, Z, sx, sz) {
     if (!chDim) {
-      chDim = chLayer(W, H, X, Z, sx, sz, '#303036', '#27272c', '#141417', '#1b1b20');     // 안개 속
-      chLit = chLayer(W, H, X, Z, sx, sz, '#9c9ca4', '#85858d', '#3a3a42', '#4c4c56');     // 지금 보이는 곳
+      chDim = chLayer(W, H, X, Z, sx, sz, '#303036', '#27272c', '#141417', '#1b1b20', '#1a2a1a');     // 안개 속
+      chLit = chLayer(W, H, X, Z, sx, sz, '#9c9ca4', '#85858d', '#3a3a42', '#4c4c56', '#4f7447');     // 지금 보이는 곳
       chMask = document.createElement('canvas'); chMask.width = W; chMask.height = H;
     }
     const g = mmCtx, m = chMask.getContext('2d');
@@ -87,7 +102,7 @@ MINIMAP = r'''
     g.clip(); g.drawImage(chLit, 0, 0); g.restore();                      // 지금 보이는 곳 = 밝게
     const sz2 = 10.5 * mmDpr;
     for (const B of buildings) {
-      if (B.type === 'house') continue;                                  // 집은 표시 없음
+      if (B.type === 'house' || B.type === 'hill') continue;             // 집과 산은 표시 없음
       if (!B.found) {                                                    // 건물 자리를 한 칸이라도 밝혔으면 그때부터 표시
         const cx0 = Math.max(0, Math.floor((B.x0 - MM.x0) / MM_CELL)), cx1 = Math.min(mmW - 1, Math.floor((B.x1 - MM.x0) / MM_CELL));
         const cz0 = Math.max(0, Math.floor((B.z0 - MM.z0) / MM_CELL)), cz1 = Math.min(mmH - 1, Math.floor((B.z1 - MM.z0) / MM_CELL));
@@ -103,8 +118,8 @@ MINIMAP = r'''
 R = [
   ('<title>러닝데드 이동 테스트</title>', '<title>러닝데드 챕터</title>'),
   ('<div id="ver">v589</div>', f'<div id="ver">챕터 {VER}</div>'),
-  ("  const TEST_MAP = CAR_TEST || false;", "  const CHAPTER = true;   // 챕터 줄기 (c1): 구역 4개짜리 맵, 지금은 건물만 — 사람·경찰·금고 없음\n  const TEST_MAP = CAR_TEST || CHAPTER;"),
-  ("  const BUILDINGS = TEST_MAP ? TEST_BLDGS : ", "  const CH_MAP = " + MAP + ";   // 생성기(씨앗 7)가 만든 고정 맵 — 건물 97채 (랜드마크 9 · 창고 8 · 집 80)\n  const BUILDINGS = CHAPTER ? CH_MAP.b : TEST_MAP ? TEST_BLDGS : "),
+  ("  const TEST_MAP = CAR_TEST || false;", "  const CHAPTER = true;   // 챕터 줄기 (c1~): 구역 4개짜리 맵, 지금은 건물만 — 사람·경찰·금고 없음\n  const TEST_MAP = CAR_TEST || CHAPTER;"),
+  ("  const BUILDINGS = TEST_MAP ? TEST_BLDGS : ", "  const CH_MAP = " + MAP + ";   // 생성기(씨앗 7)가 만든 고정 맵 — c2: 건물 71채 (랜드마크 9 · 창고 8 · 집 54) + 구역 사이 산줄기 · 길목 5곳\n  const BUILDINGS = CHAPTER ? CH_MAP.b : TEST_MAP ? TEST_BLDGS : "),
   ("local: s.local, block: s.block };", "local: s.local, block: s.block, type: s.t || '', zone: s.zone, sideK: s.sideK };"),
   ("  // 잠긴 문 (v239) — 문 자리를 막는 벽 한 토막 + 철문 그림.", ICONS.strip('\n') + "\n  // 잠긴 문 (v239) — 문 자리를 막는 벽 한 토막 + 철문 그림."),
   ("  const MM = TEST_MAP ? {", "  const MM = CHAPTER ? CH_MAP.mm : TEST_MAP ? {"),
@@ -115,6 +130,7 @@ R = [
   ("      if (B.qm) B.qm.visible = !B.open && !!B.safe && !B.safe.dead && !B.safe.hidden;", "      if (B.sign) { B.sign.visible = !B.open; const tx = CH_TEX[B.done ? 'x' : B.type]; if (B.sign.material.map !== tx) { B.sign.material.map = tx; B.sign.material.needsUpdate = true; } }   // c1: 지붕 아이콘 — 들어가면 사라지고, 잠식하면 X\n      if (B.qm) B.qm.visible = !B.open && !!B.safe && !B.safe.dead && !B.safe.hidden;"),
   ("    for (const B of buildings) if (!B.station) B.found = false;", "    for (const B of buildings) if (!B.station) { B.found = false; B.done = false; }"),
   ("  const starsEl = document.getElementById('stars');", "  const starsEl = document.getElementById('stars');\n  if (CHAPTER) { starsEl.style.display = 'none'; document.getElementById('lvbox').style.display = 'none'; }   // c1: 맵만 보는 판 — 경보·레벨 표시는 가린다"),
+  ("  for (const [ax, az, bx, bz] of walls) flat(", "  for (const [ax, az, bx, bz] of buildings.flatMap((B) => (B.type === 'hill' ? [] : B.walls))) flat("),   # c2: 산은 벽 선을 안 그린다
   ("|| cand[Math.floor(Math.random() * cand.length)];   /* v431", "|| cand[B.sideK !== undefined ? B.sideK % cand.length : Math.floor(Math.random() * cand.length)];   /* c1: 챕터 맵은 쪽문 자리도 고정 */   /* v431"),
   ("bodies, spawn, fleeDir, step: stepWorld };", "bodies, spawn, fleeDir, step: stepWorld, buildings, explored };"),
 ]
