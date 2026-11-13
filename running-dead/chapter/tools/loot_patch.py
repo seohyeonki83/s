@@ -129,7 +129,8 @@ LOOT = r'''  // ── c19: 금고와 아이템 (챕터) ──
     const free = zombies.filter((z) => z !== me && isZombie(z) && !z.rage);
     let cand = free.filter((z) => z.mut);     // 1순위 = 변이한 동료 (거리 상관없이. 나는 대상이 아니다 — 내가 각성해 있어도), 없으면 내 근접 거리 안 동료
     if (!cand.length) { const R = NEAR * armyK; cand = free.filter((z) => Math.hypot(z.foot.x - me.foot.x, z.foot.z - me.foot.z) <= R); }
-    if (!cand.length) return;
+    if (!cand.length && free.length) cand = [free.reduce((a, z) => Math.hypot(z.foot.x - me.foot.x, z.foot.z - me.foot.z) < Math.hypot(a.foot.x - me.foot.x, a.foot.z - me.foot.z) ? z : a)];   // c23: 곁에 없으면 안 걸린 동료 중 나와 가장 가까운 하나 — 걸 동료가 하나라도 있으면 기다리지 않는다
+    if (!cand.length) return;                 // 걸 동료가 아무도 없다 (전부 걸렸거나 동료가 없다) → 쓰지 않고 기다렸다가, 동료가 생기면 바로 건다. 한 번 걸린 동료는 다시 안 걸린다
     rageT = 0;
     const z = cand[Math.floor(Math.random() * cand.length)];
     z.rage = true;
