@@ -2,7 +2,7 @@
 
 사용: python3 make_app.py v127.html
      python3 make_app.py chapter/c6.html chapter/app "러닝데드 챕터"   (나갈 폴더와 앱 이름을 따로 줄 수 있다)
-  → app/index.html (전체 화면용 머리말을 붙인 게임), app/manifest.webmanifest, app/icon-*.png
+  → app/game.html (전체 화면용 머리말을 붙인 게임), app/index.html (켤 때마다 game.html을 새로 받아 오는 문지기), app/manifest.webmanifest, app/icon-*.png
 app 폴더를 그대로 공개 주소(예: GitHub Pages)에 올리고, 아이폰 Safari에서 열어 '공유 → 홈 화면에 추가'.
 """
 import json
@@ -35,7 +35,19 @@ head = """<!doctype html>
 <style>html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #1f1f23; -webkit-text-size-adjust: 100%; }</style>
 </head>
 <body>"""
-(out / 'index.html').write_text(head.replace('{NAME}', NAME) + rest, encoding='utf8')
+(out / 'game.html').write_text(head.replace('{NAME}', NAME) + rest, encoding='utf8')
+# index.html = 작은 문지기. 앱을 켤 때마다 게임 파일을 새로 받아 와서 이 문서에 그대로 쓴다
+#   (주소 쪽이 파일을 10분쯤 붙잡고 있어서, 그냥 두면 새 버전이 바로 안 뜬다. 문지기 자신은 바뀔 일이 없다)
+loader = head.replace('{NAME}', NAME) + """
+<script>
+fetch('game.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.text(); })
+  .then(function (t) { document.open(); document.write(t); document.close(); })
+  .catch(function () { location.replace('game.html'); });
+</script>
+</body>
+</html>
+"""
+(out / 'index.html').write_text(loader, encoding='utf8')
 
 manifest = {
     'name': NAME, 'short_name': NAME, 'start_url': './', 'scope': './',
