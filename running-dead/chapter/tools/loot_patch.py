@@ -256,3 +256,42 @@ ITEM_R = [   # c21: 도구·장비 수치를 정한 대로 (c19의 결과물 위
   ("    for (const [k, el] of Object.entries(pBadges)) if (t[k]) el.querySelector('.pc').textContent = t[k]();", "    for (const [k, el] of Object.entries(pBadges)) if (t[k]) el.querySelector('.pc').textContent = (CHAPTER && CH_BADGE[k] ? CH_BADGE[k] : t[k])();"),
   ("tools: items.map((x) => x.kind + ':' + x.ammo),", "tools: items.map((x) => x.kind + ':' + (x.off ? 'off' : x.kind === 'awaken' ? (+x.acc.toFixed(1)) + 's' : x.ammo)),"),
 ]
+
+CHIPS = r"""  // c24: 잔해 — 본편(f23 · f24)에서 가져왔다. 부서질 때 작은 조각들이 팍 튀어 올랐다가 떨어져 한 번 튕기고, 바닥에서 잠깐 있다 사라진다
+  const chips = [], chipGeo = new THREE.PlaneGeometry(1, 1);
+  const DOOR_BITS = [0xc4c4c4, 0x6a6a6a, 0x2b2b2b, 0xe0e0e0], CHEST_BITS = [0x9c5b2e, 0xb8743a, 0xf2c14e, 0x3a2410];   // 문짝 조각 · 금고(상자) 조각
+  function debris(x, z, n, colors, size, spd) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, sp = rand(spd * 0.45, spd);
+      const m = new THREE.Mesh(chipGeo, new THREE.MeshBasicMaterial({ color: colors[i % colors.length], transparent: true, depthTest: false, depthWrite: false }));
+      m.scale.set(rand(size * 0.5, size), rand(size * 0.22, size * 0.55), 1);
+      m.quaternion.copy(camera.quaternion); m.rotateZ(Math.random() * Math.PI); m.renderOrder = 6;   // 먼지 위로
+      m.position.set(x + Math.cos(a) * 0.25, 0.4, z + Math.sin(a) * 0.25);
+      scene.add(m);
+      chips.push({ m, vx: Math.cos(a) * sp, vz: Math.sin(a) * sp, vy: rand(3.5, 7), y: 0.4, spin: rand(-14, 14), t: 0, life: rand(1.3, 2.0) });
+    }
+  }
+  function stepChips(dt) {
+    for (let i = chips.length - 1; i >= 0; i--) {
+      const c = chips[i]; c.t += dt;
+      c.vy -= 20 * dt; c.y += c.vy * dt;
+      if (c.y < 0.06) { c.y = 0.06; if (c.vy < -2.5) c.vy = -c.vy * 0.3; else c.vy = 0; c.vx *= 0.45; c.vz *= 0.45; c.spin *= 0.4; }   // 바닥에 떨어지면 한 번 통 튀고 멈춘다
+      c.m.position.x += c.vx * dt; c.m.position.z += c.vz * dt; c.m.position.y = c.y;
+      if (c.y > 0.06) { c.vx *= 1 - Math.min(1, dt * 0.8); c.vz *= 1 - Math.min(1, dt * 0.8); }
+      c.m.rotateZ(c.spin * dt);
+      c.m.material.opacity = c.t > c.life - 0.4 ? Math.max(0, (c.life - c.t) / 0.4) : 1;
+      if (c.t >= c.life) { scene.remove(c.m); c.m.material.dispose(); chips.splice(i, 1); }
+    }
+  }
+"""
+FX_R = [   # c24: 문·금고가 부서질 때 파편 (본편과 같은 수치)
+  ("  function stepFx(dt) {\n", CHIPS + "  function stepFx(dt) {\n"),
+  ("    stepFx(dt); drawObjBars(dt);", "    stepFx(dt); stepChips(dt); drawObjBars(dt);"),
+  ("      dust(o.L.cx, o.L.cz, 18, 1.4);", "      dust(o.L.cx, o.L.cz, 18, 1.4); debris(o.L.cx, o.L.cz, 18, DOOR_BITS, 0.4, 6.5);   // c24: 문짝 조각"),
+  ("    if (CHAPTER && b.B) b.B.done = true;       // c19: 금고를 깬 건물 = 잠식 (지붕·미니맵 아이콘이 X로)\n",
+   "    if (CHAPTER && b.B) b.B.done = true;       // c19: 금고를 깬 건물 = 잠식 (지붕·미니맵 아이콘이 X로)\n"
+   "    debris(b.foot.x, b.foot.z, 20, CHEST_BITS, 0.42, 6.5); if (!b.dud) dust(b.foot.x, b.foot.z, 16, 1.4);   // c24: 금고 — 먼지 + 상자 조각 (꽝 금고 포함. 꽝은 바로 아래에서 먼지를 낸다)\n"),
+  ("if (k) dropPickup(k, b.foot.x, b.foot.z, b.space); else dust(b.foot.x, b.foot.z, 16, 1.4); return; }", "if (k) dropPickup(k, b.foot.x, b.foot.z, b.space); return; }"),
+  ("    for (const p of pickups) scene.remove(p.s); pickups.length = 0;", "    for (const p of pickups) scene.remove(p.s); pickups.length = 0;\n    for (const c of chips) { scene.remove(c.m); c.m.material.dispose(); } chips.length = 0;   // c24"),
+  ("zombify: makeZombie, slotOf,", "zombify: makeZombie, slotOf, chips: () => chips.length, objs, breakObj,"),
+]
