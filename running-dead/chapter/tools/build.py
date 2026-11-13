@@ -137,7 +137,7 @@ MINIMAP = r'''
     g.save(); g.beginPath();
     for (const z of eyes) { if (!isZombie(z)) continue; const cx = X(z.foot.x), cz = Z(z.foot.z), r = z.sense * sx; g.moveTo(cx + r, cz); g.arc(cx, cz, r, 0, Math.PI * 2); }
     g.clip(); g.drawImage(chLit, 0, 0); g.restore();                      // 지금 보이는 곳 = 밝게
-    const sz2 = 10.5 * mmDpr;
+    const sz2 = 8 * mmDpr;   /* c6: 미니맵이 작아진 만큼 아이콘도 (10.5 → 8) */
     for (const B of buildings) {
       if (B.type === 'house' || B.type === 'hill') continue;             // 집과 산은 표시 없음
       if (!B.found) {                                                    // 건물 자리를 한 칸이라도 밝혔으면 그때부터 표시
@@ -151,7 +151,7 @@ MINIMAP = r'''
       if (!P.found && explored[Math.floor((P.z - MM.z0) / MM_CELL) * mmW + Math.floor((P.x - MM.x0) / MM_CELL)]) P.found = true;
       if (P.found) g.drawImage(CH_ICON[P.dir === 'h' ? 'passH' : 'passV'], X(P.x) - sz2 / 2, Z(P.z) - sz2 / 2, sz2, sz2);
     }
-    const r = 2.4 * mmDpr;                                                // 나 = 빨간 점
+    const r = 2.1 * mmDpr;                                                // 나 = 빨간 점
     g.beginPath(); g.arc(X(me.foot.x), Z(me.foot.z), r, 0, Math.PI * 2);
     g.fillStyle = '#ff3b30'; g.fill(); g.lineWidth = 1 * mmDpr; g.strokeStyle = 'rgba(255, 255, 255, 0.9)'; g.stroke();
   }
@@ -167,7 +167,7 @@ R = [
   ("o.hp = o.maxHp = B.side ? MY_DAMAGE * 3.5 : MY_DAMAGE * 19.5;", "o.hp = o.maxHp = B.side || B.garage ? MY_DAMAGE * 3.5 : MY_DAMAGE * 19.5;   /* c5: 차고 문도 집 문과 같다 */"),
   ("  // 잠긴 문 (v239) — 문 자리를 막는 벽 한 토막 + 철문 그림.", ICONS.strip('\n') + "\n  // 잠긴 문 (v239) — 문 자리를 막는 벽 한 토막 + 철문 그림."),
   ("  const MM = TEST_MAP ? {", "  const MM = CHAPTER ? CH_MAP.mm : TEST_MAP ? {"),
-  ("  const MM_S = Math.min(128 * 2 / 3 / (MM.x1 - MM.x0), 136 * 2 / 3 / (MM.z1 - MM.z0));", "  const MM_S = Math.min((CHAPTER ? 132 : 128 * 2 / 3) / (MM.x1 - MM.x0), (CHAPTER ? 160 : 136 * 2 / 3) / (MM.z1 - MM.z0));   /* c1: 맵이 3배라 미니맵도 크게 */"),
+  ("  const MM_S = Math.min(128 * 2 / 3 / (MM.x1 - MM.x0), 136 * 2 / 3 / (MM.z1 - MM.z0));", "  const MM_S = Math.min((CHAPTER ? 88 : 128 * 2 / 3) / (MM.x1 - MM.x0), (CHAPTER ? 107 : 136 * 2 / 3) / (MM.z1 - MM.z0));   /* c6: 미니맵을 3분의 1 줄여 테스트맵 크기쯤으로 (132×160 → 88×107) */"),
   ("  function updateMinimap(dt) {                // 0.1초마다", MINIMAP.strip('\n') + "\n  function updateMinimap(dt) {                // 0.1초마다"),
   ("    mmCtx.clearRect(0, 0, W, H);", "    if (CHAPTER) { chMinimap(eyes, W, H, X, Z, sx, sz); return; }\n    mmCtx.clearRect(0, 0, W, H);"),
   ("    me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;", "    if (CHAPTER) { me.foot.set(CH_MAP.start[0], 0, CH_MAP.start[1]); me.space = null; me.hp = me.maxHp; return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작, 아무도 없다\n    me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;"),
