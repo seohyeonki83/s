@@ -62,7 +62,8 @@ ICONS = r'''
   const CH_HOUSE_ROOF = [0x26231f, 0x2a2622, 0x22252a, 0x2c241f, 0x25282b, 0x302a24, 0x1f2226];   // 집 지붕은 조금씩 다르게
   if (CHAPTER) {
     for (const k of [...Object.keys(CH_DEF), 'x', 'passH', 'passV']) { CH_ICON[k] = chIcon(k); CH_TEX[k] = new THREE.CanvasTexture(CH_ICON[k]); CH_TEX[k].colorSpace = THREE.SRGBColorSpace; }
-    const roadMat = flatMat(0x858585);
+    const roadMat = flatMat(0x858585), lotMat = flatMat(0xa7a294);
+    for (const [x0, z0, x1, z1] of CH_MAP.lots) flat(x1 - x0, z1 - z0, (x0 + x1) / 2, (z0 + z1) / 2, lotMat, -0.93);   // c5: 공터 — 나중에 기물이 들어갈 자리 (지금은 흙빛 바닥만)
     for (const [x0, z0, x1, z1] of CH_MAP.roads) flat(x1 - x0, z1 - z0, (x0 + x1) / 2, (z0 + z1) / 2, roadMat, -0.9);   // 대로 — 어둠 밑에 깔린다
     // c3: 강 — 못 건너지만 건너편은 보인다 (벽이 아니라 시야를 안 가린다). 물 무늬는 땅 기준, 어둠 밑에 깔린다. 다리 = 상판 + 양쪽 난간
     const waterTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
@@ -159,8 +160,11 @@ R = [
   ('<title>러닝데드 이동 테스트</title>', '<title>러닝데드 챕터</title>'),
   ('<div id="ver">v589</div>', f'<div id="ver">챕터 {VER}</div>'),
   ("  const TEST_MAP = CAR_TEST || false;", "  const CHAPTER = true;   // 챕터 줄기 (c1~): 구역 4개짜리 맵, 지금은 건물만 — 사람·경찰·금고 없음\n  const TEST_MAP = CAR_TEST || CHAPTER;"),
-  ("  const BUILDINGS = TEST_MAP ? TEST_BLDGS : ", "  const CH_MAP = " + MAP + ";   // 생성기(씨앗 7)가 만든 고정 맵 — c2: 건물 71채 (랜드마크 9 · 창고 8 · 집 54) · c3: 세로 경계 = 강(다리 3곳), 가로 경계 = 산(길목 2곳) · c4: 집을 작게, 1~3채씩 뭉쳐서\n  const BUILDINGS = CHAPTER ? CH_MAP.b : TEST_MAP ? TEST_BLDGS : "),
-  ("local: s.local, block: s.block };", "local: s.local, block: s.block, type: s.t || '', zone: s.zone, sideK: s.sideK };"),
+  ("  const BUILDINGS = TEST_MAP ? TEST_BLDGS : ", "  const CH_MAP = " + MAP + ";   // 생성기(씨앗 7)가 만든 고정 맵 — c2: 건물 71채 (랜드마크 9 · 창고 8 · 집 54) · c3: 세로 경계 = 강(다리 3곳), 가로 경계 = 산(길목 2곳) · c4·c5: 집을 작게, 1~4채씩 바짝 뭉치고 블록마다 공터, 집 8채는 차고\n  const BUILDINGS = CHAPTER ? CH_MAP.b : TEST_MAP ? TEST_BLDGS : "),
+  ("local: s.local, block: s.block };", "local: s.local, block: s.block, type: s.t || '', zone: s.zone, sideK: s.sideK, garage: !!s.garage };"),
+  ("    B.doors = [].map((side) => {", "    B.doors = (s.open || []).map((side) => {   /* c5: 차고 — 한쪽 벽이 처음부터 통째로 뚫려 있다 */"),
+  ("w: s.station ? DOOR * 4 / 9 : DOOR };", "w: s.garage ? (nx ? s.d : s.w) - 0.5 : s.station ? DOOR * 4 / 9 : DOOR };"),
+  ("o.hp = o.maxHp = B.side ? MY_DAMAGE * 3.5 : MY_DAMAGE * 19.5;", "o.hp = o.maxHp = B.side || B.garage ? MY_DAMAGE * 3.5 : MY_DAMAGE * 19.5;   /* c5: 차고 문도 집 문과 같다 */"),
   ("  // 잠긴 문 (v239) — 문 자리를 막는 벽 한 토막 + 철문 그림.", ICONS.strip('\n') + "\n  // 잠긴 문 (v239) — 문 자리를 막는 벽 한 토막 + 철문 그림."),
   ("  const MM = TEST_MAP ? {", "  const MM = CHAPTER ? CH_MAP.mm : TEST_MAP ? {"),
   ("  const MM_S = Math.min(128 * 2 / 3 / (MM.x1 - MM.x0), 136 * 2 / 3 / (MM.z1 - MM.z0));", "  const MM_S = Math.min((CHAPTER ? 132 : 128 * 2 / 3) / (MM.x1 - MM.x0), (CHAPTER ? 160 : 136 * 2 / 3) / (MM.z1 - MM.z0));   /* c1: 맵이 3배라 미니맵도 크게 */"),
