@@ -382,7 +382,7 @@ MINIMAP = r'''
     g.save(); g.beginPath();
     for (const z of eyes) { if (!isZombie(z)) continue; const cx = X(z.foot.x), cz = Z(z.foot.z), r = z.sense * sx; g.moveTo(cx + r, cz); g.arc(cx, cz, r, 0, Math.PI * 2); }
     g.clip(); g.drawImage(chLit, 0, 0); g.restore();                      // 지금 보이는 곳 = 밝게
-    const sz2 = 8 * mmDpr, szB = 16 * mmDpr;   /* c14: 건물 아이콘 2배 (8 → 16) — 미니맵은 건물이 나에게서 어느 쪽에 있는지만 보이면 된다 (자세한 지형은 가려져도 된다). 길목 화살표는 그대로 */   /* c6: 미니맵이 작아진 만큼 아이콘도 (10.5 → 8) */
+    const sz2 = 8 * mmDpr, szB = 12 * mmDpr;   /* c15: 2배는 너무 커서 1.5배로 (8 → 12) */   /* c14: 건물 아이콘 2배 (8 → 16) — 미니맵은 건물이 나에게서 어느 쪽에 있는지만 보이면 된다 (자세한 지형은 가려져도 된다). 길목 화살표는 그대로 */   /* c6: 미니맵이 작아진 만큼 아이콘도 (10.5 → 8) */
     for (let pass = 0; pass < 3; pass++) for (const B of buildings) {   // 커진 아이콘이 겹치면 중요한 것이 위로 — 잠식한 건물(X) → 창고 → 랜드마크 순으로 그린다
       if (B.type === 'house' || B.type === 'hill') continue;             // 집과 산은 표시 없음
       if (pass === 0 && !B.found) {                                      // 건물 자리를 한 칸이라도 밝혔으면 그때부터 표시
