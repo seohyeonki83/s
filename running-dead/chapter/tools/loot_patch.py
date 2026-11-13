@@ -123,25 +123,45 @@ LOOT = r'''  // ── c19: 금고와 아이템 (챕터) ──
       const m = el.querySelector('.mag'); if (m) m.style.display = 'none';
     });
   }
-  // ── c25: 레벨업 = 가진 도구·장비 가운데 하나를 골라 강화 (능력치 카드 대신). 새 아이템은 건물에서만 얻는다 ──
+  // ── c25 · c27: 레벨업 = 도구·장비 14종 가운데 랜덤 3장 중 하나를 고른다 — 없는 것이면 새로 얻고, 가진 것이면 강화 +1 ──
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
     bomb: ['범위', (n) => n ? `+${20 * n}%` : '기본'], mutate: ['', (n) => `${1 + n}개·${10 + 3 * n}초`], taser: ['대상', (n) => `${1 + n}명`], awaken: ['최대', (n) => `${10 + 3 * n}초`], cash: ['유혹', (n) => n ? `+${n}` : '기본'],
-    book: ['쿨타임', (n) => `-${5 * (1 + n)}%`], rage: ['속도', (n) => `+${5 + 2 * n}%`], crowbar: ['사물', (n) => `+${10 * (1 + n)}%`], absorb: ['흡수', (n) => `${1 + n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
+    book: ['쿨타임', (n) => `-${5 * (1 + n)}%`], bag: ['도구', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${5 + 2 * n}%`], crowbar: ['사물', (n) => `+${10 * (1 + n)}%`], absorb: ['흡수', (n) => `${1 + n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
     shoes: ['이동', (n) => `+${5 * (1 + n)}%`], catalyst: ['변이', (n) => `+${5 * (1 + n)}%`], blood: ['체력', (n) => `+${10 * (1 + n)}%`],
   };
-  function chUpPool() {                       // 고를 수 있는 것 — 가진 도구(얻은 순서) 다음에 장비(얻은 순서). 끝까지 올린 것과 가방은 뺀다 (가방은 얻어야만 칸이 는다)
-    return [...items.map((it) => it.kind), ...Object.keys(pBadges)].filter((k) => k !== 'bag' && lv(k) < chLvMax(k));
+  const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
+    bomb: '동료 하나가 자폭', mutate: '동료 하나를 변이', taser: '적을 감전', awaken: '내가 변이', cash: '적을 유혹',
+    book: '도구 쿨타임 단축', bag: '쓸 수 있는 도구 +1', rage: '동료 속도 강화', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해 감소', shoes: '내 이동 속도 증가', catalyst: '변이 좀비 공격력 증가', blood: '내 최대 체력 증가',
+  };
+  function chUpPool() {                       // 레벨업에 나올 수 있는 것 — 14종 전부, 끝까지 올린 것만 뺀다
+    return CH_ITEMS.filter((k) => !(chHas(k) && lv(k) >= chLvMax(k)));
+  }
+  function chGain(kind) {                     // c27: 획득창 없이 바로 얻는다 (레벨업에서 고른 새 아이템) — 금고에서 얻을 때와 같은 자리에 붙는다
+    const d = ITEM[kind]; let el;
+    if (d.passive) {
+      el = document.createElement('div'); el.className = 'pbadge';
+      el.innerHTML = `<span class="ic">${d.icon}</span><span class="pc"></span><span class="mag"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6" fill="none" stroke="#e8eef5" stroke-width="3"/><path d="M14.5 14.5 20 20" stroke="#e8eef5" stroke-width="3.4" stroke-linecap="round"/></svg></span>`;
+      el.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); showInfo(kind); });
+      stage.appendChild(el); pBadges[kind] = el; if (kind === 'vest') { vestEl = el; hasVest = true; }
+      owned[kind] = true;
+    } else {
+      const it = { kind, ammo: itemMax(kind), t: 0, el: makeItemButton(kind, items.length), acc: kind === 'awaken' ? chAccMax() : 0, off: items.length >= chToolCap() };
+      items.push(it); addActiveBadge(kind); el = it.el;
+    }
+    chItemChanged(kind); el.classList.add('pop');
   }
   function chLevelUp() {
-    const pool = chUpPool();
-    if (!pool.length) { lvQueued = Math.max(0, lvQueued - 1); return; }   // 강화할 게 없으면 레벨업은 모아 둔다 — 강화할 수 있는 아이템이 생기면 그때 뜬다
+    const pool = chUpPool(), keys = [];
+    while (keys.length < 3 && pool.length) keys.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);   // 그냥 랜덤 3장 (서로 다른 것)
+    if (!keys.length) { lvQueued = Math.max(0, lvQueued - 1); return; }   // 전부 끝까지 올렸으면 뜰 게 없다
     lvOpen = true; paused = true; stopInput();
     const ov = document.createElement('div');
-    ov.id = 'pick'; ov.style.paddingTop = 'calc(8vh + env(safe-area-inset-top, 0px))';
-    ov.innerHTML = `<div class="hd">LEVEL UP!</div><div class="sub">Lv ${level} → Lv ${level + 1} · 강화할 도구·장비 하나를 고르세요</div>` +
-      `<div class="cards" style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:6px;width:min(94vw, 372px);box-sizing:border-box;margin-top:12px;padding:0">` +
-      pool.map((k) => { const n = lv(k); return `<div class="card" data-k="${k}" style="width:auto;min-height:0;padding:4px 4px 8px"><div style="height:12px;font:900 11px/12px var(--font);color:#ffd34d;letter-spacing:-0.5px">${chStars(n)}</div>` +   // c26: 카드에도 지금 강화 단계만큼 별
-        `<div class="ic" style="font-size:24px">${ITEM[k].icon}</div><div class="nm" style="margin-top:4px;font-size:12.5px">${ITEM[k].name}</div><div class="vl" style="margin-top:4px;font-size:10.5px;white-space:nowrap">${CH_SHORT[k][0]} ${CH_SHORT[k][1](n)} → ${CH_SHORT[k][1](n + 1)}</div></div>`; }).join('') +
+    ov.id = 'pick';
+    ov.innerHTML = `<div class="hd">LEVEL UP!</div><div class="sub">Lv ${level} → Lv ${level + 1} · 하나를 고르세요</div><div class="cards">` +
+      keys.map((k) => { const has = chHas(k), n = lv(k), S = CH_SHORT[k];
+        return `<div class="card" data-k="${k}" style="min-height:158px;padding-top:8px"><div style="height:14px;font:900 12px/14px var(--font);letter-spacing:-0.5px;color:${has ? '#ffd34d' : '#7dffa0'}">${has ? chStars(n) : 'NEW'}</div>` +
+          `<div class="ic" style="margin-top:4px">${ITEM[k].icon}</div><div class="nm" style="margin-top:8px">${ITEM[k].name}</div><div class="ds" style="margin-top:8px">${has ? '강화' : CH_BRIEF[k]}</div>` +
+          `<div class="vl">${S[0]} ${has ? S[1](n) + ' → ' + S[1](n + 1) : S[1](0)}</div></div>`; }).join('') +
       `</div><button class="ok okBtn">확인</button>`;
     stage.appendChild(ov);
     let chosen = null;
@@ -156,7 +176,7 @@ LOOT = r'''  // ── c19: 금고와 아이템 (챕터) ──
       ov.dataset.done = '1';
       for (const c of ov.querySelectorAll('.card')) { c.classList.remove('on'); c.classList.add(c.dataset.k === chosen ? 'win' : 'gone'); }   // 고른 카드가 커지며 빛나고 나머지는 사라진다
       ov.querySelector('.ok').style.opacity = '0';
-      ilv[chosen] = lv(chosen) + 1; chItemChanged(chosen);
+      if (chHas(chosen)) { ilv[chosen] = lv(chosen) + 1; chItemChanged(chosen); } else chGain(chosen);   // 가진 것이면 강화, 없는 것이면 새로 얻는다
       pendingLv--; lvQueued = Math.max(0, lvQueued - 1); level++;
       drawLv();
       setTimeout(() => { ov.style.opacity = '0'; }, 550);
