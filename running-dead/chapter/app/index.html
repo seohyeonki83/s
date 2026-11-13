@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="러닝데드 챕터">
 <meta name="theme-color" content="#1f1f23">
 <link rel="manifest" href="manifest.webmanifest">
@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c7</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c8</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -291,8 +291,7 @@
   const FOV = 40;         // 세로 시야각 (유니티와 같음)
   const DIST = 77.175 * 0.8 * 0.75 * 0.8 * 0.8 * 1.1;   /* v175에 10% 뒤로 (29.6 → 32.6) */ //   /* v171에 20% 더 당김 (37.0 → 29.6) */ //   /* v142에 20% 더 당김 (46.3 → 37.0) */ //   // 카메라 ~ 나 거리 (유닛) — v26의 51.45에서 50% 뒤로, v122에 20% 당김, v140에 25% 더 당김 (약 46.3). 동료가 5명 넘으면 한 명마다 1%씩 뒤로 (armyK)
   const FULL = window.navigator.standalone === true || window.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches;   // c7: 홈 화면 앱으로 연 전체 화면
-  if (FULL) document.documentElement.style.setProperty('--joyd', '28px');   // 전체 화면에선 조이스틱(과 그 둘레 버튼)을 28px 아래로
-  const SCREEN_Y = FULL ? 0.46 : 0.40;  // 내 자리 = 화면 위에서 40% (c7: 전체 화면에선 46% — 화면이 길어진 만큼 나를 조금 아래로) (가운데보다 살짝 위 — 아래는 엄지 자리)
+  const SCREEN_Y = FULL ? 0.45 : 0.40;  // 내 자리 = 화면 위에서 40% (c8: 전체 화면에선 45% — 화면이 길어진 만큼 나를 조금 아래로. 조이스틱은 화면이 바닥까지 내려가면서 같이 내려간다 — 따로 더 내리려면 --joyd) (가운데보다 살짝 위 — 아래는 엄지 자리)
 
   // 나 (좀비) — 감염된 시민은 동료 좀비가 되어 손 뗀 나처럼 움직인다
   const RADIUS = 0.5;     // 원 반지름 — 나·시민 전부 (지름 1유닛 = 유니티 큐브 한 변)
