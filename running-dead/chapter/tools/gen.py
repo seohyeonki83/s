@@ -14,7 +14,7 @@ ZONES = [  # 남쪽(z+)에 큰 구역 둘, 북쪽에 작은 구역 둘
     dict(id=2, big=False, r=(X0, Z0, X0 + ZW, Z0 + SMALL_H)),
     dict(id=3, big=False, r=(X0 + ZW + GAP, Z0, X0 + W, Z0 + SMALL_H)),
 ]
-COUNTS = {0: (3, 3, 18), 1: (3, 3, 18), 2: (2, 1, 9), 3: (1, 1, 9)}     # 랜드마크 · 창고 · 집 (합 9 · 8 · 54) — c2: 집 80 → 54
+COUNTS = {0: (3, 3, 18), 1: (3, 3, 18), 2: (2, 1, 9), 3: (1, 1, 9)}     # 랜드마크 · 창고 · 집 (합 9 · 8 · 54) — c2: 집 80 → 54 — c17: 다 놓은 뒤에 집만 3분의 1을 뺀다 (54 → 36, 맨 아래 thin_zone)
 LM = {'bank': (11.0, 8.0), 'police': (11.9, 8.5), 'fire': (12.5, 8.5), 'mart': (13.6, 9.5), 'hospital': (13.6, 10.2),
       'army': (14.0, 10.2), 'library': (11.9, 8.5), 'conv': (8.5, 6.5), 'gym': (10.5, 7.5)}
 STORE = (9.4, 6.8)
@@ -98,7 +98,7 @@ def pack(block, specs):                                  # c5: 블록마다 공�
             else: ok = False; break
         if not ok: continue
         if not any(p[3] < lot[1] for p in placed) or not any(p[1] > lot[3] for p in placed): continue   # 공터 위아래에 다 건물이 있어야 (공터가 동네 한가운데에 놓이게)
-        return [dict(t=sp[0], x=u['x'] + x + sp[1] / 2, z=u['z'] + z + sp[2] / 2, w=sp[1], d=sp[2]) for u in units for sp, x, z in u['rects']], lot
+        return [dict(t=sp[0], x=u['x'] + x + sp[1] / 2, z=u['z'] + z + sp[2] / 2, w=sp[1], d=sp[2], u=ui) for ui, u in enumerate(units) for sp, x, z in u['rects']], lot   # u = 그 블록 안에서 몇 번째 덩어리인가 (집 줄이기에 쓴다)
     return None
 
 types = list(LM); rng.shuffle(types)
@@ -146,9 +146,9 @@ for z in ZONES:
         res = [pack(blocks[i], load[i]) for i in order]
         if all(r is not None for r in res): break
     else: raise SystemExit('zone pack failed')
-    for r, lot in res:
+    for bi, (r, lot) in enumerate(res):
         LOTS.append(lot)
-        for b in r: b['zone'] = z['id']; bld.append(b)
+        for b in r: b['zone'] = z['id']; b['unit'] = (z['id'], bi, b.pop('u')); bld.append(b)
 
 def clear(b, side):                                    # 그 벽 문 앞이 얼마나 트여 있나
     lim = {'n': b['z'] - b['d'] / 2 - Z0, 's': Z0 + H - (b['z'] + b['d'] / 2), 'w': b['x'] - b['w'] / 2 - X0, 'e': X0 + W - (b['x'] + b['w'] / 2)}[side]
@@ -187,10 +187,68 @@ for i, a in enumerate(bld):
     for b in bld[i + 1:]:
         gx = abs(a['x'] - b['x']) - (a['w'] + b['w']) / 2; gz = abs(a['z'] - b['z']) - (a['d'] + b['d']) / 2
         assert max(gx, gz) >= MIN_GAP - 0.02, (a, b)
+# c17: 집을 3분의 1 줄인다 (54 → 36). 다 만든 뒤에 집만 골라 빼서 나머지(랜드마크·창고·공터·길, 남는 집의 자리·문·차고)는 그대로 둔다
+#   ① 외딴 집(한 채짜리)부터 — 가장 외딴 것부터, 그 블록에 집이 두 채는 남게   ② 네 채짜리 덩어리는 세 채로
+#   ③ 그래도 모자라면 집이 가장 많은 블록의 세 채짜리를 통째로, 한두 채만 모자라면 큰 덩어리에서 한 채씩
+#   차고는 남는 집의 15%쯤 (구역마다 적어도 하나) 남게 고른다. 덩어리에서 뺄 때는 가장 바깥 집을 뺀다 (남는 집들이 붙어 있게)
+HOUSE_CUT = 1 / 3
+def thin_zone(zid):
+    hs = [b for b in bld if b['zone'] == zid and b['t'] == 'house']
+    need = round(len(hs) * HOUSE_CUT); keepG = max(1, round((len(hs) - need) * 0.15))
+    gone = set()
+    alive = lambda: [b for b in hs if id(b) not in gone]
+    dist = lambda a, b: ((a['x'] - b['x']) ** 2 + (a['z'] - b['z']) ** 2) ** 0.5
+    def units():
+        d = {}
+        for b in alive(): d.setdefault(b['unit'], []).append(b)
+        return d
+    in_block = lambda bi: [b for b in alive() if b['unit'][1] == bi]
+    gar_n = lambda: sum(1 for b in alive() if b.get('garage'))
+    crowd = lambda b: sum(1 for o in bld if o is not b and id(o) not in gone and dist(o, b) < 14)
+    def ok(bs):                                           # 이 집들을 빼도 되나 — 차고 수와 블록에 남는 집 수
+        if gar_n() - sum(1 for b in bs if b.get('garage')) < keepG: return False
+        for bi in set(b['unit'][1] for b in bs):
+            left = len(in_block(bi)) - sum(1 for b in bs if b['unit'][1] == bi)
+            if left < min(2, len(in_block(bi))) and left < 2: return False
+        return True
+    def outer(bs):                                        # 덩어리에서 가장 바깥 집 (차고는 되도록 남긴다)
+        c = [b for b in bs if not b.get('garage')] or bs
+        return max(c, key=lambda b: (round(sum(dist(b, o) for o in bs if o is not b), 2), crowd(b), b['x'], b['z']))
+    def drop(bs):
+        nonlocal need
+        for b in bs: gone.add(id(b))
+        need -= len(bs)
+    # ① 외딴 집
+    lone = [bs[0] for bs in units().values() if len(bs) == 1]
+    iso = lambda b: min([dist(b, o) for o in in_block(b['unit'][1]) if o is not b] or [99])
+    for b in sorted(lone, key=lambda b: (-round(iso(b), 2), b['x'], b['z'])):
+        if need > 0 and ok([b]): drop([b])
+    # ② 네 채 → 세 채
+    for u, bs in sorted(units().items()):
+        if need > 0 and len(bs) >= 4:
+            b = outer(bs)
+            if ok([b]): drop([b])
+    # ③ 세 채짜리 통째로 (집이 가장 많은 블록부터, 차고가 남는 몫보다 많으면 차고 낀 덩어리부터)
+    while need >= 3:
+        c = [bs for bs in units().values() if len(bs) == 3 and ok(bs)]
+        if not c: break
+        over = gar_n() > keepG
+        drop(max(c, key=lambda bs: (len(in_block(bs[0]['unit'][1])), any(b.get('garage') for b in bs) == over, sum(crowd(b) for b in bs), bs[0]['x'])))
+    while need > 0:                                       # 한두 채 모자라면 큰 덩어리에서 한 채씩
+        c = [bs for bs in units().values() if len(bs) >= 2 and ok([outer(bs)])]
+        if not c: break
+        drop([outer(max(c, key=lambda bs: (len(bs), len(in_block(bs[0]['unit'][1])), bs[0]['x'])))])
+    assert need == 0, (zid, need)
+    return gone
+_gone = set()
+for zid in range(4): _gone |= thin_zone(zid)
+CUT = [b for b in bld if id(b) in _gone]
+bld[:] = [b for b in bld if id(b) not in _gone]
 from collections import Counter
 print('건물', len(bld), dict(Counter(b['t'] for b in bld)))
 for z in ZONES: print(' 구역', z['id'], '큰' if z['big'] else '작은', dict(Counter(b['t'] for b in bld if b['zone'] == z['id'])))
 print(' 차고', sum(1 for b in bld if b.get('garage')), ' 공터', len(LOTS), [round((l[2] - l[0]) * (l[3] - l[1])) for l in LOTS])
+print(' 뺀 집', len(CUT), [(b['zone'], round(b['x']), round(b['z']), 'G' if b.get('garage') else '') for b in CUT])
 print(' 산 덩어리', len(hills), ' 강 토막', len(rivers), ' 다리', len(bridges), ' 산 길목', sum(1 for a, c in PASSES if a == 'h'))
 print(' 정문 방향', dict(Counter(b['doors'][0] for b in bld)), ' 가장 좁은 정문 앞', round(min(clear(b, b['doors'][0]) for b in bld), 2))
 A = ZONES[0]['r']
