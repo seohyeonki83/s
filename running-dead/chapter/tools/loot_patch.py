@@ -120,6 +120,46 @@ LOOT = r'''  // ── c19: 금고와 아이템 (챕터) ──
       const m = el.querySelector('.mag'); if (m) m.style.display = 'none';
     });
   }
+  // ── c25: 레벨업 = 가진 도구·장비 가운데 하나를 골라 강화 (능력치 카드 대신). 새 아이템은 건물에서만 얻는다 ──
+  const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
+    bomb: ['범위', (n) => n ? `+${20 * n}%` : '기본'], mutate: ['', (n) => `${1 + n}개·${10 + 3 * n}초`], taser: ['대상', (n) => `${1 + n}명`], awaken: ['최대', (n) => `${10 + 3 * n}초`], cash: ['유혹', (n) => n ? `+${n}` : '기본'],
+    book: ['쿨타임', (n) => `-${5 * (1 + n)}%`], rage: ['속도', (n) => `+${5 + 2 * n}%`], crowbar: ['사물', (n) => `+${10 * (1 + n)}%`], absorb: ['흡수', (n) => `${1 + n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
+    shoes: ['이동', (n) => `+${5 * (1 + n)}%`], catalyst: ['변이', (n) => `+${5 * (1 + n)}%`], blood: ['체력', (n) => `+${10 * (1 + n)}%`],
+  };
+  function chUpPool() {                       // 고를 수 있는 것 — 가진 도구(얻은 순서) 다음에 장비(얻은 순서). 끝까지 올린 것과 가방은 뺀다 (가방은 얻어야만 칸이 는다)
+    return [...items.map((it) => it.kind), ...Object.keys(pBadges)].filter((k) => k !== 'bag' && lv(k) < chLvMax(k));
+  }
+  function chLevelUp() {
+    const pool = chUpPool();
+    if (!pool.length) { lvQueued = Math.max(0, lvQueued - 1); return; }   // 강화할 게 없으면 레벨업은 모아 둔다 — 강화할 수 있는 아이템이 생기면 그때 뜬다
+    lvOpen = true; paused = true; stopInput();
+    const ov = document.createElement('div');
+    ov.id = 'pick'; ov.style.paddingTop = 'calc(8vh + env(safe-area-inset-top, 0px))';
+    ov.innerHTML = `<div class="hd">LEVEL UP!</div><div class="sub">Lv ${level} → Lv ${level + 1} · 강화할 도구·장비 하나를 고르세요</div>` +
+      `<div class="cards" style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:6px;width:min(94vw, 372px);box-sizing:border-box;margin-top:12px;padding:0">` +
+      pool.map((k) => { const n = lv(k); return `<div class="card" data-k="${k}" style="width:auto;min-height:0;padding:7px 4px 8px">` + (n ? `<div style="position:absolute;top:3px;right:6px;font:900 11px/1 var(--font);color:#ffd34d">★${n}</div>` : '') +
+        `<div class="ic" style="font-size:24px">${ITEM[k].icon}</div><div class="nm" style="margin-top:4px;font-size:12.5px">${ITEM[k].name}</div><div class="vl" style="margin-top:4px;font-size:10.5px;white-space:nowrap">${CH_SHORT[k][0]} ${CH_SHORT[k][1](n)} → ${CH_SHORT[k][1](n + 1)}</div></div>`; }).join('') +
+      `</div><button class="ok okBtn">확인</button>`;
+    stage.appendChild(ov);
+    let chosen = null;
+    const block = (e) => { e.stopPropagation(); e.preventDefault(); };
+    ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
+    ov.addEventListener('pointerdown', (e) => {
+      block(e);
+      if (ov.dataset.done) return;
+      const card = e.target.closest('.card'), ok = e.target.closest('.ok');
+      if (card) { chosen = card.dataset.k; for (const c of ov.querySelectorAll('.card')) c.classList.toggle('on', c === card); ov.querySelector('.ok').classList.add('ready'); return; }
+      if (!ok || !chosen) return;
+      ov.dataset.done = '1';
+      for (const c of ov.querySelectorAll('.card')) { c.classList.remove('on'); c.classList.add(c.dataset.k === chosen ? 'win' : 'gone'); }   // 고른 카드가 커지며 빛나고 나머지는 사라진다
+      ov.querySelector('.ok').style.opacity = '0';
+      ilv[chosen] = lv(chosen) + 1; chItemChanged(chosen);
+      pendingLv--; lvQueued = Math.max(0, lvQueued - 1); level++;
+      drawLv();
+      setTimeout(() => { ov.style.opacity = '0'; }, 550);
+      setTimeout(() => { ov.remove(); lvOpen = false; paused = false; last = 0; }, 850);
+    });
+  }
   let rageT = 0;
   const RAGE_CD = 30, rageK = () => 0.05 + 0.02 * lv('rage');   // c22: 30초 고정 · 효과 5%에서 강화마다 +2%p (15%까지) — 걸린 동료 전원에게 지금 단계가 적용된다
   function rageTick(dt) {                     // 분노 바이러스: 30초마다 아직 안 걸린 동료 한 명 — 공격 속도·이동 속도가 오른다 (그 동료가 살아 있는 동안 계속)
@@ -294,4 +334,10 @@ FX_R = [   # c24: 문·금고가 부서질 때 파편 (본편과 같은 수치)
   ("if (k) dropPickup(k, b.foot.x, b.foot.z, b.space); else dust(b.foot.x, b.foot.z, 16, 1.4); return; }", "if (k) dropPickup(k, b.foot.x, b.foot.z, b.space); return; }"),
   ("    for (const p of pickups) scene.remove(p.s); pickups.length = 0;", "    for (const p of pickups) scene.remove(p.s); pickups.length = 0;\n    for (const c of chips) { scene.remove(c.m); c.m.material.dispose(); } chips.length = 0;   // c24"),
   ("zombify: makeZombie, slotOf,", "zombify: makeZombie, slotOf, chips: () => chips.length, objs, breakObj,"),
+]
+
+LVUP_R = [   # c25: 레벨업 화면에 능력치 대신 가진 도구·장비
+  ("    else if (e.t === 'lv') showLevelUp();", "    else if (e.t === 'lv') { if (CHAPTER) chLevelUp(); else showLevelUp(); }   // c25"),
+  ("    while (lvQueued < pendingLv) { fxQueue.push({ t: 'lv' }); lvQueued++; }", "    while (lvQueued < pendingLv && (!CHAPTER || chUpPool().length)) { fxQueue.push({ t: 'lv' }); lvQueued++; }   // c25: 강화할 아이템이 있을 때만 줄을 세운다 (없으면 모아 둔다)"),
+  ("zombify: makeZombie, slotOf,", "zombify: makeZombie, slotOf, xp: (n) => { for (let i = 0; i < n; i++) gainXp(); return { level, xp, pendingLv }; }, lvInfo: () => ({ level, xp, pendingLv, need: needXp(level + pendingLv) }),"),
 ]
