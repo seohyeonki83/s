@@ -397,6 +397,12 @@ MINIMAP = r'''
       if (!P.found && explored[Math.floor((P.z - MM.z0) / MM_CELL) * mmW + Math.floor((P.x - MM.x0) / MM_CELL)]) P.found = true;
       if (P.found) g.drawImage(CH_ICON[P.dir === 'h' ? 'passH' : 'passV'], X(P.x) - sz2 / 2, Z(P.z) - sz2 / 2, sz2, sz2);
     }
+    for (const p of pickups) {                                            // c20: 안 주운 아이템 — 테스트맵처럼 미니맵에 늘 보인다 (금색 동그라미 + 아이콘). 건물 아이콘 위에 그린다
+      const px = X(p.x), py = Z(p.z), pr = 5.5 * u;
+      g.fillStyle = 'rgba(0, 0, 0, 0.85)'; g.beginPath(); g.arc(px, py, pr + 1.2 * u, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#ffd25a'; g.beginPath(); g.arc(px, py, pr, 0, Math.PI * 2); g.fill();
+      if (p.img && p.img.complete && p.img.naturalWidth) g.drawImage(p.img, px - pr * 0.8, py - pr * 0.8, pr * 1.6, pr * 1.6);
+    }
     const r = 2.1 * u;                                                    // 나 = 빨간 점
     g.beginPath(); g.arc(X(me.foot.x), Z(me.foot.z), r, 0, Math.PI * 2);
     g.fillStyle = '#ff3b30'; g.fill(); g.lineWidth = 1 * u; g.strokeStyle = 'rgba(255, 255, 255, 0.9)'; g.stroke();
