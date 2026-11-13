@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c17</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c18</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2342,7 +2342,8 @@
     return c;
   }
   function chMinimap(eyes, W, H, X, Z, sx, sz) {
-    if (!chDim) {
+    const u = W / MM_CW;                       // c18: 그림 한 칸 크기 — 작게 볼 때는 화면 배율 그대로, 크게 볼 때는 커진 만큼 (아이콘·내 점이 같은 비율로 커진다)
+    if (!chDim || chDim.width !== W || chDim.height !== H) {   // c18: 크기가 바뀌면(크게 보기) 바탕 그림을 그 크기로 새로 만든다
       chDim = chLayer(W, H, X, Z, sx, sz, '#303036', '#27272c', '#141417', '#1b1b20', '#1a2a1a', '#14283a', '#3a342c');     // 안개 속
       chLit = chLayer(W, H, X, Z, sx, sz, '#9c9ca4', '#85858d', '#3a3a42', '#4c4c56', '#4f7447', '#3d82b6', '#a8957b');     // 지금 보이는 곳
       chMask = document.createElement('canvas'); chMask.width = W; chMask.height = H;
@@ -2355,7 +2356,7 @@
     g.save(); g.beginPath();
     for (const z of eyes) { if (!isZombie(z)) continue; const cx = X(z.foot.x), cz = Z(z.foot.z), r = z.sense * sx; g.moveTo(cx + r, cz); g.arc(cx, cz, r, 0, Math.PI * 2); }
     g.clip(); g.drawImage(chLit, 0, 0); g.restore();                      // 지금 보이는 곳 = 밝게
-    const sz2 = 8 * mmDpr, szB = 12 * mmDpr;   /* c15: 2배는 너무 커서 1.5배로 (8 → 12) */   /* c14: 건물 아이콘 2배 (8 → 16) — 미니맵은 건물이 나에게서 어느 쪽에 있는지만 보이면 된다 (자세한 지형은 가려져도 된다). 길목 화살표는 그대로 */   /* c6: 미니맵이 작아진 만큼 아이콘도 (10.5 → 8) */
+    const sz2 = 8 * u, szB = 12 * u;   /* c15: 2배는 너무 커서 1.5배로 (8 → 12) */   /* c14: 건물 아이콘 2배 (8 → 16) — 미니맵은 건물이 나에게서 어느 쪽에 있는지만 보이면 된다 (자세한 지형은 가려져도 된다). 길목 화살표는 그대로 */   /* c6: 미니맵이 작아진 만큼 아이콘도 (10.5 → 8) */
     for (let pass = 0; pass < 3; pass++) for (const B of buildings) {   // 커진 아이콘이 겹치면 중요한 것이 위로 — 잠식한 건물(X) → 창고 → 랜드마크 순으로 그린다
       if (B.type === 'house' || B.type === 'hill') continue;             // 집과 산은 표시 없음
       if (pass === 0 && !B.found) {                                      // 건물 자리를 한 칸이라도 밝혔으면 그때부터 표시
@@ -2370,9 +2371,28 @@
       if (!P.found && explored[Math.floor((P.z - MM.z0) / MM_CELL) * mmW + Math.floor((P.x - MM.x0) / MM_CELL)]) P.found = true;
       if (P.found) g.drawImage(CH_ICON[P.dir === 'h' ? 'passH' : 'passV'], X(P.x) - sz2 / 2, Z(P.z) - sz2 / 2, sz2, sz2);
     }
-    const r = 2.1 * mmDpr;                                                // 나 = 빨간 점
+    const r = 2.1 * u;                                                    // 나 = 빨간 점
     g.beginPath(); g.arc(X(me.foot.x), Z(me.foot.z), r, 0, Math.PI * 2);
-    g.fillStyle = '#ff3b30'; g.fill(); g.lineWidth = 1 * mmDpr; g.strokeStyle = 'rgba(255, 255, 255, 0.9)'; g.stroke();
+    g.fillStyle = '#ff3b30'; g.fill(); g.lineWidth = 1 * u; g.strokeStyle = 'rgba(255, 255, 255, 0.9)'; g.stroke();
+  }
+  // ── c18: 미니맵을 누르면 화면 한가운데에 크게, 다시 누르면 제자리로. 보여 주는 내용은 같다 (크게 볼 때는 그 크기로 새로 그려서 또렷하게) ──
+  let mmBig = false;
+  function mmLayout() {
+    const S = mmEl.style;
+    if (!mmBig) {
+      S.width = MM_CW + 'px'; S.height = MM_CH + 'px'; S.top = ''; S.left = ''; S.right = ''; S.transform = ''; S.zIndex = ''; S.borderRadius = ''; S.boxShadow = '';
+      mmEl.width = Math.round(MM_CW * mmDpr); mmEl.height = Math.round(MM_CH * mmDpr);
+    } else {                                  // 화면 폭의 92% (높이의 70%를 넘지 않게), 한가운데보다 살짝 위 — 조이스틱을 가리지 않는다
+      const vw = stage.clientWidth, vh = stage.clientHeight, k = Math.min(vw * 0.92 / MM_CW, vh * 0.7 / MM_CH), w = Math.round(MM_CW * k), h = Math.round(MM_CH * k), d = Math.min(mmDpr, 2);
+      S.width = w + 'px'; S.height = h + 'px'; S.top = '46%'; S.left = '50%'; S.right = 'auto'; S.transform = 'translate(-50%, -50%)'; S.zIndex = '15'; S.borderRadius = '12px'; S.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.65)';
+      mmEl.width = Math.round(w * d); mmEl.height = Math.round(h * d);
+    }
+    mmT = 0; updateMinimap(0);                // 크기를 바꾸면 그림이 지워진다 — 바로 다시 그린다 (일시정지 중이어도)
+  }
+  if (CHAPTER) {
+    mmEl.style.pointerEvents = 'auto'; mmEl.style.touchAction = 'none'; mmEl.style.cursor = 'pointer';
+    mmEl.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); mmBig = !mmBig; mmLayout(); });   // 누른 손가락은 조이스틱으로 안 넘어간다
+    window.addEventListener('resize', () => { if (mmBig) mmLayout(); });
   }
   function updateMinimap(dt) {                // 0.1초마다
     if ((mmT -= dt) > 0) return;
