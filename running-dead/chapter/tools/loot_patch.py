@@ -67,7 +67,7 @@ LOOT = r'''  // ── c19: 금고와 아이템 (챕터) ──
     cash: (n) => n ? `유혹 강도와 범위 +${n}` : '유혹 강도와 범위 기본',
     book: (n) => `도구 쿨타임 -${5 * (1 + n)}%`,
     bag: (n) => `도구 ${Math.min(5, 2 + n)}칸`,
-    rage: (n) => `${25 - n}초마다 동료 1명 · 공격 속도·이동 속도 +5%`,
+    rage: (n) => `30초마다 동료 1명 · 공격 속도·이동 속도 +${5 + 2 * n}%`,
     crowbar: (n) => `사물 피해 +${10 * (1 + n)}%`,
     absorb: (n) => `충격 흡수 ${1 + n} (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12)`,
     vest: (n) => `총격 피해 -${10 * (1 + n)}%`,
@@ -75,7 +75,7 @@ LOOT = r'''  // ── c19: 금고와 아이템 (챕터) ──
     catalyst: (n) => `변이 좀비 공격력 +${5 * (1 + n)}%`,
     blood: (n) => `내 최대 체력 +${10 * (1 + n)}%`,
   };
-  const CH_BADGE = { absorb: () => '흡수 ' + (1 + lv('absorb')), crowbar: () => '+' + 10 * (1 + lv('crowbar')) + '%', shoes: () => '+' + 5 * (1 + lv('shoes')) + '%' };   // 배지 아래 짧은 수치
+  const CH_BADGE = { rage: () => '+' + (5 + 2 * lv('rage')) + '%', absorb: () => '흡수 ' + (1 + lv('absorb')), crowbar: () => '+' + 10 * (1 + lv('crowbar')) + '%', shoes: () => '+' + 5 * (1 + lv('shoes')) + '%' };   // 배지 아래 짧은 수치
   Object.assign(ITEM_TEXT, {                  // c21: 바뀐 규칙에 맞춘 설명
     taser: ['대상을 3초 동안 감전시킵니다.', '강화 시 감전 대상이 늘어납니다.'],
     awaken: ['모아 둔 시간만큼 내가 변이 좀비로 변합니다. 쓰지 않는 동안 시간이 모입니다.', '강화 시 모을 수 있는 시간이 늘어납니다.'],
@@ -84,6 +84,7 @@ LOOT = r'''  // ── c19: 금고와 아이템 (챕터) ──
     absorb: ['총격과 충격에 덜 밀려납니다. 약한 충격은 아예 받지 않습니다.', '강화 시 더 강한 충격도 흡수합니다.'],
     vest: ['총격 피해를 줄여 줍니다.', '강화 시 더 많이 줄여 줍니다.'],
     crowbar: ['사물에 입히는 피해가 늘어납니다.', '강화 시 피해가 더 늘어납니다.'],
+    rage: ['30초마다 동료 한 명을 감염시켜 공격 속도와 이동 속도를 올립니다. 변이한 동료가 먼저입니다.', '강화 시 오르는 폭이 커집니다.'],   // c22
   });
   function chItemChanged(kind) {              // 얻었거나 강화한 바로 그때 적용할 것
     if (kind === 'blood' && isZombie(me)) {   // 혈액팩: 나만 최대 체력 +10% (기본 체력 기준 — 얻을 때, 그리고 강화할 때마다)
@@ -120,13 +121,15 @@ LOOT = r'''  // ── c19: 금고와 아이템 (챕터) ──
     });
   }
   let rageT = 0;
-  function rageTick(dt) {                     // 분노 바이러스: 일정 시간마다 아직 안 걸린 동료 한 명 — 공격 속도·이동 속도 +5% (그 동료가 살아 있는 동안 계속)
+  const RAGE_CD = 30, rageK = () => 0.05 + 0.02 * lv('rage');   // c22: 30초 고정 · 효과 5%에서 강화마다 +2%p (15%까지) — 걸린 동료 전원에게 지금 단계가 적용된다
+  function rageTick(dt) {                     // 분노 바이러스: 30초마다 아직 안 걸린 동료 한 명 — 공격 속도·이동 속도가 오른다 (그 동료가 살아 있는 동안 계속)
     if (!owned.rage || !isZombie(me)) return;
+    rageT = Math.min(RAGE_CD, rageT + dt);    // c22: 30초 고정 — 시간은 늘 흐른다 (백과사전의 영향은 안 받는다 — 장비라서). 다 찼는데 걸 동료가 없으면 생길 때까지 기다렸다가 바로 건다
+    if (rageT < RAGE_CD) return;
     const free = zombies.filter((z) => z !== me && isZombie(z) && !z.rage);
-    let cand = free.filter((z) => z.mut);     // c21: 대상은 스팀팩과 같은 순서 — 변이 좀비 먼저 (거리 상관없이), 없으면 내 근접 거리 안 동료
+    let cand = free.filter((z) => z.mut);     // 1순위 = 변이한 동료 (거리 상관없이. 나는 대상이 아니다 — 내가 각성해 있어도), 없으면 내 근접 거리 안 동료
     if (!cand.length) { const R = NEAR * armyK; cand = free.filter((z) => Math.hypot(z.foot.x - me.foot.x, z.foot.z - me.foot.z) <= R); }
-    if (!cand.length) return;                 // 걸 동료가 없으면 시간도 멈춘다 (백과사전의 영향은 안 받는다 — 장비라서)
-    if ((rageT += dt) < 25 - lv('rage')) return;
+    if (!cand.length) return;
     rageT = 0;
     const z = cand[Math.floor(Math.random() * cand.length)];
     z.rage = true;
@@ -192,8 +195,8 @@ LOOT_R = [
    "shoes: () => `이동 속도 +${10 + 3 * n}%`,\n"
    "      bag: () => `도구 ${Math.min(5, 3 + n)}칸`, rage: () => `${25 - n}초마다 동료 1명 · 공격 속도·이동 속도 +5%`, catalyst: () => `변이 좀비 공격력 +${5 * (1 + n)}%`, blood: () => `내 최대 체력 +${10 * (1 + n)}%`,   // c19"),
   ("(z.mut === 'armor' && z !== me ? 1.3 * 1.3 * 2 : 1);", "(z.mut === 'armor' && z !== me ? 1.3 * 1.3 * 2 : 1) * (CHAPTER && z.mut && owned.catalyst ? 1 + 0.05 * (1 + lv('catalyst')) : 1);   /* c19: 촉매제 */"),
-  ("if (z.atkT > 0) z.atkT -= dt;", "if (z.atkT > 0) z.atkT -= dt * (z.rage ? 1.05 : 1);   /* c19: 분노 바이러스 — 공격 속도 +5% */"),
-  ("const gk = b.goo ? 0.56 : 1;", "const gk = (b.goo ? 0.56 : 1) * (b.rage ? 1.05 : 1);   /* c19: 분노 바이러스 — 이동 속도 +5% */"),
+  ("if (z.atkT > 0) z.atkT -= dt;", "if (z.atkT > 0) z.atkT -= dt * (z.rage ? 1 + rageK() : 1);   /* c19 · c22: 분노 바이러스 — 공격 속도 +5~15% */"),
+  ("const gk = b.goo ? 0.56 : 1;", "const gk = (b.goo ? 0.56 : 1) * (b.rage ? 1 + rageK() : 1);   /* c19 · c22: 분노 바이러스 — 이동 속도 +5~15% */"),
   ("    stimTick(dt);", "    stimTick(dt);\n    if (CHAPTER) rageTick(dt);"),
   ("trickleT = TRICKLE_T; stimT = 0; reviveT = 0;", "trickleT = TRICKLE_T; stimT = 0; reviveT = 0; rageT = 0;"),
   # ── 도구 칸 · 배지 ──
@@ -213,7 +216,7 @@ LOOT_R = [
   ("    for (const k of Object.keys(owned)) delete owned[k];", "    for (const k of Object.keys(owned)) delete owned[k];\n    for (const k of Object.keys(ilv)) delete ilv[k];   // c19"),
   ("  function showDud() {", LOOT + "  function showDud() {"),
   ("chPopulate(); return; }", "chPopulate(); chSafes(); return; }"),
-  ("zombify: makeZombie, slotOf,", "zombify: makeZombie, slotOf, loot: CHAPTER ? chLoot : null, breakSafe, give: (k) => pendingAward.push(k), inv: () => ({ tools: items.map((x) => x.kind + ':' + x.ammo), owned: Object.keys(owned), lv: Object.assign({}, ilv), cap: chToolCap(), pickups: pickups.map((p) => [p.kind, +p.x.toFixed(1), +p.z.toFixed(1)]), acq: acqOpen }), zDamage,"),
+  ("zombify: makeZombie, slotOf,", "zombify: makeZombie, slotOf, rageK: CHAPTER ? rageK : null, loot: CHAPTER ? chLoot : null, breakSafe, give: (k) => pendingAward.push(k), inv: () => ({ tools: items.map((x) => x.kind + ':' + x.ammo), owned: Object.keys(owned), lv: Object.assign({}, ilv), cap: chToolCap(), pickups: pickups.map((p) => [p.kind, +p.x.toFixed(1), +p.z.toFixed(1)]), acq: acqOpen }), zDamage,"),
 ]
 
 ITEM_R = [   # c21: 도구·장비 수치를 정한 대로 (c19의 결과물 위에 다시 바꾼다)
