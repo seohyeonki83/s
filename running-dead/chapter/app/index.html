@@ -154,7 +154,7 @@
   .hold::after { content: ''; position: absolute; inset: 10px; border-radius: 50%; background: rgba(20, 20, 26, 0.35); }   /* 가운데는 비쳐 보이게 — 뒤 글이 가려지지 않게 (v215) */
   #smell { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }   /* 후각 표시 (v180) — 게임 화면 위, 다른 UI 아래 */
   #joy {
-    position: absolute; left: 50%; bottom: calc(56px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; width: 124px; height: 124px; margin-left: -62px;
+    position: absolute; left: 50%; bottom: calc(56px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; width: 124px; height: 124px; margin-left: -62px;
     border: 2px solid var(--joy-ring); border-radius: 50%; background: var(--joy-fill); pointer-events: none;
     opacity: 0.55; transition: opacity 0.12s;   /* 화면 아래 가운데 고정 — 안 만질 땐 흐리게 (v96) */
   }
@@ -189,7 +189,7 @@
   #legend .fight { height: 0; border-top: 3px dashed var(--fight); border-radius: 0; }
   #legend .gap { margin-left: 6px; }
   .okBtn {   /* v244: 모든 확인 버튼 = 조이스틱 자리에 조이스틱 크기 동그라미. 떠 있는 동안 조이스틱은 숨긴다 */
-    position: fixed !important; left: 50% !important; top: auto !important; bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    position: fixed !important; left: 50% !important; top: auto !important; bottom: calc(56px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px)) !important;
     width: 124px !important; height: 124px !important; margin: 0 0 0 -62px !important; padding: 0 !important; border-radius: 50% !important; transform: none !important;
     z-index: 45; font: 800 22px/1 var(--font) !important; box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55); border: 0; background: rgba(255, 255, 255, 0.94); color: #15151c; pointer-events: auto; touch-action: manipulation; }
   #stage.okOn #joy { visibility: hidden; }
@@ -218,7 +218,7 @@
   #pauseOv .t { font: 900 40px/1 var(--font); color: #fff; letter-spacing: 4px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8); }
   #cmd {   /* 명령 컨트롤키 — 이동 조이스틱의 오른쪽 위에 붙은 작은 조이스틱. 엄지 하나로 둘 다 닿게 (v100)
               이동 조이스틱 가운데(아래 가운데, 바닥에서 118px)에서 오른쪽 92px · 위 92px = 이 키 가운데 → 두 원 사이 30px */
-    position: absolute; left: calc(50% + 54px); bottom: calc(172px + env(safe-area-inset-bottom, 0px));
+    position: absolute; left: calc(50% + 54px); bottom: calc(172px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px));
     box-sizing: border-box; width: 76px; height: 76px;
     border: 2px solid var(--joy-ring); border-radius: 50%; background: var(--joy-fill);
     opacity: 0.55; transition: opacity 0.12s; touch-action: none; cursor: pointer;
@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c6</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c7</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -290,7 +290,9 @@
   const PITCH = 50;       // 카메라가 내려다보는 각 (유니티 카메라 X = 50)
   const FOV = 40;         // 세로 시야각 (유니티와 같음)
   const DIST = 77.175 * 0.8 * 0.75 * 0.8 * 0.8 * 1.1;   /* v175에 10% 뒤로 (29.6 → 32.6) */ //   /* v171에 20% 더 당김 (37.0 → 29.6) */ //   /* v142에 20% 더 당김 (46.3 → 37.0) */ //   // 카메라 ~ 나 거리 (유닛) — v26의 51.45에서 50% 뒤로, v122에 20% 당김, v140에 25% 더 당김 (약 46.3). 동료가 5명 넘으면 한 명마다 1%씩 뒤로 (armyK)
-  const SCREEN_Y = 0.40;  // 내 자리 = 화면 위에서 40% (가운데보다 살짝 위 — 아래는 엄지 자리)
+  const FULL = window.navigator.standalone === true || window.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches;   // c7: 홈 화면 앱으로 연 전체 화면
+  if (FULL) document.documentElement.style.setProperty('--joyd', '28px');   // 전체 화면에선 조이스틱(과 그 둘레 버튼)을 28px 아래로
+  const SCREEN_Y = FULL ? 0.46 : 0.40;  // 내 자리 = 화면 위에서 40% (c7: 전체 화면에선 46% — 화면이 길어진 만큼 나를 조금 아래로) (가운데보다 살짝 위 — 아래는 엄지 자리)
 
   // 나 (좀비) — 감염된 시민은 동료 좀비가 되어 손 뗀 나처럼 움직인다
   const RADIUS = 0.5;     // 원 반지름 — 나·시민 전부 (지름 1유닛 = 유니티 큐브 한 변)
@@ -4032,7 +4034,7 @@
     const d = ITEM[kind], el = document.createElement('div'), [dx, dy] = slotPos(i);
     el.className = 'item';
     el.style.left = `calc(50% + ${dx}px)`;
-    el.style.bottom = `calc(118px + env(safe-area-inset-bottom, 0px) + ${dy}px)`;
+    el.style.bottom = `calc(118px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px) + ${dy}px)`;
     el.style.setProperty('--c', d.col); el.style.setProperty('--p', 100);
     el.innerHTML = `<div class="core"><span class="ic">${d.icon}</span><span class="n"></span></div>`;
     el.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); if (!paused) useItem(kind); });
