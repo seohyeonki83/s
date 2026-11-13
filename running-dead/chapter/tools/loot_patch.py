@@ -98,8 +98,9 @@ LOOT = r'''  // ── c19: 금고와 아이템 (챕터) ──
     acqOpen = true; paused = true; stopInput();
     const d = ITEM[kind], n = lv(kind), max = n >= chLvMax(kind), ov = document.createElement('div');
     ov.id = 'acq';
-    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name} ${max ? '(이미 최대 강화)' : '강화'}</div><div class="ds">${itemDesc(kind)}<div class="up">` +
-      (max ? `지금 (강화 ${n}단계 · 최대): ${statLine(kind, n)}` : `지금 (강화 ${n}단계): ${statLine(kind, n)}<br>강화 뒤 (${n + 1}단계): ${statLine(kind, n + 1)}`) + `</div></div>`;
+    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name} ${max ? '(이미 최대 강화)' : '강화'}</div>` +
+      `<div style="margin-top:6px;font:900 22px/1 var(--font);color:#ffd34d;letter-spacing:1px;text-shadow:0 2px 6px rgba(0, 0, 0, 0.7)">${chStars(max ? n : n + 1)}</div><div class="ds">${itemDesc(kind)}<div class="up">` +   // c26: 강화 단계는 별로
+      (max ? `지금${starTag(n)} (최대): ${statLine(kind, n)}` : `지금${starTag(n)}: ${statLine(kind, n)}<br>강화 뒤${starTag(n + 1)}: ${statLine(kind, n + 1)}`) + `</div></div>`;
     stage.appendChild(ov);
     tapOk(ov, max ? '확인' : '강화', () => {
       if (ov.dataset.done) return;
@@ -112,10 +113,12 @@ LOOT = r'''  // ── c19: 금고와 아이템 (챕터) ──
       ov.remove(); acqOpen = false; paused = false; last = 0;
     });
   }
-  function chBadgeGrid() {                    // 장비 배지 = 왼쪽 아래에 3칸씩 위로 쌓는다 (최대 9개 — 한 줄로 늘어놓으면 조이스틱과 능력치 버튼에 닿는다)
+  function chBadgeGrid() {                    // c26: 장비 배지 — 왼쪽 아래 두 줄(3개씩)이 차면 오른쪽 아래에 이어서 (유전자 버튼이 있던 자리)
     Object.values(pBadges).forEach((el, i) => {
-      el.style.left = `calc(max(16px, env(safe-area-inset-left, 0px)) + ${(i % 3) * 40}px)`;
-      el.style.bottom = `calc(6px + env(safe-area-inset-bottom, 0px) + ${Math.floor(i / 3) * 48}px)`;
+      const right = i >= 6, j = right ? i - 6 : i, side = right ? 'right' : 'left';
+      el.style.left = 'auto'; el.style.right = 'auto';
+      el.style[side] = `calc(max(16px, env(safe-area-inset-${side}, 0px)) + ${(j % 3) * 40}px)`;
+      el.style.bottom = `calc(6px + env(safe-area-inset-bottom, 0px) + ${Math.floor(j / 3) * 48}px)`;
       el.style.width = el.style.height = '36px';
       const m = el.querySelector('.mag'); if (m) m.style.display = 'none';
     });
@@ -137,7 +140,7 @@ LOOT = r'''  // ── c19: 금고와 아이템 (챕터) ──
     ov.id = 'pick'; ov.style.paddingTop = 'calc(8vh + env(safe-area-inset-top, 0px))';
     ov.innerHTML = `<div class="hd">LEVEL UP!</div><div class="sub">Lv ${level} → Lv ${level + 1} · 강화할 도구·장비 하나를 고르세요</div>` +
       `<div class="cards" style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:6px;width:min(94vw, 372px);box-sizing:border-box;margin-top:12px;padding:0">` +
-      pool.map((k) => { const n = lv(k); return `<div class="card" data-k="${k}" style="width:auto;min-height:0;padding:7px 4px 8px">` + (n ? `<div style="position:absolute;top:3px;right:6px;font:900 11px/1 var(--font);color:#ffd34d">★${n}</div>` : '') +
+      pool.map((k) => { const n = lv(k); return `<div class="card" data-k="${k}" style="width:auto;min-height:0;padding:4px 4px 8px"><div style="height:12px;font:900 11px/12px var(--font);color:#ffd34d;letter-spacing:-0.5px">${chStars(n)}</div>` +   // c26: 카드에도 지금 강화 단계만큼 별
         `<div class="ic" style="font-size:24px">${ITEM[k].icon}</div><div class="nm" style="margin-top:4px;font-size:12.5px">${ITEM[k].name}</div><div class="vl" style="margin-top:4px;font-size:10.5px;white-space:nowrap">${CH_SHORT[k][0]} ${CH_SHORT[k][1](n)} → ${CH_SHORT[k][1](n + 1)}</div></div>`; }).join('') +
       `</div><button class="ok okBtn">확인</button>`;
     stage.appendChild(ov);
@@ -190,7 +193,9 @@ LOOT_R = [
    "const up = { brain: 0, meat: 0, arm: 0, bite: 0, skin: 0, leg: 0, life: 0 };\n"
    "  const ilv = {};                             // c19: 아이템마다 강화 단계 (챕터) — 같은 걸 또 얻으면 그것만 +1. 테스트맵은 지금까지처럼 '장비/도구 강화' 한 값을 다 같이 쓴다\n"
    "  const lv = (k) => CHAPTER ? (ilv[k] || 0) : up.brain;\n"
-   "  const lvText = (kind) => { const n = lv(kind), max = CHAPTER && n >= chLvMax(kind); return `지금 (강화 ${n}단계${max ? ' · 최대' : ''}): ${statLine(kind, n)}` + (max ? '' : `<br>다음 강화: ${statLine(kind, n + 1)}`); };"),
+   "  const chStars = (n) => '★'.repeat(Math.max(0, Math.min(5, n)));   // c26: 강화 단계 = 별 (최대 5개)\n"
+   "  const starTag = (n) => n ? ` <span style=\"color:#ffd34d;letter-spacing:-1px\">${chStars(n)}</span>` : '';\n"
+   "  const lvText = (kind) => { const n = lv(kind); if (!CHAPTER) return `지금 (강화 ${n}단계): ${statLine(kind, n)}<br>다음 강화: ${statLine(kind, n + 1)}`; const max = n >= chLvMax(kind); return `지금${starTag(n)}${max ? ' (최대)' : ''}: ${statLine(kind, n)}` + (max ? '' : `<br>다음 강화${starTag(n + 1)}: ${statLine(kind, n + 1)}`); };"),
   (LV_OLD, '<div class="up">${lvText(kind)}</div>', 2),
   ("owned.absorb ? SNIPER_KD / 4 * (1 + up.brain) : 0;", "owned.absorb ? SNIPER_KD / 4 * (1 + lv('absorb')) : 0;"),
   ("base * vestK(up.brain) : base", "base * vestK(lv('vest')) : base"),
@@ -217,7 +222,7 @@ LOOT_R = [
   ("      let t = el.querySelector(':scope > .upn');\n      if (!n) { if (t) t.remove(); continue; }",
    "      if (CHAPTER) n = lv(kd[els.indexOf(el)]);   // c19: 아이템마다 자기 강화 단계\n      let t = el.querySelector(':scope > .upn');\n      if (!n) { if (t) t.remove(); continue; }"),
   ("const st = Array.from({ length: Math.ceil(n / 3) }, (_, i) => '★'.repeat(Math.min(3, n - i * 3))).reverse().join('<br>');",
-   "const st = CHAPTER ? '★' + n : Array.from({ length: Math.ceil(n / 3) }, (_, i) => '★'.repeat(Math.min(3, n - i * 3))).reverse().join('<br>');   /* c19: 배지가 촘촘해서 별 하나 + 숫자 */"),
+   "if (CHAPTER) t.style.fontSize = el.classList.contains('pbadge') ? '9px' : '';   /* c26: 배지는 작아서 별도 작게 (5개가 한 줄에 들어가게) */ const st = CHAPTER ? chStars(n) : Array.from({ length: Math.ceil(n / 3) }, (_, i) => '★'.repeat(Math.min(3, n - i * 3))).reverse().join('<br>');   /* c26: 강화 단계만큼 별 (최대 5개, 한 줄) */"),
   # 레벨업 카드에서 '장비/도구 강화'는 뺀다 (강화는 같은 아이템을 또 얻을 때)
   ("const pool = Object.keys(ABIL).map((k) => [k, k === 'brain' ? 0.25 : 1]), keys = [];",
    "const pool = Object.keys(ABIL).filter((k) => !(CHAPTER && k === 'brain')).map((k) => [k, k === 'brain' ? 0.25 : 1]), keys = [];   /* c19: 챕터는 '장비/도구 강화' 카드 없음 */"),
@@ -340,4 +345,8 @@ LVUP_R = [   # c25: 레벨업 화면에 능력치 대신 가진 도구·장비
   ("    else if (e.t === 'lv') showLevelUp();", "    else if (e.t === 'lv') { if (CHAPTER) chLevelUp(); else showLevelUp(); }   // c25"),
   ("    while (lvQueued < pendingLv) { fxQueue.push({ t: 'lv' }); lvQueued++; }", "    while (lvQueued < pendingLv && (!CHAPTER || chUpPool().length)) { fxQueue.push({ t: 'lv' }); lvQueued++; }   // c25: 강화할 아이템이 있을 때만 줄을 세운다 (없으면 모아 둔다)"),
   ("zombify: makeZombie, slotOf,", "zombify: makeZombie, slotOf, xp: (n) => { for (let i = 0; i < n; i++) gainXp(); return { level, xp, pendingLv }; }, lvInfo: () => ({ level, xp, pendingLv, need: needXp(level + pendingLv) }),"),
+]
+
+STAR_R = [   # c26: 유전자(능력치) 버튼은 챕터에서 안 쓴다
+  ("    statBtn.classList.toggle('on', Object.values(up).some((v) => v > 0));", "    statBtn.classList.toggle('on', !CHAPTER && Object.values(up).some((v) => v > 0));   // c26: 챕터는 능력치 카드가 없어서 유전자 버튼도 없다"),
 ]
