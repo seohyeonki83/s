@@ -414,3 +414,10 @@ SLOT_R = [
   ("      if ((it.t += dt) >= itemReload(it.kind)) { it.t = 0; it.ammo++; }\n    }\n    refreshItems();", "      if ((it.t += dt) >= itemReload(it.kind)) { it.t = 0; it.ammo++; }\n    }\n    refreshItems();\n    if (CHAPTER) chEmptySlots();   // c34"),
   ("color:${has ? '#ffd34d' : '#7dffa0'}\">${has ? chStars(n) : 'NEW'}", "color:#ffd34d\">${has ? chStars(n + 1) : 'NEW'}"),   # c34: 강화 카드 = 강화 뒤 별 수 (노랑), NEW도 노랑
 ]
+
+AWK_TXT_R = [   # c35: 각성 주사 설명 글
+  ("    awaken: ['모아 둔 시간만큼 내가 변이 좀비로 변합니다. 변이가 끝나면 다시 시간이 모입니다.', '강화 시 모을 수 있는 시간이 늘어납니다.'],",
+   "    awaken: ['충전한 시간만큼 변이합니다.', '강화 시 최대 사용 시간과 게이지 충전 속도가 늘어납니다.'],"),
+  ("    awaken: (n) => `최대 ${10 + 3 * n}초 변이 · 변이가 끝나고 가득 모이는 데 40초`,",
+   "    awaken: (n) => `최대 사용 시간 ${10 + 3 * n}초 · 게이지 충전 속도 ${n ? '+' + 30 * n + '%' : '기본'}`,"),
+]
