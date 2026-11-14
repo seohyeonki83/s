@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c64</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c65</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -573,9 +573,20 @@
   const clockFillGeos = Array.from({ length: CLOCK_N + 1 }, (_, k) => new THREE.CircleGeometry(CLOCK_R, Math.max(1, k), Math.PI / 2 - (k / CLOCK_N) * Math.PI * 2, (k / CLOCK_N) * Math.PI * 2));
 
   // 체력바 = 감염 게이지와 같은 모양, 체력이 깎여 있는 동안 머리 위에 뜬다 — 꽉 차 있으면 안 보인다, 0이면 빈 바 (시민 빨강, 좀비 초록. 나도 같다)
-  const hpFoeMat = new THREE.MeshBasicMaterial({ color: 0xff4d4d, transparent: true, depthTest: false, depthWrite: false });
+  const hpFoeMat = new THREE.MeshBasicMaterial({ color: CHAPTER ? 0x43d17a : 0xff4d4d,   /* c65: 챕터는 적도 초록 */ transparent: true, depthTest: false, depthWrite: false });
   const hpOurMat = new THREE.MeshBasicMaterial({ color: 0x43d17a, transparent: true, depthTest: false, depthWrite: false });
-  const barW = (b, mine) => Math.max(0.001, (mine ? 1.2 * 1.2 * 1.2 * 2 / 3 * 2 / 3 / MY_HP :   /* v491: 보이는 길이만 1/3 더 줄임 (v490에 이어) */ 0.5 / POLICE_HP) * (b.maxHp || 0));   // v440: 체력바 가로 = 최대 체력에 비례 — 남들은 경찰 체력(168)일 때 예전 길이(50%), 나는 처음 최대 체력(약 190)일 때 예전 길이(120%) · 강화·스팀팩·변이로 늘면 같이 늘어난다
+  const barW = (b, mine) => Math.max(0.001, (mine ? 1.2 * 1.2 * 1.2 * 2 / 3 * 2 / 3 / MY_HP :   /* v491: 보이는 길이만 1/3 더 줄임 (v490에 이어) */ 0.5 / POLICE_HP) * (CHAPTER && !mine ? Math.min(b.maxHp || 0, CH_HP_CAP) : (b.maxHp || 0)));   /* c65: 챕터 — 덩치 좀비 체력보다 길어지지 않는다 (넘는 만큼은 겹으로) */
+  const CH_HP_CAP = ALLY_HP * 3;   // c65: 한 겹 = 덩치 좀비(동료) 기본 최대 체력 (약 284)
+  const chHpMat2 = new THREE.MeshBasicMaterial({ color: 0x3d8bff, transparent: true, depthTest: false, depthWrite: false }), chHpMat3 = new THREE.MeshBasicMaterial({ color: 0xff9a1f, transparent: true, depthTest: false, depthWrite: false });
+  function chHpFill(b) {                       // c65: 한 겹을 넘는 체력은 초록 위를 파랑으로, 두 겹을 넘으면 주황으로 덮는다
+    const C = CH_HP_CAP, M = b.maxHp || 1, h = Math.max(0, b.hpDisp);
+    if (M <= C + 1e-6) { b.hpFill.scale.x = Math.max(0.001, h / M); if (b.hpFill2) b.hpFill2.visible = b.hpFill3.visible = false; return; }
+    if (!b.hpFill2) for (const [k, mat, n] of [['hpFill2', chHpMat2, 1], ['hpFill3', chHpMat3, 2]]) { const m = new THREE.Mesh(gaugeFillGeo, mat); m.position.copy(b.hpFill.position); m.position.z += 0.001 * n; m.renderOrder = b.hpFill.renderOrder + n; b.hpBar.add(m); b[k] = m; }
+    const f2 = Math.min(1, Math.max(0, h - C) / C), f3 = Math.min(1, Math.max(0, h - 2 * C) / C);
+    b.hpFill.scale.x = Math.max(0.001, Math.min(h, C) / C);
+    b.hpFill2.visible = f2 > 0; b.hpFill2.scale.x = Math.max(0.001, f2);
+    b.hpFill3.visible = f3 > 0; b.hpFill3.scale.x = Math.max(0.001, f3);
+  }   // v440: 체력바 가로 = 최대 체력에 비례 — 남들은 경찰 체력(168)일 때 예전 길이(50%), 나는 처음 최대 체력(약 190)일 때 예전 길이(120%) · 강화·스팀팩·변이로 늘면 같이 늘어난다
   function addHpBar(b, mat) {
     b.hpBar = new THREE.Group();
     b.hpBar.quaternion.copy(camera.quaternion);
@@ -3600,7 +3611,7 @@
         b.hpBar.visible = barUp && !hide;
         if (barUp) {
           b.hpBar.position.copy(b.foot).addScaledVector(UP, (b.halfH || RADIUS) * 2 + 0.22 + (b === me ? GAUGE_H : 0));   // 내 바는 두 배 두꺼워서 아래 끝이 같게 조금 올린다
-          b.hpFill.scale.x = Math.max(0.001, b.hpDisp / b.maxHp);
+          if (CHAPTER && b !== me) chHpFill(b); else b.hpFill.scale.x = Math.max(0.001, b.hpDisp / b.maxHp);   // c65
           b.hpBar.scale.x = barW(b, b === me);   // v440: 가로 = 최대 체력에 비례 (좀비가 되거나 강화·스팀팩·변이로 바뀌면 바로)
         }
       }
@@ -4893,7 +4904,7 @@
       o.hpBar.visible = !o.dead && o.hp < o.maxHp && !(o.L && o.L.out && !o.L.out.open);   // c53: 방문 체력바는 건물 지붕이 열렸을 때만
       if (!o.hpBar.visible) continue;
       o.hpDisp += (o.hp - o.hpDisp) * Math.min(1, dt * 12);
-      o.hpFill.scale.x = Math.max(0.001, o.hpDisp / o.maxHp);
+      if (CHAPTER) chHpFill(o); else o.hpFill.scale.x = Math.max(0.001, o.hpDisp / o.maxHp);   // c65
       o.hpBar.scale.x = barW(o, false);   // v440: 문·경찰차도 최대 체력에 비례
       o.hpBar.position.set(o.foot.x, 0, o.foot.z).addScaledVector(UP, 1.6);
     }
@@ -5918,7 +5929,7 @@
   //   단계가 오를 때마다 바리케이트와 수비대가 는다 (수와 놓이는 모양은 건널목마다 조금씩 다르다). 줄이 꽉 차면 안쪽에 한 겹 더 — 앞줄의 가장 큰 틈 뒤부터 막는다.
   //   수비대는 자리(사수지역)에 묶여 있다: 자리 둘레(근접 거리)에 서 있고, 지배 거리 밖으로 벗어나면 싸우다가도 돌아온다. 앞에서부터 경찰 → 군인 → 저격수.
   //   수비대는 먼저 다가가서 쏘지 않는다 (자리를 지킨다). 저격수는 맨 앞 바리케이트를 때리는 좀비가 보이는 거리에 선다. 내가 다른 구역으로 넘어가면 수비대는 그쪽 바리케이트 뒤로 옮겨 서고 순서도 뒤집힌다.
-  const CH_BARR_K = 3, CH_BARR_HP = 4, CH_BARR_T = 1.0, CH_BARR_W = CH_BARR_T / CAR_W;   // 무게 = 경찰차의 3배 · 체력 = 경찰차의 4배 · 길이 = 경찰차 길이. c61: 두께 1칸 — 근접 공격 거리(몸 가운데끼리 1.7칸)에서 몸 반지름 둘(0.8)을 빼면 0.9칸이라, 그보다 두꺼워야 건너편 사람을 못 때린다
+  const CH_BARR_K = 3, CH_BARR_HP = 2,   /* c65: 경찰차의 4배 → 2배 */ CH_BARR_T = 1.0, CH_BARR_W = CH_BARR_T / CAR_W;   // 무게 = 경찰차의 3배 · 체력 = 경찰차의 4배 · 길이 = 경찰차 길이. c61: 두께 1칸 — 근접 공격 거리(몸 가운데끼리 1.7칸)에서 몸 반지름 둘(0.8)을 빼면 0.9칸이라, 그보다 두꺼워야 건너편 사람을 못 때린다
   const CH_HOLD_NEAR = 1.7, CH_HOLD_DOM = 3.2;
   const CH_BAR_ROW0 = 4.75, CH_BAR_ROWD = 1.25, CH_BAR_ROWS = 2, CH_BAR_HALF = 4;   // c61: 첫 줄 = 건널목 한가운데에서 4.75칸 (앞면이 다리 끝에서 1.25칸 안쪽 — c60은 0.77칸) · 줄 간격 · 두 겹까지 (두꺼워져서) · 건널목 반폭
   const chBarrTex = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 128; const g = c.getContext('2d');   // c61: 두꺼운 블록 — 회색 몸통에 노랑·검정 빗금 띠
