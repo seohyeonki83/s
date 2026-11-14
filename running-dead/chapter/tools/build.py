@@ -136,15 +136,18 @@ ICONS = r'''
     // c48: 건물 안 — 랜드마크·창고는 건물마다 정한 인원, 집은 넓이대로 하양 (빈집 3분의 1)
     const hs = buildings.filter((B) => B.type === 'house').sort(() => Math.random() - 0.5), empty = new Set(hs.slice(0, Math.round(hs.length / 3)));
     const inPut = (B, type) => { let g = pickGoal(B); for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.0); t++) g = pickGoal(B); const c = chPut(g.x, g.y, B, type, B); if (type === 'police' || type === 'soldier') c.post = B; return c; };
-    const R2 = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+    const R2 = (a, b) => a + Math.floor(Math.random() * (b - a + 1)), houseSlots = [];
     for (const B of buildings) {
       if (B.type === 'hill') continue;
       const T = CH_INSIDE[B.type];
-      if (T) { for (const [type, lo, hi] of T) for (let i = 0, k = R2(lo, hi); i < k; i++) inPut(B, type); continue; }
+      if (T) { for (const [type, lo, hi] of T) { let k = R2(lo, hi); if (B.type !== 'store' && (type === '' || type === 'guard')) k = Math.round(k * 2 / 3);   /* c49: 랜드마크 하양·노랑 3분의 1 줄임 */ for (let i = 0; i < k; i++) inPut(B, type); } continue; }
       if (B.type !== 'house' || empty.has(B)) continue;
       const base = Math.max(1, Math.round((B.x1 - B.x0) * (B.z1 - B.z0) / CH_ROOM)), k = Math.max(1, base + Math.floor(Math.random() * 3) - 1);
-      for (let i = 0; i < k; i++) inPut(B, '');
+      for (let i = 0; i < k; i++) houseSlots.push(B);
     }
+    houseSlots.sort(() => Math.random() - 0.5);
+    const houseOut = Math.round(houseSlots.length / 3);   // c49: 집 사람 3분의 1은 집 밖(길거리)으로
+    houseSlots.slice(houseOut).forEach((B) => inPut(B, ''));
     for (const B of buildings) if (B.type === 'police') for (let i = 0; i < 3; i++) {   // 경찰서 밖 배회 경찰 3명 (죽어도 채워지지 않는다)
       const ring = { x0: B.x0 - 5, z0: B.z0 - 5, x1: B.x1 + 5, z1: B.z1 + 5 }; let g = pickGoal(ring); for (let t = 0; t < 40 && (spaceOf(g.x, g.y) || chNearRiver(g.x, g.y, 1)); t++) g = pickGoal(ring);
       chPut(g.x, g.y, ring, 'police');
@@ -152,7 +155,7 @@ ICONS = r'''
     const ys = [];
     for (let k = 0; k < CH_YELLOW_OUT; k++) { const p = chOutSpot(ys, 1.2, 14); if (!p) continue; ys.push(p); chPut(p[0], p[1], square(p[0], p[1]), 'guard'); }
     let w = 0;
-    for (let t = 0; t < 40000 && w < CH_WHITE_OUT; t++) {   // 길거리 하양
+    for (let t = 0; t < 40000 && w < CH_WHITE_OUT + houseOut; t++) {   // 길거리 하양
       const x = rand(MM.x0 + 3, MM.x1 - 3), z = rand(MM.z0 + 3, MM.z1 - 3);
       if (spaceOf(x, z) || chNearRiver(x, z, AREA / 2 + 1) || !freeSpot(x, z, null) || Math.hypot(x - me.foot.x, z - me.foot.z) < 14) continue;
       if (bodies.some((b) => Math.hypot(b.foot.x - x, b.foot.z - z) < 1.2)) continue;
