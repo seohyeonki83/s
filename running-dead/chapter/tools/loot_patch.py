@@ -473,3 +473,54 @@ HP_R = [   # c42: 챕터는 무적이 아니다 — 체력은 테스트맵(본�
 DMG_R = [   # c45: 주황 공격력 1.5배 · 빨강(자경단) 2배 (전에는 둘 다 같았다)
   ("landHit(b, b.lungeVictim, isZombie(b) ? zDamage(b) : DAMAGE)", "landHit(b, b.lungeVictim, isZombie(b) ? zDamage(b) : DAMAGE * (CHAPTER && b.attacker ? (b.vig ? 2 : 1.5) : 1))"),
 ]
+
+DISP_FN = r"""  // ── c46: 경찰 출동 (챕터) ──
+  //   ① 랜드마크 사수: 랜드마크 문 하나라도 체력이 3분의 1 깎이면 (건물당 한 번) 그 구역 바깥 라인 중 안 보이는 곳에서 경찰차 1대 (경찰 2~3명)
+  //      → 그 문 앞에 서서 내리고, 그 건물 둘레를 지킨다 (멀리 끌려가도 적이 없으면 돌아온다)
+  //   ② 경보 출동: 경보 1단계가 되는 순간 한 번, 그 뒤 40초마다 (단계마다 3초씩 짧아진다). 걸어서 / 경찰차 50:50.
+  //      내가 있는 구역의 바깥 라인 중 안 보이는 곳에서 나와 마지막 사건 자리를 쫓는다 (테스트맵과 같다)
+  const CH_LM = new Set(['bank', 'police', 'fire', 'mart', 'hospital', 'army', 'library', 'conv', 'gym']);
+  const CH_DISP_N = [[1, 1], [1, 2], [2, 3], [3, 3], [3, 4], [4, 4], [4, 5], [5, 5]];   // 경보 단계별 출동 인원 (최소, 최대)
+  let chDispT = -1, chDispStage = 0;
+  function chDispReset() { chDispT = -1; chDispStage = 0; for (const B of buildings) B.called = false; }
+  function chZoneAt(x, z) { const Z = CH_MAP.zones; for (let i = 0; i < Z.length; i++) if (x >= Z[i][0] - 2 && x <= Z[i][2] + 2 && z >= Z[i][1] - 2 && z <= Z[i][3] + 2) return i; return chZoneOf(x, z); }
+  function chEdgeSpot(zi) {                  // 그 구역 바깥 라인(가장자리 띠) 위 빈자리 — 내 화면과 좀비 시야 밖
+    const [x0, z0, x1, z1] = CH_MAP.zones[zi], W = x1 - x0 - 4, H = z1 - z0 - 4;
+    const edge = () => { const t = Math.random() * 2 * (W + H), j = rand(0, 3);
+      if (t < W) return [x0 + 2 + t, z0 + 2 + j]; if (t < W + H) return [x1 - 2 - j, z0 + 2 + (t - W)]; if (t < 2 * W + H) return [x1 - 2 - (t - W - H), z1 - 2 - j]; return [x0 + 2 + j, z1 - 2 - (t - 2 * W - H)]; };
+    const ok = (x, z, strict) => !spaceOf(x, z) && !chNearRiver(x, z, 1.5) && freeSpot(x, z, null) && (!strict || (!onView(x, z, 3) && !zombies.some((zb) => Math.hypot(zb.foot.x - x, zb.foot.z - z) < zb.sense + 2)));
+    for (let k = 0; k < 600; k++) { const [x, z] = edge(); if (ok(x, z, true)) return { x, z }; }
+    for (let k = 0; k < 300; k++) { const [x, z] = edge(); if (ok(x, z, false)) return { x, z }; }
+    const [x, z] = edge(); return { x, z };
+  }
+  function chDispatchTick(dt) {
+    for (const o of objs) {                   // ① 랜드마크 사수
+      if (o.type !== 'door' || !CH_LM.has(o.B.type) || o.B.called || !(o.dead || o.hp <= o.maxHp * 2 / 3)) continue;
+      const B = o.B, L = o.L; B.called = true;
+      const tx = L.cx + L.nx * 2.6, tz = L.cz + L.nz * 2.6, p = chEdgeSpot(B.zone >= 0 ? B.zone : chZoneAt(tx, tz));
+      addCar(p.x, p.z, Math.atan2(tz - p.z, tx - p.x), new THREE.Vector2(tx, tz), 2 + Math.floor(Math.random() * 2));
+      cars[cars.length - 1].guard = B;
+    }
+    if (!stars || !isZombie(me)) return;      // ② 경보 출동
+    if (stars !== chDispStage) { if (!chDispStage) chDispT = 0; chDispStage = stars; }
+    if (chDispT > 0) { chDispT -= dt; return; }
+    chDispT = 40 - 3 * (stars - 1);
+    const site = lastIncident ? lastIncident.clone() : new THREE.Vector2(me.foot.x, me.foot.z);
+    const [lo, hi] = CH_DISP_N[Math.min(CH_DISP_N.length, stars) - 1], n = lo + Math.floor(Math.random() * (hi - lo + 1));
+    const p = chEdgeSpot(chZoneAt(me.foot.x, me.foot.z));
+    if (Math.random() < 0.5) addCar(p.x, p.z, Math.atan2(site.y - p.z, site.x - p.x), site, n);
+    else for (let i = 0; i < n; i++) {
+      let x = p.x + (i - (n - 1) / 2) * 0.9, z = p.z; if (!freeSpot(x, z, null) || spaceOf(x, z)) { x = p.x; z = p.z; }
+      addCitizen(x, z, null, 'police').calls.push(site.clone());
+    }
+  }
+"""
+DISP_R = [
+  ("  function showDud() {", DISP_FN + "  function showDud() {"),
+  ("      o.off = false; if (o.fill) o.fill.visible = false;", "      if (CHAPTER && CH_LM.has(B.type)) o.hp = o.maxHp = o.maxHp * 1.5;   // c46: 랜드마크 문 체력 1.5배\n      o.off = false; if (o.fill) o.fill.visible = false;"),
+  ("          if (k >= 0 && d < 2.5) car.calls.splice(k, 1);", "          if (k >= 0 && d < 2.5 && car.guard) { car.state = 'brake'; car.brakeT = 0; }   // c46: 사수 경찰차는 그 문 앞에 선다\n          else if (k >= 0 && d < 2.5) car.calls.splice(k, 1);"),
+  ("      for (const s of car.calls) c.calls.push(s.clone());", "      if (car.guard) { const G = car.guard, ring = { x0: G.x0 - 4, z0: G.z0 - 4, x1: G.x1 + 4, z1: G.z1 + 4 }; c.area = ring; c.post = ring; c.guardOf = G; }   // c46: 그 건물 둘레를 지킨다\n      else for (const s of car.calls) c.calls.push(s.clone());"),
+  ("    dispatchTick(dt);", "    dispatchTick(dt);\n    if (CHAPTER) chDispatchTick(dt);   // c46"),
+  ("chPopulate(); chSafes(); return; }", "chPopulate(); chSafes(); chDispReset(); return; }"),
+  ("zombify: makeZombie, slotOf,", "zombify: makeZombie, slotOf, cars: () => cars, objsL: () => objs, lastInc: () => lastIncident, stars: () => stars, setStars: (n, x, z) => { stars = n; deaths = Math.max(deaths, STAR_AT[n - 1]); lastIncident = new THREE.Vector2(x, z); },"),
+]
