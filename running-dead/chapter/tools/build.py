@@ -532,7 +532,7 @@ R = [
   ("  const MM_S = Math.min(128 * 2 / 3 / (MM.x1 - MM.x0), 136 * 2 / 3 / (MM.z1 - MM.z0));", "  const MM_S = Math.min((CHAPTER ? 88 : 128 * 2 / 3) / (MM.x1 - MM.x0), (CHAPTER ? 107 : 136 * 2 / 3) / (MM.z1 - MM.z0));   /* c6: 미니맵을 3분의 1 줄여 테스트맵 크기쯤으로 (132×160 → 88×107) */"),
   ("  function updateMinimap(dt) {                // 0.1초마다", MINIMAP.strip('\n') + "\n  function updateMinimap(dt) {                // 0.1초마다"),
   ("    mmCtx.clearRect(0, 0, W, H);", "    if (CHAPTER) { chMinimap(eyes, W, H, X, Z, sx, sz); return; }\n    mmCtx.clearRect(0, 0, W, H);"),
-  ("    me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;", "    if (CHAPTER) { me.foot.set(CH_MAP.start[0], 0, CH_MAP.start[1]); me.space = null; me.hp = me.maxHp; chPopulate(); return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작 · c11: 인간 200명\n    me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;"),
+  ("    me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;", "    if (CHAPTER) { me.foot.set(CH_MAP.start[0], 0, CH_MAP.start[1]); me.space = null; chPopulate();   /* c42: 시작 체력은 테스트맵과 같다 (최대의 20%) */ return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작 · c11: 인간 200명\n    me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;"),
   ("      if (B.qm) B.qm.visible = !B.open && !!B.safe && !B.safe.dead && !B.safe.hidden;", "      if (B.sign) { B.sign.visible = !B.open; const tx = CH_TEX[B.done ? 'x' : B.type]; if (B.sign.material.map !== tx) { B.sign.material.map = tx; B.sign.material.needsUpdate = true; } }   // c1: 지붕 아이콘 — 들어가면 사라지고, 잠식하면 X\n      if (B.qm) B.qm.visible = !B.open && !!B.safe && !B.safe.dead && !B.safe.hidden;"),
   ("    for (const B of buildings) if (!B.station) B.found = false;", "    for (const B of buildings) if (!B.station) { B.found = false; B.done = false; }\n    if (CHAPTER) for (const P of CH_MAP.passPts) P.found = false;"),
   ("  const starsEl = document.getElementById('stars');", "  const starsEl = document.getElementById('stars');\n  if (CHAPTER) { const v = document.getElementById('ver'); v.style.setProperty('display', 'block', 'important'); v.style.top = 'auto'; v.style.bottom = 'calc(2px + env(safe-area-inset-bottom, 0px))'; v.style.left = '50%'; v.style.transform = 'translateX(-50%)';   /* c40: 레벨·경보는 테스트맵처럼 보이고, 버전 글자는 아래 가운데로 */ v.style.fontSize = '10px'; v.style.opacity = '0.55'; }   // c1: 맵만 보는 판 — 경보·레벨 표시는 가린다. c10: 왼쪽 위에 버전 글자 (새 버전이 떴는지 보려고)"),
@@ -541,8 +541,8 @@ R = [
   ("|| cand[Math.floor(Math.random() * cand.length)];   /* v431", "|| cand[B.sideK !== undefined ? B.sideK % cand.length : Math.floor(Math.random() * cand.length)];   /* c1: 챕터 맵은 쪽문 자리도 고정 */   /* v431"),
   ("bodies, spawn, fleeDir, step: stepWorld };", "bodies, spawn, fleeDir, step: stepWorld, buildings, explored, ch: CHAPTER ? CH_MAP : null, zombify: makeZombie, slotOf, route: CHAPTER ? chRoute : null, cf: () => ({ D: cfD, W: cfW, H: cfH, block: cfBlock, ready: cfReady, runs: cfRuns, dist: cfDist }), get armyK() { return armyK; } };"),
 ]
-from loot_patch import LOOT_R, ITEM_R, FX_R, LVUP_R, STAR_R, XP_R, AWAKE_R, SLOT_R, AWK_TXT_R, AWK_UI_R, AWK_RING_R, RANK_R, VIG_R, STICK_R, COPKB_R   # c19: 금고와 아이템 · c21: 아이템 수치 · c24: 파편 · c25: 레벨업 · c26: 별 · c28: 경험치 · c29: 각성 주사
-R += LOOT_R + ITEM_R + FX_R + LVUP_R + STAR_R + XP_R + AWAKE_R + SLOT_R + AWK_TXT_R + AWK_UI_R + AWK_RING_R + RANK_R + VIG_R + STICK_R + COPKB_R
+from loot_patch import LOOT_R, ITEM_R, FX_R, LVUP_R, STAR_R, XP_R, AWAKE_R, SLOT_R, AWK_TXT_R, AWK_UI_R, AWK_RING_R, RANK_R, VIG_R, STICK_R, COPKB_R, HP_R   # c19: 금고와 아이템 · c21: 아이템 수치 · c24: 파편 · c25: 레벨업 · c26: 별 · c28: 경험치 · c29: 각성 주사
+R += LOOT_R + ITEM_R + FX_R + LVUP_R + STAR_R + XP_R + AWAKE_R + SLOT_R + AWK_TXT_R + AWK_UI_R + AWK_RING_R + RANK_R + VIG_R + STICK_R + COPKB_R + HP_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

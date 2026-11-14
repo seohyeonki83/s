@@ -284,7 +284,7 @@ LOOT_R = [
    "if (it.passive) { owned[kind] = true; if (kind === 'vest') hasVest = true; if (kind === 'shoes' && isZombie(me)) me.speed = meSpeed(); refreshBadges(); } else { items.push(it); addActiveBadge(kind); }\n        if (CHAPTER) chItemChanged(kind);"),
   ("    for (const k of Object.keys(owned)) delete owned[k];", "    for (const k of Object.keys(owned)) delete owned[k];\n    for (const k of Object.keys(ilv)) delete ilv[k];   // c19"),
   ("  function showDud() {", LOOT + "  function showDud() {"),
-  ("chPopulate(); return; }", "chPopulate(); chSafes(); return; }"),
+  ("chPopulate();   /* c42: 시작 체력은 테스트맵과 같다 (최대의 20%) */ return; }", "chPopulate(); chSafes(); return; }"),
   ("zombify: makeZombie, slotOf,", "zombify: makeZombie, slotOf, rageK: CHAPTER ? rageK : null, loot: CHAPTER ? chLoot : null, breakSafe, give: (k) => pendingAward.push(k), inv: () => ({ tools: items.map((x) => x.kind + ':' + x.ammo), owned: Object.keys(owned), lv: Object.assign({}, ilv), cap: chToolCap(), pickups: pickups.map((p) => [p.kind, +p.x.toFixed(1), +p.z.toFixed(1)]), acq: acqOpen }), zDamage,"),
 ]
 
@@ -464,4 +464,8 @@ COPKB_R = [   # c41: 경찰 권총 넉백 2 (= 저격수 넉백의 12분의 2, �
    "      if (z.mode === 'pounce') stopPounce(z);\n"
    "      giveKnock(z, z.foot.x - c.foot.x, z.foot.z - c.foot.z, V, T);\n"
    "    }"),
+]
+
+HP_R = [   # c42: 챕터는 무적이 아니다 — 체력은 테스트맵(본판)과 같다
+  ("    if (TEST_MAP && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적\n", "    if (TEST_MAP && !CHAPTER && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적 (c42: 챕터는 빼고)\n"),
 ]

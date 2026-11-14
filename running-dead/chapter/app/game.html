@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c41</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c42</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2556,7 +2556,7 @@
 
   const ARMOR_KB = 2.3, ARMOR_KT = 0.4;       // v295: 덩치에 맞으면 처음 이 속도(칸/초)로 밀려나 이 시간 동안 점점 느려진다 — v300: 거리 2배, v301: 0.32 → 0.46칸 (1.5배, 2 → 2.3칸/초 · 0.25 → 0.4초)
   function landHit(a, v, dmg = DAMAGE) {
-    if (TEST_MAP && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적
+    if (TEST_MAP && !CHAPTER && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적 (c42: 챕터는 빼고)
     if (CHAPTER && a && a.vig && isZombie(v) && v.mode !== 'bite' && v.mut !== 'armor' && !(v === me && absorbAmt() >= SNIPER_KD / 12 - 0.001)) {   // c39: 자경단 몽둥이 — 밀림 1
       const T = ARMOR_KT / 12, D = SNIPER_KD / 12, V = D * 4 / (1 - Math.exp(-4 * T));
       if (v.mode === 'pounce') stopPounce(v);
@@ -3943,7 +3943,7 @@
   //   경찰서·경찰은 START_COP_CLEAR(15칸) 안에 없어야 하고, 밖에 있는 시민(일반·수비형·공격형)은 내 인지거리 밖이면 된다
   function testPopulate() {                   // v396: 시험 맵 — 저격수 2명을 세로 가운데, 가로로 고르게 / 나는 아래 가운데
     const W = MM.x1 - MM.x0, cz = (MM.z0 + MM.z1) / 2;
-    if (CHAPTER) { me.foot.set(CH_MAP.start[0], 0, CH_MAP.start[1]); me.space = null; me.hp = me.maxHp; chPopulate(); chSafes(); return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작 · c11: 인간 200명
+    if (CHAPTER) { me.foot.set(CH_MAP.start[0], 0, CH_MAP.start[1]); me.space = null; chPopulate(); chSafes(); return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작 · c11: 인간 200명
     me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;
     if (CAR_TEST) { carTestSetup(); return; }
     teamQueue.push(1);                        // v410: 시험 맵 — 시작하자마자 맵 가장자리에서 1팀 (군인 2 + 저격수 1)
