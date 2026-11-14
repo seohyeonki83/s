@@ -430,3 +430,9 @@ AWK_UI_R = [   # c36: 각성 주사 버튼 — 게이지 한 바퀴 = 5강 최�
 AWK_RING_R = [   # c37: 각성 주사 둘레 — 반투명 빈칸까지 최대 사용 시간만큼만 (한 바퀴 = 25초)
   ("it.el.style.setProperty('--p', Math.round(it.acc / 25 * 100));", "it.el.style.setProperty('--p', Math.round(it.acc / 25 * 100)); { const m = chAccMax() / 25 * 100, bg = `conic-gradient(var(--c) calc(var(--p) * 1%), rgba(255, 255, 255, 0.16) 0 ${m}%, transparent 0)`; if (it.el.style.background !== bg) it.el.style.background = bg; }"),
 ]
+
+RANK_R = [   # c38: 군집 단계 10개 (챕터)
+  ("  let rankNext = 0, rankAnim = false;", """  if (CHAPTER) RANKS.splice(0, RANKS.length, ...[[10, '동료들이 따르기 시작합니다.'], [30, '패거리를 이루었습니다.'], [50, '떼거리를 이루었습니다.'], [75, '개떼의 수장이 되었습니다.'], [100, '파괴의 무리가 당신을 따릅니다.'],
+    [130, '죽음의 물결이 산 자들을 덮칩니다.'], [160, '압도적인 힘으로.'], [200, '너희의 신은 어디 있느냐?'], [250, '무저갱의 사자가 왔노라.'], [300, '나는 군단이다.']].map(([n, d]) => ({ n, t: n + '마리 돌파', d })));   // c38
+  let rankNext = 0, rankAnim = false;"""),
+]
