@@ -573,6 +573,8 @@ R = [
 ]
 from loot_patch import LOOT_R, ITEM_R, FX_R, LVUP_R, STAR_R, XP_R, AWAKE_R, SLOT_R, AWK_TXT_R, AWK_UI_R, AWK_RING_R, RANK_R, VIG_R, STICK_R, COPKB_R, HP_R, DMG_R, DISP_R, CAR_R, TEAM_R   # c19: 금고와 아이템 · c21: 아이템 수치 · c24: 파편 · c25: 레벨업 · c26: 별 · c28: 경험치 · c29: 각성 주사
 R += LOOT_R + ITEM_R + FX_R + LVUP_R + STAR_R + XP_R + AWAKE_R + SLOT_R + AWK_TXT_R + AWK_UI_R + AWK_RING_R + RANK_R + VIG_R + STICK_R + COPKB_R + HP_R + DMG_R + DISP_R + CAR_R + TEAM_R
+from room_patch import ROOM_R   # c53: 건물 안 방 · 철창 · 랜덤 시작
+R += ROOM_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

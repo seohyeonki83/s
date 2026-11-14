@@ -281,7 +281,96 @@ for i, a in enumerate(bld):                              # 다시 검사
     for b in bld[i + 1:]:
         gx = abs(a['x'] - b['x']) - (a['w'] + b['w']) / 2; gz = abs(a['z'] - b['z']) - (a['d'] + b['d']) / 2
         assert max(gx, gz) >= MIN_GAP - 0.02, (a, b)
+# c53: 건물 안 방 — 마트(창고 방 1 + 바깥으로 난 작은 쪽문) · 병원(방 2, 붙여서) · 군부대(작은 방 1 + 쪽문) · 경찰서(철창 1, 벽 너머가 보인다)
+#   방은 건물 구석(병원은 문 없는 벽 한가운데)에 붙인다. 건물 정문·쪽문과 그 안쪽 길(2.4칸)은 비운다.
+#   방문 = 방 안쪽 벽 한가운데 (폭 2.0) · 바깥 쪽문 = 방의 바깥벽 한가운데 (폭 1.5, 문 앞이 가장 트인 쪽) · 철창은 정문에서 가장 먼 구석
+#   난수는 따로 쓴다 (맵의 나머지는 그대로)
+ROOM_SPEC = {'mart': dict(n=1, size=(5.0, 3.0), ext=True, kind='room'), 'hospital': dict(n=2, size=(3.0, 3.0), ext=False, kind='room'),
+             'army': dict(n=1, size=(3.6, 3.2), ext=True, kind='room'), 'police': dict(n=1, size=(3.6, 3.2), ext=False, kind='jail')}
+IN_W, EXT_W = 2.0, 1.5
+NRM = {'n': (0, -1), 's': (0, 1), 'w': (-1, 0), 'e': (1, 0)}
+rr = random.Random(SEED * 1000 + 53)
+b_rect = lambda b: (b['x'] - b['w'] / 2, b['z'] - b['d'] / 2, b['x'] + b['w'] / 2, b['z'] + b['d'] / 2)
+b_doors = lambda b: [b['doors'][0], [q for q in 'nesw' if q != b['doors'][0]][b['sideK']]]
+def side_mid(r, sd):                                      # 그 벽의 한가운데와 반 길이
+    x0, z0, x1, z1 = r
+    return {'n': ((x0 + x1) / 2, z0, (x1 - x0) / 2), 's': ((x0 + x1) / 2, z1, (x1 - x0) / 2), 'w': (x0, (z0 + z1) / 2, (z1 - z0) / 2), 'e': (x1, (z0 + z1) / 2, (z1 - z0) / 2)}[sd]
+ovl = lambda q, o, m=0.0: q[0] < o[2] + m - 1e-6 and q[2] > o[0] - m + 1e-6 and q[1] < o[3] + m - 1e-6 and q[3] > o[1] - m + 1e-6
+def corridors(b):                                         # 건물 문과 그 안쪽 길 — 방이 걸치면 안 된다
+    R, out = b_rect(b), []
+    for sd in b_doors(b):
+        cx, cz, _ = side_mid(R, sd); nx, nz = NRM[sd]
+        out.append((cx - 2.2, min(cz, cz - nz * 2.4), cx + 2.2, max(cz, cz - nz * 2.4)) if nx == 0 else (min(cx, cx - nx * 2.4), cz - 2.2, max(cx, cx - nx * 2.4), cz + 2.2))
+    return out
+def out_clear(b, cx, cz, sd, half=1.2, maxd=8.0):         # 그 문 앞 바깥이 얼마나 트였나
+    nx, nz = NRM[sd]; best = maxd
+    for o in [b_rect(o) for o in bld if o is not b] + list(hills) + list(rivers):
+        if nx == 0:
+            if o[2] < cx - half or o[0] > cx + half: continue
+            g = (cz - o[3]) if nz < 0 else (o[1] - cz)
+        else:
+            if o[3] < cz - half or o[1] > cz + half: continue
+            g = (cx - o[2]) if nx < 0 else (o[0] - cx)
+        if g >= -1e-6: best = min(best, g)
+    return min(best, {'n': cz - Z0, 's': Z0 + H - cz, 'w': cx - X0, 'e': X0 + W - cx}[sd] + 3.0)   # 지도는 구역 끝에서 3칸 더 나간다
+def room_doors(b, q, sibs, ext):                          # 방문(안쪽) · 쪽문(바깥) 자리 — 못 놓으면 None
+    R = b_rect(b); inner, outer = [], []
+    for sd in 'nesw':
+        cx, cz, hl = side_mid(q, sd); nx, nz = NRM[sd]
+        on_wall = abs({'n': q[1] - R[1], 's': q[3] - R[3], 'w': q[0] - R[0], 'e': q[2] - R[2]}[sd]) < 1e-6
+        if on_wall:
+            if not ext or hl * 2 < EXT_W + 0.8: continue
+            if sd in b_doors(b):                           # 그 벽에 건물 문이 있으면 1칸 넘게 떨어져야
+                mx, mz, _ = side_mid(R, sd)
+                if abs((cx - mx) if nx == 0 else (cz - mz)) < 1.7 + EXT_W / 2 + 1.0: continue
+            outer.append((sd not in b_doors(b), min(out_clear(b, cx, cz, sd), 6.0), sd))   # 건물 문이 없는 벽이 먼저, 그다음 문 앞이 트인 쪽
+        else:
+            if hl * 2 < IN_W + 0.8: continue
+            fx, fz = cx + nx * 1.0, cz + nz * 1.0          # 문 앞 (복도 쪽)
+            if not (R[0] + 0.6 < fx < R[2] - 0.6 and R[1] + 0.6 < fz < R[3] - 0.6): continue
+            if any(o[0] - 0.3 < fx < o[2] + 0.3 and o[1] - 0.3 < fz < o[3] + 0.3 for o in sibs): continue
+            inner.append((hl, (b['x'] - cx) * nx + (b['z'] - cz) * nz, sd))
+    if not inner or (ext and not outer): return None
+    ins = max(inner)[2]; res = [dict(s=ins, w=IN_W, ext=False)]; clr = None
+    if ext:
+        best = max(outer); clr = best[1]
+        if clr < 2.5: return None                          # 쪽문 앞이 막혀 있다
+        res.append(dict(s=best[2], w=EXT_W, ext=True))
+    return res, clr
+ROOMS = []
+for bi, b in enumerate(bld):
+    sp = ROOM_SPEC.get(b['t'])
+    if not sp: continue
+    R, cors, cands = b_rect(b), corridors(b), []
+    a, d = sp['size']
+    if sp['n'] == 1:                                       # 구석 방 — 네 구석 × 두 방향
+        for (w_, d_) in ((a, d), (d, a)):
+            for cx_, cz_ in ((R[0], R[1]), (R[2] - w_, R[1]), (R[0], R[3] - d_), (R[2] - w_, R[3] - d_)):
+                cands.append([(cx_, cz_, cx_ + w_, cz_ + d_)])
+    else:                                                  # 방 둘 — 한 벽 한가운데에 나란히
+        for sd in 'nswe':
+            if sd in 'ns':
+                x0 = b['x'] - a; z0 = R[1] if sd == 'n' else R[3] - d
+                cands.append([(x0, z0, x0 + a, z0 + d), (x0 + a, z0, x0 + 2 * a, z0 + d)])
+            else:
+                z0 = b['z'] - a; x0 = R[0] if sd == 'w' else R[2] - d
+                cands.append([(x0, z0, x0 + d, z0 + a), (x0, z0 + a, x0 + d, z0 + 2 * a)])
+    good = []
+    for qs in cands:
+        if any(q[0] < R[0] - 1e-6 or q[2] > R[2] + 1e-6 or q[1] < R[1] - 1e-6 or q[3] > R[3] + 1e-6 for q in qs): continue
+        if any(ovl(q, c) for q in qs for c in cors): continue
+        ds = [room_doors(b, q, [o for o in qs if o is not q], sp['ext']) for q in qs]
+        if any(x is None for x in ds): continue
+        fx, fz, _ = side_mid(R, b['doors'][0])              # 정문에서 방까지
+        far = min(((q[0] + q[2]) / 2 - fx) ** 2 + ((q[1] + q[3]) / 2 - fz) ** 2 for q in qs) ** 0.5
+        clr = min([x[1] for x in ds if x[1] is not None] or [0])
+        good.append(((round(min(clr, 6.0), 1), round(far, 1)) if sp['ext'] else (round(far, 1), 0), rr.random(), qs, ds))
+    assert good, ('방 자리 없음', b['t'])
+    _, _, qs, ds = max(good, key=lambda g: (g[0], g[1]))
+    for q, (doors, clr) in zip(qs, ds):
+        ROOMS.append(dict(t=sp['kind'], x=round((q[0] + q[2]) / 2, 2), z=round((q[1] + q[3]) / 2, 2), w=round(q[2] - q[0], 2), d=round(q[3] - q[1], 2), parent=bi, zone=b['zone'], doors=[x['s'] for x in doors], rdoors=doors, clr=clr, pt=b['t']))
 from collections import Counter
+print('방', [(r['pt'], r['t'], (r['x'], r['z']), (r['w'], r['d']), [(x['s'], x['w'], 'ext' if x['ext'] else 'in') for x in r['rdoors']], '쪽문 앞 트임 %s' % r['clr']) for r in ROOMS])
 print('크기 바꿈 (종류, 옛 가로·세로, 새 가로·세로, 옮긴 x·z, 이웃 간격, 블록 여백)')
 for r in RESIZED: print('  ', r)
 print('건물', len(bld), dict(Counter(b['t'] for b in bld)))
@@ -312,7 +401,8 @@ out = dict(seed=SEED, mm=dict(x0=X0 - 3, z0=Z0 - 3, x1=X0 + W + 3, z1=Z0 + H + 3
            passPts=[dict(x=0.0 if a == 'v' else round(c, 2), z=round(c, 2) if a == 'v' else round((ZR0 + ZR1) / 2, 2), dir='h' if a == 'v' else 'v') for a, c in PASSES], rivers=[[round(v, 2) for v in r] for r in rivers], bridges=[[round(v, 2) for v in r] for r in bridges],
            lots=[[round(v, 2) for v in l] for l in LOTS],
            b=[dict(dict(x=b['x'], z=b['z'], w=b['w'], d=b['d'], doors=b['doors'], kinds={}, local=i, block=-1, t=b['t'], zone=b['zone']), **(dict(garage=True, open=b['open'], locks=[]) if b.get('garage') else dict(sideK=b['sideK']))) for i, b in enumerate(bld)] +
-             [dict(x=round((h[0] + h[2]) / 2, 2), z=round((h[1] + h[3]) / 2, 2), w=round(h[2] - h[0], 2), d=round(h[3] - h[1], 2), doors=[], locks=[], kinds={}, local=len(bld) + i, block=-1, t='hill', zone=-1) for i, h in enumerate(hills)])
+             [dict(x=round((h[0] + h[2]) / 2, 2), z=round((h[1] + h[3]) / 2, 2), w=round(h[2] - h[0], 2), d=round(h[3] - h[1], 2), doors=[], locks=[], kinds={}, local=len(bld) + i, block=-1, t='hill', zone=-1) for i, h in enumerate(hills)] +
+             [dict(x=r['x'], z=r['z'], w=r['w'], d=r['d'], doors=r['doors'], locks=[], kinds={}, local=len(bld) + len(hills) + i, block=-1, t=r['t'], zone=r['zone'], parent=r['parent'], room=dict(doors=r['rdoors'])) for i, r in enumerate(ROOMS)])   # c53: 방 (건물 안의 작은 건물)
 json.dump(out, open('map.json', 'w'), ensure_ascii=False, separators=(',', ':'))
 # 그림으로 확인
 from PIL import Image, ImageDraw
@@ -333,5 +423,10 @@ for b in bld:
         nx, nz = {'n': (0, -1), 's': (0, 1), 'w': (-1, 0), 'e': (1, 0)}[s]
         cx, cz = b['x'] + nx * b['w'] / 2, b['z'] + nz * b['d'] / 2
         dr.line([P(cx - abs(nz) * hw, cz - abs(nx) * hw), P(cx + abs(nz) * hw, cz + abs(nx) * hw)], fill=c, width=3)
+for r in ROOMS:
+    dr.rectangle([P(r['x'] - r['w'] / 2, r['z'] - r['d'] / 2), P(r['x'] + r['w'] / 2, r['z'] + r['d'] / 2)], outline=(255, 255, 255))
+    for x in r['rdoors']:
+        nx, nz = NRM[x['s']]; cx, cz = r['x'] + nx * r['w'] / 2, r['z'] + nz * r['d'] / 2; hw = x['w'] / 2
+        dr.line([P(cx - abs(nz) * hw, cz - abs(nx) * hw), P(cx + abs(nz) * hw, cz + abs(nx) * hw)], fill=(80, 255, 255) if x['ext'] else (255, 80, 255), width=3)
 sx, sz = out['start']; dr.ellipse([P(sx - 1, sz - 1), P(sx + 1, sz + 1)], fill=(60, 110, 255))
 im.save('map.png'); print('map.png', im.size)
