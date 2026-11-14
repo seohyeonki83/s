@@ -510,7 +510,7 @@ R = [
   ("    position: absolute; left: calc(50% + 54px); bottom: calc(172px + env(safe-area-inset-bottom, 0px));", "    position: absolute; left: calc(50% + 54px); bottom: calc(172px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px));"),
   ("    el.style.bottom = `calc(118px + env(safe-area-inset-bottom, 0px) + ${dy}px)`;", "    el.style.bottom = `calc(118px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px) + ${dy}px)`;"),
   ("    const el = document.getElementById(id); el.style.bottom = 'auto';", "    const el = document.getElementById(id); el.style.bottom = 'auto'; if (CHAPTER) el.style.opacity = '0';   /* c9: 되감기·일시정지 버튼은 안 보이게 (자리와 누르는 건 그대로) */"),
-  ("citizen: 0xffcf33, guard: 0xff8c1a,", "citizen: CHAPTER ? 0xf2f2f2 : 0xffcf33, guard: CHAPTER ? 0xffcf33 : 0xff8c1a, attacker: CHAPTER ? 0xff8c1a : 0xc62828,"),   # c32: 강한 인간 = 노랑
+  ("citizen: 0xffcf33, guard: 0xff8c1a, attacker: 0xc62828,", "citizen: CHAPTER ? 0xf2f2f2 : 0xffcf33, guard: CHAPTER ? 0xffcf33 : 0xff8c1a, attacker: CHAPTER ? 0xff8c1a : 0xc62828,"),   # c43: 원래 attacker 항목까지 바꿔야 주황이 먹는다   # c32: 강한 인간 = 노랑
   ("    guard: { col: '#ff8c1a', name: '헬창',", "    guard: { col: CHAPTER ? '#ffcf33' : '#ff8c1a', name: CHAPTER ? '강한 인간' : '헬창',"),   # c11: 인간 = 하양
   ("    citizen: { col: '#ffcf33', name: '좃밥',", "    citizen: { col: CHAPTER ? '#f2f2f2' : '#ffcf33', name: CHAPTER ? '인간' : '좃밥',"),
   ("    for (const b of bodies) if (isZombie(b)) zombies.push(b);\n    while (teamQueue.length)", "    for (const b of bodies) if (isZombie(b)) zombies.push(b);\n" + SLEEP + "    while (teamQueue.length)"),

@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c42</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c43</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -453,7 +453,7 @@
   const BITE_GAP = RADIUS;   // 물 때 두 원 중심 거리 = 반지름 → 반쯤 겹친다
   const SPLIT = 1.5;      // 물기가 끝나고 둘이 떨어지는 속도 (유닛/초)
   const ICON_H = 0.55;    // 머리 위 ? ! !!! 높이 (유닛)
-  const COLOR = { me: 0x3366f2, citizen: CHAPTER ? 0xf2f2f2 : 0xffcf33, guard: CHAPTER ? 0xffcf33 : 0xff8c1a, attacker: CHAPTER ? 0xff8c1a : 0xc62828, attacker: 0xc62828, police: 0x8e24aa, sniper: 0x556b2f, soldier: 0x556b2f, ally: 0x8aa4f5, dead: 0x555555 };   // 나 = 유니티 큐브 파랑, 시민 = 노랑, 수비형 = 주황, 공격형 = 진한 빨강, 경찰 = 보라, 동료 좀비 = 연한 파랑
+  const COLOR = { me: 0x3366f2, citizen: CHAPTER ? 0xf2f2f2 : 0xffcf33, guard: CHAPTER ? 0xffcf33 : 0xff8c1a, attacker: CHAPTER ? 0xff8c1a : 0xc62828, police: 0x8e24aa, sniper: 0x556b2f, soldier: 0x556b2f, ally: 0x8aa4f5, dead: 0x555555 };   // 나 = 유니티 큐브 파랑, 시민 = 노랑, 수비형 = 주황, 공격형 = 진한 빨강, 경찰 = 보라, 동료 좀비 = 연한 파랑
 
   // 그리는 층 (v132) — 바닥·벽·어둠·경찰차·캐릭터 < 모든 UI(체력바·머리 위 표시) < 내 UI(내 체력바·감염 시계·조준 테두리·명령 화살표)
   const UI = 10, UI_ME = 20;
