@@ -43,7 +43,8 @@ ICONS = r'''
       g.strokeStyle = col; g.lineWidth = 5; g.beginPath(); g.moveTo(64, 42); g.lineTo(64, 96); g.stroke();
     } else if (type === 'gym') { g.fillRect(40, 58, 48, 12); g.fillRect(28, 40, 15, 48); g.fillRect(85, 40, 15, 48); g.fillRect(17, 50, 10, 28); g.fillRect(101, 50, 10, 28); }   // 아령
     else if (type === 'store') {              // 나무 상자
-      g.lineWidth = 8; g.strokeRect(32, 34, 64, 60); g.beginPath(); g.moveTo(32, 34); g.lineTo(96, 94); g.moveTo(96, 34); g.lineTo(32, 94); g.stroke();
+      g.beginPath(); g.moveTo(64, 26); g.lineTo(102, 52); g.lineTo(102, 100); g.lineTo(26, 100); g.lineTo(26, 52); g.closePath(); g.fill();   // c33: 창고 — 세모 지붕 건물 + 셔터 문
+      g.fillStyle = col; g.fillRect(42, 64, 44, 36); g.fillStyle = ink; for (const y of [72, 81, 90]) g.fillRect(46, y, 36, 4);
     } else if (type === 'x') { g.lineWidth = 17; g.beginPath(); g.moveTo(40, 40); g.lineTo(88, 88); g.moveTo(88, 40); g.lineTo(40, 88); g.stroke(); }   // 잠식한 건물
     return c;
   }
@@ -62,10 +63,10 @@ ICONS = r'''
   const CH_MEET = 14;                         // c12: 좀비가 이만큼(칸) 안에 오면 깨어난다 — 좀비 시야(7.2칸)의 두 배쯤이라, 내 눈에 들어올 땐 이미 돌아다니고 있다
   let chHot = null, CH_GW = 0, CH_GH = 0;
   const chNearRiver = (x, z, m) => CH_MAP.rivers.some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
-  const CH_PEOPLE = 220,   /* c32: 200 → 220 (10% 늘림) */ CH_ROOM = 30;         // c30: 인간(하양) 전체 수 · 건물 안 한 명당 넓이(칸²)
+  const CH_PEOPLE = 242,   /* c33: 하양 198 → 218 · 노랑 22 → 24 */   /* c32: 200 → 220 (10% 늘림) */ CH_ROOM = 30;         // c30: 인간(하양) 전체 수 · 건물 안 한 명당 넓이(칸²)
   function chPopulate() {                     // c30: 인간 200명 — 먼저 모든 건물 안에 골고루, 남은 사람은 바깥 맵 전체에
     let n = 0;
-    const kinds = Array.from({ length: CH_PEOPLE }, (_, i) => i < Math.round(CH_PEOPLE * 0.1) ? 'guard' : '').sort(() => Math.random() - 0.5);   // c32: 10%는 노랑(강한 인간) — 건물 안·밖에 하양과 같은 비율로 섞인다
+    const kinds = Array.from({ length: CH_PEOPLE }, (_, i) => i < 24 ? 'guard' : '').sort(() => Math.random() - 0.5);   // c32: 10%는 노랑(강한 인간) — 건물 안·밖에 하양과 같은 비율로 섞인다
     const hs = buildings.filter((B) => B.type === 'house').sort(() => Math.random() - 0.5), empty = new Set(hs.slice(0, Math.round(hs.length / 3)));   // c31: 집 3분의 1은 빈집 (판마다 다른 집)
     for (const B of buildings) {              // ① 건물 안: 넓이 30칸²마다 1명, 판마다 ±1 (최소 1명) — 집 1~2 · 창고 1~3 · 랜드마크 1~6명 (테스트맵처럼 큰 건물일수록 많이)
       if (B.type === 'hill' || empty.has(B)) continue;
@@ -395,7 +396,7 @@ MINIMAP = r'''
     g.save(); g.beginPath();
     for (const z of eyes) { if (!isZombie(z)) continue; const cx = X(z.foot.x), cz = Z(z.foot.z), r = z.sense * sx; g.moveTo(cx + r, cz); g.arc(cx, cz, r, 0, Math.PI * 2); }
     g.clip(); g.drawImage(chLit, 0, 0); g.restore();                      // 지금 보이는 곳 = 밝게
-    const sz2 = 8 * u, szB = 12 * u;   /* c15: 2배는 너무 커서 1.5배로 (8 → 12) */   /* c14: 건물 아이콘 2배 (8 → 16) — 미니맵은 건물이 나에게서 어느 쪽에 있는지만 보이면 된다 (자세한 지형은 가려져도 된다). 길목 화살표는 그대로 */   /* c6: 미니맵이 작아진 만큼 아이콘도 (10.5 → 8) */
+    const sz2 = 8 * u, szB = 13.2 * u;   /* c33: 1.1배 더 (12 → 13.2) */   /* c15: 2배는 너무 커서 1.5배로 (8 → 12) */   /* c14: 건물 아이콘 2배 (8 → 16) — 미니맵은 건물이 나에게서 어느 쪽에 있는지만 보이면 된다 (자세한 지형은 가려져도 된다). 길목 화살표는 그대로 */   /* c6: 미니맵이 작아진 만큼 아이콘도 (10.5 → 8) */
     for (let pass = 0; pass < 3; pass++) for (const B of buildings) {   // 커진 아이콘이 겹치면 중요한 것이 위로 — 잠식한 건물(X) → 창고 → 랜드마크 순으로 그린다
       if (B.type === 'house' || B.type === 'hill') continue;             // 집과 산은 표시 없음
       if (pass === 0 && !B.found) {                                      // 건물 자리를 한 칸이라도 밝혔으면 그때부터 표시
