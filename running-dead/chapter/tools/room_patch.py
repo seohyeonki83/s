@@ -177,22 +177,32 @@ ROOM_FN = r"""  // ── c53: 건물 안 방 ──
     }
     return CH_MAP.start;
   }
-  function chPrisoner(J) {                     // 철창 수감자 1명 — 덩치만 한 자경단 (덩치형: 체력 4배·공격력 2배 / 히드라형: 체력 2배·공격력 4배). 감염시키면 영구 덩치 · 영구 히드라
-    const type = Math.random() < 0.5 ? 'armor' : 'hydra';
-    const c = chPut((J.x0 + J.x1) / 2, (J.z0 + J.z1) / 2, J, 'vig', J);
-    c.boss = type; c.r = BODY * 1.5; c.halfH = RADIUS * 1.5; c.mesh.scale.setScalar(1.5);
+  function chBoss(B, type, x, z) {             // 변이 좀비가 되는 사람 — 덩치 좀비만 한 몸, 무기 없이 주황처럼 때린다 (넉백 없음). 덩치형: 체력 4배·공격력 2배 / 히드라형: 체력 2배·공격력 4배 (자경단 기준). 머리 위 변이 주사 색 다이아몬드
+    const c = chPut(x, z, B, 'attacker', B);
+    c.boss = type; c.mesh.material.color.setHex(0xc62828);
+    c.r = BODY * 1.5; c.halfH = RADIUS * 1.5; c.mesh.scale.setScalar(1.5);
     c.hp = c.maxHp = GUARD_HP * (type === 'armor' ? 4 : 2); c.hpDisp = c.hp; c.dmgK = type === 'armor' ? 2 : 4;
-    const g = new THREE.Group();               // 머리 위 다이아몬드 — 변이 주사 색
+    const g = new THREE.Group();
     const mk = (sz, col, zz) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(sz, sz), new THREE.MeshBasicMaterial({ color: col, transparent: true, depthTest: false, depthWrite: false })); m.rotation.z = Math.PI / 4; m.position.z = zz; m.renderOrder = 1; return m; };
     g.add(mk(0.38, 0x1c1c1e, 0), mk(0.27, 0xb05cff, 0.002)); g.position.set(0, 0.5, 0.02);
     c.mesh.add(g); c.gem = g;
     return c;
   }
-  function chBossTurn(b) {                     // 수감자가 감염됐다 → 영구 변이 (덩치는 덩치 크기, 히드라는 보통 크기)
+  function chPrisoner(J) { return chBoss(J, J.parent.type === 'army' ? 'hydra' : Math.random() < 0.5 ? 'armor' : 'hydra', (J.x0 + J.x1) / 2, (J.z0 + J.z1) / 2); }   // 철창 수감자 1명 — 경찰서: 덩치·히드라 반반 / 군부대: 히드라
+  function chBossTurn(b) {                     // 감염됐다 → 영구 변이 (덩치는 덩치 크기, 히드라는 보통 크기) + 검은 테두리
     const t = b.boss; b.boss = null; b.dmgK = 0;
     if (b.gem) { b.mesh.remove(b.gem); b.gem = null; }
     b.r = BODY; delete b.halfH; b.mesh.scale.setScalar(1);
     mutate(b, t);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(RADIUS * 0.84, RADIUS, 48), new THREE.MeshBasicMaterial({ color: 0x0b0b0d, transparent: true, depthTest: false, depthWrite: false }));
+    ring.position.z = 0.003; b.mesh.add(ring); b.ring = ring;
+  }
+  function chSafeInRoom(s, R) {                // c54: 금고를 방 안에 — 방문에서 가장 먼 자리. 작은 방이면 그 방 사람은 복도로 옮긴다
+    const D = R.locks.find((L) => L.out) || R.locks[0], m = s.r + 0.3;
+    let best = [(R.x0 + R.x1) / 2, (R.z0 + R.z1) / 2], bd = -1;
+    for (let x = R.x0 + m; x <= R.x1 - m + 1e-6; x += 0.25) for (let z = R.z0 + m; z <= R.z1 - m + 1e-6; z += 0.25) { const d = Math.hypot(x - D.cx, z - D.cz); if (d > bd) { bd = d; best = [x, z]; } }
+    s.foot.x = best[0]; s.foot.z = best[1]; s.room = R; R.safe = s;
+    if ((R.x1 - R.x0) * (R.z1 - R.z0) < 12) for (const c of bodies) if (c.kind === 'citizen' && c.space === R) { const P = R.parent, g = pickGoal(P); c.foot.x = g.x; c.foot.z = g.y; c.space = P; c.home = P; c.area = P; if (c.post) c.post = P; c.goal = null; }
   }
 """
 LINK = r"""  const chRooms = buildings.filter((B) => B.rspec);   // c53: 방 (건물 안의 작은 건물) — 목록에서는 부모 건물 뒤에 온다
@@ -228,6 +238,7 @@ POP_NEW = r"""      if (T) {
           for (let n = R2(0, cap); n > 0 && pool.length; n--) { const i = pool.splice(Math.floor(Math.random() * pool.length), 1)[0]; inPut(R, list[i]); list[i] = null; }
         }
         for (const type of list) if (type !== null) inPut(B, type);
+        if (B.type === 'gym') { let g = pickGoal(B); for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.4); t++) g = pickGoal(B); chBoss(B, 'armor', g.x, g.y); }   // c54: 헬스장 관장 — 갇혀 있지 않다. 감염시키면 영구 덩치
         continue;
       }"""
 ROOM_R = [
@@ -260,7 +271,7 @@ ROOM_R = [
   ("      const D = DS.reduce((a, o) => Math.hypot(o.cx - car.x, o.cz - car.z) < Math.hypot(a.cx - car.x, a.cz - car.z) ? o : a);", "      const D = (DS.length ? DS : B.locks).reduce((a, o) => Math.hypot(o.cx - car.x, o.cz - car.z) < Math.hypot(a.cx - car.x, a.cz - car.z) ? o : a);   /* c53: 쓸 문이 하나도 없어도 멈추지 않게 */"),
   ("    const B = spaceOf(tx, tz);\n    if (B) {\n      const DS = B.doors.length ? B.doors :", "    let B = spaceOf(tx, tz); if (B && B.parent) B = B.parent;   // c53: 방 안이면 그 건물 문 앞으로\n    if (B) {\n      const DS = B.doors.length ? B.doors :"),
   ("    if (B && B.safe && !B.safe.dead) {        // v295: 건물 안 자리가 금고 위에 걸리면 금고 밖으로", "    if (CHAPTER && chRooms.length) { const f = chRoomPush(x, y, B); x = f[0]; y = f[1]; }   // c53: 방 안에 걸린 자리는 복도로\n    if (B && B.safe && !B.safe.dead) {        // v295: 건물 안 자리가 금고 위에 걸리면 금고 밖으로"),
-  ("DAMAGE * (CHAPTER && b.attacker ? (b.vig ? 2 : 1.5) : 1))", "DAMAGE * (CHAPTER && b.attacker ? (b.vig ? 2 : 1.5) : 1) * (b.dmgK || 1))"),
+  ("DAMAGE * (CHAPTER && b.attacker ? (b.vig ? 2 : 1.5) : 1))", "DAMAGE * (CHAPTER && b.attacker ? (b.vig || b.boss ? 2 : 1.5) : 1) * (b.dmgK || 1))"),
   ("  function mutate(z) {\n", "  function mutate(z, force) {   /* c53: force = 정해진 변이를 영구로 (철창 수감자) */\n"),
   ("    const type = TEST_ARMOR || CAR_TEST ? 'armor' : Math.random() < 0.5 ? 'armor' : 'hydra';\n    z.mut = type; z.mutT = MUT_T();", "    const type = force || (TEST_ARMOR || CAR_TEST ? 'armor' : Math.random() < 0.5 ? 'armor' : 'hydra');\n    z.mut = type; z.mutT = force ? Infinity : MUT_T(); z.mutPerm = !!force;"),
   ("    const al = nearAllies();\n    if (!al.length) return false;", "    const al = nearAllies().filter((z) => !z.mutPerm);   // c53: 영구 변이는 건드리지 않는다\n    if (!al.length) return false;"),
@@ -268,11 +279,12 @@ ROOM_R = [
   ("me.foot.set(CH_MAP.start[0], 0, CH_MAP.start[1]); me.space = null;", "chRoomDoors(); { const st = chStart(); me.foot.set(st[0], 0, st[1]); } me.space = null;   /* c53: 방문 반은 열어 두고, 시작 자리는 아무 구역 바깥 라인 */"),
   (POP_OLD, POP_NEW),
   ("      if (B.type === 'hill' || (B.type === 'house' && Math.random() >= CH_HOUSE_SAFE)) continue;\n      addSafe(B);\n      const s = B.safe; s.B = B; s.loot = chLoot(B.type); s.dud = !s.loot;",
-   "      if (B.type === 'hill' || B.parent || (B.type === 'house' && Math.random() >= CH_HOUSE_SAFE)) continue;\n      addSafe(B);\n      const s = B.safe; s.B = B; s.loot = chLoot(B.type); s.dud = !s.loot;\n      if (B.rooms) chSafeSpot(B, s);   // c53: 금고는 방과 방문 앞을 피해서"),
-  ("          c.foot.x = rand(B.x0 + 0.6, B.x1 - 0.6); c.foot.z = rand(B.z0 + 0.6, B.z1 - 0.6);", "          { const g = pickGoal(B); c.foot.x = g.x; c.foot.z = g.y; }   /* c53: 방을 피해서 */"),
+   "      if (B.type === 'hill' || B.parent || (B.type === 'house' && Math.random() >= CH_HOUSE_SAFE)) continue;\n      addSafe(B);\n      const s = B.safe; s.B = B; s.loot = chLoot(B.type); s.dud = !s.loot;\n      s.room = null;\n      if (B.rooms) { const rs = B.rooms.filter((R) => R.type === 'room'); if (rs.length && Math.random() < 0.5) chSafeInRoom(s, rs[Math.floor(Math.random() * rs.length)]); else chSafeSpot(B, s); }   // c53: 금고는 방과 방문 앞을 피해서 · c54: 방이 있는 건물은 반반 확률로 방 안"),
+  ("        if (c.kind !== 'citizen' || c.space !== B) continue;\n        const dx = c.foot.x - s.foot.x, dz = c.foot.z - s.foot.z, d = Math.hypot(dx, dz), R = s.r + BODY + 0.1;", "        if (c.kind !== 'citizen' || c.space !== (s.room || B)) continue;   /* c54: 금고가 방 안이면 그 방 사람 */\n        const dx = c.foot.x - s.foot.x, dz = c.foot.z - s.foot.z, d = Math.hypot(dx, dz), R = s.r + BODY + 0.1;"),
+  ("        c.foot.x = Math.max(B.x0 + 0.6, Math.min(B.x1 - 0.6, s.foot.x + ux * R)); c.foot.z = Math.max(B.z0 + 0.6, Math.min(B.z1 - 0.6, s.foot.z + uz * R));", "        { const Q = s.room || B; c.foot.x = Math.max(Q.x0 + 0.6, Math.min(Q.x1 - 0.6, s.foot.x + ux * R)); c.foot.z = Math.max(Q.z0 + 0.6, Math.min(Q.z1 - 0.6, s.foot.z + uz * R)); }"),
+  ("          c.foot.x = rand(B.x0 + 0.6, B.x1 - 0.6); c.foot.z = rand(B.z0 + 0.6, B.z1 - 0.6);", "          { const g = pickGoal(s.room || B); c.foot.x = g.x; c.foot.z = g.y; }   /* c53: 방을 피해서 · c54: 금고가 방 안이면 그 방 안에서 */"),
   ("      if (B.type === 'house' || B.type === 'hill') continue;             // 집과 산은 표시 없음", "      if (B.type === 'house' || B.type === 'hill' || B.parent) continue;             // 집과 산은 표시 없음 (c53: 방도)"),
   ("      B.roof.material = flatMat(B.type === 'house' ? CH_HOUSE_ROOF[i % CH_HOUSE_ROOF.length] : CH_DEF[B.type].roof);\n      if (B.type === 'house') return;", "      B.roof.material = flatMat(B.type === 'house' ? CH_HOUSE_ROOF[i % CH_HOUSE_ROOF.length] : CH_DEF[(B.parent || B).type].roof);   /* c53: 방 지붕 = 그 건물 지붕 색 */\n      if (B.type === 'house' || B.parent) return;"),
-  ("      if (o.type !== 'door' || !CH_LM.has(o.B.type)) continue;\n      const B = o.B, L = o.L, k = B.called || 0;", "      if (o.type !== 'door' || (o.B.parent && !o.L.ext)) continue;   // c53: 방 쪽문(바깥 문)도 건물 문으로 친다 · 방문(안쪽 문)은 아니다\n      const B = o.B.parent || o.B, L = o.L, k = B.called || 0;\n      if (!CH_LM.has(B.type)) continue;"),
   ("zombify: makeZombie, slotOf,", "zombify: makeZombie, slotOf, rooms: chRooms, spaceOf, linked, chStart, mutate, openDoor: chOpenDoor,"),
   ("  function showDud() {", ROOM_FN + "  function showDud() {"),   # 맨 끝에 — 위의 이름 바꾸기(via0 · rebuildSight)가 먼저 돼야 한다
 ]

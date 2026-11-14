@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c53</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c54</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -439,7 +439,7 @@
   const CHAPTER = true;   // 챕터 줄기 (c1~): 구역 4개짜리 맵, 지금은 건물만 — 사람·경찰·금고 없음
   const TEST_MAP = CAR_TEST || CHAPTER;   // v396: true면 저격수 시험 맵 (빈 건물 4채 + 저격수 2명, 나는 무적)
   const TEST_BLDGS = [[-15, -15], [15, -15], [-15, 15], [15, 15]].map(([x, z], i) => ({ x, z, w: 11 * MAP, d: 8 * MAP, doors: ['s'], kinds: {}, local: i, block: -1 }));
-  const CH_MAP = {"seed":7,"mm":{"x0":-69.5,"z0":-81.5,"x1":69.5,"z1":81.5},"start":[-36.5,75.5],"zones":[[-66.5,-17.5,-6.5,78.5],[6.5,-17.5,66.5,78.5],[-66.5,-78.5,-6.5,-30.5],[6.5,-78.5,66.5,-30.5]],"roads":[[-22.5,26.5,-6.5,34.5],[6.5,26.5,22.5,34.5],[-22.5,66.5,-6.5,74.5],[6.5,66.5,22.5,74.5],[-22.5,-74.5,-6.5,-66.5],[6.5,-74.5,22.5,-66.5],[-40.5,-46.5,-32.5,-30.5],[-40.5,-17.5,-32.5,-1.5],[32.5,-46.5,40.5,-30.5],[32.5,-17.5,40.5,-1.5],[-40.5,-31.5,-32.5,-16.5],[32.5,-31.5,40.5,-16.5],[-39.5,-17.5,-33.5,78.5],[-66.5,28.0,-6.5,33.0],[33.5,-17.5,39.5,78.5],[6.5,28.0,66.5,33.0],[-39.5,-78.5,-33.5,-30.5],[33.5,-78.5,39.5,-30.5]],"passes":[["v",30.5],["v",70.5],["v",-70.5],["h",-36.5],["h",36.5]],"gap":13.0,"passW":8.0,"zrMid":-24.0,"passes2":[{"axis":"v","c":30.5,"len":18.0,"ax":-9.0,"az":30.5,"bx":9.0,"bz":30.5,"za":0,"zb":1},{"axis":"v","c":70.5,"len":18.0,"ax":-9.0,"az":70.5,"bx":9.0,"bz":70.5,"za":0,"zb":1},{"axis":"v","c":-70.5,"len":18.0,"ax":-9.0,"az":-70.5,"bx":9.0,"bz":-70.5,"za":2,"zb":3},{"axis":"h","c":-36.5,"len":18.0,"ax":-36.5,"az":-15.0,"bx":-36.5,"bz":-33.0,"za":0,"zb":2},{"axis":"h","c":36.5,"len":18.0,"ax":36.5,"az":-15.0,"bx":36.5,"bz":-33.0,"za":1,"zb":3}],"passPts":[{"x":0.0,"z":30.5,"dir":"h"},{"x":0.0,"z":70.5,"dir":"h"},{"x":0.0,"z":-70.5,"dir":"h"},{"x":-36.5,"z":-24.0,"dir":"v"},{"x":36.5,"z":-24.0,"dir":"v"}],"rivers":[[-6.5,-82.0,6.5,-74.5],[-6.5,-66.5,6.5,26.5],[-6.5,34.5,6.5,66.5],[-6.5,74.5,6.5,82.0]],"bridges":[[-8.0,-74.5,8.0,-66.5],[-8.0,26.5,8.0,34.5],[-8.0,66.5,8.0,74.5]],"lots":[[-33.0,2.29,-9.0,11.83],[-33.0,48.24,-9.0,57.36],[-64.0,48.87,-40.0,56.5],[-64.0,8.14,-40.0,17.98],[9.0,46.86,33.0,56.03],[40.0,3.2,64.0,14.03],[40.0,41.94,64.0,51.07],[9.0,3.4,33.0,15.02],[-64.0,-57.01,-40.0,-46.83],[-33.0,-56.06,-9.0,-48.51],[40.0,-61.35,64.0,-51.5],[9.0,-65.99,33.0,-55.82]],"b":[{"x":-22.49,"z":18.74,"w":12.0,"d":8.6,"doors":["w"],"kinds":{},"local":0,"block":-1,"t":"army","zone":0,"sideK":0},{"x":-25.67,"z":-10.3,"w":9.4,"d":6.8,"doors":["w"],"kinds":{},"local":1,"block":-1,"t":"store","zone":0,"sideK":1},{"x":-21.97,"z":-1.36,"w":7.0,"d":4.0,"doors":["s"],"kinds":{},"local":2,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-13.372743698002509,"z":-1.4238752966259387,"w":6.0,"d":4.0,"doors":["n"],"kinds":{},"local":3,"block":-1,"t":"house","zone":0,"garage":true,"open":["s"],"locks":[]},{"x":-25.46,"z":41.03,"w":12.0,"d":8.6,"doors":["s"],"kinds":{},"local":4,"block":-1,"t":"fire","zone":0,"sideK":0},{"x":-15.68,"z":61.83,"w":9.4,"d":6.8,"doors":["n"],"kinds":{},"local":5,"block":-1,"t":"store","zone":0,"sideK":1},{"x":-27.78,"z":63.59,"w":5.0,"d":6.0,"doors":["n"],"kinds":{},"local":6,"block":-1,"t":"house","zone":0,"sideK":2},{"x":-26.94,"z":70.64,"w":5.0,"d":4.0,"doors":["s"],"kinds":{},"local":7,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-49.97,"z":69.78,"w":14.9,"d":10.4,"doors":["e"],"kinds":{},"local":8,"block":-1,"t":"mart","zone":0,"sideK":2},{"x":-58.25,"z":59.82,"w":5.5,"d":4.5,"doors":["s"],"kinds":{},"local":9,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-50.82,"z":59.74,"w":5.0,"d":4.5,"doors":["n"],"kinds":{},"local":10,"block":-1,"t":"house","zone":0,"sideK":1},{"x":-55.48563882735918,"z":37.25106424011956,"w":6.5,"d":5.5,"doors":["s"],"kinds":{},"local":11,"block":-1,"t":"house","zone":0,"garage":true,"open":["n"],"locks":[]},{"x":-46.66,"z":37.26,"w":6.0,"d":5.0,"doors":["n"],"kinds":{},"local":12,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-55.31,"z":44.87,"w":7.0,"d":5.5,"doors":["s"],"kinds":{},"local":13,"block":-1,"t":"house","zone":0,"sideK":2},{"x":-55.36,"z":23.01,"w":9.4,"d":6.8,"doors":["e"],"kinds":{},"local":14,"block":-1,"t":"store","zone":0,"sideK":0},{"x":-58.93,"z":-11.28,"w":7.5,"d":5.0,"doors":["n"],"kinds":{},"local":15,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-59.74,"z":-3.51,"w":5.5,"d":6.0,"doors":["e"],"kinds":{},"local":16,"block":-1,"t":"house","zone":0,"sideK":2},{"x":-58.34,"z":3.59,"w":7.0,"d":4.0,"doors":["s"],"kinds":{},"local":17,"block":-1,"t":"house","zone":0,"sideK":0},{"x":16.05,"z":39.86,"w":12.0,"d":8.6,"doors":["s"],"kinds":{},"local":18,"block":-1,"t":"gym","zone":1,"sideK":0},{"x":15.42,"z":60.75,"w":9.4,"d":6.8,"doors":["e"],"kinds":{},"local":19,"block":-1,"t":"store","zone":1,"sideK":1},{"x":28.13,"z":65.72,"w":5.0,"d":6.0,"doors":["n"],"kinds":{},"local":20,"block":-1,"t":"house","zone":1,"sideK":0},{"x":28.68,"z":72.89,"w":5.5,"d":4.0,"doors":["s"],"kinds":{},"local":21,"block":-1,"t":"house","zone":1,"sideK":0},{"x":56.95,"z":19.2,"w":12.0,"d":8.6,"doors":["n"],"kinds":{},"local":22,"block":-1,"t":"bank","zone":1,"sideK":1},{"x":46.75,"z":-5.33,"w":9.4,"d":6.8,"doors":["s"],"kinds":{},"local":23,"block":-1,"t":"store","zone":1,"sideK":2},{"x":59.38,"z":-1.66,"w":6.5,"d":4.5,"doors":["s"],"kinds":{},"local":24,"block":-1,"t":"house","zone":1,"sideK":0},{"x":58.51,"z":-10.07,"w":7.0,"d":5.0,"doors":["n"],"kinds":{},"local":25,"block":-1,"t":"house","zone":1,"sideK":0},{"x":48.0,"z":68.9,"w":12.0,"d":8.6,"doors":["w"],"kinds":{},"local":26,"block":-1,"t":"hospital","zone":1,"sideK":1},{"x":44.93,"z":55.52,"w":7.5,"d":5.5,"doors":["w"],"kinds":{},"local":27,"block":-1,"t":"house","zone":1,"sideK":0},{"x":53.33,"z":54.7,"w":5.0,"d":4.5,"doors":["n"],"kinds":{},"local":28,"block":-1,"t":"house","zone":1,"sideK":1},{"x":60.47994038247018,"z":55.40510577851337,"w":5.0,"d":4.5,"doors":["n"],"kinds":{},"local":29,"block":-1,"t":"house","zone":1,"garage":true,"open":["s"],"locks":[]},{"x":15.06,"z":21.27,"w":9.4,"d":6.8,"doors":["n"],"kinds":{},"local":30,"block":-1,"t":"store","zone":1,"sideK":1},{"x":15.56,"z":-7.82,"w":6.0,"d":4.0,"doors":["n"],"kinds":{},"local":31,"block":-1,"t":"house","zone":1,"sideK":1},{"x":23.379166344455236,"z":-7.203197941176766,"w":5.5,"d":5.0,"doors":["w"],"kinds":{},"local":32,"block":-1,"t":"house","zone":1,"garage":true,"open":["e"],"locks":[]},{"x":15.6,"z":-0.46,"w":5.0,"d":4.5,"doors":["s"],"kinds":{},"local":33,"block":-1,"t":"house","zone":1,"sideK":0},{"x":26.83,"z":17.95,"w":5.0,"d":4.0,"doors":["n"],"kinds":{},"local":34,"block":-1,"t":"house","zone":1,"sideK":1},{"x":27.96,"z":24.23,"w":7.5,"d":4.5,"doors":["s"],"kinds":{},"local":35,"block":-1,"t":"house","zone":1,"sideK":0},{"x":-56.58,"z":-62.19,"w":8.5,"d":6.5,"doors":["s"],"kinds":{},"local":36,"block":-1,"t":"conv","zone":2,"sideK":2},{"x":-56.95,"z":-38.52,"w":9.4,"d":6.8,"doors":["e"],"kinds":{},"local":37,"block":-1,"t":"store","zone":2,"sideK":0},{"x":-45.7,"z":-72.39,"w":6.0,"d":4.5,"doors":["n"],"kinds":{},"local":38,"block":-1,"t":"house","zone":2,"sideK":1},{"x":-45.68,"z":-65.48,"w":5.5,"d":5.0,"doors":["s"],"kinds":{},"local":39,"block":-1,"t":"house","zone":2,"sideK":1},{"x":-16.2,"z":-61.41,"w":11.4,"d":8.15,"doors":["n"],"kinds":{},"local":40,"block":-1,"t":"library","zone":2,"sideK":1},{"x":-27.758943909907252,"z":-72.5514296954452,"w":7.5,"d":4.0,"doors":["n"],"kinds":{},"local":41,"block":-1,"t":"house","zone":2,"garage":true,"open":["s"],"locks":[]},{"x":-22.04,"z":-44.08,"w":4.5,"d":5.0,"doors":["w"],"kinds":{},"local":42,"block":-1,"t":"house","zone":2,"sideK":1},{"x":-13.89,"z":-43.71,"w":6.5,"d":5.5,"doors":["n"],"kinds":{},"local":43,"block":-1,"t":"house","zone":2,"sideK":0},{"x":-22.16,"z":-36.99,"w":5.5,"d":4.0,"doors":["s"],"kinds":{},"local":44,"block":-1,"t":"house","zone":2,"sideK":0},{"x":48.49,"z":-67.48,"w":12.0,"d":8.6,"doors":["s"],"kinds":{},"local":45,"block":-1,"t":"police","zone":3,"sideK":1},{"x":47.29,"z":-45.74,"w":4.0,"d":7.5,"doors":["w"],"kinds":{},"local":46,"block":-1,"t":"house","zone":3,"sideK":1},{"x":48.28,"z":-37.57,"w":6.5,"d":4.5,"doors":["s"],"kinds":{},"local":47,"block":-1,"t":"house","zone":3,"sideK":0},{"x":58.65579042374771,"z":-45.81122534301815,"w":6.5,"d":4.5,"doors":["s"],"kinds":{},"local":48,"block":-1,"t":"house","zone":3,"garage":true,"open":["n"],"locks":[]},{"x":58.86,"z":-38.83,"w":6.0,"d":5.0,"doors":["s"],"kinds":{},"local":49,"block":-1,"t":"house","zone":3,"sideK":1},{"x":15.78,"z":-40.46,"w":9.4,"d":6.8,"doors":["s"],"kinds":{},"local":50,"block":-1,"t":"store","zone":3,"sideK":1},{"x":21.64,"z":-51.45,"w":5.5,"d":4.0,"doors":["n"],"kinds":{},"local":51,"block":-1,"t":"house","zone":3,"sideK":1},{"x":29.19,"z":-51.34,"w":5.5,"d":5.5,"doors":["n"],"kinds":{},"local":52,"block":-1,"t":"house","zone":3,"sideK":0},{"x":-65.59,"z":-24.0,"w":8.83,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":53,"block":-1,"t":"hill","zone":-1},{"x":-56.8,"z":-24.21,"w":10.34,"d":9.87,"doors":[],"locks":[],"kinds":{},"local":54,"block":-1,"t":"hill","zone":-1},{"x":-46.47,"z":-24.0,"w":11.93,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":55,"block":-1,"t":"hill","zone":-1},{"x":-27.94,"z":-24.0,"w":9.12,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":56,"block":-1,"t":"hill","zone":-1},{"x":-19.97,"z":-23.68,"w":8.42,"d":10.48,"doors":[],"locks":[],"kinds":{},"local":57,"block":-1,"t":"hill","zone":-1},{"x":-11.28,"z":-24.0,"w":10.56,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":58,"block":-1,"t":"hill","zone":-1},{"x":10.49,"z":-24.0,"w":8.98,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":59,"block":-1,"t":"hill","zone":-1},{"x":18.2,"z":-24.1,"w":8.03,"d":12.54,"doors":[],"locks":[],"kinds":{},"local":60,"block":-1,"t":"hill","zone":-1},{"x":26.96,"z":-24.0,"w":11.08,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":61,"block":-1,"t":"hill","zone":-1},{"x":44.77,"z":-24.0,"w":8.54,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":62,"block":-1,"t":"hill","zone":-1},{"x":52.59,"z":-23.81,"w":8.7,"d":11.64,"doors":[],"locks":[],"kinds":{},"local":63,"block":-1,"t":"hill","zone":-1},{"x":63.07,"z":-24.0,"w":13.85,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":64,"block":-1,"t":"hill","zone":-1},{"x":-18.09,"z":21.24,"w":3.2,"d":3.6,"doors":["w","s"],"locks":[],"kinds":{},"local":65,"block":-1,"t":"room","zone":0,"parent":0,"room":{"doors":[{"s":"w","w":2.0,"ext":false},{"s":"s","w":1.5,"ext":true}]}},{"x":-54.92,"z":73.48,"w":5.0,"d":3.0,"doors":["n","s"],"locks":[],"kinds":{},"local":66,"block":-1,"t":"room","zone":0,"parent":8,"room":{"doors":[{"s":"n","w":2.0,"ext":false},{"s":"s","w":1.5,"ext":true}]}},{"x":46.5,"z":71.7,"w":3.0,"d":3.0,"doors":["n"],"locks":[],"kinds":{},"local":67,"block":-1,"t":"room","zone":1,"parent":26,"room":{"doors":[{"s":"n","w":2.0,"ext":false}]}},{"x":49.5,"z":71.7,"w":3.0,"d":3.0,"doors":["n"],"locks":[],"kinds":{},"local":68,"block":-1,"t":"room","zone":1,"parent":26,"room":{"doors":[{"s":"n","w":2.0,"ext":false}]}},{"x":44.29,"z":-70.18,"w":3.6,"d":3.2,"doors":["s"],"locks":[],"kinds":{},"local":69,"block":-1,"t":"jail","zone":3,"parent":45,"room":{"doors":[{"s":"s","w":2.0,"ext":false}]}}]};   // 생성기(씨앗 7)가 만든 고정 맵 — c2: 건물 71채 (랜드마크 9 · 창고 8 · 집 54) · c3: 세로 경계 = 강(다리 3곳), 가로 경계 = 산(길목 2곳) · c4·c5: 집을 작게, 1~4채씩 바짝 뭉치고 블록마다 공터, 집 8채는 차고
+  const CH_MAP = {"seed":7,"mm":{"x0":-69.5,"z0":-81.5,"x1":69.5,"z1":81.5},"start":[-36.5,75.5],"zones":[[-66.5,-17.5,-6.5,78.5],[6.5,-17.5,66.5,78.5],[-66.5,-78.5,-6.5,-30.5],[6.5,-78.5,66.5,-30.5]],"roads":[[-22.5,26.5,-6.5,34.5],[6.5,26.5,22.5,34.5],[-22.5,66.5,-6.5,74.5],[6.5,66.5,22.5,74.5],[-22.5,-74.5,-6.5,-66.5],[6.5,-74.5,22.5,-66.5],[-40.5,-46.5,-32.5,-30.5],[-40.5,-17.5,-32.5,-1.5],[32.5,-46.5,40.5,-30.5],[32.5,-17.5,40.5,-1.5],[-40.5,-31.5,-32.5,-16.5],[32.5,-31.5,40.5,-16.5],[-39.5,-17.5,-33.5,78.5],[-66.5,28.0,-6.5,33.0],[33.5,-17.5,39.5,78.5],[6.5,28.0,66.5,33.0],[-39.5,-78.5,-33.5,-30.5],[33.5,-78.5,39.5,-30.5]],"passes":[["v",30.5],["v",70.5],["v",-70.5],["h",-36.5],["h",36.5]],"gap":13.0,"passW":8.0,"zrMid":-24.0,"passes2":[{"axis":"v","c":30.5,"len":18.0,"ax":-9.0,"az":30.5,"bx":9.0,"bz":30.5,"za":0,"zb":1},{"axis":"v","c":70.5,"len":18.0,"ax":-9.0,"az":70.5,"bx":9.0,"bz":70.5,"za":0,"zb":1},{"axis":"v","c":-70.5,"len":18.0,"ax":-9.0,"az":-70.5,"bx":9.0,"bz":-70.5,"za":2,"zb":3},{"axis":"h","c":-36.5,"len":18.0,"ax":-36.5,"az":-15.0,"bx":-36.5,"bz":-33.0,"za":0,"zb":2},{"axis":"h","c":36.5,"len":18.0,"ax":36.5,"az":-15.0,"bx":36.5,"bz":-33.0,"za":1,"zb":3}],"passPts":[{"x":0.0,"z":30.5,"dir":"h"},{"x":0.0,"z":70.5,"dir":"h"},{"x":0.0,"z":-70.5,"dir":"h"},{"x":-36.5,"z":-24.0,"dir":"v"},{"x":36.5,"z":-24.0,"dir":"v"}],"rivers":[[-6.5,-82.0,6.5,-74.5],[-6.5,-66.5,6.5,26.5],[-6.5,34.5,6.5,66.5],[-6.5,74.5,6.5,82.0]],"bridges":[[-8.0,-74.5,8.0,-66.5],[-8.0,26.5,8.0,34.5],[-8.0,66.5,8.0,74.5]],"lots":[[-33.0,2.29,-9.0,11.83],[-33.0,48.24,-9.0,57.36],[-64.0,48.87,-40.0,56.5],[-64.0,8.14,-40.0,17.98],[9.0,46.86,33.0,56.03],[40.0,3.2,64.0,14.03],[40.0,41.94,64.0,51.07],[9.0,3.4,33.0,15.02],[-64.0,-57.01,-40.0,-46.83],[-33.0,-56.06,-9.0,-48.51],[40.0,-61.35,64.0,-51.5],[9.0,-65.99,33.0,-55.82]],"b":[{"x":-22.49,"z":18.74,"w":12.0,"d":8.6,"doors":["w"],"kinds":{},"local":0,"block":-1,"t":"army","zone":0,"sideK":0},{"x":-25.67,"z":-10.3,"w":9.4,"d":6.8,"doors":["w"],"kinds":{},"local":1,"block":-1,"t":"store","zone":0,"sideK":1},{"x":-21.97,"z":-1.36,"w":7.0,"d":4.0,"doors":["s"],"kinds":{},"local":2,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-13.372743698002509,"z":-1.4238752966259387,"w":6.0,"d":4.0,"doors":["n"],"kinds":{},"local":3,"block":-1,"t":"house","zone":0,"garage":true,"open":["s"],"locks":[]},{"x":-25.46,"z":41.03,"w":12.0,"d":8.6,"doors":["s"],"kinds":{},"local":4,"block":-1,"t":"fire","zone":0,"sideK":0},{"x":-15.68,"z":61.83,"w":9.4,"d":6.8,"doors":["n"],"kinds":{},"local":5,"block":-1,"t":"store","zone":0,"sideK":1},{"x":-27.78,"z":63.59,"w":5.0,"d":6.0,"doors":["n"],"kinds":{},"local":6,"block":-1,"t":"house","zone":0,"sideK":2},{"x":-26.94,"z":70.64,"w":5.0,"d":4.0,"doors":["s"],"kinds":{},"local":7,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-49.97,"z":69.78,"w":14.9,"d":10.4,"doors":["e"],"kinds":{},"local":8,"block":-1,"t":"mart","zone":0,"sideK":2},{"x":-58.25,"z":59.82,"w":5.5,"d":4.5,"doors":["s"],"kinds":{},"local":9,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-50.82,"z":59.74,"w":5.0,"d":4.5,"doors":["n"],"kinds":{},"local":10,"block":-1,"t":"house","zone":0,"sideK":1},{"x":-55.48563882735918,"z":37.25106424011956,"w":6.5,"d":5.5,"doors":["s"],"kinds":{},"local":11,"block":-1,"t":"house","zone":0,"garage":true,"open":["n"],"locks":[]},{"x":-46.66,"z":37.26,"w":6.0,"d":5.0,"doors":["n"],"kinds":{},"local":12,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-55.31,"z":44.87,"w":7.0,"d":5.5,"doors":["s"],"kinds":{},"local":13,"block":-1,"t":"house","zone":0,"sideK":2},{"x":-55.36,"z":23.01,"w":9.4,"d":6.8,"doors":["e"],"kinds":{},"local":14,"block":-1,"t":"store","zone":0,"sideK":0},{"x":-58.93,"z":-11.28,"w":7.5,"d":5.0,"doors":["n"],"kinds":{},"local":15,"block":-1,"t":"house","zone":0,"sideK":0},{"x":-59.74,"z":-3.51,"w":5.5,"d":6.0,"doors":["e"],"kinds":{},"local":16,"block":-1,"t":"house","zone":0,"sideK":2},{"x":-58.34,"z":3.59,"w":7.0,"d":4.0,"doors":["s"],"kinds":{},"local":17,"block":-1,"t":"house","zone":0,"sideK":0},{"x":16.05,"z":39.86,"w":12.0,"d":8.6,"doors":["s"],"kinds":{},"local":18,"block":-1,"t":"gym","zone":1,"sideK":0},{"x":15.42,"z":60.75,"w":9.4,"d":6.8,"doors":["e"],"kinds":{},"local":19,"block":-1,"t":"store","zone":1,"sideK":1},{"x":28.13,"z":65.72,"w":5.0,"d":6.0,"doors":["n"],"kinds":{},"local":20,"block":-1,"t":"house","zone":1,"sideK":0},{"x":28.68,"z":72.89,"w":5.5,"d":4.0,"doors":["s"],"kinds":{},"local":21,"block":-1,"t":"house","zone":1,"sideK":0},{"x":56.95,"z":19.2,"w":12.0,"d":8.6,"doors":["n"],"kinds":{},"local":22,"block":-1,"t":"bank","zone":1,"sideK":1},{"x":46.75,"z":-5.33,"w":9.4,"d":6.8,"doors":["s"],"kinds":{},"local":23,"block":-1,"t":"store","zone":1,"sideK":2},{"x":59.38,"z":-1.66,"w":6.5,"d":4.5,"doors":["s"],"kinds":{},"local":24,"block":-1,"t":"house","zone":1,"sideK":0},{"x":58.51,"z":-10.07,"w":7.0,"d":5.0,"doors":["n"],"kinds":{},"local":25,"block":-1,"t":"house","zone":1,"sideK":0},{"x":48.0,"z":68.9,"w":12.0,"d":8.6,"doors":["w"],"kinds":{},"local":26,"block":-1,"t":"hospital","zone":1,"sideK":1},{"x":44.93,"z":55.52,"w":7.5,"d":5.5,"doors":["w"],"kinds":{},"local":27,"block":-1,"t":"house","zone":1,"sideK":0},{"x":53.33,"z":54.7,"w":5.0,"d":4.5,"doors":["n"],"kinds":{},"local":28,"block":-1,"t":"house","zone":1,"sideK":1},{"x":60.47994038247018,"z":55.40510577851337,"w":5.0,"d":4.5,"doors":["n"],"kinds":{},"local":29,"block":-1,"t":"house","zone":1,"garage":true,"open":["s"],"locks":[]},{"x":15.06,"z":21.27,"w":9.4,"d":6.8,"doors":["n"],"kinds":{},"local":30,"block":-1,"t":"store","zone":1,"sideK":1},{"x":15.56,"z":-7.82,"w":6.0,"d":4.0,"doors":["n"],"kinds":{},"local":31,"block":-1,"t":"house","zone":1,"sideK":1},{"x":23.379166344455236,"z":-7.203197941176766,"w":5.5,"d":5.0,"doors":["w"],"kinds":{},"local":32,"block":-1,"t":"house","zone":1,"garage":true,"open":["e"],"locks":[]},{"x":15.6,"z":-0.46,"w":5.0,"d":4.5,"doors":["s"],"kinds":{},"local":33,"block":-1,"t":"house","zone":1,"sideK":0},{"x":26.83,"z":17.95,"w":5.0,"d":4.0,"doors":["n"],"kinds":{},"local":34,"block":-1,"t":"house","zone":1,"sideK":1},{"x":27.96,"z":24.23,"w":7.5,"d":4.5,"doors":["s"],"kinds":{},"local":35,"block":-1,"t":"house","zone":1,"sideK":0},{"x":-56.58,"z":-62.19,"w":8.5,"d":6.5,"doors":["s"],"kinds":{},"local":36,"block":-1,"t":"conv","zone":2,"sideK":2},{"x":-56.95,"z":-38.52,"w":9.4,"d":6.8,"doors":["e"],"kinds":{},"local":37,"block":-1,"t":"store","zone":2,"sideK":0},{"x":-45.7,"z":-72.39,"w":6.0,"d":4.5,"doors":["n"],"kinds":{},"local":38,"block":-1,"t":"house","zone":2,"sideK":1},{"x":-45.68,"z":-65.48,"w":5.5,"d":5.0,"doors":["s"],"kinds":{},"local":39,"block":-1,"t":"house","zone":2,"sideK":1},{"x":-16.2,"z":-61.41,"w":11.4,"d":8.15,"doors":["n"],"kinds":{},"local":40,"block":-1,"t":"library","zone":2,"sideK":1},{"x":-27.758943909907252,"z":-72.5514296954452,"w":7.5,"d":4.0,"doors":["n"],"kinds":{},"local":41,"block":-1,"t":"house","zone":2,"garage":true,"open":["s"],"locks":[]},{"x":-22.04,"z":-44.08,"w":4.5,"d":5.0,"doors":["w"],"kinds":{},"local":42,"block":-1,"t":"house","zone":2,"sideK":1},{"x":-13.89,"z":-43.71,"w":6.5,"d":5.5,"doors":["n"],"kinds":{},"local":43,"block":-1,"t":"house","zone":2,"sideK":0},{"x":-22.16,"z":-36.99,"w":5.5,"d":4.0,"doors":["s"],"kinds":{},"local":44,"block":-1,"t":"house","zone":2,"sideK":0},{"x":48.49,"z":-67.48,"w":12.0,"d":8.6,"doors":["s"],"kinds":{},"local":45,"block":-1,"t":"police","zone":3,"sideK":1},{"x":47.29,"z":-45.74,"w":4.0,"d":7.5,"doors":["w"],"kinds":{},"local":46,"block":-1,"t":"house","zone":3,"sideK":1},{"x":48.28,"z":-37.57,"w":6.5,"d":4.5,"doors":["s"],"kinds":{},"local":47,"block":-1,"t":"house","zone":3,"sideK":0},{"x":58.65579042374771,"z":-45.81122534301815,"w":6.5,"d":4.5,"doors":["s"],"kinds":{},"local":48,"block":-1,"t":"house","zone":3,"garage":true,"open":["n"],"locks":[]},{"x":58.86,"z":-38.83,"w":6.0,"d":5.0,"doors":["s"],"kinds":{},"local":49,"block":-1,"t":"house","zone":3,"sideK":1},{"x":15.78,"z":-40.46,"w":9.4,"d":6.8,"doors":["s"],"kinds":{},"local":50,"block":-1,"t":"store","zone":3,"sideK":1},{"x":21.64,"z":-51.45,"w":5.5,"d":4.0,"doors":["n"],"kinds":{},"local":51,"block":-1,"t":"house","zone":3,"sideK":1},{"x":29.19,"z":-51.34,"w":5.5,"d":5.5,"doors":["n"],"kinds":{},"local":52,"block":-1,"t":"house","zone":3,"sideK":0},{"x":-65.59,"z":-24.0,"w":8.83,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":53,"block":-1,"t":"hill","zone":-1},{"x":-56.8,"z":-24.21,"w":10.34,"d":9.87,"doors":[],"locks":[],"kinds":{},"local":54,"block":-1,"t":"hill","zone":-1},{"x":-46.47,"z":-24.0,"w":11.93,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":55,"block":-1,"t":"hill","zone":-1},{"x":-27.94,"z":-24.0,"w":9.12,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":56,"block":-1,"t":"hill","zone":-1},{"x":-19.97,"z":-23.68,"w":8.42,"d":10.48,"doors":[],"locks":[],"kinds":{},"local":57,"block":-1,"t":"hill","zone":-1},{"x":-11.28,"z":-24.0,"w":10.56,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":58,"block":-1,"t":"hill","zone":-1},{"x":10.49,"z":-24.0,"w":8.98,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":59,"block":-1,"t":"hill","zone":-1},{"x":18.2,"z":-24.1,"w":8.03,"d":12.54,"doors":[],"locks":[],"kinds":{},"local":60,"block":-1,"t":"hill","zone":-1},{"x":26.96,"z":-24.0,"w":11.08,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":61,"block":-1,"t":"hill","zone":-1},{"x":44.77,"z":-24.0,"w":8.54,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":62,"block":-1,"t":"hill","zone":-1},{"x":52.59,"z":-23.81,"w":8.7,"d":11.64,"doors":[],"locks":[],"kinds":{},"local":63,"block":-1,"t":"hill","zone":-1},{"x":63.07,"z":-24.0,"w":13.85,"d":13.0,"doors":[],"locks":[],"kinds":{},"local":64,"block":-1,"t":"hill","zone":-1},{"x":-18.09,"z":21.24,"w":3.2,"d":3.6,"doors":["w","s"],"locks":[],"kinds":{},"local":65,"block":-1,"t":"room","zone":0,"parent":0,"room":{"doors":[{"s":"w","w":2.0,"ext":false},{"s":"s","w":1.5,"ext":true}]}},{"x":-54.92,"z":73.48,"w":5.0,"d":3.0,"doors":["n","s"],"locks":[],"kinds":{},"local":66,"block":-1,"t":"room","zone":0,"parent":8,"room":{"doors":[{"s":"n","w":2.0,"ext":false},{"s":"s","w":1.5,"ext":true}]}},{"x":46.5,"z":71.7,"w":3.0,"d":3.0,"doors":["n"],"locks":[],"kinds":{},"local":67,"block":-1,"t":"room","zone":1,"parent":26,"room":{"doors":[{"s":"n","w":2.0,"ext":false}]}},{"x":49.5,"z":71.7,"w":3.0,"d":3.0,"doors":["n"],"locks":[],"kinds":{},"local":68,"block":-1,"t":"room","zone":1,"parent":26,"room":{"doors":[{"s":"n","w":2.0,"ext":false}]}},{"x":44.29,"z":-70.18,"w":3.6,"d":3.2,"doors":["s"],"locks":[],"kinds":{},"local":69,"block":-1,"t":"jail","zone":3,"parent":45,"room":{"doors":[{"s":"s","w":2.0,"ext":false}]}},{"x":-18.09,"z":16.24,"w":3.2,"d":3.6,"doors":["w"],"locks":[],"kinds":{},"local":70,"block":-1,"t":"jail","zone":0,"parent":0,"room":{"doors":[{"s":"w","w":2.0,"ext":false}]}}]};   // 생성기(씨앗 7)가 만든 고정 맵 — c2: 건물 71채 (랜드마크 9 · 창고 8 · 집 54) · c3: 세로 경계 = 강(다리 3곳), 가로 경계 = 산(길목 2곳) · c4·c5: 집을 작게, 1~4채씩 바짝 뭉치고 블록마다 공터, 집 8채는 차고
   const BUILDINGS = CHAPTER ? CH_MAP.b : TEST_MAP ? TEST_BLDGS : BLOCKS.flatMap(([ox, oz], k) => TOWN.map((s) => (k === START_BLOCK && s.station ? BIG : s)).map((s) => ({ ...s, x: s.x + ox, z: s.z + oz, block: k })));
   const DOOR = 4 * MAP;   // 문 폭 (유닛) — 문은 그 벽 한가운데. 여럿이 나란히 지나간다
   const WALL_SENSE = 1 / 4;   // 도망칠 때 벽도 좀비처럼 피한다 — 가장 가까운 벽이 인지거리의 이만큼 안에 들어오면 (구석에 몰리지 않게)
@@ -803,6 +803,14 @@
   }
   // ── c11: 인간(하양) 깔기 + 먼 사람 재우기 ──
   const CH_WAKE = 40;                         // 깨울 사람을 고를 때 쓰는 굵은 격자 한 칸 (칸)
+  const CH_SLEEP = 20;                        // c54: 깨어 있던 사람은 좀비가 전부 이만큼 멀어지면 그 자리에 다시 선다 (깨어나는 거리 14보다 넉넉히)
+  function chCanSleep(b) {                    // 지금 다시 서도 되나 — 나와 얽힌 중(싸움·도망·경계·추적·출동)이면 안 된다
+    return b.state === 'normal' && !(b.police && !b.post) && !b.guardOf && !b.fb && !(b.infect > 0) && !(b.stunT > 0) && !(b.knockT > 0) && !(b.pushT > 0) && !b.lureAlert && !b.goo && !b.marked;
+  }
+  function chWakeUp(b) {                      // 깨어나는 순간 — 서 있지 않고 바로 돌아다니기 시작한다 (내 눈에 들어올 땐 이미 걷는 중)
+    if (b.state !== 'normal' || b.goal || !b.area) return;
+    if (Math.random() < 0.75) { b.goal = pickGoal(b.area); b.back = false; } else b.timer = rand(0.2, 1.5);
+  }
   const CH_MEET = 14;                         // c12: 좀비가 이만큼(칸) 안에 오면 깨어난다 — 좀비 시야(7.2칸)의 두 배쯤이라, 내 눈에 들어올 땐 이미 돌아다니고 있다
   let chHot = null, CH_GW = 0, CH_GH = 0;
   const chNearRiver = (x, z, m) => CH_MAP.rivers.some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
@@ -813,14 +821,14 @@
   const CH_WHITE_OUT = 81, CH_YELLOW_OUT = 36;   // c48: 길거리 하양 · 노랑 (건물 안은 아래 표)
   const CH_INSIDE = {                         // c48: 건물 안 인원 [종류, 최소, 최대] — '' 하양 · guard 노랑 · attacker 주황 · vig 빨강 · police 경찰 · soldier 군인
     army: [['sniper', 1, 1], ['soldier', 2, 4]],   // c51: 저격수 1명은 늘
-    hospital: [['', 5, 10], ['attacker', 2, 3], ['vig', 2, 3], ['police', 1, 2]],
+    hospital: [['', 5, 10], ['attacker', 2, 3], ['vig', 1, 2], ['police', 1, 2]],   // c54: 빨강은 건물마다 한 명씩 뺐다 (최소 1)
     police: [['police', 4, 7], ['', 2, 4]],
-    fire: [['police', 1, 2], ['vig', 3, 5], ['attacker', 2, 4]],
+    fire: [['police', 1, 2], ['vig', 2, 4], ['attacker', 2, 4]],
     conv: [['', 1, 3], ['guard', 1, 2]],
-    mart: [['', 7, 12], ['police', 3, 4], ['vig', 2, 3], ['guard', 2, 4]],
-    gym: [['', 2, 3], ['guard', 3, 5], ['attacker', 7, 10], ['vig', 1, 2], ['police', 1, 1]],
-    store: [['attacker', 4, 6], ['vig', 4, 7]],
-    bank: [['', 4, 7], ['guard', 4, 7], ['attacker', 1, 2], ['police', 3, 4], ['vig', 3, 4]],
+    mart: [['', 7, 12], ['police', 3, 4], ['vig', 1, 2], ['guard', 2, 4]],
+    gym: [['', 2, 3], ['guard', 3, 5], ['attacker', 7, 10], ['vig', 1, 1], ['police', 1, 1]],
+    store: [['attacker', 4, 6], ['vig', 3, 6]],
+    bank: [['', 4, 7], ['guard', 4, 7], ['attacker', 1, 2], ['police', 3, 4], ['vig', 2, 3]],
     library: [['police', 1, 2], ['guard', 2, 3], ['', 4, 5]],
   };
   function chOutSpot(placed, minOwn, keepStart) {   // 바깥 빈자리 — placed(같은 종류 자리들)에서 최대한 먼 곳 (고르게)
@@ -892,6 +900,7 @@
           for (let n = R2(0, cap); n > 0 && pool.length; n--) { const i = pool.splice(Math.floor(Math.random() * pool.length), 1)[0]; inPut(R, list[i]); list[i] = null; }
         }
         for (const type of list) if (type !== null) inPut(B, type);
+        if (B.type === 'gym') { let g = pickGoal(B); for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.4); t++) g = pickGoal(B); chBoss(B, 'armor', g.x, g.y); }   // c54: 헬스장 관장 — 갇혀 있지 않다. 감염시키면 영구 덩치
         continue;
       }
       if (B.type !== 'house' || empty.has(B)) continue;
@@ -900,7 +909,7 @@
     }
     houseSlots.sort(() => Math.random() - 0.5);
     const houseOut = Math.round(houseSlots.length / 3);   // c49: 집 사람 3분의 1은 집 밖(길거리)으로
-    houseSlots.slice(houseOut).forEach((B) => inPut(B, ''));
+    houseSlots.slice(houseOut).forEach((B) => { const q = Math.random(); inPut(B, q < 0.15 ? 'attacker' : q < 0.30 ? 'vig' : ''); });   // c54: 집 안 하양은 15%는 주황, 15%는 빨강으로
     for (const B of buildings) if (B.type === 'police') for (let i = 0; i < 3; i++) {   // 경찰서 밖 배회 경찰 3명 (죽어도 채워지지 않는다)
       const ring = { x0: B.x0 - 5, z0: B.z0 - 5, x1: B.x1 + 5, z1: B.z1 + 5 }; let g = pickGoal(ring); for (let t = 0; t < 40 && (spaceOf(g.x, g.y) || chNearRiver(g.x, g.y, 1)); t++) g = pickGoal(ring);
       chPut(g.x, g.y, ring, 'police');
@@ -908,7 +917,8 @@
     const ys = [];
     for (let k = 0; k < CH_YELLOW_OUT; k++) { const p = chOutSpot(ys, 1.2, 14); if (!p) continue; ys.push(p); chPut(p[0], p[1], square(p[0], p[1]), 'guard'); }
     let w = 0;
-    for (let t = 0; t < 40000 && w < CH_WHITE_OUT + houseOut; t++) {   // 길거리 하양
+    const whiteOut = Math.round((CH_WHITE_OUT + houseOut) * 1.15);   // c54: 길거리 하양 15% 더
+    for (let t = 0; t < 40000 && w < whiteOut; t++) {   // 길거리 하양
       const x = rand(MM.x0 + 3, MM.x1 - 3), z = rand(MM.z0 + 3, MM.z1 - 3);
       if (spaceOf(x, z) || chNearRiver(x, z, AREA / 2 + 1) || !freeSpot(x, z, null) || Math.hypot(x - me.foot.x, z - me.foot.z) < 14) continue;
       if (bodies.some((b) => Math.hypot(b.foot.x - x, b.foot.z - z) < 1.2)) continue;
@@ -1337,7 +1347,7 @@
   const SAFE_AVOID = 1.0;                     // v295: 금고 = 건물 안 장애물 (경찰차처럼) — 돌아가는 원은 부딪힘(1.2)보다 살짝 작게
   function insideVia(b, B, tx, tz) {
     const S = B.safe;
-    if (!S || S.dead || b === S || Math.hypot(tx - S.foot.x, tz - S.foot.z) < 0.05) return wp.set(tx, tz);   // 금고 자체로 가는 길(때리러)은 그대로
+    if (!S || S.dead || b === S || (S.room && S.room !== B) || Math.hypot(tx - S.foot.x, tz - S.foot.z) < 0.05) return wp.set(tx, tz);   /* c54: 금고가 방 안이면 복도에서는 안 피한다 */   // 금고 자체로 가는 길(때리러)은 그대로
     const px = b.foot.x, pz = b.foot.z, L = Math.hypot(tx - px, tz - pz) || 1e-6, ux = (tx - px) / L, uz = (tz - pz) / L;
     const R = SAFE_AVOID + BODY + 0.45;
     const cx = S.foot.x - px, cz = S.foot.z - pz, dc = Math.hypot(cx, cz);
@@ -1529,6 +1539,7 @@
   // ── 시민 상태: 일반 → 경계 → 패닉 → 멈춤 → 일반 (공격형은 HP가 남아 있으면, 경찰은 늘 패닉 대신 싸움) ──
   const inArea = (c) => c.foot.x >= c.area.x0 && c.foot.x <= c.area.x1 && c.foot.z >= c.area.z0 && c.foot.z <= c.area.z1;
   function pickGoal(a) {                      // 영역 안 아무 곳 — 밖 영역이면 건물 근처는 빼고
+    if (CHAPTER && a.guardB && a.guardB.doors.length && Math.random() < 0.4) return pickGoal(a.guardB);   // c54: 사수 경찰 — 그 건물 문이 뚫려 있으면 열 번에 네 번은 건물 안을 돈다
     let g;
     for (let n = 0; n < 20; n++) {
       g = new THREE.Vector2(rand(a.x0 + 0.6, a.x1 - 0.6), rand(a.z0 + 0.6, a.z1 - 0.6));
@@ -1547,7 +1558,7 @@
     c.back = !!c.goal;                              // 돌아가는 길은 일반 속도, 영역 안 배회는 그 1/3
     c.timer = rand(...IDLE_TIME);
   }
-  function enterAlert(c) { c.state = 'alert'; c.timer = rand(...ALERT_TIME) * (c.police ? POLICE_ALERT : 1); }
+  function enterAlert(c) { c.state = 'alert'; c.timer = rand(...ALERT_TIME) * (c.police || (CHAPTER && c.attacker) ? POLICE_ALERT : 1); }   /* c54: 주황·빨강도 경찰만큼 짧게 경계 (3분의 1) */
   function enterPanic(c, spots, quiet) {
     c.state = 'panic';
     c.panicLen = rand(...PANIC_TIME);
@@ -1563,6 +1574,7 @@
       c.onDuty = true;
     }
     c.state = 'fight';
+    if (CHAPTER && (c.police || c.attacker)) chFightBoost(c);   // c54: 타겟이 생긴 순간 시야 1.3배
     c.foe = z || null;
     c.chaseR = 0;
     if (z) c.spot = null;
@@ -1751,6 +1763,7 @@
   const LURED_FORCE = MY_FORCE * 1.5;   // 돈다발로 달려가는 사람의 미는 힘(무게) = 나의 1.5배 (v196) — 유혹이 풀리면 원래대로
   const INFECT_DECAY = 0.1;   // 저장된 감염 게이지가 빠지는 속도 — 꽉 찬 게이지(100)가 10초에 0 (v213)
   function updateCitizen(c, dt) {
+    if (c.fb) chFightBoostTick(c, dt);   // c54
     if (c.sniper) sniperSpeed(c, dt);        // v411: 저격수 실제 이동 속도 (고립 판단)
     if (c.infect > 0 && c.state !== 'held') c.infect = Math.max(0, c.infect - INFECT_DECAY * dt);
     c.force = c.state === 'lured' ? LURED_FORCE : c.sniper ? 5 : 1;   /* v512: 저격수 미는 힘 5 (v448: 8) */   // v448: 저격수 미는 힘 = 나와 같음
@@ -2042,7 +2055,7 @@
     if (c.notice > 0) c.notice -= dt;
     const tick = (c.tick -= dt) <= 0;
     if (tick) c.tick += TICK;
-    const range = c.boostT > 0 ? c.boostSight : c.sight;   // 사거리 = 원래(1배) 시야 (v159)
+    const range = c.boostT > 0 ? c.boostSight : c.fb ? c.sight0 : c.sight;   // 사거리 = 원래(1배) 시야 (v159 · c54: 늘어난 시야는 사거리가 아니다)
     if (c.soldier && soldierLeash(c, dt)) { moveShoot(c, dt); return; }   // v442: 복귀하면서도 쏜다   // v410: 주인 저격수에게서 지배 거리 밖에 1~2초 → 복귀
     if (c.sniper && !c.isolated) {   // v510: 건물 안에서도 회피 (벽은 그냥 막히는 것 — 막히면 고립 규칙)   // v396: 저격수 — 좀비가 회피거리 안이면 바로 도망 (건물 안 · 고립 중엔 안 함)
       const er = c.evadeR;                    // v406: 회피거리 = 내 덮침 거리(3.24칸)의 1.1배 = 3.56칸 ±10% (회피할 때마다 새로 뽑는다)
@@ -2071,7 +2084,7 @@
     if (!c.military) return;
     if (c.atkT > 0) { c.atkT += own ? -dt * (c.goo ? 0.56 : 1) : 0; return; }   /* v540: 이동 중에도 공격 속도 그대로 */   // own: 쿨타임을 여기서 직접 흘린다 (평소 이동 중)
     if (c.burstN > 0) return;
-    const z = nearestZombie(c, c.boostT > 0 ? c.boostSight : c.sight, true);
+    const z = nearestZombie(c, c.boostT > 0 ? c.boostSight : c.fb ? c.sight0 : c.sight, true);
     if (!z) return;
     if (c.soldier) { c.burstN = 4; c.burstT = 0; c.burstZ = z; c.burstX = z.foot.x; c.burstZz = z.foot.z; } else shoot(c, z);
     c.atkT = HIT_EVERY * (c.sniper ? 4 : 1);
@@ -2243,7 +2256,7 @@
       const sd = i % 2 ? -s0 : s0, back = Math.floor(i / 2) * (BODY * 2 + 0.3);
       const c = addCitizen(car.x + rx * off * sd - fx * back, car.z + rz * off * sd - fz * back, null, 'police');
       if (CHAPTER) { (car.crew = car.crew || []).push(c); c.met = true; }   // c47 · c52: 내린 사람은 깨어 있다
-      if (car.guard) { const G = car.guard, ring = { x0: G.x0 - 4, z0: G.z0 - 4, x1: G.x1 + 4, z1: G.z1 + 4 }; c.area = ring; c.post = ring; c.guardOf = G; }   // c46: 그 건물 둘레를 지킨다
+      if (car.guard) { const G = car.guard, ring = { x0: G.x0 - 4, z0: G.z0 - 4, x1: G.x1 + 4, z1: G.z1 + 4, guardB: G };   /* c54: 문이 뚫려 있으면 안에도 들어가 돈다 (pickGoal) */ c.area = ring; c.post = ring; c.guardOf = G; }   // c46: 그 건물 둘레를 지킨다
       else for (const s of car.calls) c.calls.push(s.clone());   // 차가 아직 못 들른 사건 자리 (없으면 내린 뒤 주인공을 쫓는다)
       c.baseSense = c.sense;                  // 내리는 순간 인지거리 2배 → 3초에 걸쳐 원래대로
       c.dropT = DROP_SENSE_T;
@@ -2736,7 +2749,7 @@
     z.engaging = c;                           // 수비형은 이걸 보고 '누가 나를 노리나'를 안다
     const d = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z);
     if (d > ATTACK_HOLD) z.attacking = false; // 상대가 1.5칸 밖 = 공격 중 아님 (다가가는 중)
-    if (d > MELEE + (c.kind === 'safe' ? c.r : 0) || c.space !== z.space) { steer(z.vel, toward(z, c.foot.x, c.foot.z, z.speed), ACCEL * dt); return; }   // v296: 다른 공간이면 문으로 들어가서 때린다   // 큰 금고는 겉면까지 닿으면 때린다 (v196)
+    if (d > MELEE + (c.kind === 'safe' ? c.r : 0) || (c.space !== z.space && !(c.kind === 'safe' && chSafeReach(z, c)))) { steer(z.vel, toward(z, c.foot.x, c.foot.z, z.speed), ACCEL * dt); return; }   /* c54: 방을 꽉 채운 금고는 문간에서 때린다 */   // v296: 다른 공간이면 문으로 들어가서 때린다   // 큰 금고는 겉면까지 닿으면 때린다 (v196)
     steer(z.vel, wantV.set(0, 0), ACCEL * dt);
     if (z === me && c.kind === 'safe') c.hotF = objFrame;   // v360: 내가 금고를 때리는 중
     if (z.atkT <= 0) { strike(z, c); z.atkT = HIT_EVERY; z.attacking = true; }   // 휘두르는 순간부터 공격 중
@@ -2872,6 +2885,7 @@
   }
 
   function makeZombie(b) {
+    if (CHAPTER && b.home && b.home.x0 !== undefined) { const P = b.home.parent || b.home; if (P.called === 1) P.lost = true; }   // c54: 문이 부서진 건물 안 사람이 감염됐다 → 두 번째 출동
     if (b.mark) { scene.remove(b.mark); b.mark = null; }
     if (b.stick) { b.mesh.remove(b.stick); b.stick = null; b.vig = false; }   // c40: 감염되면 몽둥이를 놓는다   // v401: 감염되면 저격수 다이아몬드 지움
     if (b.gooS) { b.mesh.remove(b.gooS); b.gooS = null; } b.goo = false;   // v275: 좀비가 되면 산성 덩어리는 사라진다
@@ -3464,7 +3478,7 @@
       if (b.kind !== 'citizen') continue;
       if (b.mark) { b.mark.visible = !hide; if (!hide) b.mark.position.copy(b.foot).addScaledVector(UP, RADIUS); }   // v412: 저격수 스코프 — 몸 한가운데에 크게
       if (b.stunT > 0 || b.stunShown) {       // 감전 중 깜빡임 (v190)
-        const base = COLOR[b.sniper ? 'sniper' : b.soldier ? 'soldier' : b.police ? 'police' : b.attacker ? 'attacker' : b.guard ? 'guard' : 'citizen'];
+        const base = b.vig || b.boss ? 0xc62828 : COLOR[b.sniper ? 'sniper' : b.soldier ? 'soldier' : b.police ? 'police' : b.attacker ? 'attacker' : b.guard ? 'guard' : 'citizen'];   /* c54: 빨강은 감전 뒤에도 빨강 */
         b.stunShown = b.stunT > 0;
         b.mesh.material.color.setHex(b.stunShown && Math.floor(clock * 14) % 2 ? 0xc8f0ff : base);
       }
@@ -4196,10 +4210,18 @@
       chHot.fill(0); chHot[row(me.foot.z) * CH_GW + col(me.foot.x)] = 1;   // 먼저 굵은 격자로 거른다 — 좀비가 있는 칸과 이웃 칸에 있는 사람만 거리를 잰다
       for (const z of zombies) chHot[row(z.foot.z) * CH_GW + col(z.foot.x)] = 1;
       const near = (b, z) => { const dx = z.foot.x - b.foot.x, dz = z.foot.z - b.foot.z; return dx * dx + dz * dz < CH_MEET * CH_MEET; };
-      for (const b of bodies) if (b.kind === 'citizen' && !b.met) {
+      for (const b of bodies) if (b.kind === 'citizen') {
+        if (b.met) {                          // c54: 깨어 있는 사람 — 좀비가 전부 멀어지면(CH_SLEEP칸 밖) 그 자리에 다시 선다 (연산 안 함). 싸우거나 도망치거나 나를 쫓는 중이면 그대로 움직인다
+          if ((b.zzT = (b.zzT === undefined ? Math.random() * 0.5 : b.zzT) - dt) > 0) continue;
+          b.zzT = 0.5;
+          if (!chCanSleep(b)) continue;
+          const far = (z) => { const dx = z.foot.x - b.foot.x, dz = z.foot.z - b.foot.z; return dx * dx + dz * dz > CH_SLEEP * CH_SLEEP; };
+          if (far(me) && zombies.every(far)) { b.met = false; b.sleep = true; b.vel.set(0, 0); }
+          continue;
+        }
         const cx = col(b.foot.x), cz = row(b.foot.z); let hot = false;
         for (let dz = -1; dz <= 1 && !hot; dz++) for (let dx = -1; dx <= 1; dx++) { const X = cx + dx, Z = cz + dz; if (X >= 0 && X < CH_GW && Z >= 0 && Z < CH_GH && chHot[Z * CH_GW + X]) { hot = true; break; } }
-        if (hot && (near(b, me) || zombies.some((z) => near(b, z)))) b.met = true;
+        if (hot && (near(b, me) || zombies.some((z) => near(b, z)))) { b.met = true; chWakeUp(b); }
         b.sleep = !b.met;
       }
     }
@@ -4245,7 +4267,7 @@
       if (b.lungeT >= 0) {                    // 때리는 모션 시간 — 붙는 순간 데미지
         const before = b.lungeT;
         b.lungeT += dt;
-        if (before < LUNGE_IN && b.lungeT >= LUNGE_IN && b.lungeVictim) { landHit(b, b.lungeVictim, isZombie(b) ? zDamage(b) : DAMAGE * (CHAPTER && b.attacker ? (b.vig ? 2 : 1.5) : 1) * (b.dmgK || 1)); b.lungeVictim = null; }   // 좀비 공격력 = 강한 팔 반영 (v201)
+        if (before < LUNGE_IN && b.lungeT >= LUNGE_IN && b.lungeVictim) { landHit(b, b.lungeVictim, isZombie(b) ? zDamage(b) : DAMAGE * (CHAPTER && b.attacker ? (b.vig || b.boss ? 2 : 1.5) : 1) * (b.dmgK || 1)); b.lungeVictim = null; }   // 좀비 공격력 = 강한 팔 반영 (v201)
         if (b.lungeT >= LUNGE_IN + LUNGE_OUT) b.lungeT = -1;
       }
     }
@@ -4635,7 +4657,7 @@
   function nearSafe(z) {                      // 나랑 같은 공간, 인지거리 안의 안 부서진 금고
     for (const S of buildings) {
       const b = S.safe;
-      if (!b || b.dead || b.space !== z.space) continue;
+      if (!b || b.dead || (b.space !== z.space && !chSafeReach(z, b))) continue;   /* c54: 방 안 금고는 열린 문 너머로도 */
       if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) - (z === me ? 0 : b.r) <= (z === me || hotObj(b) ? z.sense : OBJ_SEE)) return b;   // v360: 동료는 경찰차처럼 붙어야 알아챈다 (내가 때리는 중이면 인지거리)
     }
     return null;
@@ -5230,15 +5252,16 @@
       if (B.type === 'hill' || B.parent || (B.type === 'house' && Math.random() >= CH_HOUSE_SAFE)) continue;
       addSafe(B);
       const s = B.safe; s.B = B; s.loot = chLoot(B.type); s.dud = !s.loot;
-      if (B.rooms) chSafeSpot(B, s);   // c53: 금고는 방과 방문 앞을 피해서
+      s.room = null;
+      if (B.rooms) { const rs = B.rooms.filter((R) => R.type === 'room'); if (rs.length && Math.random() < 0.5) chSafeInRoom(s, rs[Math.floor(Math.random() * rs.length)]); else chSafeSpot(B, s); }   // c53: 금고는 방과 방문 앞을 피해서 · c54: 방이 있는 건물은 반반 확률로 방 안
       for (const c of bodies) {               // 금고 자리에 겹친 사람은 옆으로 (자는 사람은 부딪힘 계산을 안 해서 겹친 채 남는다)
-        if (c.kind !== 'citizen' || c.space !== B) continue;
+        if (c.kind !== 'citizen' || c.space !== (s.room || B)) continue;   /* c54: 금고가 방 안이면 그 방 사람 */
         const dx = c.foot.x - s.foot.x, dz = c.foot.z - s.foot.z, d = Math.hypot(dx, dz), R = s.r + BODY + 0.1;
         if (d >= R) continue;
         const ux = d > 1e-6 ? dx / d : 1, uz = d > 1e-6 ? dz / d : 0;
-        c.foot.x = Math.max(B.x0 + 0.6, Math.min(B.x1 - 0.6, s.foot.x + ux * R)); c.foot.z = Math.max(B.z0 + 0.6, Math.min(B.z1 - 0.6, s.foot.z + uz * R));
+        { const Q = s.room || B; c.foot.x = Math.max(Q.x0 + 0.6, Math.min(Q.x1 - 0.6, s.foot.x + ux * R)); c.foot.z = Math.max(Q.z0 + 0.6, Math.min(Q.z1 - 0.6, s.foot.z + uz * R)); }
         for (let t = 0; t < 40 && (Math.hypot(c.foot.x - s.foot.x, c.foot.z - s.foot.z) < R || bodies.some((o) => o !== c && o.kind === 'citizen' && Math.hypot(o.foot.x - c.foot.x, o.foot.z - c.foot.z) < 1.0)); t++) {   // c30: 벽 쪽에 막혀 아직 겹치면 그 건물 안 다른 빈 자리로
-          { const g = pickGoal(B); c.foot.x = g.x; c.foot.z = g.y; }   /* c53: 방을 피해서 */
+          { const g = pickGoal(s.room || B); c.foot.x = g.x; c.foot.z = g.y; }   /* c53: 방을 피해서 · c54: 금고가 방 안이면 그 방 안에서 */
         }
       }
     }
@@ -5427,8 +5450,15 @@
   const CH_LM = new Set(['bank', 'police', 'fire', 'mart', 'hospital', 'army', 'library', 'conv', 'gym']);
   const CH_DISP_N = [[1, 1], [1, 2], [2, 3], [3, 3], [3, 4], [4, 4], [4, 5], [5, 5]];   // 경보 단계별 출동 인원 (최소, 최대)
   let chDispT = -1, chDispStage = 0;
-  const CH_TWICE = new Set(['mart', 'hospital', 'bank', 'library']);   // c48: 두 번 출동 (3분의 1 깎였을 때 · 문 하나가 부서졌을 때)
-  function chDispReset() { chDispT = -1; chDispStage = 0; for (const B of buildings) { B.called = 0; B.firstSpot = null; } }
+  const CH_TWICE = new Set(['mart', 'hospital', 'bank', 'library']);   // c48: 두 번 출동 — c54: 문이 부서졌을 때 · 그 뒤 안에 있던 사람이 한 명이라도 감염됐을 때
+  function chDispReset() { chDispT = -1; chDispStage = 0; for (const B of buildings) { B.called = 0; B.firstSpot = null; B.lost = false; B.gate = null; } }
+  function chGuardCar(B) {                     // 사수 경찰차 1대 (경찰 2~3명) — 그 구역 바깥 라인 중 안 보이는 곳에서 나와 부서진 문 앞으로
+    const L = B.gate, tx = L.cx + L.nx * 2.6, tz = L.cz + L.nz * 2.6, zi = B.zone >= 0 ? B.zone : chZoneAt(tx, tz);
+    let p = chEdgeSpot(zi); for (let t = 0; t < 20 && B.firstSpot && Math.hypot(p.x - B.firstSpot.x, p.z - B.firstSpot.z) < 15; t++) p = chEdgeSpot(zi);   // 두 번째 차는 다른 자리에서
+    if (!B.firstSpot) B.firstSpot = p;
+    addCar(p.x, p.z, Math.atan2(tz - p.z, tx - p.x), new THREE.Vector2(tx, tz), 2 + Math.floor(Math.random() * 2));
+    cars[cars.length - 1].guard = B;
+  }
   function chZoneAt(x, z) { const Z = CH_MAP.zones; for (let i = 0; i < Z.length; i++) if (x >= Z[i][0] - 2 && x <= Z[i][2] + 2 && z >= Z[i][1] - 2 && z <= Z[i][3] + 2) return i; return chZoneOf(x, z); }
   function chEdgeSpot(zi) {                  // 그 구역 바깥 라인(가장자리 띠) 위 빈자리 — 내 화면과 좀비 시야 밖
     const [x0, z0, x1, z1] = CH_MAP.zones[zi], W = x1 - x0 - 4, H = z1 - z0 - 4;
@@ -5440,18 +5470,13 @@
     const [x, z] = edge(); return { x, z };
   }
   function chDispatchTick(dt) {
-    for (const o of objs) {                   // ① 랜드마크 사수
-      if (o.type !== 'door' || (o.B.parent && !o.L.ext)) continue;   // c53: 방 쪽문(바깥 문)도 건물 문으로 친다 · 방문(안쪽 문)은 아니다
-      const B = o.B.parent || o.B, L = o.L, k = B.called || 0;
-      if (!CH_LM.has(B.type)) continue;
-      if (!(k === 0 && (o.dead || o.hp <= o.maxHp * 2 / 3)) && !(k === 1 && CH_TWICE.has(B.type) && o.dead)) continue;
-      B.called = k + 1;
-      const tx = L.cx + L.nx * 2.6, tz = L.cz + L.nz * 2.6, zi = B.zone >= 0 ? B.zone : chZoneAt(tx, tz);
-      let p = chEdgeSpot(zi); for (let t = 0; t < 20 && B.firstSpot && Math.hypot(p.x - B.firstSpot.x, p.z - B.firstSpot.z) < 15; t++) p = chEdgeSpot(zi);   // 두 번째 차는 다른 자리에서
-      if (!B.firstSpot) B.firstSpot = p;
-      addCar(p.x, p.z, Math.atan2(tz - p.z, tx - p.x), new THREE.Vector2(tx, tz), 2 + Math.floor(Math.random() * 2));
-      cars[cars.length - 1].guard = B;
+    for (const o of objs) {                   // ① 랜드마크 사수 — c54: 바깥문(정문·쪽문·방 쪽문)이 부서지면 한 번. 방문(안쪽 문)은 아니다
+      if (o.type !== 'door' || !o.dead || (o.B.parent && !o.L.ext)) continue;
+      const B = o.B.parent || o.B;
+      if (!CH_LM.has(B.type) || B.called) continue;
+      B.called = 1; B.gate = o.L; chGuardCar(B);
     }
+    for (const B of buildings) if (B.called === 1 && B.lost && CH_TWICE.has(B.type)) { B.called = 2; chGuardCar(B); }   // 두 번 출동하는 건물: 문이 부서진 뒤 안에 있던 사람이 한 명이라도 감염되면 한 번 더
     if (!stars || !isZombie(me)) return;      // ② 경보 출동
     if (stars !== chDispStage) { if (!chDispStage) chDispT = 0; chDispStage = stars; }
     if (chDispT > 0) { chDispT -= dt; return; }
@@ -5681,22 +5706,46 @@
     }
     return CH_MAP.start;
   }
-  function chPrisoner(J) {                     // 철창 수감자 1명 — 덩치만 한 자경단 (덩치형: 체력 4배·공격력 2배 / 히드라형: 체력 2배·공격력 4배). 감염시키면 영구 덩치 · 영구 히드라
-    const type = Math.random() < 0.5 ? 'armor' : 'hydra';
-    const c = chPut((J.x0 + J.x1) / 2, (J.z0 + J.z1) / 2, J, 'vig', J);
-    c.boss = type; c.r = BODY * 1.5; c.halfH = RADIUS * 1.5; c.mesh.scale.setScalar(1.5);
+  function chBoss(B, type, x, z) {             // 변이 좀비가 되는 사람 — 덩치 좀비만 한 몸, 무기 없이 주황처럼 때린다 (넉백 없음). 덩치형: 체력 4배·공격력 2배 / 히드라형: 체력 2배·공격력 4배 (자경단 기준). 머리 위 변이 주사 색 다이아몬드
+    const c = chPut(x, z, B, 'attacker', B);
+    c.boss = type; c.mesh.material.color.setHex(0xc62828);
+    c.r = BODY * 1.5; c.halfH = RADIUS * 1.5; c.mesh.scale.setScalar(1.5);
     c.hp = c.maxHp = GUARD_HP * (type === 'armor' ? 4 : 2); c.hpDisp = c.hp; c.dmgK = type === 'armor' ? 2 : 4;
-    const g = new THREE.Group();               // 머리 위 다이아몬드 — 변이 주사 색
+    const g = new THREE.Group();
     const mk = (sz, col, zz) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(sz, sz), new THREE.MeshBasicMaterial({ color: col, transparent: true, depthTest: false, depthWrite: false })); m.rotation.z = Math.PI / 4; m.position.z = zz; m.renderOrder = 1; return m; };
     g.add(mk(0.38, 0x1c1c1e, 0), mk(0.27, 0xb05cff, 0.002)); g.position.set(0, 0.5, 0.02);
     c.mesh.add(g); c.gem = g;
     return c;
   }
-  function chBossTurn(b) {                     // 수감자가 감염됐다 → 영구 변이 (덩치는 덩치 크기, 히드라는 보통 크기)
+  function chPrisoner(J) { return chBoss(J, J.parent.type === 'army' ? 'hydra' : Math.random() < 0.5 ? 'armor' : 'hydra', (J.x0 + J.x1) / 2, (J.z0 + J.z1) / 2); }   // 철창 수감자 1명 — 경찰서: 덩치·히드라 반반 / 군부대: 히드라
+  function chBossTurn(b) {                     // 감염됐다 → 영구 변이 (덩치는 덩치 크기, 히드라는 보통 크기) + 검은 테두리
     const t = b.boss; b.boss = null; b.dmgK = 0;
     if (b.gem) { b.mesh.remove(b.gem); b.gem = null; }
     b.r = BODY; delete b.halfH; b.mesh.scale.setScalar(1);
     mutate(b, t);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(RADIUS * 0.84, RADIUS, 48), new THREE.MeshBasicMaterial({ color: 0x0b0b0d, transparent: true, depthTest: false, depthWrite: false }));
+    ring.position.z = 0.003; b.mesh.add(ring); b.ring = ring;
+  }
+  function chSafeInRoom(s, R) {                // c54: 금고를 방 안에 — 방문에서 가장 먼 자리. 작은 방이면 그 방 사람은 복도로 옮긴다
+    const D = R.locks.find((L) => L.out) || R.locks[0], m = s.r + 0.3;
+    let best = [(R.x0 + R.x1) / 2, (R.z0 + R.z1) / 2], bd = -1;
+    for (let x = R.x0 + m; x <= R.x1 - m + 1e-6; x += 0.25) for (let z = R.z0 + m; z <= R.z1 - m + 1e-6; z += 0.25) { const d = Math.hypot(x - D.cx, z - D.cz); if (d > bd) { bd = d; best = [x, z]; } }
+    s.foot.x = best[0]; s.foot.z = best[1]; s.room = R; R.safe = s;
+    if ((R.x1 - R.x0) * (R.z1 - R.z0) < 12) for (const c of bodies) if (c.kind === 'citizen' && c.space === R) { const P = R.parent, g = pickGoal(P); c.foot.x = g.x; c.foot.z = g.y; c.space = P; c.home = P; c.area = P; if (c.post) c.post = P; c.goal = null; }
+  }
+  // ── c54: 타겟이 생기면 시야 1.3배 ──
+  //   먼저 덤비는 사람(주황·빨강·경찰·군인·저격수)은 싸움을 시작하는 순간(타겟이 없다가 생긴 순간) 시야가 1.3배가 된다. 사거리는 그대로 (원래 시야)
+  //   원래 시야(1배) 안에 좀비가 없어진 때부터 2~5초(그때마다 랜덤)가 지나면 다시 1배. 그 전에 다시 들어오면 그대로 유지한다
+  function chSafeReach(z, s) { return CHAPTER && !!s.room && linked(z.space, s.space) && !fireBlocked(z.foot.x, z.foot.z, s.foot.x, s.foot.z); }   // 방 안 금고 — 문이 뚫려 있고 사이에 벽이 없으면 문간에서 때릴 수 있다 (작은 방은 금고가 꽉 차서 못 들어간다)
+  function chFightBoost(c) {
+    if (!c.fb) { c.sight0 = c.sight; c.sight = c.sight0 * 1.3; c.fb = true; }
+    c.fbT = -1; c.fbTick = 0;
+  }
+  function chFightBoostTick(c, dt) {
+    if ((c.fbTick -= dt) <= 0) { c.fbTick = 0.2; c.fbNear = !!nearestZombie(c, c.sight0); }
+    if (c.fbNear) { c.fbT = -1; return; }                      // 원래 시야 안에 타겟이 있다 → 유지
+    if (c.fbT < 0) c.fbT = rand(2, 5);                         // 없어진 순간부터 2~5초
+    if ((c.fbT -= dt) <= 0) { c.fb = false; c.sight = c.sight0; if (c.chaseR > c.sight0) c.chaseR = c.sight0; }   // 다시 1배 — 더 못 보면 쫓기를 그만둔다 (경찰이 늘어난 시야로 쫓던 거리도 같이 줄인다)
   }
   function showDud() {                        // v288: 꽝 금고 — 멈추고 '꽝!' + 놀리는 글, 조이스틱 자리 [확인]
     acqOpen = true; paused = true; stopInput();

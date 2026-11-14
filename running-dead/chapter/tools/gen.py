@@ -369,6 +369,34 @@ for bi, b in enumerate(bld):
     _, _, qs, ds = max(good, key=lambda g: (g[0], g[1]))
     for q, (doors, clr) in zip(qs, ds):
         ROOMS.append(dict(t=sp['kind'], x=round((q[0] + q[2]) / 2, 2), z=round((q[1] + q[3]) / 2, 2), w=round(q[2] - q[0], 2), d=round(q[3] - q[1], 2), parent=bi, zone=b['zone'], doors=[x['s'] for x in doors], rdoors=doors, clr=clr, pt=b['t']))
+# c54: 군부대 철창 (히드라가 되는 수감자) — 위에서 놓은 방들은 그대로 두고 따로 한 번 더 돈다 (난수도 따로)
+#   이미 있는 방과 겹치지 않는 구석, 정문에서 가장 먼 곳. 문 앞(2.2칸)에 다른 방이 걸리는 쪽 벽에는 문을 안 낸다
+ROOM_SPEC2 = {'army': dict(size=(3.6, 3.2), kind='jail')}
+rr2 = random.Random(SEED * 1000 + 54)
+for bi, b in enumerate(bld):
+    sp = ROOM_SPEC2.get(b['t'])
+    if not sp: continue
+    R, cors = b_rect(b), corridors(b)
+    have = [(r['x'] - r['w'] / 2, r['z'] - r['d'] / 2, r['x'] + r['w'] / 2, r['z'] + r['d'] / 2) for r in ROOMS if r['parent'] == bi]
+    a, d = sp['size']; good = []
+    for (w_, d_) in ((a, d), (d, a)):
+        for cx_, cz_ in ((R[0], R[1]), (R[2] - w_, R[1]), (R[0], R[3] - d_), (R[2] - w_, R[3] - d_)):
+            q = (cx_, cz_, cx_ + w_, cz_ + d_)
+            if any(ovl(q, c) for c in cors) or any(ovl(q, o, 1.0) for o in have): continue   # 다른 방과 1칸은 띄운다
+            inner = []
+            for sd in 'nesw':
+                cx, cz, hl = side_mid(q, sd); nx, nz = NRM[sd]
+                if abs({'n': q[1] - R[1], 's': q[3] - R[3], 'w': q[0] - R[0], 'e': q[2] - R[2]}[sd]) < 1e-6 or hl * 2 < IN_W + 0.8: continue
+                front = (min(cx - abs(nz) * 1.2, cx + nx * 2.2), min(cz - abs(nx) * 1.2, cz + nz * 2.2), max(cx + abs(nz) * 1.2, cx + nx * 2.2), max(cz + abs(nx) * 1.2, cz + nz * 2.2))   # 문 앞 네모
+                if front[0] < R[0] + 0.3 or front[2] > R[2] - 0.3 or front[1] < R[1] + 0.3 or front[3] > R[3] - 0.3 or any(ovl(front, o) for o in have): continue
+                inner.append((hl, (b['x'] - cx) * nx + (b['z'] - cz) * nz, sd))
+            if not inner: continue
+            fx, fz, _ = side_mid(R, b['doors'][0])
+            good.append((round((((q[0] + q[2]) / 2 - fx) ** 2 + ((q[1] + q[3]) / 2 - fz) ** 2) ** 0.5, 1), rr2.random(), q, max(inner)[2]))
+    assert good, ('철창 자리 없음', b['t'])
+    _, _, q, sd = max(good, key=lambda g: (g[0], g[1]))
+    doors = [dict(s=sd, w=IN_W, ext=False)]
+    ROOMS.append(dict(t=sp['kind'], x=round((q[0] + q[2]) / 2, 2), z=round((q[1] + q[3]) / 2, 2), w=round(q[2] - q[0], 2), d=round(q[3] - q[1], 2), parent=bi, zone=b['zone'], doors=[sd], rdoors=doors, clr=None, pt=b['t']))
 from collections import Counter
 print('방', [(r['pt'], r['t'], (r['x'], r['z']), (r['w'], r['d']), [(x['s'], x['w'], 'ext' if x['ext'] else 'in') for x in r['rdoors']], '쪽문 앞 트임 %s' % r['clr']) for r in ROOMS])
 print('크기 바꿈 (종류, 옛 가로·세로, 새 가로·세로, 옮긴 x·z, 이웃 간격, 블록 여백)')

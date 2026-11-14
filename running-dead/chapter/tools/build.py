@@ -60,6 +60,14 @@ ICONS = r'''
   }
   // ── c11: 인간(하양) 깔기 + 먼 사람 재우기 ──
   const CH_WAKE = 40;                         // 깨울 사람을 고를 때 쓰는 굵은 격자 한 칸 (칸)
+  const CH_SLEEP = 20;                        // c54: 깨어 있던 사람은 좀비가 전부 이만큼 멀어지면 그 자리에 다시 선다 (깨어나는 거리 14보다 넉넉히)
+  function chCanSleep(b) {                    // 지금 다시 서도 되나 — 나와 얽힌 중(싸움·도망·경계·추적·출동)이면 안 된다
+    return b.state === 'normal' && !(b.police && !b.post) && !b.guardOf && !b.fb && !(b.infect > 0) && !(b.stunT > 0) && !(b.knockT > 0) && !(b.pushT > 0) && !b.lureAlert && !b.goo && !b.marked;
+  }
+  function chWakeUp(b) {                      // 깨어나는 순간 — 서 있지 않고 바로 돌아다니기 시작한다 (내 눈에 들어올 땐 이미 걷는 중)
+    if (b.state !== 'normal' || b.goal || !b.area) return;
+    if (Math.random() < 0.75) { b.goal = pickGoal(b.area); b.back = false; } else b.timer = rand(0.2, 1.5);
+  }
   const CH_MEET = 14;                         // c12: 좀비가 이만큼(칸) 안에 오면 깨어난다 — 좀비 시야(7.2칸)의 두 배쯤이라, 내 눈에 들어올 땐 이미 돌아다니고 있다
   let chHot = null, CH_GW = 0, CH_GH = 0;
   const chNearRiver = (x, z, m) => CH_MAP.rivers.some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
@@ -70,14 +78,14 @@ ICONS = r'''
   const CH_WHITE_OUT = 81, CH_YELLOW_OUT = 36;   // c48: 길거리 하양 · 노랑 (건물 안은 아래 표)
   const CH_INSIDE = {                         // c48: 건물 안 인원 [종류, 최소, 최대] — '' 하양 · guard 노랑 · attacker 주황 · vig 빨강 · police 경찰 · soldier 군인
     army: [['sniper', 1, 1], ['soldier', 2, 4]],   // c51: 저격수 1명은 늘
-    hospital: [['', 5, 10], ['attacker', 2, 3], ['vig', 2, 3], ['police', 1, 2]],
+    hospital: [['', 5, 10], ['attacker', 2, 3], ['vig', 1, 2], ['police', 1, 2]],   // c54: 빨강은 건물마다 한 명씩 뺐다 (최소 1)
     police: [['police', 4, 7], ['', 2, 4]],
-    fire: [['police', 1, 2], ['vig', 3, 5], ['attacker', 2, 4]],
+    fire: [['police', 1, 2], ['vig', 2, 4], ['attacker', 2, 4]],
     conv: [['', 1, 3], ['guard', 1, 2]],
-    mart: [['', 7, 12], ['police', 3, 4], ['vig', 2, 3], ['guard', 2, 4]],
-    gym: [['', 2, 3], ['guard', 3, 5], ['attacker', 7, 10], ['vig', 1, 2], ['police', 1, 1]],
-    store: [['attacker', 4, 6], ['vig', 4, 7]],
-    bank: [['', 4, 7], ['guard', 4, 7], ['attacker', 1, 2], ['police', 3, 4], ['vig', 3, 4]],
+    mart: [['', 7, 12], ['police', 3, 4], ['vig', 1, 2], ['guard', 2, 4]],
+    gym: [['', 2, 3], ['guard', 3, 5], ['attacker', 7, 10], ['vig', 1, 1], ['police', 1, 1]],
+    store: [['attacker', 4, 6], ['vig', 3, 6]],
+    bank: [['', 4, 7], ['guard', 4, 7], ['attacker', 1, 2], ['police', 3, 4], ['vig', 2, 3]],
     library: [['police', 1, 2], ['guard', 2, 3], ['', 4, 5]],
   };
   function chOutSpot(placed, minOwn, keepStart) {   // 바깥 빈자리 — placed(같은 종류 자리들)에서 최대한 먼 곳 (고르게)
@@ -147,7 +155,7 @@ ICONS = r'''
     }
     houseSlots.sort(() => Math.random() - 0.5);
     const houseOut = Math.round(houseSlots.length / 3);   // c49: 집 사람 3분의 1은 집 밖(길거리)으로
-    houseSlots.slice(houseOut).forEach((B) => inPut(B, ''));
+    houseSlots.slice(houseOut).forEach((B) => { const q = Math.random(); inPut(B, q < 0.15 ? 'attacker' : q < 0.30 ? 'vig' : ''); });   // c54: 집 안 하양은 15%는 주황, 15%는 빨강으로
     for (const B of buildings) if (B.type === 'police') for (let i = 0; i < 3; i++) {   // 경찰서 밖 배회 경찰 3명 (죽어도 채워지지 않는다)
       const ring = { x0: B.x0 - 5, z0: B.z0 - 5, x1: B.x1 + 5, z1: B.z1 + 5 }; let g = pickGoal(ring); for (let t = 0; t < 40 && (spaceOf(g.x, g.y) || chNearRiver(g.x, g.y, 1)); t++) g = pickGoal(ring);
       chPut(g.x, g.y, ring, 'police');
@@ -155,7 +163,8 @@ ICONS = r'''
     const ys = [];
     for (let k = 0; k < CH_YELLOW_OUT; k++) { const p = chOutSpot(ys, 1.2, 14); if (!p) continue; ys.push(p); chPut(p[0], p[1], square(p[0], p[1]), 'guard'); }
     let w = 0;
-    for (let t = 0; t < 40000 && w < CH_WHITE_OUT + houseOut; t++) {   // 길거리 하양
+    const whiteOut = Math.round((CH_WHITE_OUT + houseOut) * 1.15);   // c54: 길거리 하양 15% 더
+    for (let t = 0; t < 40000 && w < whiteOut; t++) {   // 길거리 하양
       const x = rand(MM.x0 + 3, MM.x1 - 3), z = rand(MM.z0 + 3, MM.z1 - 3);
       if (spaceOf(x, z) || chNearRiver(x, z, AREA / 2 + 1) || !freeSpot(x, z, null) || Math.hypot(x - me.foot.x, z - me.foot.z) < 14) continue;
       if (bodies.some((b) => Math.hypot(b.foot.x - x, b.foot.z - z) < 1.2)) continue;
@@ -520,10 +529,18 @@ SLEEP = r'''    if (CHAPTER) {                            // c12: 사람은 좀�
       chHot.fill(0); chHot[row(me.foot.z) * CH_GW + col(me.foot.x)] = 1;   // 먼저 굵은 격자로 거른다 — 좀비가 있는 칸과 이웃 칸에 있는 사람만 거리를 잰다
       for (const z of zombies) chHot[row(z.foot.z) * CH_GW + col(z.foot.x)] = 1;
       const near = (b, z) => { const dx = z.foot.x - b.foot.x, dz = z.foot.z - b.foot.z; return dx * dx + dz * dz < CH_MEET * CH_MEET; };
-      for (const b of bodies) if (b.kind === 'citizen' && !b.met) {
+      for (const b of bodies) if (b.kind === 'citizen') {
+        if (b.met) {                          // c54: 깨어 있는 사람 — 좀비가 전부 멀어지면(CH_SLEEP칸 밖) 그 자리에 다시 선다 (연산 안 함). 싸우거나 도망치거나 나를 쫓는 중이면 그대로 움직인다
+          if ((b.zzT = (b.zzT === undefined ? Math.random() * 0.5 : b.zzT) - dt) > 0) continue;
+          b.zzT = 0.5;
+          if (!chCanSleep(b)) continue;
+          const far = (z) => { const dx = z.foot.x - b.foot.x, dz = z.foot.z - b.foot.z; return dx * dx + dz * dz > CH_SLEEP * CH_SLEEP; };
+          if (far(me) && zombies.every(far)) { b.met = false; b.sleep = true; b.vel.set(0, 0); }
+          continue;
+        }
         const cx = col(b.foot.x), cz = row(b.foot.z); let hot = false;
         for (let dz = -1; dz <= 1 && !hot; dz++) for (let dx = -1; dx <= 1; dx++) { const X = cx + dx, Z = cz + dz; if (X >= 0 && X < CH_GW && Z >= 0 && Z < CH_GH && chHot[Z * CH_GW + X]) { hot = true; break; } }
-        if (hot && (near(b, me) || zombies.some((z) => near(b, z)))) b.met = true;
+        if (hot && (near(b, me) || zombies.some((z) => near(b, z)))) { b.met = true; chWakeUp(b); }
         b.sleep = !b.met;
       }
     }
@@ -575,6 +592,8 @@ from loot_patch import LOOT_R, ITEM_R, FX_R, LVUP_R, STAR_R, XP_R, AWAKE_R, SLOT
 R += LOOT_R + ITEM_R + FX_R + LVUP_R + STAR_R + XP_R + AWAKE_R + SLOT_R + AWK_TXT_R + AWK_UI_R + AWK_RING_R + RANK_R + VIG_R + STICK_R + COPKB_R + HP_R + DMG_R + DISP_R + CAR_R + TEAM_R
 from room_patch import ROOM_R   # c53: 건물 안 방 · 철창 · 랜덤 시작
 R += ROOM_R
+from c54_patch import C54_R   # c54: 시야 1.3배 · 경계 시간 · 두 번째 출동 조건
+R += C54_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

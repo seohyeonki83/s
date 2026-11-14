@@ -482,8 +482,15 @@ DISP_FN = r"""  // ── c46: 경찰 출동 (챕터) ──
   const CH_LM = new Set(['bank', 'police', 'fire', 'mart', 'hospital', 'army', 'library', 'conv', 'gym']);
   const CH_DISP_N = [[1, 1], [1, 2], [2, 3], [3, 3], [3, 4], [4, 4], [4, 5], [5, 5]];   // 경보 단계별 출동 인원 (최소, 최대)
   let chDispT = -1, chDispStage = 0;
-  const CH_TWICE = new Set(['mart', 'hospital', 'bank', 'library']);   // c48: 두 번 출동 (3분의 1 깎였을 때 · 문 하나가 부서졌을 때)
-  function chDispReset() { chDispT = -1; chDispStage = 0; for (const B of buildings) { B.called = 0; B.firstSpot = null; } }
+  const CH_TWICE = new Set(['mart', 'hospital', 'bank', 'library']);   // c48: 두 번 출동 — c54: 문이 부서졌을 때 · 그 뒤 안에 있던 사람이 한 명이라도 감염됐을 때
+  function chDispReset() { chDispT = -1; chDispStage = 0; for (const B of buildings) { B.called = 0; B.firstSpot = null; B.lost = false; B.gate = null; } }
+  function chGuardCar(B) {                     // 사수 경찰차 1대 (경찰 2~3명) — 그 구역 바깥 라인 중 안 보이는 곳에서 나와 부서진 문 앞으로
+    const L = B.gate, tx = L.cx + L.nx * 2.6, tz = L.cz + L.nz * 2.6, zi = B.zone >= 0 ? B.zone : chZoneAt(tx, tz);
+    let p = chEdgeSpot(zi); for (let t = 0; t < 20 && B.firstSpot && Math.hypot(p.x - B.firstSpot.x, p.z - B.firstSpot.z) < 15; t++) p = chEdgeSpot(zi);   // 두 번째 차는 다른 자리에서
+    if (!B.firstSpot) B.firstSpot = p;
+    addCar(p.x, p.z, Math.atan2(tz - p.z, tx - p.x), new THREE.Vector2(tx, tz), 2 + Math.floor(Math.random() * 2));
+    cars[cars.length - 1].guard = B;
+  }
   function chZoneAt(x, z) { const Z = CH_MAP.zones; for (let i = 0; i < Z.length; i++) if (x >= Z[i][0] - 2 && x <= Z[i][2] + 2 && z >= Z[i][1] - 2 && z <= Z[i][3] + 2) return i; return chZoneOf(x, z); }
   function chEdgeSpot(zi) {                  // 그 구역 바깥 라인(가장자리 띠) 위 빈자리 — 내 화면과 좀비 시야 밖
     const [x0, z0, x1, z1] = CH_MAP.zones[zi], W = x1 - x0 - 4, H = z1 - z0 - 4;
@@ -495,17 +502,13 @@ DISP_FN = r"""  // ── c46: 경찰 출동 (챕터) ──
     const [x, z] = edge(); return { x, z };
   }
   function chDispatchTick(dt) {
-    for (const o of objs) {                   // ① 랜드마크 사수
-      if (o.type !== 'door' || !CH_LM.has(o.B.type)) continue;
-      const B = o.B, L = o.L, k = B.called || 0;
-      if (!(k === 0 && (o.dead || o.hp <= o.maxHp * 2 / 3)) && !(k === 1 && CH_TWICE.has(B.type) && o.dead)) continue;
-      B.called = k + 1;
-      const tx = L.cx + L.nx * 2.6, tz = L.cz + L.nz * 2.6, zi = B.zone >= 0 ? B.zone : chZoneAt(tx, tz);
-      let p = chEdgeSpot(zi); for (let t = 0; t < 20 && B.firstSpot && Math.hypot(p.x - B.firstSpot.x, p.z - B.firstSpot.z) < 15; t++) p = chEdgeSpot(zi);   // 두 번째 차는 다른 자리에서
-      if (!B.firstSpot) B.firstSpot = p;
-      addCar(p.x, p.z, Math.atan2(tz - p.z, tx - p.x), new THREE.Vector2(tx, tz), 2 + Math.floor(Math.random() * 2));
-      cars[cars.length - 1].guard = B;
+    for (const o of objs) {                   // ① 랜드마크 사수 — c54: 바깥문(정문·쪽문·방 쪽문)이 부서지면 한 번. 방문(안쪽 문)은 아니다
+      if (o.type !== 'door' || !o.dead || (o.B.parent && !o.L.ext)) continue;
+      const B = o.B.parent || o.B;
+      if (!CH_LM.has(B.type) || B.called) continue;
+      B.called = 1; B.gate = o.L; chGuardCar(B);
     }
+    for (const B of buildings) if (B.called === 1 && B.lost && CH_TWICE.has(B.type)) { B.called = 2; chGuardCar(B); }   // 두 번 출동하는 건물: 문이 부서진 뒤 안에 있던 사람이 한 명이라도 감염되면 한 번 더
     if (!stars || !isZombie(me)) return;      // ② 경보 출동
     if (stars !== chDispStage) { if (!chDispStage) chDispT = 0; chDispStage = stars; }
     if (chDispT > 0) { chDispT -= dt; return; }
@@ -524,7 +527,7 @@ DISP_R = [
   ("  function showDud() {", DISP_FN + "  function showDud() {"),
   ("      o.off = false; if (o.fill) o.fill.visible = false;", "      if (CHAPTER && CH_LM.has(B.type)) o.hp = o.maxHp = o.maxHp * 1.5;   // c46: 랜드마크 문 체력 1.5배\n      o.off = false; if (o.fill) o.fill.visible = false;"),
   ("          if (k >= 0 && d < 2.5) car.calls.splice(k, 1);", "          if (k >= 0 && d < 2.5 && car.guard) { car.state = 'brake'; car.brakeT = 0; }   // c46: 사수 경찰차는 그 문 앞에 선다\n          else if (k >= 0 && d < 2.5) car.calls.splice(k, 1);"),
-  ("      for (const s of car.calls) c.calls.push(s.clone());", "      if (car.guard) { const G = car.guard, ring = { x0: G.x0 - 4, z0: G.z0 - 4, x1: G.x1 + 4, z1: G.z1 + 4 }; c.area = ring; c.post = ring; c.guardOf = G; }   // c46: 그 건물 둘레를 지킨다\n      else for (const s of car.calls) c.calls.push(s.clone());"),
+  ("      for (const s of car.calls) c.calls.push(s.clone());", "      if (car.guard) { const G = car.guard, ring = { x0: G.x0 - 4, z0: G.z0 - 4, x1: G.x1 + 4, z1: G.z1 + 4, guardB: G };   /* c54: 문이 뚫려 있으면 안에도 들어가 돈다 (pickGoal) */ c.area = ring; c.post = ring; c.guardOf = G; }   // c46: 그 건물 둘레를 지킨다\n      else for (const s of car.calls) c.calls.push(s.clone());"),
   ("    dispatchTick(dt);", "    dispatchTick(dt);\n    if (CHAPTER) chDispatchTick(dt);   // c46"),
   ("chPopulate(); chSafes(); return; }", "chPopulate(); chSafes(); chDispReset(); return; }"),
   ("zombify: makeZombie, slotOf,", "zombify: makeZombie, slotOf, cars: () => cars, objsL: () => objs, lastInc: () => lastIncident, stars: () => stars, setStars: (n, x, z) => { stars = n; deaths = Math.max(deaths, STAR_AT[n - 1]); lastIncident = new THREE.Vector2(x, z); },"),
