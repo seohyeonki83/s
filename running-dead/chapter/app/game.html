@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c66</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c67</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -577,15 +577,16 @@
   const hpOurMat = new THREE.MeshBasicMaterial({ color: 0x43d17a, transparent: true, depthTest: false, depthWrite: false });
   const barW = (b, mine) => Math.max(0.001, (mine ? 1.2 * 1.2 * 1.2 * 2 / 3 * 2 / 3 / MY_HP :   /* v491: 보이는 길이만 1/3 더 줄임 (v490에 이어) */ 0.5 / POLICE_HP) * (CHAPTER && !mine ? Math.min(b.maxHp || 0, CH_HP_CAP) : (b.maxHp || 0)));   /* c65: 챕터 — 덩치 좀비 체력보다 길어지지 않는다 (넘는 만큼은 겹으로) */
   const CH_HP_CAP = ALLY_HP * 3;   // c65: 한 겹 = 덩치 좀비(동료) 기본 최대 체력 (약 284)
-  const chHpMat2 = new THREE.MeshBasicMaterial({ color: 0x3d8bff, transparent: true, depthTest: false, depthWrite: false }), chHpMat3 = new THREE.MeshBasicMaterial({ color: 0xff9a1f, transparent: true, depthTest: false, depthWrite: false });
+  const chHpMat2 = new THREE.MeshBasicMaterial({ color: 0x3d8bff, transparent: true, depthTest: false, depthWrite: false }), chHpMat3 = new THREE.MeshBasicMaterial({ color: 0xa64dff, transparent: true, depthTest: false, depthWrite: false }), chHpMat4 = new THREE.MeshBasicMaterial({ color: 0xff3b3b, transparent: true, depthTest: false, depthWrite: false });   // c67: 초록 → 파랑 → 보라 → 빨강
   function chHpFill(b) {                       // c65: 한 겹을 넘는 체력은 초록 위를 파랑으로, 두 겹을 넘으면 주황으로 덮는다
     const C = CH_HP_CAP, M = b.maxHp || 1, h = Math.max(0, b.hpDisp);
-    if (M <= C + 1e-6) { b.hpFill.scale.x = Math.max(0.001, h / M); if (b.hpFill2) b.hpFill2.visible = b.hpFill3.visible = false; return; }
-    if (!b.hpFill2) for (const [k, mat, n] of [['hpFill2', chHpMat2, 1], ['hpFill3', chHpMat3, 2]]) { const m = new THREE.Mesh(gaugeFillGeo, mat); m.position.copy(b.hpFill.position); m.position.z += 0.001 * n; m.renderOrder = b.hpFill.renderOrder + n; b.hpBar.add(m); b[k] = m; }
-    const f2 = Math.min(1, Math.max(0, h - C) / C), f3 = Math.min(1, Math.max(0, h - 2 * C) / C);
+    if (M <= C + 1e-6) { b.hpFill.scale.x = Math.max(0.001, h / M); if (b.hpFill2) b.hpFill2.visible = b.hpFill3.visible = b.hpFill4.visible = false; return; }
+    if (!b.hpFill2) for (const [k, mat, n] of [['hpFill2', chHpMat2, 1], ['hpFill3', chHpMat3, 2], ['hpFill4', chHpMat4, 3]]) { const m = new THREE.Mesh(gaugeFillGeo, mat); m.position.copy(b.hpFill.position); m.position.z += 0.001 * n; m.renderOrder = b.hpFill.renderOrder + n; b.hpBar.add(m); b[k] = m; }
+    const f2 = Math.min(1, Math.max(0, h - C) / C), f3 = Math.min(1, Math.max(0, h - 2 * C) / C), f4 = Math.min(1, Math.max(0, h - 3 * C) / C);
     b.hpFill.scale.x = Math.max(0.001, Math.min(h, C) / C);
     b.hpFill2.visible = f2 > 0; b.hpFill2.scale.x = Math.max(0.001, f2);
     b.hpFill3.visible = f3 > 0; b.hpFill3.scale.x = Math.max(0.001, f3);
+    b.hpFill4.visible = f4 > 0; b.hpFill4.scale.x = Math.max(0.001, f4);
   }   // v440: 체력바 가로 = 최대 체력에 비례 — 남들은 경찰 체력(168)일 때 예전 길이(50%), 나는 처음 최대 체력(약 190)일 때 예전 길이(120%) · 강화·스팀팩·변이로 늘면 같이 늘어난다
   function addHpBar(b, mat) {
     b.hpBar = new THREE.Group();
