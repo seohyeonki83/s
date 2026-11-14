@@ -62,9 +62,10 @@ ICONS = r'''
   const CH_MEET = 14;                         // c12: 좀비가 이만큼(칸) 안에 오면 깨어난다 — 좀비 시야(7.2칸)의 두 배쯤이라, 내 눈에 들어올 땐 이미 돌아다니고 있다
   let chHot = null, CH_GW = 0, CH_GH = 0;
   const chNearRiver = (x, z, m) => CH_MAP.rivers.some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
-  const CH_PEOPLE = 200, CH_ROOM = 30;         // c30: 인간(하양) 전체 수 · 건물 안 한 명당 넓이(칸²)
+  const CH_PEOPLE = 220,   /* c32: 200 → 220 (10% 늘림) */ CH_ROOM = 30;         // c30: 인간(하양) 전체 수 · 건물 안 한 명당 넓이(칸²)
   function chPopulate() {                     // c30: 인간 200명 — 먼저 모든 건물 안에 골고루, 남은 사람은 바깥 맵 전체에
     let n = 0;
+    const kinds = Array.from({ length: CH_PEOPLE }, (_, i) => i < Math.round(CH_PEOPLE * 0.1) ? 'guard' : '').sort(() => Math.random() - 0.5);   // c32: 10%는 노랑(강한 인간) — 건물 안·밖에 하양과 같은 비율로 섞인다
     const hs = buildings.filter((B) => B.type === 'house').sort(() => Math.random() - 0.5), empty = new Set(hs.slice(0, Math.round(hs.length / 3)));   // c31: 집 3분의 1은 빈집 (판마다 다른 집)
     for (const B of buildings) {              // ① 건물 안: 넓이 30칸²마다 1명, 판마다 ±1 (최소 1명) — 집 1~2 · 창고 1~3 · 랜드마크 1~6명 (테스트맵처럼 큰 건물일수록 많이)
       if (B.type === 'hill' || empty.has(B)) continue;
@@ -72,7 +73,7 @@ ICONS = r'''
       for (let i = 0; i < k && n < CH_PEOPLE; i++) {
         let g = pickGoal(B);
         for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(B);
-        const c = addCitizen(g.x, g.y, B, ''); c.home = B;
+        const c = addCitizen(g.x, g.y, B, kinds[n] || ''); c.home = B;
         c.space = B; c.sleep = true;          // 처음엔 전부 잔다 (어느 건물 안인지는 미리 적어 둔다)
         n++;
       }
@@ -82,7 +83,7 @@ ICONS = r'''
       if (spaceOf(x, z) || chNearRiver(x, z, AREA / 2 + 1)) continue;                       // 건물·산 속 · 강가(돌아다니다 물에 막히는 자리)는 뺀다
       if (!freeSpot(x, z, null) || Math.hypot(x - me.foot.x, z - me.foot.z) < 14) continue;  // 벽에 붙은 자리 · 시작 자리 둘레도 뺀다
       if (bodies.some((b) => Math.hypot(b.foot.x - x, b.foot.z - z) < 1.2)) continue;
-      const c = addCitizen(x, z, square(x, z), '');
+      const c = addCitizen(x, z, square(x, z), kinds[n] || '');
       c.space = null; c.sleep = true;
       n++;
     }
@@ -465,7 +466,8 @@ R = [
   ("    position: absolute; left: calc(50% + 54px); bottom: calc(172px + env(safe-area-inset-bottom, 0px));", "    position: absolute; left: calc(50% + 54px); bottom: calc(172px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px));"),
   ("    el.style.bottom = `calc(118px + env(safe-area-inset-bottom, 0px) + ${dy}px)`;", "    el.style.bottom = `calc(118px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px) + ${dy}px)`;"),
   ("    const el = document.getElementById(id); el.style.bottom = 'auto';", "    const el = document.getElementById(id); el.style.bottom = 'auto'; if (CHAPTER) el.style.opacity = '0';   /* c9: 되감기·일시정지 버튼은 안 보이게 (자리와 누르는 건 그대로) */"),
-  ("citizen: 0xffcf33, guard:", "citizen: CHAPTER ? 0xf2f2f2 : 0xffcf33, guard:"),   # c11: 인간 = 하양
+  ("citizen: 0xffcf33, guard: 0xff8c1a,", "citizen: CHAPTER ? 0xf2f2f2 : 0xffcf33, guard: CHAPTER ? 0xffcf33 : 0xff8c1a,"),   # c32: 강한 인간 = 노랑
+  ("    guard: { col: '#ff8c1a', name: '헬창',", "    guard: { col: CHAPTER ? '#ffcf33' : '#ff8c1a', name: CHAPTER ? '강한 인간' : '헬창',"),   # c11: 인간 = 하양
   ("    citizen: { col: '#ffcf33', name: '좃밥',", "    citizen: { col: CHAPTER ? '#f2f2f2' : '#ffcf33', name: CHAPTER ? '인간' : '좃밥',"),
   ("    for (const b of bodies) if (isZombie(b)) zombies.push(b);\n    while (teamQueue.length)", "    for (const b of bodies) if (isZombie(b)) zombies.push(b);\n" + SLEEP + "    while (teamQueue.length)"),
   ("      b.px = b.foot.x; b.pz = b.foot.z;\n      const sp0 = spaceOf(b.foot.x, b.foot.z);", "      if (b.sleep) continue;\n      b.px = b.foot.x; b.pz = b.foot.z;\n      const sp0 = spaceOf(b.foot.x, b.foot.z);"),
