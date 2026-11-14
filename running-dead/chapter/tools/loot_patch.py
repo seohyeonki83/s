@@ -584,3 +584,7 @@ CAR_R = [
   ("    updateCars(dt);                           // 경찰차 달리기·서기·내리기", "    updateCars(dt);                           // 경찰차 달리기·서기·내리기\n    if (CHAPTER) for (const car of cars) { chStuckTick(car, dt); if (!car.wreck) for (const [x0, z0, x1, z1] of CH_MAP.rivers) { const m = CAR_W * ck(car) / 3 + 0.2; if (car.x > x0 - m && car.x < x1 + m && car.z > z0 - m && car.z < z1 + m) { const l = car.x - (x0 - m), r = x1 + m - car.x, u = car.z - (z0 - m), w = z1 + m - car.z, k = Math.min(l, r, u, w); if (k === l) car.x = x0 - m; else if (k === r) car.x = x1 + m; else if (k === u) car.z = z0 - m; else car.z = z1 + m; } } }   // c47: 끼임 풀기 · 강에 못 들어간다"),
   ("      else updateCitizen(b, dt);\n    }\n", "      else updateCitizen(b, dt);\n    }\n    if (CHAPTER) chBoardTick(dt);   // c47: 싸움이 끝난 사람은 차로 돌아간다\n"),
 ]
+
+TEAM_R = [   # c50: 챕터는 군인팀 출동 없음
+  ("    while (teamIdx < TEAM_EVENTS.length && deaths >= TEAM_EVENTS[teamIdx].at) teamQueue.push(TEAM_EVENTS[teamIdx++].tier);", "    while (!CHAPTER && teamIdx < TEAM_EVENTS.length && deaths >= TEAM_EVENTS[teamIdx].at) teamQueue.push(TEAM_EVENTS[teamIdx++].tier);   // c50: 챕터는 군인팀 없음"),
+]
