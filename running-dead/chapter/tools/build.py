@@ -692,6 +692,8 @@ from c69_patch import C69B_R   # c69: 순환도로 · 차종 · 주차된 차
 R += C69B_R
 from c70_patch import C70_R   # c70: 건물 안 사물 · 하트
 R += C70_R
+from c71_patch import C71_R   # c71: 돌아다니는 민간 차
+R += C71_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
