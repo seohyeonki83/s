@@ -2,9 +2,8 @@
 C62_FN = r"""  // ── c62: 특수부대 출동 차례표 (감염 75명에 처음, 그 뒤로 60명마다) ──
   //   1번째: 걸어서 저격수 1 + 군인 2 · 2번째: 걸어서 저격수 1 + 군인 3 · 3번째: 걸어서 저격수 2 + 군인 4 (분대 둘, 3초 간격)
   //   4·5번째: 군인차 1대 (저격수 2 + 군인 5)
-  //   6번째부터: 군인차 2대 — 서로 다른 방향의 가장자리에서 출발, 둘째 차는 0~5초 늦게. 둘이 합쳐 저격수 3 + 군인 6
-  //     싣는 방법은 둘 중 하나 (반반): ① 저격수 2 + 군인 3 / 저격수 1 + 군인 3  ② 저격수 3 + 군인 1 / 군인 5 (저격수 없음)
-  //     4번에 1번은 군인차 1대만 — 저격수 3 + 군인 2
+  //   6번째부터: 군인차 2대 — 서로 다른 방향의 가장자리에서 출발, 둘째 차는 0~5초 늦게. 인원은 싣는 방법마다 다르다
+  //     싣는 방법: ① 저격수 2 + 군인 3 / 저격수 1 + 군인 3 (35%)  ② 저격수 2 + 군인 3 / 군인 6 (35%)  ③ 군인 6 / 군인 6 — 저격수 없이 군인 12명 (20%)  ④ 군인차 1대만 — 저격수 1 + 군인 3 (10%, 쉬어 가는 차례)
   //   저격수가 없는 차의 군인은 주인 없이 스스로 싸운다 (다른 곳 저격수를 찾아 떠나지 않는다)
   const S_ = 'sniper', G_ = 'soldier';
   function chTeamSeg2(a) {                     // 첫 차와 다른 방향의 가장자리 — 나에게서 본 방향이 가장 많이 벌어진 자리 (90° 넘으면 바로)
@@ -20,8 +19,9 @@ C62_FN = r"""  // ── c62: 특수부대 출동 차례표 (감염 75명에 처
     if (i < 3) { const sq = i === 0 ? [[S_, G_, G_]] : i === 1 ? [[S_, G_, G_, G_]] : [[S_, G_, G_], [S_, G_, G_]];
       sq.forEach((c, k) => teamWait.push({ comp: c, t: k * 3, first: false, seg, hold: true })); return; }
     if (i < 5) { teamWait.push({ car: [S_, G_, G_, G_, S_, G_, G_], t: 0, seg, hold: true }); return; }
-    if (Math.random() < 0.25) { teamWait.push({ car: [S_, G_, S_, G_, S_], t: 0, seg, hold: true }); return; }
-    const L = Math.random() < 0.5 ? [[S_, G_, G_, S_, G_], [S_, G_, G_, G_]] : [[S_, G_, S_, S_], [G_, G_, G_, G_, G_]];
+    const q = Math.random(), G6 = [G_, G_, G_, G_, G_, G_];
+    if (q < 0.1) { teamWait.push({ car: [S_, G_, G_, G_], t: 0, seg, hold: true }); return; }   // 쉬어 가는 차례 — 군인차 1대
+    const L = q < 0.3 ? [G6, G6.slice()] : q < 0.65 ? [[S_, G_, G_, S_, G_], [S_, G_, G_, G_]] : [[S_, G_, G_, S_, G_], G6];
     if (Math.random() < 0.5) L.reverse();
     teamWait.push({ car: L[0], t: 0, seg, hold: true }, { car: L[1], t: rand(0, 5), seg: chTeamSeg2(seg), hold: true });
   }
