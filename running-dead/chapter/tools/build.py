@@ -98,10 +98,17 @@ ICONS = r'''
     const placed = [];
     for (let k = 0; k < CH_COPS; k++) { const p = chOutSpot(placed, 1.2, 18); if (!p) continue; placed.push(p); chPut(p[0], p[1], square(p[0], p[1]), 'police'); }
     // 무리: 주황·빨강 각 48 — 2~4명 무리로 쪼갠다. 섞인 5명 무리 2개 (주황 2 + 빨강 3, 주황 3 + 빨강 2)
-    const groups = [['attacker', 'attacker', 'vig', 'vig', 'vig'], ['attacker', 'attacker', 'attacker', 'vig', 'vig']];
+    // c44: 무리 세 가지 — 주황만 (2~4) · 빨강만 (2~4) · 섞인 무리 (4~6, 둘 다 2명 이상). 섞인 무리에 주황·빨강 각 3분의 1쯤
+    const groups = [];
+    let mo = Math.round(CH_GANG / 3), mr = mo;
+    while (mo >= 2 && mr >= 2) {
+      let k = 4 + Math.floor(Math.random() * 3), o = 2 + Math.floor(Math.random() * (k - 3));   // 주황 2 ~ k-2
+      o = Math.min(o, mo); let r = Math.min(k - o, mr); if (r < 2) break;
+      groups.push([...Array(o).fill('attacker'), ...Array(r).fill('vig')]); mo -= o; mr -= r;
+    }
     for (const t of ['attacker', 'vig']) {
       let left = CH_GANG - groups.flat().filter((x) => x === t).length;
-      while (left > 0) { let k = 2 + Math.floor(Math.random() * 3); if (left - k === 1) k = left > 4 ? k - 1 : left; k = Math.min(k, left); groups.push(Array(k).fill(t)); left -= k; }
+      while (left > 0) { let k = 2 + Math.floor(Math.random() * 3); if (left - k === 1) k = k > 2 ? k - 1 : 3; k = Math.min(k, left); groups.push(Array(k).fill(t)); left -= k; }
     }
     const centers = [];
     for (const G of groups.sort(() => Math.random() - 0.5)) {
