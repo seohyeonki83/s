@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c71</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c72</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6122,18 +6122,20 @@
     for (const c of X.units) chBarSeat(X, c, !!c.fresh || !!c.sleep || far(c));   // c60: 군인도 저격수를 따라다니지 않고 자기 자리를 지킨다 (경찰 뒤에 흩어져 선다)
     for (const c of X.units) c.fresh = false;
   }
+  const CH_BAR_MAX = 4, chHalf = (n) => Math.floor(n / 2) + (n % 2 && Math.random() < 0.5 ? 1 : 0);   // c72: 한쪽 끝 조각 수 한계 (6의 3분의 2) · 인원 절반
   function chBarGrow(s) {                      // 경보 s단계가 됐다 — 건널목마다 바리케이트와 수비대를 늘린다 (말한 수에서 조금씩 다르게)
     const N = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
     for (const X of chBar.X) {
       for (const e of [0, 1]) {
-        if (s === 1) { const q = Math.random(), kinds = q < 0.7 ? [true, true, false] : q < 0.85 ? [true, true, false, false] : [true, true, true, false];   // 바리케이트 2 + 경찰차 1 (가끔 하나 더)
+        if (s === 1) { const q = Math.random(), kinds = q < 0.55 ? [true, false] : q < 0.8 ? [true, true] : [true, true, false];   /* c72: 3분의 1 줄임 — 바리케이트 1 + 경찰차 1 (넷에 한 번은 바리케이트만 2, 다섯에 한 번은 바리케이트 2 + 경찰차 1) */   // 바리케이트 2 + 경찰차 1 (가끔 하나 더)
           kinds.sort(() => Math.random() - 0.5); chBarRow0(X, e, kinds); }
         else { const q = Math.random(), k = s === 4 ? (q < 0.25 ? 1 : 0) : q < 0.2 ? 0 : q < 0.8 ? 1 : 2;   // 단계마다 양쪽에 하나씩 (4단계는 그대로) — 가끔 안 늘거나 둘이 는다
-          for (let i = 0; i < k; i++) chBarAdd(X, e, true); if (Math.random() < 0.2) chBarAdd(X, e, false); }   // 가끔 경찰차도 한 대
+          const live = () => X.rows[e].reduce((n, row) => n + (row || []).filter(chBarLive).length, 0);   /* c72 */
+          for (let i = 0; i < k; i++) if (Math.random() < 2 / 3 && live() < CH_BAR_MAX) chBarAdd(X, e, true); if (Math.random() < 0.2 * 2 / 3 && live() < CH_BAR_MAX) chBarAdd(X, e, false); }   // 가끔 경찰차도 한 대
       }
       const r2 = Math.random();                // 수비대: 말한 수에서 한두 명씩 다르게 — 1단계 경찰 4 · 2단계 경찰 +2 · 3단계 군인 +3 저격수 +1 · 4단계 군인 +2 저격수 +1 · 그 뒤로 군인 +3씩
       const add = s === 1 ? { police: r2 < 0.2 ? 3 : r2 < 0.8 ? 4 : 5 } :   /* c61: 수상함 = 경찰 4명 (열에 둘은 3명, 열에 둘은 5명) */ s === 2 ? { police: N(1, 3) } : s === 3 ? { soldier: N(2, 4), sniper: r2 < 0.75 ? 1 : 2 } : s === 4 ? { soldier: N(1, 3), sniper: r2 < 0.2 ? 0 : r2 < 0.8 ? 1 : 2 } : { soldier: N(2, 4) };
-      for (const type of ['police', 'soldier', 'sniper']) for (let i = 0; i < (add[type] || 0); i++) { const c = addCitizen(X.cx, X.cz, square(X.cx, X.cz), type); c.gar = X; c.fresh = true; X.units.push(c); }
+      for (const type of ['police', 'soldier', 'sniper']) for (let i = 0, n = chHalf(add[type] || 0); i < n; i++) {   /* c72: 인원 절반 */ const c = addCitizen(X.cx, X.cz, square(X.cx, X.cz), type); c.gar = X; c.fresh = true; X.units.push(c); }
       chBarForm(X);
     }
     updateCarObs();
