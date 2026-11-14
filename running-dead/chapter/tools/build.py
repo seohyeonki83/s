@@ -69,7 +69,7 @@ ICONS = r'''
   const CH_WHITE = 145, CH_YELLOW = 48, CH_YELLOW_IN = 12, CH_GANG = 48, CH_COPS = 20, CH_ROOM = 45;
   const CH_WHITE_OUT = 81, CH_YELLOW_OUT = 36;   // c48: 길거리 하양 · 노랑 (건물 안은 아래 표)
   const CH_INSIDE = {                         // c48: 건물 안 인원 [종류, 최소, 최대] — '' 하양 · guard 노랑 · attacker 주황 · vig 빨강 · police 경찰 · soldier 군인
-    army: [['soldier', 2, 4]],
+    army: [['sniper', 1, 1], ['soldier', 2, 4]],   // c51: 저격수 1명은 늘
     hospital: [['', 5, 10], ['attacker', 2, 3], ['vig', 2, 3], ['police', 1, 2]],
     police: [['police', 4, 7], ['', 2, 4]],
     fire: [['police', 1, 2], ['vig', 3, 5], ['attacker', 2, 4]],
@@ -135,7 +135,7 @@ ICONS = r'''
     }
     // c48: 건물 안 — 랜드마크·창고는 건물마다 정한 인원, 집은 넓이대로 하양 (빈집 3분의 1)
     const hs = buildings.filter((B) => B.type === 'house').sort(() => Math.random() - 0.5), empty = new Set(hs.slice(0, Math.round(hs.length / 3)));
-    const inPut = (B, type) => { let g = pickGoal(B); for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.0); t++) g = pickGoal(B); const c = chPut(g.x, g.y, B, type, B); if (type === 'police' || type === 'soldier') c.post = B; return c; };
+    const inPut = (B, type) => { let g = pickGoal(B); for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.0); t++) g = pickGoal(B); const c = chPut(g.x, g.y, B, type, B); if (type === 'police' || type === 'soldier' || type === 'sniper') c.post = B; return c; };
     const R2 = (a, b) => a + Math.floor(Math.random() * (b - a + 1)), houseSlots = [];
     for (const B of buildings) {
       if (B.type === 'hill') continue;
