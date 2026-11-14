@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c65</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c66</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5945,7 +5945,7 @@
       body.renderOrder = -0.45; pad.visible = false; g.add(body, pad); scene.add(g);
       cars.push({ g, red: dm, blue: dm, x, z, vx: 0, vz: 0, h, calls: [], n: 0, squad: null, mil: false, state: 'parked', flashT: 0, sight: 0, foot: new THREE.Vector3(x, 0, z), barr: true });
     } else { addCar(x, z, h, null, 0); const c = cars[cars.length - 1]; c.state = 'parked'; c.red.color.setHex(0x4a3a3a); c.blue.color.setHex(0x3a3f4a); }
-    const car = cars[cars.length - 1], hp = MY_DAMAGE * 9.5 * (barr ? CH_BARR_HP : 1);
+    const car = cars[cars.length - 1], hp = barr ? CH_HP_CAP * 3 : MY_DAMAGE * 9.5   /* c66: 바리케이트 = 체력바 딱 세 겹 (약 851) */;
     car.wall = true;                          // 건널목을 막는 물건 — 달리는 경찰차·군인차는 그냥 지나간다 (자기편 길은 열어 준다)
     car.obj = { kind: 'obj', type: 'car', car, foot: new THREE.Vector3(x, 0, z), hp, maxHp: hp, dead: false };
     addHpBar(car.obj, hpFoeMat); objs.push(car.obj);

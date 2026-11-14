@@ -1,6 +1,7 @@
 # c65: 바리케이트 체력 = 경찰차의 2배 · 체력바 여러 겹 (덩치 좀비 체력까지가 한 줄 — 넘으면 파랑, 그 다음 주황으로 덮는다) · 체력바는 모두 초록
 C65_R = [
   ("CH_BARR_HP = 4,", "CH_BARR_HP = 2,   /* c65: 경찰차의 4배 → 2배 */"),
+  ("hp = MY_DAMAGE * 9.5 * (barr ? CH_BARR_HP : 1)", "hp = barr ? CH_HP_CAP * 3 : MY_DAMAGE * 9.5   /* c66: 바리케이트 = 체력바 딱 세 겹 (약 851) */"),
   ("  const hpFoeMat = new THREE.MeshBasicMaterial({ color: 0xff4d4d,", "  const hpFoeMat = new THREE.MeshBasicMaterial({ color: CHAPTER ? 0x43d17a : 0xff4d4d,   /* c65: 챕터는 적도 초록 */"),
   ("0.5 / POLICE_HP) * (b.maxHp || 0));",
    "0.5 / POLICE_HP) * (CHAPTER && !mine ? Math.min(b.maxHp || 0, CH_HP_CAP) : (b.maxHp || 0)));   /* c65: 챕터 — 덩치 좀비 체력보다 길어지지 않는다 (넘는 만큼은 겹으로) */\n"
