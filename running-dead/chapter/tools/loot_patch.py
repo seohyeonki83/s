@@ -524,3 +524,58 @@ DISP_R = [
   ("chPopulate(); chSafes(); return; }", "chPopulate(); chSafes(); chDispReset(); return; }"),
   ("zombify: makeZombie, slotOf,", "zombify: makeZombie, slotOf, cars: () => cars, objsL: () => objs, lastInc: () => lastIncident, stars: () => stars, setStars: (n, x, z) => { stars = n; deaths = Math.max(deaths, STAR_AT[n - 1]); lastIncident = new THREE.Vector2(x, z); },"),
 ]
+
+CAR_FN = r"""  // ── c47: 차 다시 타기 · 끼임 풀기 ──
+  //   차에서 내린 사람들(경찰·군인)은 둘레에 싸울 좀비가 없으면 2초 뒤 차로 돌아가 타고, 차는 원래 목적지(문 앞 · 사건 자리 · 나)로 다시 간다
+  //   달리는 차가 3초 동안 1칸도 못 가면 (건물에 끼임) 가까운 빈 길(건물·강에서 떨어진 곳)로 옮겨 놓는다. 목적지는 그대로
+  function chCalm(c) { return !zombies.some((z) => isZombie(z) && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= (c.sight || SIGHT) * 1.5); }
+  function chBoardTick(dt) {
+    for (const car of cars) {
+      if (car.state !== 'parked' || car.wreck || !car.crew || car.done) continue;
+      const crew = car.crew.filter((c) => bodies.includes(c) && c.kind === 'citizen' && c.hp > 0);
+      if (!crew.length) { car.crew = null; continue; }
+      if (!crew.every(chCalm)) { car.calmT = 0; for (const c of crew) c.boarding = false; continue; }
+      if ((car.calmT = (car.calmT || 0) + dt) < 2) continue;
+      for (const c of crew) {
+        c.boarding = true;
+        if (Math.hypot(c.foot.x - car.x, c.foot.z - car.z) > CAR_L * ck(car) / 2 + 1.0) { steer(c.vel, toward(c, car.x, car.z, PANIC_SPEED * 0.9), ACCEL * dt); continue; }
+        c.boarded = true;
+      }
+      if (!crew.every((c) => c.boarded)) continue;
+      const types = crew.map((c) => c.soldier ? 'soldier' : c.sniper ? 'sniper' : 'police');
+      for (const c of crew) { for (const o of [c.mesh, c.icon, c.gauge, c.hpBar, c.tracer, c.mark]) if (o) scene.remove(o); const i = bodies.indexOf(c); if (i >= 0) bodies.splice(i, 1); }
+      if (car.squad) car.squad = types; else car.n = types.length;
+      car.crew = null; car.calmT = 0; car.state = 'drive'; car.stuckT = 0;
+      if (car.obj) { const j = objs.indexOf(car.obj); if (j >= 0) objs.splice(j, 1); if (car.obj.hpBar) scene.remove(car.obj.hpBar); car.carHp = car.obj.hp; car.obj = null; }
+      updateCarObs();
+    }
+  }
+  function chFreeCarSpot(x, z, car) {         // 건물·강에서 차 반 길이 + 1칸 넘게 떨어진 가장 가까운 빈 길
+    const m = CAR_L * ck(car) / 2 + 1.0, okAt = (px, pz) => px > MM.x0 + 2 && px < MM.x1 - 2 && pz > MM.z0 + 2 && pz < MM.z1 - 2 && !buildings.some((B) => px > B.x0 - m && px < B.x1 + m && pz > B.z0 - m && pz < B.z1 + m) && !chNearRiver(px, pz, m);
+    for (let r = 1; r < 30; r += 0.75) for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI * 2, px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; if (okAt(px, pz)) return [px, pz]; }
+    return null;
+  }
+  function chStuckTick(car, dt) {
+    if (car.state !== 'drive') { car.stuckT = 0; return; }
+    if (car.sx === undefined || Math.hypot(car.x - car.sx, car.z - car.sz) > 1) { car.sx = car.x; car.sz = car.z; car.stuckT = 0; return; }
+    if ((car.stuckT += dt) < 3) return;
+    const p = chFreeCarSpot(car.x, car.z, car);
+    if (p) { car.x = p[0]; car.z = p[1]; car.vx = car.vz = 0; car.g.position.set(car.x, car.g.position.y, car.z); }
+    car.sx = car.x; car.sz = car.z; car.stuckT = 0; car.warps = (car.warps || 0) + 1;
+  }
+"""
+CAR_R = [
+  ("  function showDud() {", CAR_FN + "  function showDud() {"),
+  # 내린 사람을 차에 적어 둔다
+  ("      const c = addCitizen(car.x + rx * off * sd - fx * back, car.z + rz * off * sd - fz * back, null, 'police');", "      const c = addCitizen(car.x + rx * off * sd - fx * back, car.z + rz * off * sd - fz * back, null, 'police');\n      if (CHAPTER) (car.crew = car.crew || []).push(c);   // c47"),
+  ("      const c = addCitizen(p.x, p.z, square(p.x, p.z), t);", "      const c = addCitizen(p.x, p.z, square(p.x, p.z), t);\n      if (CHAPTER) (car.crew = car.crew || []).push(c);   // c47"),
+  ("          unload(car);", "          if (CHAPTER) car.crew = [];\n          unload(car);\n          if (CHAPTER && car.arrived) car.done = true;   // c47: 목적지(사수할 문 앞)에서 내린 사람은 다시 안 탄다"),
+  ("          if (k >= 0 && d < 2.5 && car.guard) { car.state = 'brake'; car.brakeT = 0; }", "          if (k >= 0 && d < 2.5 && car.guard) { car.state = 'brake'; car.brakeT = 0; car.arrived = true; }"),
+  # 건물과 부딪히는 차 크기 3분의 2 · 강도 막는다 · 다리·길목으로 돌아가는 길
+  ("        const m = CAR_W * ck(car) / 2 + 0.2;", "        const m = CAR_W * ck(car) / 2 * (CHAPTER ? 2 / 3 : 1) + 0.2;   // c47: 챕터는 건물과 부딪히는 크기만 3분의 2"),
+  ("            const w = around(car.x, car.z, tx, tz, CAR_W * ck(car) / 2 + 0.6, CAR_L * ck(car) / 2 + 1.3);   // 건물은 넉넉히 돌아간다",
+   "            let gx = tx, gz = tz; if (CHAPTER) { const r = chRoute({ foot: { x: car.x, z: car.z }, laneK: 0 }, tx, tz); gx = r[0]; gz = r[1]; }   // c47: 강·산 건너면 다리·길목으로\n"
+   "            const w = around(car.x, car.z, gx, gz, CAR_W * ck(car) / 2 + 0.6, CAR_L * ck(car) / 2 + 1.3);   // 건물은 넉넉히 돌아간다"),
+  ("    updateCars(dt);                           // 경찰차 달리기·서기·내리기", "    updateCars(dt);                           // 경찰차 달리기·서기·내리기\n    if (CHAPTER) for (const car of cars) { chStuckTick(car, dt); if (!car.wreck) for (const [x0, z0, x1, z1] of CH_MAP.rivers) { const m = CAR_W * ck(car) / 3 + 0.2; if (car.x > x0 - m && car.x < x1 + m && car.z > z0 - m && car.z < z1 + m) { const l = car.x - (x0 - m), r = x1 + m - car.x, u = car.z - (z0 - m), w = z1 + m - car.z, k = Math.min(l, r, u, w); if (k === l) car.x = x0 - m; else if (k === r) car.x = x1 + m; else if (k === u) car.z = z0 - m; else car.z = z1 + m; } } }   // c47: 끼임 풀기 · 강에 못 들어간다"),
+  ("      else updateCitizen(b, dt);\n    }\n", "      else updateCitizen(b, dt);\n    }\n    if (CHAPTER) chBoardTick(dt);   // c47: 싸움이 끝난 사람은 차로 돌아간다\n"),
+]
