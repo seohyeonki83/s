@@ -686,6 +686,8 @@ from c64_patch import C64_R   # c64: 경찰 출동 간격 · 근접 적 먼저
 R += C64_R
 from c65_patch import C65_R   # c65: 바리케이트 체력 2배 · 체력바 여러 겹
 R += C65_R
+from c68_patch import C68_R   # c68: 배회 멈춤 0 · 주황·빨강 바로 공격
+R += C68_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
