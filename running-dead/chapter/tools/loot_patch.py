@@ -455,3 +455,13 @@ STICK_R = [   # c40: 자경단 몽둥이 휘두르기 — 때리는 모션 동�
    "      if (b.stick) { const L = LUNGE_IN + LUNGE_OUT, u = b.lungeT >= 0 ? Math.min(1, b.lungeT / L) : -1; b.stick.rotation.z = u < 0 ? -0.5 : -0.5 + 2.6 * Math.sin(Math.PI * u); }   // c40\n"
    "      if (b.lungeT >= 0) {                    // 때리는 모션 시간 — 붙는 순간 데미지"),
 ]
+
+COPKB_R = [   # c41: 경찰 권총 넉백 2 (= 저격수 넉백의 12분의 2, 시간도 같은 비율). 흡수복 2부터 안 밀린다
+  ("    else if (c.soldier && isZombie(z)) soldierHit(c, z);   // v478",
+   "    else if (c.soldier && isZombie(z)) soldierHit(c, z);   // v478\n"
+   "    else if (CHAPTER && c.police && !c.military && isZombie(z) && z.hp > 0 && z.mode !== 'bite' && z.mut !== 'armor' && !(z === me && absorbAmt() >= SNIPER_KD * 2 / 12 - 0.001)) {   // c41\n"
+   "      const T = ARMOR_KT * 2 / 12, D = SNIPER_KD * 2 / 12, V = D * 4 / (1 - Math.exp(-4 * T));\n"
+   "      if (z.mode === 'pounce') stopPounce(z);\n"
+   "      giveKnock(z, z.foot.x - c.foot.x, z.foot.z - c.foot.z, V, T);\n"
+   "    }"),
+]
