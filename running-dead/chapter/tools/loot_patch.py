@@ -512,7 +512,7 @@ DISP_FN = r"""  // ── c46: 경찰 출동 (챕터) ──
     if (!stars || !isZombie(me)) return;      // ② 경보 출동
     if (stars !== chDispStage) { if (!chDispStage) chDispT = 0; chDispStage = stars; }
     if (chDispT > 0) { chDispT -= dt; return; }
-    chDispT = 40 - 3 * (stars - 1);
+    chDispT = 32 - 3 * (stars - 1);   // c56: 기본 간격 20% 줄임 (40 → 32초). 단계마다 3초씩 짧아지는 건 그대로
     const site = lastIncident ? lastIncident.clone() : new THREE.Vector2(me.foot.x, me.foot.z);
     const [lo, hi] = CH_DISP_N[Math.min(CH_DISP_N.length, stars) - 1], n = lo + Math.floor(Math.random() * (hi - lo + 1));
     const p = chEdgeSpot(chZoneAt(me.foot.x, me.foot.z));

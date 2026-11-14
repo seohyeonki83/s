@@ -118,7 +118,7 @@ ICONS = r'''
   }
   function chPut(x, z, area, type, B) {
     const c = addCitizen(x, z, area, type === 'vig' ? 'attacker' : type);
-    if (type === 'police') c.post = area;     // 배회 경찰 = 자기 자리 둘레를 돈다
+    if (type === 'police') { c.post = area; c.area = area; }     // 배회 경찰 = 자기 자리 둘레를 돈다 (c56: 만들 때 자리가 다른 네모로 바뀌어서 경찰만 안 돌아다녔다 — 같은 자리로 맞춘다)
     if (type === 'vig') chVig(c);
     if (B) c.home = B;
     c.space = B || null; c.sleep = true;
@@ -132,9 +132,52 @@ ICONS = r'''
     s.position.set(0.42, 0.05, 0.01); s.rotation.z = -0.5; s.renderOrder = 1;
     c.mesh.add(s); c.stick = s;
   }
+  // c56: 다시 채우기 — 구역마다 따로. 길거리 한 명짜리(하양·노랑·배회 경찰)는 색마다 40초에 한 명씩 (줄어든 만큼만), 전멸한 무리는 60초에 한 무리 (어느 무리일지는 랜덤, 무리 전체가 한꺼번에 · 한 명이라도 남은 무리는 안 채운다)
+  //   내 화면과 좀비 시야 밖 빈자리에 나온다 (그런 자리가 없으면 아무 빈자리). 건물 안 사람과 경찰서 둘레 경찰은 안 채운다
+  const CH_RE_ONE = 40, CH_RE_GANG = 60;
+  let chPop = null;
+  function chPopReset() { chPop = { one: CH_MAP.zones.map(() => ({ '': { want: 0, list: [], t: CH_RE_ONE }, guard: { want: 0, list: [], t: CH_RE_ONE }, police: { want: 0, list: [], t: CH_RE_ONE } })), gangs: [], gt: CH_MAP.zones.map(() => CH_RE_GANG), acc: 0 }; for (const B of buildings) if (B.type === 'house') { B.res = []; B.taken = false; B.seen = false; } }
+  function chReg(c, type) { const P = chPop.one[chZoneOf(c.foot.x, c.foot.z)][type]; P.list.push(c); P.want++; return c; }
+  function chGang(G, p) {                       // 무리 하나를 그 자리에 놓는다 — 자리(area)를 같이 쓴다 (함께 옮겨 다닌다)
+    const area = chRoamArea(p[0], p[1]); area.roam.members = G.members = [];
+    G.types.forEach((t, i) => {
+      let x = p[0], z = p[1];
+      for (let tt = 0; tt < 40; tt++) { const a = Math.random() * Math.PI * 2, r = i ? rand(0.9, 1.8) : 0; x = p[0] + Math.cos(a) * r; z = p[1] + Math.sin(a) * r; if (!spaceOf(x, z) && freeSpot(x, z, null) && !bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < 0.9)) break; }
+      G.members.push(chPut(x, z, area, t));
+    });
+  }
+  function chHiddenSpot(zi, minOwn) {          // 그 구역 길거리 빈자리 — 내 화면과 좀비 시야 밖 (없으면 아무 빈자리)
+    const [x0, z0, x1, z1] = CH_MAP.zones[zi];
+    const ok = (x, z, strict) => !spaceOf(x, z) && !chNearRiver(x, z, AREA / 2 + 1) && freeSpot(x, z, null) && !bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < minOwn) && (!strict || (!onView(x, z, 3) && !zombies.some((zb) => Math.hypot(zb.foot.x - x, zb.foot.z - z) < zb.sense + 2)));
+    for (const strict of [true, false]) for (let k = 0; k < 200; k++) { const x = rand(x0 + 3, x1 - 3), z = rand(z0 + 3, z1 - 3); if (ok(x, z, strict)) return [x, z]; }
+    return null;
+  }
+  function chRespawnTick(dt) {
+    if ((chPop.acc += dt) < 0.5) return;
+    const d = chPop.acc; chPop.acc = 0;
+    for (let zi = 0; zi < chPop.one.length; zi++) {
+      for (const type of ['', 'guard', 'police']) {
+        const P = chPop.one[zi][type]; P.list = P.list.filter((c) => c.kind === 'citizen');
+        if (P.list.length >= P.want) { P.t = CH_RE_ONE; continue; }
+        if ((P.t -= d) > 0) continue;
+        P.t = CH_RE_ONE; const p = chHiddenSpot(zi, 1.2); if (p) P.list.push(chPut(p[0], p[1], chRoamArea(p[0], p[1]), type));
+      }
+      const dead = chPop.gangs.filter((G) => G.zone === zi && !G.members.some((c) => c.kind === 'citizen'));
+      if (!dead.length) { chPop.gt[zi] = CH_RE_GANG; continue; }
+      if ((chPop.gt[zi] -= d) > 0) continue;
+      chPop.gt[zi] = CH_RE_GANG; const p = chHiddenSpot(zi, 2.5); if (p) chGang(dead[Math.floor(Math.random() * dead.length)], p);
+    }
+    for (const B of buildings) {               // c56: 집 점령 표시 — 문이 하나라도 부서졌고(차고는 좀비가 들어가 봤고) 안에 있던 사람이 전부 감염됐으면 (원래 빈집이면 문만)
+      if (B.type !== 'house' || B.taken) continue;
+      if (B.garage && !B.seen && zombies.some((z) => z.space === B)) B.seen = true;
+      const open = B.garage ? B.seen || B.locks.some((L) => L.obj && L.obj.dead) : B.doors.length > 0;
+      if (open && B.res.every((c) => c.kind !== 'citizen')) B.taken = true;
+    }
+  }
   function chPopulate() {
+    chPopReset();
     const placed = [];
-    for (let k = 0; k < CH_COPS; k++) { const p = chOutSpot(placed, 1.2, CH_CALM); if (!p) continue; placed.push(p); chPut(p[0], p[1], chRoamArea(p[0], p[1]), 'police'); }
+    for (let k = 0; k < CH_COPS; k++) { const p = chOutSpot(placed, 1.2, CH_CALM); if (!p) continue; placed.push(p); chReg(chPut(p[0], p[1], chRoamArea(p[0], p[1]), 'police'), 'police'); }
     // 무리: 주황·빨강 각 48 — 2~4명 무리로 쪼갠다. 섞인 5명 무리 2개 (주황 2 + 빨강 3, 주황 3 + 빨강 2)
     // c44: 무리 세 가지 — 주황만 (2~4) · 빨강만 (2~4) · 섞인 무리 (4~6, 둘 다 2명 이상). 섞인 무리에 주황·빨강 각 3분의 1쯤
     const groups = [];
@@ -149,14 +192,9 @@ ICONS = r'''
       while (left > 0) { let k = 2 + Math.floor(Math.random() * 3); if (left - k === 1) k = k > 2 ? k - 1 : 3; k = Math.min(k, left); groups.push(Array(k).fill(t)); left -= k; }
     }
     const centers = [];
-    for (const G of groups.sort(() => Math.random() - 0.5)) {
+    for (const types of groups.sort(() => Math.random() - 0.5)) {
       const p = chOutSpot(centers, 2.5, CH_CALM + 2); if (!p) continue; centers.push(p);
-      const area = chRoamArea(p[0], p[1]); area.roam.members = [];
-      G.forEach((t, i) => {
-        let x = p[0], z = p[1];
-        for (let tt = 0; tt < 40; tt++) { const a = Math.random() * Math.PI * 2, r = i ? rand(0.9, 1.8) : 0; x = p[0] + Math.cos(a) * r; z = p[1] + Math.sin(a) * r; if (!spaceOf(x, z) && freeSpot(x, z, null) && !bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < 0.9)) break; }
-        area.roam.members.push(chPut(x, z, area, t));
-      });
+      const G = { zone: chZoneOf(p[0], p[1]), types, members: [] }; chPop.gangs.push(G); chGang(G, p);
     }
     // c48: 건물 안 — 랜드마크·창고는 건물마다 정한 인원, 집은 넓이대로 하양 (빈집 3분의 1)
     const hs = buildings.filter((B) => B.type === 'house').sort(() => Math.random() - 0.5), empty = new Set(hs.slice(0, Math.round(hs.length / 3)));
@@ -172,7 +210,7 @@ ICONS = r'''
     }
     houseSlots.sort(() => Math.random() - 0.5);
     const houseOut = Math.round(houseSlots.length / 3);   // c49: 집 사람 3분의 1은 집 밖(길거리)으로
-    houseSlots.slice(houseOut).forEach((B) => { const q = Math.random(), calm = Math.max(B.x0 - me.foot.x, me.foot.x - B.x1, B.z0 - me.foot.z, me.foot.z - B.z1, 0) < CH_CALM; inPut(B, calm ? '' : q < 0.15 ? 'attacker' : q < 0.30 ? 'vig' : ''); });   // c54: 집 안 하양은 15%는 주황, 15%는 빨강으로 (c55: 시작 자리 둘레 집은 하양만)
+    houseSlots.slice(houseOut).forEach((B) => { const q = Math.random(), calm = Math.max(B.x0 - me.foot.x, me.foot.x - B.x1, B.z0 - me.foot.z, me.foot.z - B.z1, 0) < CH_CALM; B.res.push(inPut(B, calm ? '' : q < 0.15 ? 'attacker' : q < 0.30 ? 'vig' : '')); });   // c54: 집 안 하양은 15%는 주황, 15%는 빨강으로 (c55: 시작 자리 둘레 집은 하양만)
     for (const B of buildings) if (B.type === 'police') for (let i = 0; i < 3; i++) {   // 경찰서 밖 배회 경찰 3명 (죽어도 채워지지 않는다)
       const ring = { x0: B.x0 - 5, z0: B.z0 - 5, x1: B.x1 + 5, z1: B.z1 + 5 }; let g = pickGoal(ring); for (let t = 0; t < 40 && (spaceOf(g.x, g.y) || chNearRiver(g.x, g.y, 1)); t++) g = pickGoal(ring);
       chPut(g.x, g.y, ring, 'police');
@@ -182,19 +220,19 @@ ICONS = r'''
     { const a0 = Math.random() * Math.PI * 2, zi = chZoneOf(me.foot.x, me.foot.z);
       const tryAt = (a) => { const r = rand(9, 12), x = me.foot.x + Math.cos(a) * r, z = me.foot.z + Math.sin(a) * r;
         if (x < MM.x0 + 3 || x > MM.x1 - 3 || z < MM.z0 + 3 || z > MM.z1 - 3 || chZoneOf(x, z) !== zi || spaceOf(x, z) || chNearRiver(x, z, 1.5) || !freeSpot(x, z, null) || bodies.some((b) => Math.hypot(b.foot.x - x, b.foot.z - z) < 1.2)) return false;
-        const y = Math.random() < 0.35; chPut(x, z, chRoamArea(x, z), y ? 'guard' : ''); if (y) nearY++; else nearW++; return true; };
+        const y = Math.random() < 0.35; chReg(chPut(x, z, chRoamArea(x, z), y ? 'guard' : ''), y ? 'guard' : ''); if (y) nearY++; else nearW++; return true; };
       for (let k = 0; k < 5; k++) for (let t = 0; t < 60; t++) if (tryAt(a0 + k * Math.PI * 2 / 5 + rand(-0.3, 0.3))) break;
       for (let t = 0; t < 300 && nearW + nearY < 3; t++) tryAt(Math.random() * Math.PI * 2);   // 가장자리라 막힌 쪽이 많으면 아무 쪽에나 채워서 적어도 셋
     }
     const ys = [];
-    for (let k = 0; k < CH_YELLOW_OUT - nearY; k++) { const p = chOutSpot(ys, 1.2, 14); if (!p) continue; ys.push(p); chPut(p[0], p[1], chRoamArea(p[0], p[1]), 'guard'); }
+    for (let k = 0; k < CH_YELLOW_OUT - nearY; k++) { const p = chOutSpot(ys, 1.2, 14); if (!p) continue; ys.push(p); chReg(chPut(p[0], p[1], chRoamArea(p[0], p[1]), 'guard'), 'guard'); }
     let w = nearW;
     const whiteOut = Math.round((CH_WHITE_OUT + houseOut) * 1.15);   // c54: 길거리 하양 15% 더
     for (let t = 0; t < 40000 && w < whiteOut; t++) {   // 길거리 하양
       const x = rand(MM.x0 + 3, MM.x1 - 3), z = rand(MM.z0 + 3, MM.z1 - 3);
       if (spaceOf(x, z) || chNearRiver(x, z, AREA / 2 + 1) || !freeSpot(x, z, null) || Math.hypot(x - me.foot.x, z - me.foot.z) < 14) continue;
       if (bodies.some((b) => Math.hypot(b.foot.x - x, b.foot.z - z) < 1.2)) continue;
-      chPut(x, z, chRoamArea(x, z), ''); w++;
+      chReg(chPut(x, z, chRoamArea(x, z), ''), ''); w++;
     }
   }
   const chRiverSegs = CHAPTER ? CH_MAP.rivers.flatMap(([x0, z0, x1, z1]) => [[x0, z0, x1, z0], [x0, z1, x1, z1], [x0, z0, x0, z1], [x1, z0, x1, z1]]) : [];
@@ -515,6 +553,7 @@ MINIMAP = r'''
       if (!B.found || (B.done ? 0 : B.type === 'store' ? 1 : 2) !== pass) continue;
       g.drawImage(CH_ICON[B.done ? 'x' : B.type], Math.max(0, Math.min(W - szB, X((B.x0 + B.x1) / 2) - szB / 2)), Math.max(0, Math.min(H - szB, Z((B.z0 + B.z1) / 2) - szB / 2)), szB, szB);   // 가장자리 건물은 미니맵 안쪽으로 당겨서 잘리지 않게
     }
+    for (const B of buildings) if (B.type === 'house' && B.taken) { const s = szB / 3; g.drawImage(CH_ICON.x, X((B.x0 + B.x1) / 2) - s / 2, Z((B.z0 + B.z1) / 2) - s / 2, s, s); }   // c56: 점령한 집 = 3분의 1 크기 X (지붕엔 표시 없음)
     for (const P of CH_MAP.passPts) {                                     // c4: 길목 — 그 자리를 밝혔으면 양쪽 화살표
       if (!P.found && explored[Math.floor((P.z - MM.z0) / MM_CELL) * mmW + Math.floor((P.x - MM.x0) / MM_CELL)]) P.found = true;
       if (P.found) g.drawImage(CH_ICON[P.dir === 'h' ? 'passH' : 'passV'], X(P.x) - sz2 / 2, Z(P.z) - sz2 / 2, sz2, sz2);
@@ -622,6 +661,8 @@ from c54_patch import C54_R   # c54: 시야 1.3배 · 경계 시간 · 두 번�
 R += C54_R
 from c55_patch import C55_R   # c55: 위험 티어 · 각성 체력 회복
 R += C55_R
+from c56_patch import C56_R   # c56: 내 테두리 · 다시 채우기
+R += C56_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

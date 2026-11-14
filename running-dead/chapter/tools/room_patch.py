@@ -194,9 +194,7 @@ ROOM_FN = r"""  // ── c53: 건물 안 방 ──
     const t = b.boss; b.boss = null; b.dmgK = 0;
     if (b.gem) { b.mesh.remove(b.gem); b.gem = null; }
     b.r = BODY; delete b.halfH; b.mesh.scale.setScalar(1);
-    mutate(b, t);
-    const ring = new THREE.Mesh(new THREE.RingGeometry(RADIUS * 0.84, RADIUS, 48), new THREE.MeshBasicMaterial({ color: 0x0b0b0d, transparent: true, depthTest: false, depthWrite: false }));
-    ring.position.z = 0.003; b.mesh.add(ring); b.ring = ring;
+    mutate(b, t);   // c56: 검은 테두리는 뺐다 (테두리는 변이한 나만)
   }
   function chSafeInRoom(s, R) {                // c54: 금고를 방 안에 — 방문에서 가장 먼 자리. 작은 방이면 그 방 사람은 복도로 옮긴다
     const D = R.locks.find((L) => L.out) || R.locks[0], m = s.r + 0.3;
