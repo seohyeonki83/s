@@ -448,3 +448,10 @@ VIG_R = [   # c39: 자경단 근접 넉백 1 (= 저격수 넉백의 12분의 1, 
   ("    attacker: { col: '#c62828', name: '만두귀',", "    attacker: { col: CHAPTER ? '#ff8c1a' : '#c62828', name: CHAPTER ? '위협적인 인간' : '만두귀',"),
   ("    police: { col: '#8e24aa', name: '짭새',", "    police: { col: '#8e24aa', name: CHAPTER ? '경찰' : '짭새',"),
 ]
+
+STICK_R = [   # c40: 자경단 몽둥이 휘두르기 — 때리는 모션 동안 크게 휘두른다
+  ("    if (b.mark) { scene.remove(b.mark); b.mark = null; }", "    if (b.mark) { scene.remove(b.mark); b.mark = null; }\n    if (b.stick) { b.mesh.remove(b.stick); b.stick = null; b.vig = false; }   // c40: 감염되면 몽둥이를 놓는다"),
+  ("      if (b.lungeT >= 0) {                    // 때리는 모션 시간 — 붙는 순간 데미지",
+   "      if (b.stick) { const L = LUNGE_IN + LUNGE_OUT, u = b.lungeT >= 0 ? Math.min(1, b.lungeT / L) : -1; b.stick.rotation.z = u < 0 ? -0.5 : -0.5 + 2.6 * Math.sin(Math.PI * u); }   // c40\n"
+   "      if (b.lungeT >= 0) {                    // 때리는 모션 시간 — 붙는 순간 데미지"),
+]

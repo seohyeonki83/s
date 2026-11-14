@@ -63,52 +63,73 @@ ICONS = r'''
   const CH_MEET = 14;                         // c12: 좀비가 이만큼(칸) 안에 오면 깨어난다 — 좀비 시야(7.2칸)의 두 배쯤이라, 내 눈에 들어올 땐 이미 돌아다니고 있다
   let chHot = null, CH_GW = 0, CH_GH = 0;
   const chNearRiver = (x, z, m) => CH_MAP.rivers.some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
-  const CH_PEOPLE = 242,   /* c33: 하양 198 → 218 · 노랑 22 → 24 */   /* c32: 200 → 220 (10% 늘림) */ CH_ROOM = 30;         // c30: 인간(하양) 전체 수 · 건물 안 한 명당 넓이(칸²)
-  // c39: 길거리 적 — 경찰(배회) 20 · 자경단 25 · 공격형 인간 20을 맵 전체 바깥에 고르게 (건물 안 X). 같은 종류끼리 최대한 떨어지게 자리를 고른다
-  function chSpread(type, count) {
-    const placed = [];
-    for (let k = 0; k < count; k++) {
-      let best = null, bd = -1;
-      for (let t = 0; t < 400 && (bd < 0 || t < 60); t++) {
-        const x = rand(MM.x0 + 3, MM.x1 - 3), z = rand(MM.z0 + 3, MM.z1 - 3);
-        if (spaceOf(x, z) || chNearRiver(x, z, AREA / 2 + 1) || !freeSpot(x, z, null)) continue;
-        if (Math.hypot(x - me.foot.x, z - me.foot.z) < 18 || bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < 1.2)) continue;
-        const d = placed.reduce((m, p) => Math.min(m, Math.hypot(p[0] - x, p[1] - z)), 1e9);
-        if (d > bd) { bd = d; best = [x, z]; }
-      }
-      if (!best) continue;
-      placed.push(best);
-      const [x, z] = best, area = square(x, z), c = addCitizen(x, z, area, type === 'vig' ? 'attacker' : type);
-      if (type === 'police') c.post = area;   // 배회 경찰 = 자기 자리 둘레를 돈다 (테스트맵 순찰 경찰처럼)
-      if (type === 'vig') { c.vig = true; c.mesh.material.color.setHex(0xc62828); }   // 자경단 = 공격형과 같은 수치 + 근접 넉백 1 (빨강)
-      c.space = null; c.sleep = true;
-      enterNormal(c);
-    }
-  }
-  function chPopulate() {                     // c30: 인간 200명 — 먼저 모든 건물 안에 골고루, 남은 사람은 바깥 맵 전체에
-    chSpread('police', 20); chSpread('vig', 25); chSpread('attacker', 20);   // c39: 길거리 적 먼저
-    let n = 0;
-    const kinds = Array.from({ length: CH_PEOPLE }, (_, i) => i < 24 ? 'guard' : '').sort(() => Math.random() - 0.5);   // c32: 10%는 노랑(강한 인간) — 건물 안·밖에 하양과 같은 비율로 섞인다
-    const hs = buildings.filter((B) => B.type === 'house').sort(() => Math.random() - 0.5), empty = new Set(hs.slice(0, Math.round(hs.length / 3)));   // c31: 집 3분의 1은 빈집 (판마다 다른 집)
-    for (const B of buildings) {              // ① 건물 안: 넓이 30칸²마다 1명, 판마다 ±1 (최소 1명) — 집 1~2 · 창고 1~3 · 랜드마크 1~6명 (테스트맵처럼 큰 건물일수록 많이)
-      if (B.type === 'hill' || empty.has(B)) continue;
-      const base = Math.max(1, Math.round((B.x1 - B.x0) * (B.z1 - B.z0) / CH_ROOM)), k = Math.max(1, base + Math.floor(Math.random() * 3) - 1);
-      for (let i = 0; i < k && n < CH_PEOPLE; i++) {
-        let g = pickGoal(B);
-        for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(B);
-        const c = addCitizen(g.x, g.y, B, kinds[n] || ''); c.home = B;
-        c.space = B; c.sleep = true;          // 처음엔 전부 잔다 (어느 건물 안인지는 미리 적어 둔다)
-        n++;
-      }
-    }
-    for (let t = 0; t < 40000 && n < CH_PEOPLE; t++) {   // ② 바깥: 남은 사람을 맵 전체에 — 그 자리 둘레를 돌아다닌다
+  // c40: 사람 깔기 — 판마다 자리는 랜덤, 종류별 수와 패턴은 늘 같다
+  //   하양 145 (건물 안 먼저 골고루, 빈집 3분의 1) · 노랑 48 (길거리에 띄엄띄엄, 4분의 1은 건물 안에 한 명씩) · 배회 경찰 20 (길거리)
+  //   주황 48 · 빨강(자경단) 48 = 길거리에 2~4명씩 무리. 주황 2 + 빨강 3 (또는 3 + 2)이 섞인 5명 무리도 몇 개
+  const CH_WHITE = 145, CH_YELLOW = 48, CH_YELLOW_IN = 12, CH_GANG = 48, CH_COPS = 20, CH_ROOM = 45;
+  function chOutSpot(placed, minOwn, keepStart) {   // 바깥 빈자리 — placed(같은 종류 자리들)에서 최대한 먼 곳 (고르게)
+    let best = null, bd = -1;
+    for (let t = 0; t < 400 && (bd < 0 || t < 50); t++) {
       const x = rand(MM.x0 + 3, MM.x1 - 3), z = rand(MM.z0 + 3, MM.z1 - 3);
-      if (spaceOf(x, z) || chNearRiver(x, z, AREA / 2 + 1)) continue;                       // 건물·산 속 · 강가(돌아다니다 물에 막히는 자리)는 뺀다
-      if (!freeSpot(x, z, null) || Math.hypot(x - me.foot.x, z - me.foot.z) < 14) continue;  // 벽에 붙은 자리 · 시작 자리 둘레도 뺀다
+      if (spaceOf(x, z) || chNearRiver(x, z, AREA / 2 + 1) || !freeSpot(x, z, null)) continue;
+      if (Math.hypot(x - me.foot.x, z - me.foot.z) < keepStart || bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < minOwn)) continue;
+      const d = placed.reduce((m, p) => Math.min(m, Math.hypot(p[0] - x, p[1] - z)), 1e9);
+      if (d > bd) { bd = d; best = [x, z]; }
+    }
+    return best;
+  }
+  function chPut(x, z, area, type, B) {
+    const c = addCitizen(x, z, area, type === 'vig' ? 'attacker' : type);
+    if (type === 'police') c.post = area;     // 배회 경찰 = 자기 자리 둘레를 돈다
+    if (type === 'vig') chVig(c);
+    if (B) c.home = B;
+    c.space = B || null; c.sleep = true;
+    enterNormal(c);
+    return c;
+  }
+  function chVig(c) {                         // 자경단 = 공격형과 같은 수치 + 근접 넉백 1, 빨강, 몽둥이
+    c.vig = true; c.mesh.material.color.setHex(0xc62828);
+    const s = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.95), new THREE.MeshBasicMaterial({ color: 0x8a5a30, transparent: true, depthTest: false, depthWrite: false }));
+    s.geometry.translate(0, 0.45, 0);         // 손잡이 쪽이 축
+    s.position.set(0.42, 0.05, 0.01); s.rotation.z = -0.5; s.renderOrder = 1;
+    c.mesh.add(s); c.stick = s;
+  }
+  function chPopulate() {
+    const placed = [];
+    for (let k = 0; k < CH_COPS; k++) { const p = chOutSpot(placed, 1.2, 18); if (!p) continue; placed.push(p); chPut(p[0], p[1], square(p[0], p[1]), 'police'); }
+    // 무리: 주황·빨강 각 48 — 2~4명 무리로 쪼갠다. 섞인 5명 무리 2개 (주황 2 + 빨강 3, 주황 3 + 빨강 2)
+    const groups = [['attacker', 'attacker', 'vig', 'vig', 'vig'], ['attacker', 'attacker', 'attacker', 'vig', 'vig']];
+    for (const t of ['attacker', 'vig']) {
+      let left = CH_GANG - groups.flat().filter((x) => x === t).length;
+      while (left > 0) { let k = 2 + Math.floor(Math.random() * 3); if (left - k === 1) k = left > 4 ? k - 1 : left; k = Math.min(k, left); groups.push(Array(k).fill(t)); left -= k; }
+    }
+    const centers = [];
+    for (const G of groups.sort(() => Math.random() - 0.5)) {
+      const p = chOutSpot(centers, 2.5, 20); if (!p) continue; centers.push(p);
+      const area = square(p[0], p[1]);
+      G.forEach((t, i) => {
+        let x = p[0], z = p[1];
+        for (let tt = 0; tt < 40; tt++) { const a = Math.random() * Math.PI * 2, r = i ? rand(0.9, 1.8) : 0; x = p[0] + Math.cos(a) * r; z = p[1] + Math.sin(a) * r; if (!spaceOf(x, z) && freeSpot(x, z, null) && !bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < 0.9)) break; }
+        chPut(x, z, area, t);
+      });
+    }
+    // 하양: 건물 안 먼저 (빈집 3분의 1은 그대로 비운다) · 노랑 12명은 건물 안 한 명씩
+    const hs = buildings.filter((B) => B.type === 'house').sort(() => Math.random() - 0.5), empty = new Set(hs.slice(0, Math.round(hs.length / 3)));
+    const rooms = buildings.filter((B) => B.type !== 'hill' && !empty.has(B));
+    const inPut = (B, type) => { let g = pickGoal(B); for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(B); chPut(g.x, g.y, B, type, B); };
+    let w = 0;
+    for (const B of rooms) {
+      const base = Math.max(1, Math.round((B.x1 - B.x0) * (B.z1 - B.z0) / CH_ROOM)), k = Math.max(1, base + Math.floor(Math.random() * 3) - 1);
+      for (let i = 0; i < k && w < CH_WHITE; i++, w++) inPut(B, '');
+    }
+    for (const B of rooms.slice().sort(() => Math.random() - 0.5).slice(0, CH_YELLOW_IN)) inPut(B, 'guard');
+    const ys = [];
+    for (let k = 0; k < CH_YELLOW - CH_YELLOW_IN; k++) { const p = chOutSpot(ys, 1.2, 14); if (!p) continue; ys.push(p); chPut(p[0], p[1], square(p[0], p[1]), 'guard'); }
+    for (let t = 0; t < 40000 && w < CH_WHITE; t++) {   // 남은 하양은 바깥 맵 전체에
+      const x = rand(MM.x0 + 3, MM.x1 - 3), z = rand(MM.z0 + 3, MM.z1 - 3);
+      if (spaceOf(x, z) || chNearRiver(x, z, AREA / 2 + 1) || !freeSpot(x, z, null) || Math.hypot(x - me.foot.x, z - me.foot.z) < 14) continue;
       if (bodies.some((b) => Math.hypot(b.foot.x - x, b.foot.z - z) < 1.2)) continue;
-      const c = addCitizen(x, z, square(x, z), kinds[n] || '');
-      c.space = null; c.sleep = true;
-      n++;
+      chPut(x, z, square(x, z), ''); w++;
     }
   }
   const chRiverSegs = CHAPTER ? CH_MAP.rivers.flatMap(([x0, z0, x1, z1]) => [[x0, z0, x1, z0], [x0, z1, x1, z1], [x0, z0, x0, z1], [x1, z0, x1, z1]]) : [];
@@ -514,14 +535,14 @@ R = [
   ("    me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;", "    if (CHAPTER) { me.foot.set(CH_MAP.start[0], 0, CH_MAP.start[1]); me.space = null; me.hp = me.maxHp; chPopulate(); return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작 · c11: 인간 200명\n    me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;"),
   ("      if (B.qm) B.qm.visible = !B.open && !!B.safe && !B.safe.dead && !B.safe.hidden;", "      if (B.sign) { B.sign.visible = !B.open; const tx = CH_TEX[B.done ? 'x' : B.type]; if (B.sign.material.map !== tx) { B.sign.material.map = tx; B.sign.material.needsUpdate = true; } }   // c1: 지붕 아이콘 — 들어가면 사라지고, 잠식하면 X\n      if (B.qm) B.qm.visible = !B.open && !!B.safe && !B.safe.dead && !B.safe.hidden;"),
   ("    for (const B of buildings) if (!B.station) B.found = false;", "    for (const B of buildings) if (!B.station) { B.found = false; B.done = false; }\n    if (CHAPTER) for (const P of CH_MAP.passPts) P.found = false;"),
-  ("  const starsEl = document.getElementById('stars');", "  const starsEl = document.getElementById('stars');\n  if (CHAPTER) { starsEl.style.display = 'none'; document.getElementById('lvbox').style.display = 'none'; const v = document.getElementById('ver'); v.style.setProperty('display', 'block', 'important'); v.style.fontSize = '10px'; v.style.opacity = '0.55'; }   // c1: 맵만 보는 판 — 경보·레벨 표시는 가린다. c10: 왼쪽 위에 버전 글자 (새 버전이 떴는지 보려고)"),
+  ("  const starsEl = document.getElementById('stars');", "  const starsEl = document.getElementById('stars');\n  if (CHAPTER) { const v = document.getElementById('ver'); v.style.setProperty('display', 'block', 'important'); v.style.top = 'auto'; v.style.bottom = 'calc(2px + env(safe-area-inset-bottom, 0px))'; v.style.left = '50%'; v.style.transform = 'translateX(-50%)';   /* c40: 레벨·경보는 테스트맵처럼 보이고, 버전 글자는 아래 가운데로 */ v.style.fontSize = '10px'; v.style.opacity = '0.55'; }   // c1: 맵만 보는 판 — 경보·레벨 표시는 가린다. c10: 왼쪽 위에 버전 글자 (새 버전이 떴는지 보려고)"),
   ("    for (const b of bodies) if (!b.fixed) wallCollide(b);   // 벽은 마지막에 — 서로 밀다가 벽을 넘지 않게", "    for (const b of bodies) if (!b.fixed && !b.sleep) wallCollide(b);   // 벽은 마지막에 — 서로 밀다가 벽을 넘지 않게\n    if (CHAPTER) for (const b of bodies) if (!b.fixed && !b.sleep) riverCollide(b);   // c3: 강"),
   ("  for (const [ax, az, bx, bz] of walls) flat(", "  for (const [ax, az, bx, bz] of buildings.flatMap((B) => (B.type === 'hill' ? [] : B.walls))) flat("),   # c2: 산은 벽 선을 안 그린다
   ("|| cand[Math.floor(Math.random() * cand.length)];   /* v431", "|| cand[B.sideK !== undefined ? B.sideK % cand.length : Math.floor(Math.random() * cand.length)];   /* c1: 챕터 맵은 쪽문 자리도 고정 */   /* v431"),
   ("bodies, spawn, fleeDir, step: stepWorld };", "bodies, spawn, fleeDir, step: stepWorld, buildings, explored, ch: CHAPTER ? CH_MAP : null, zombify: makeZombie, slotOf, route: CHAPTER ? chRoute : null, cf: () => ({ D: cfD, W: cfW, H: cfH, block: cfBlock, ready: cfReady, runs: cfRuns, dist: cfDist }), get armyK() { return armyK; } };"),
 ]
-from loot_patch import LOOT_R, ITEM_R, FX_R, LVUP_R, STAR_R, XP_R, AWAKE_R, SLOT_R, AWK_TXT_R, AWK_UI_R, AWK_RING_R, RANK_R, VIG_R   # c19: 금고와 아이템 · c21: 아이템 수치 · c24: 파편 · c25: 레벨업 · c26: 별 · c28: 경험치 · c29: 각성 주사
-R += LOOT_R + ITEM_R + FX_R + LVUP_R + STAR_R + XP_R + AWAKE_R + SLOT_R + AWK_TXT_R + AWK_UI_R + AWK_RING_R + RANK_R + VIG_R
+from loot_patch import LOOT_R, ITEM_R, FX_R, LVUP_R, STAR_R, XP_R, AWAKE_R, SLOT_R, AWK_TXT_R, AWK_UI_R, AWK_RING_R, RANK_R, VIG_R, STICK_R   # c19: 금고와 아이템 · c21: 아이템 수치 · c24: 파편 · c25: 레벨업 · c26: 별 · c28: 경험치 · c29: 각성 주사
+R += LOOT_R + ITEM_R + FX_R + LVUP_R + STAR_R + XP_R + AWAKE_R + SLOT_R + AWK_TXT_R + AWK_UI_R + AWK_RING_R + RANK_R + VIG_R + STICK_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
