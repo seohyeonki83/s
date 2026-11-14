@@ -594,5 +594,5 @@ CAR_R = [
 ]
 
 TEAM_R = [   # c50: 챕터는 군인팀 출동 없음
-  ("    while (teamIdx < TEAM_EVENTS.length && deaths >= TEAM_EVENTS[teamIdx].at) teamQueue.push(TEAM_EVENTS[teamIdx++].tier);", "    while (!CHAPTER && teamIdx < TEAM_EVENTS.length && deaths >= TEAM_EVENTS[teamIdx].at) teamQueue.push(TEAM_EVENTS[teamIdx++].tier);   // c50: 챕터는 군인팀 없음"),
+  ("    while (teamIdx < TEAM_EVENTS.length && deaths >= TEAM_EVENTS[teamIdx].at) teamQueue.push(TEAM_EVENTS[teamIdx++].tier);", "    { const EV = CHAPTER ? CH_TEAM_EVENTS : TEAM_EVENTS; while (teamIdx < EV.length && deaths >= EV[teamIdx].at) teamQueue.push(EV[teamIdx++].tier); }   // c59: 챕터도 군인팀 출동 — 경보 3단계(감염 75명)에 처음, 그 뒤로 감염 60명마다 (c50에서 뺐던 것)"),
 ]

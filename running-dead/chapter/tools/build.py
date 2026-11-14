@@ -62,7 +62,7 @@ ICONS = r'''
   const CH_WAKE = 40;                         // 깨울 사람을 고를 때 쓰는 굵은 격자 한 칸 (칸)
   const CH_SLEEP = 20;                        // c54: 깨어 있던 사람은 좀비가 전부 이만큼 멀어지면 그 자리에 다시 선다 (깨어나는 거리 14보다 넉넉히)
   function chCanSleep(b) {                    // 지금 다시 서도 되나 — 나와 얽힌 중(싸움·도망·경계·추적·출동)이면 안 된다
-    return b.state === 'normal' && !(b.police && !b.post) && !b.guardOf && !b.fb && !(b.infect > 0) && !(b.stunT > 0) && !(b.knockT > 0) && !(b.pushT > 0) && !b.lureAlert && !b.goo && !b.marked;
+    return b.state === 'normal' && !(b.police && !b.post) && !b.guardOf && !b.fb && !(b.infect > 0) && !(b.stunT > 0) && !(b.knockT > 0) && !(b.pushT > 0) && !b.lureAlert && !b.goo && !b.marked && !(b.home && b.back && b.goal);   // c59: 자기 건물로 돌아가는 중이면 끝까지 걸어간다 (도중에 서 버리지 않게)
   }
   function chWakeUp(b) {                      // 깨어나는 순간 — 서 있지 않고 바로 돌아다니기 시작한다 (내 눈에 들어올 땐 이미 걷는 중)
     if (b.state !== 'normal' || b.goal || !b.area) return;
@@ -77,6 +77,8 @@ ICONS = r'''
   //   주황 48 · 빨강(자경단) 48 = 길거리에 2~4명씩 무리. 주황 2 + 빨강 3 (또는 3 + 2)이 섞인 5명 무리도 몇 개
   const CH_WHITE = 145, CH_YELLOW = 48, CH_YELLOW_IN = 12, CH_GANG = 48, CH_COPS = 20, CH_ROOM = 45;
   const CH_WHITE_OUT = 81, CH_YELLOW_OUT = 36;   // c48: 길거리 하양 · 노랑 (건물 안은 아래 표)
+  const CH_RED_K = 0.9;                          // c59: 빨강(자경단) 10% 줄임 — 길거리 무리 · 건물 안 · 집 안 모두. 1 밑으로는 안 내려간다
+  const chRedN = (k) => { const v = k * CH_RED_K, f = Math.floor(v); return Math.max(1, f + (Math.random() < v - f ? 1 : 0)); };   // 소수는 확률로 올림 (2명 → 80%는 2명, 20%는 1명)
   const CH_WHITE_GANG = 0.5;                     // c58: 길거리 하양 가운데 무리(2~3명)로 다니는 몫
   const CH_ONE_K = 1.1;                          // c57: 길거리에 혼자 다니는 사람 (하양 · 노랑 · 배회 경찰) 10% 더 — 무리는 그대로
   const CH_INSIDE = {                         // c48: 건물 안 인원 [종류, 최소, 최대] — '' 하양 · guard 노랑 · attacker 주황 · vig 빨강 · police 경찰 · soldier 군인
@@ -188,14 +190,14 @@ ICONS = r'''
     // 무리: 주황·빨강 각 48 — 2~4명 무리로 쪼갠다. 섞인 5명 무리 2개 (주황 2 + 빨강 3, 주황 3 + 빨강 2)
     // c44: 무리 세 가지 — 주황만 (2~4) · 빨강만 (2~4) · 섞인 무리 (4~6, 둘 다 2명 이상). 섞인 무리에 주황·빨강 각 3분의 1쯤
     const groups = [];
-    let mo = Math.round(CH_GANG / 3), mr = mo;
+    let mo = Math.round(CH_GANG / 3), mr = Math.round(CH_GANG * CH_RED_K / 3);   // c59: 빨강은 10% 적게
     while (mo >= 2 && mr >= 2) {
       let k = 4 + Math.floor(Math.random() * 3), o = 2 + Math.floor(Math.random() * (k - 3));   // 주황 2 ~ k-2
       o = Math.min(o, mo); let r = Math.min(k - o, mr); if (r < 2) break;
       groups.push([...Array(o).fill('attacker'), ...Array(r).fill('vig')]); mo -= o; mr -= r;
     }
     for (const t of ['attacker', 'vig']) {
-      let left = CH_GANG - groups.flat().filter((x) => x === t).length;
+      let left = (t === 'vig' ? Math.round(CH_GANG * CH_RED_K) : CH_GANG) - groups.flat().filter((x) => x === t).length;
       while (left > 0) { let k = 2 + Math.floor(Math.random() * 3); if (left - k === 1) k = k > 2 ? k - 1 : 3; k = Math.min(k, left); groups.push(Array(k).fill(t)); left -= k; }
     }
     const centers = [];
@@ -217,7 +219,7 @@ ICONS = r'''
     }
     houseSlots.sort(() => Math.random() - 0.5);
     const houseOut = Math.round(houseSlots.length / 3);   // c49: 집 사람 3분의 1은 집 밖(길거리)으로
-    houseSlots.slice(houseOut).forEach((B) => { const q = Math.random(); B.res.push(inPut(B, q < 0.15 ? 'attacker' : q < 0.30 ? 'vig' : '')); });   // c54: 집 안 하양은 15%는 주황, 15%는 빨강으로 (c55: 시작 자리 둘레 집은 하양만)
+    houseSlots.slice(houseOut).forEach((B) => { const q = Math.random(); B.res.push(inPut(B, q < 0.15 ? 'attacker' : q < 0.15 + 0.15 * CH_RED_K ? 'vig' : '')); });   /* c59: 빨강 13.5% */   // c54: 집 안 하양은 15%는 주황, 15%는 빨강으로 (c55: 시작 자리 둘레 집은 하양만)
     for (const B of buildings) if (B.type === 'police') for (let i = 0; i < 3; i++) {   // 경찰서 밖 배회 경찰 3명 (죽어도 채워지지 않는다)
       const ring = { x0: B.x0 - 5, z0: B.z0 - 5, x1: B.x1 + 5, z1: B.z1 + 5 }; let g = pickGoal(ring); for (let t = 0; t < 40 && (spaceOf(g.x, g.y) || chNearRiver(g.x, g.y, 1)); t++) g = pickGoal(ring);
       chPut(g.x, g.y, ring, 'police');
@@ -676,6 +678,8 @@ from c57_patch import C57_R   # c57: 변이한 나는 덮치기 맨 끝
 R += C57_R
 from c58_patch import C58_R   # c58: 맞은 동료는 사물을 안 노린다 · 문이 뚫린 건물은 안팎이 한 공간
 R += C58_R
+from c59_patch import C59_R   # c59: 군인팀 출동 · 건널목 바리케이트와 수비대 · 건물 사람은 건물로 돌아간다
+R += C59_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

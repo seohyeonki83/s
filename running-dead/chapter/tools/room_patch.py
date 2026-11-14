@@ -234,7 +234,7 @@ INNER = r"""  const chBarMat = flatMat(0x2a2e35);          // c53: 방 안쪽 �
 POP_OLD = "      if (T) { for (const [type, lo, hi] of T) { let k = R2(lo, hi); if (B.type !== 'store' && (type === '' || type === 'guard')) k = Math.round(k * 2 / 3);   /* c49: 랜드마크 하양·노랑 3분의 1 줄임 */ for (let i = 0; i < k; i++) inPut(B, type); } continue; }"
 POP_NEW = r"""      if (T) {
         const list = [];
-        for (const [type, lo, hi] of T) { let k = R2(lo, hi); if (B.type !== 'store' && (type === '' || type === 'guard')) k = Math.round(k * 2 / 3);   /* c49: 랜드마크 하양·노랑 3분의 1 줄임 */ for (let i = 0; i < k; i++) list.push(type); }
+        for (const [type, lo, hi] of T) { let k = R2(lo, hi); if (B.type !== 'store' && (type === '' || type === 'guard')) k = Math.round(k * 2 / 3);   /* c49: 랜드마크 하양·노랑 3분의 1 줄임 */ if (type === 'vig') k = chRedN(k);   /* c59: 빨강 10% 줄임 (1 밑으로는 안 내려간다) */ for (let i = 0; i < k; i++) list.push(type); }
         for (const R of B.rooms || []) {        // c53: 방 안 — 그 건물 사람 중 몇 명 (없을 수도 있다). 경찰·저격수는 방에 안 들어간다. 철창엔 수감자 1명
           if (R.type === 'jail') { chPrisoner(R); continue; }
           const cap = Math.max(1, Math.floor((R.x1 - R.x0) * (R.z1 - R.z0) / 4.5)), pool = list.map((t, i) => i).filter((i) => list[i] !== null && list[i] !== 'police' && list[i] !== 'sniper');
