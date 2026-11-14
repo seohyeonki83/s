@@ -1418,7 +1418,7 @@
   }
   const SAFE_AVOID = 1.0;                     // v295: 금고 = 건물 안 장애물 (경찰차처럼) — 돌아가는 원은 부딪힘(1.2)보다 살짝 작게
   function insideVia(b, B, tx, tz) {
-    if (CHAPTER && b.kind === 'citizen' && B.fbox && B.fbox.length) { const w = chBoxPath(b.foot.x, b.foot.z, tx, tz, B.fbox, B); if (w) return w; }   // c70: 네모 사물은 모서리로 돌아간다
+    if (CHAPTER && b.kind === 'citizen') { const w = chNav(b, B, tx, tz); if (w) return w; }   // c70: 사물·금고·방을 격자 길로 돌아간다
     const S = B.safe;
     if (!S || S.dead || b === S || (S.room && S.room !== B) || Math.hypot(tx - S.foot.x, tz - S.foot.z) < 0.05) return wp.set(tx, tz);   /* c54: 금고가 방 안이면 복도에서는 안 피한다 */   // 금고 자체로 가는 길(때리러)은 그대로
     const px = b.foot.x, pz = b.foot.z, L = Math.hypot(tx - px, tz - pz) || 1e-6, ux = (tx - px) / L, uz = (tz - pz) / L;
@@ -1473,14 +1473,9 @@
       const t = segRect(px, pz, tx, tz, B, pad);
       if (t < first) { first = t; hit = B; }
     }
-    if (CHAPTER && aroundCars && pad <= GAP) for (const B of chCarRects) {   // c69: 차에 붙어 있다 — 차 쪽으로 파고드는 방향이면 옆면을 타고 빠져나간다 (끝을 스치며 제자리걸음하던 것)
-      const e = 0.26; if (px <= B.x0 - e || px >= B.x1 + e || pz <= B.z0 - e || pz >= B.z1 + e) continue;
-      const dW = px - (B.x0 - e), dE = B.x1 + e - px, dN = pz - (B.z0 - e), dS = B.z1 + e - pz, k = Math.min(dW, dE, dN, dS), nx = k === dW ? -1 : k === dE ? 1 : 0, nz = nx ? 0 : k === dN ? -1 : 1;
-      const L0 = Math.hypot(tx - px, tz - pz) || 1e-6, ux0 = (tx - px) / L0, uz0 = (tz - pz) / L0, into = ux0 * nx + uz0 * nz;
-      if (into >= -0.05) continue;
-      let sx = ux0 - into * nx, sz = uz0 - into * nz, sl = Math.hypot(sx, sz);
-      if (sl < 0.15) { const s = nx ? (tz >= (B.z0 + B.z1) / 2 ? 1 : -1) : (tx >= (B.x0 + B.x1) / 2 ? 1 : -1); sx = nx ? 0 : s; sz = nx ? s : 0; sl = 1; }
-      return wp.set(px + nx * 0.4 + sx / sl * 1.2, pz + nz * 0.4 + sz / sl * 1.2);
+    if (CHAPTER && aroundCars && pad <= GAP) for (const B of chCarRects) {   // c69 · c70: 차에 붙어 있다 — 차 쪽으로 파고드는 길이면 가까운 면의 끝으로 빠져나간다 (끝을 스치며 제자리걸음하던 것)
+      const w = chBoxEscape(px, pz, tx, tz, B, 0.24, (x, z) => !buildings.some((Q) => !Q.parent && x > Q.x0 - 0.36 && x < Q.x1 + 0.36 && z > Q.z0 - 0.36 && z < Q.z1 + 0.36) && !chCarRects.some((Q) => Q !== B && x > Q.x0 - 0.2 && x < Q.x1 + 0.2 && z > Q.z0 - 0.2 && z < Q.z1 + 0.2));
+      if (w) return wp.set(w[0], w[1]);
     }
     // 서 있는 경찰차 (v139) — 차(붙어 선 차들은 한 덩어리)를 원으로 보고 옆으로 돌아간다. 이미 원 안(차에 붙어 있음)이면 원을 따라 목적지 쪽으로 돈다
     const L = Math.hypot(tx - px, tz - pz) || 1e-6, ux = (tx - px) / L, uz = (tz - pz) / L;
@@ -1630,13 +1625,13 @@
 
   // ── 시민 상태: 일반 → 경계 → 패닉 → 멈춤 → 일반 (공격형은 HP가 남아 있으면, 경찰은 늘 패닉 대신 싸움) ──
   const inArea = (c) => c.foot.x >= c.area.x0 && c.foot.x <= c.area.x1 && c.foot.z >= c.area.z0 && c.foot.z <= c.area.z1;
-  function pickGoal(a) {                      // 영역 안 아무 곳 — 밖 영역이면 건물 근처는 빼고
-    if (CHAPTER && a.guardB && a.guardB.doors.length && Math.random() < 0.4) return pickGoal(a.guardB);   // c54: 사수 경찰 — 그 건물 문이 뚫려 있으면 열 번에 네 번은 건물 안을 돈다
+  function pickGoal(a, who) {                      // 영역 안 아무 곳 — 밖 영역이면 건물 근처는 빼고
+    if (CHAPTER && a.guardB && a.guardB.doors.length && Math.random() < 0.4) return pickGoal(a.guardB, who);   // c54: 사수 경찰 — 그 건물 문이 뚫려 있으면 열 번에 네 번은 건물 안을 돈다
     let g;
     for (let n = 0; n < 20; n++) {
       g = new THREE.Vector2(rand(a.x0 + 0.6, a.x1 - 0.6), rand(a.z0 + 0.6, a.z1 - 0.6));
       g.x = Math.max(MM.x0 + 1, Math.min(MM.x1 - 1, g.x)); g.y = Math.max(MM.z0 + 1, Math.min(MM.z1 - 1, g.y));   // 지도 밖 자리는 지도 안으로 (v174)
-      if (a.doors ? !(a.rooms && a.rooms.some((R) => g.x > R.x0 - 0.6 && g.x < R.x1 + 0.6 && g.y > R.z0 - 0.6 && g.y < R.z1 + 0.6)) && !(CHAPTER && a.fs && n < 16 && chInFurn(a, g.x, g.y, 0.5)) : freeSpot(g.x, g.y, null) && !(CHAPTER && chOnCar(g.x, g.y))) break;   // c53: 복도 자리는 방을 피해서
+      if (a.doors ? !(a.rooms && a.rooms.some((R) => g.x > R.x0 - 0.6 && g.x < R.x1 + 0.6 && g.y > R.z0 - 0.6 && g.y < R.z1 + 0.6)) && !(CHAPTER && a.fs && n < 18 && chGoalBad(a, g.x, g.y, who)) : freeSpot(g.x, g.y, null) && !(CHAPTER && chOnCar(g.x, g.y))) break;   // c53: 복도 자리는 방을 피해서
     }
     return g;
   }
@@ -1646,7 +1641,7 @@
   function enterNormal(c) {
     c.state = 'normal';
     if ((c.police && !c.station && !c.post) || c.freed) c.area = areaAround(c.foot.x, c.foot.z);   // 순찰 경찰(post)도 늘 자기 순찰 자리로 (v134)   // 경찰서 경찰은 늘 자기 영역(경찰서 안·둘레)으로 돌아간다   // 경찰·건물에서 빠져나온 시민은 정해진 영역이 없다 — 일반으로 돌아간 그 자리 근처를 배회
-    c.goal = inArea(c) ? null : pickGoal(c.area);   // 영역 밖이면 바로 걸어서 돌아간다
+    c.goal = inArea(c) ? null : pickGoal(c.area, c);   // 영역 밖이면 바로 걸어서 돌아간다
     c.back = !!c.goal;                              // 돌아가는 길은 일반 속도, 영역 안 배회는 그 1/3
     c.timer = CHAPTER && !c.gar ? 0 : rand(...IDLE_TIME);   // c68: 챕터 — 배회하다 서 있는 시간 없음 (바리케이트 수비대는 그대로 선다)
   }
@@ -1928,11 +1923,12 @@
       toward(c, me.foot.x, me.foot.z, copSpeed(c));   // v459: 저격수는 동료 속도 — v410: 추적은 늘 경찰·군인 속도 (저격수도 타겟이 없을 땐 군인 속도)
     } else if (c.goal) {                                     // 일반: 영역 안 한 곳으로 걷기
       const d = Math.hypot(c.goal.x - c.foot.x, c.goal.y - c.foot.z);
-      if (CHAPTER && c.goalRef !== c.goal) { c.goalRef = c.goal; c.goalT = clock + d / ((c.back ? WALK_SPEED : CIT_WANDER) * (c.police ? POLICE_PACE : 1)) * 2.5 + 2; c.gkT = clock + 2.5; c.gkX = c.foot.x; c.gkZ = c.foot.z; }   // c69: 이 목표까지 넉넉히 걸릴 시간
-      if (CHAPTER && clock >= c.gkT) { if (Math.hypot(c.foot.x - c.gkX, c.foot.z - c.gkZ) < 0.3) c.goalT = 0; c.gkT = clock + 2.5; c.gkX = c.foot.x; c.gkZ = c.foot.z; }   // 2.5초 동안 0.3칸도 못 갔다 = 막혔다 → 목표를 버린다
+      if (CHAPTER && c.goalRef !== c.goal) { c.goalRef = c.goal; c.goalT = clock + d / ((c.back ? WALK_SPEED : CIT_WANDER) * (c.police ? POLICE_PACE : 1)) * 2.5 + 2; c.gkT = clock + (c.space ? 1 : 2.5); c.gkX = c.foot.x; c.gkZ = c.foot.z; }   // c69: 이 목표까지 넉넉히 걸릴 시간
+      if (CHAPTER && c.navBad) { c.navBad = false; c.goalT = 0; }   // c70: 격자 길이 없는 목표
+      if (CHAPTER && clock >= c.gkT) { if (Math.hypot(c.foot.x - c.gkX, c.foot.z - c.gkZ) < (c.space ? 0.2 : 0.3)) c.goalT = 0; c.gkT = clock + (c.space ? 1 : 2.5); c.gkX = c.foot.x; c.gkZ = c.foot.z; }   // 2.5초 동안 0.3칸도 못 갔다 = 막혔다 → 목표를 버린다
       if (d < 0.1 || (CHAPTER && clock > c.goalT)) { c.goal = null; c.back = false; c.timer = CHAPTER && !c.gar ? 0 : rand(...IDLE_TIME); }   /* c68 · c69: 차·물건에 막혀 못 가는 목표는 버린다 */
-      else toward(c, c.goal.x, c.goal.y, Math.min((c.back ? WALK_SPEED : CIT_WANDER) * (c.police ? POLICE_PACE : 1), d * 3));
-    } else if ((c.timer -= dt) <= 0) { if (CHAPTER && c.area.roam) chRoam(c); c.goal = pickGoal(c.area); if (CHAPTER && c.area.roam && !inArea(c)) c.back = true; }   // 일반: 서 있다가 다음 곳으로 (c55: 길거리 사람은 가끔 자리째 옮겨 간다 — 그땐 걷는 속도로)
+      else { toward(c, c.goal.x, c.goal.y, Math.min((c.back ? WALK_SPEED : CIT_WANDER) * (c.police ? POLICE_PACE : 1), d * 3)); if (CHAPTER && c.space) chSidestep(c); }   // c70: 건물 안에서는 앞사람을 비켜 간다
+    } else if ((c.timer -= dt) <= 0) { if (CHAPTER && c.area.roam) chRoam(c); c.goal = pickGoal(c.area, c); if (CHAPTER && c.area.roam && !inArea(c)) c.back = true; }   // 일반: 서 있다가 다음 곳으로 (c55: 길거리 사람은 가끔 자리째 옮겨 간다 — 그땐 걷는 속도로)
     if (c.guard) wantV.multiplyScalar(GUARD_PACE);   // 수비형은 모든 이동이 20% 느리다 (v150)
     steer(c.vel, wantV, accelOf(c) * dt);
   }
@@ -2293,11 +2289,20 @@
 
   // ── 경찰차 (v113) ──
   const cars = [];
+  function chBoxEscape(px, pz, tx, tz, Q, e, ok) {   // 네모(부딪힘 + 0.26) 둘레 e 안에 붙어 있고 그쪽으로 파고드는 길이면 → 가까운 면의 두 끝 중 목적지까지 더 짧은 끝 [x, z]. 멀어지는 중이면 0, 붙어 있지 않으면 null
+    if (px <= Q.x0 - e || px >= Q.x1 + e || pz <= Q.z0 - e || pz >= Q.z1 + e) return null;
+    const dW = px - (Q.x0 - e), dE = Q.x1 + e - px, dN = pz - (Q.z0 - e), dS = Q.z1 + e - pz, k = Math.min(dW, dE, dN, dS), nx = k === dW ? -1 : k === dE ? 1 : 0, nz = nx ? 0 : k === dN ? -1 : 1;
+    const L0 = Math.hypot(tx - px, tz - pz) || 1e-6;
+    if ((tx - px) / L0 * nx + (tz - pz) / L0 * nz >= -0.05) return 0;
+    const o = e + 0.3, c1 = nx ? [nx < 0 ? Q.x0 - o : Q.x1 + o, Q.z0 - o] : [Q.x0 - o, nz < 0 ? Q.z0 - o : Q.z1 + o], c2 = nx ? [c1[0], Q.z1 + o] : [Q.x1 + o, c1[1]];
+    const cost = (c) => ok(c[0], c[1]) ? Math.hypot(c[0] - px, c[1] - pz) + Math.hypot(tx - c[0], tz - c[1]) : Infinity, d1 = cost(c1), d2 = cost(c2);
+    return d1 === Infinity && d2 === Infinity ? 0 : d1 <= d2 ? c1 : c2;
+  }
   let carObs = [], chCarBoxes = [], chCarRects = [], chObsAt = 0, chHotDeco = null; const chDecoObjs = [];   // c69: 서 있는 차의 네모 (사람·차가 건물처럼 모서리를 돌아간다)
   function chCarBoxesBuild() {             // 서 있는 차(잔해·바리케이트 빼고)의 부딪힘 네모 + 0.1칸. 사이로 몸이 못 지나갈 만큼 붙은 것들은 한 네모로 합친다 (주차 줄 = 긴 네모 하나)
     const out = [];
     for (const c of cars) { if (c.state !== 'parked' || c.wall || c.wreck) continue;
-      const L = CAR_L * ckl(c) * PARKED_K / 2, W = CAR_W * ck(c) * PARKED_K / 2, cs = Math.abs(Math.cos(c.h)), sn = Math.abs(Math.sin(c.h)), hx = L * cs + W * sn + 0.18, hz = L * sn + W * cs + 0.18;   // 길 찾기가 0.2칸 더 넓혀 보니까 합쳐서 몸 반지름(0.4)에 조금 못 미치게 — 차에 붙어 선 몸은 네모 밖으로 친다
+      const L = CAR_L * ckl(c) * PARKED_K / 2, W = CAR_W * ck(c) * PARKED_K / 2, cs = Math.abs(Math.cos(c.h)), sn = Math.abs(Math.sin(c.h)), hx = L * cs + W * sn + 0.26, hz = L * sn + W * cs + 0.26;   // c70: 길 찾기가 0.2칸 더 넓혀 보니까 합쳐서 0.46 — 몸 반지름(0.4)보다 넉넉하게 (끝을 스치지 않게)
       out.push({ x0: c.x - hx, z0: c.z - hz, x1: c.x + hx, z1: c.z + hz }); }
     chCarRects = out.map((a) => ({ x0: a.x0, z0: a.z0, x1: a.x1, z1: a.z1 }));   // 합치기 전 — 차 하나하나
     for (let i = 0; i < out.length; i++) for (let j = i + 1; j < out.length; j++) { const a = out[i], b = out[j];
@@ -4920,7 +4925,7 @@
     } else if (o.type === 'table') {          // c70: 네모 사물 — 먼지와 조각을 남기고 사라진다
       const t = o.t, k = chSlabs.indexOf(t), j = t.B.fs.indexOf(t), q = objs.indexOf(o);
       if (k >= 0) chSlabs.splice(k, 1); if (j >= 0) t.B.fs.splice(j, 1); if (q >= 0) objs.splice(q, 1);
-      t.B.fbox = t.B.fs.map(chSlabBox); scene.remove(t.m); chFurnBreak(t.x, t.z, CH_SLAB[t.type], t.B, 20, 0.42);
+      t.B.navDirty = true; scene.remove(t.m); chFurnBreak(t.x, t.z, CH_SLAB[t.type], t.B, 20, 0.42);
     } else {                                  // 경찰차: 폭발 + 연기 + 먼지 → 잔해만 남는다 (부딪힘 1/5)
       const c = o.car;
       c.wreck = true;
@@ -5376,7 +5381,8 @@
     b.dead = true;
     scene.remove(b.mesh); if (b.hpBar) scene.remove(b.hpBar);
     const i = bodies.indexOf(b); if (i >= 0) bodies.splice(i, 1);
-    if (b.prop) { const P = CH_PROP[b.prop]; chFurnBreak(b.foot.x, b.foot.z, P, b.space, P.r > 0.45 ? 14 : 9, P.r > 0.45 ? 0.36 : 0.28); return; }   // c70
+    if (b.prop) { const P = CH_PROP[b.prop]; chFurnBreak(b.foot.x, b.foot.z, P, b.space, P.r > 0.45 ? 14 : 9, P.r > 0.45 ? 0.36 : 0.28); if (b.space) b.space.navDirty = true; return; }   // c70
+    if (CHAPTER) for (const Q of chFurnSpaces) if (Q === b.B || Q.parent === b.B) Q.navDirty = true;   // c70: 금고가 사라졌다 → 길 찾기 격자 다시
     if (CHAPTER && b.B) b.B.done = true;       // c19: 금고를 깬 건물 = 잠식 (지붕·미니맵 아이콘이 X로)
     debris(b.foot.x, b.foot.z, 20, CHEST_BITS, 0.42, 6.5); if (!b.dud) dust(b.foot.x, b.foot.z, 16, 1.4);   // c24: 금고 — 먼지 + 상자 조각 (꽝 금고 포함. 꽝은 바로 아래에서 먼지를 낸다)
     if (b.dud) { dust(b.foot.x, b.foot.z, 16, 1.4); for (let i = 0; i < 8; i++) { const a = Math.random() * 6.28; puff(b.foot.x, 0.8, b.foot.z, 0x6a6a6a, 0.8, rand(2, 3), rand(1.2, 2), Math.cos(a) * 0.6, rand(0.6, 1.2), Math.sin(a) * 0.6, 0.6, rand(0, 0.3)); } return; }   // v331: 꽝 = 연기만, 아무 일 없음   // v288: 꽝 금고 — 아이템 없이 '힝~ 속았지' (아이템 순서는 안 쓴다)
@@ -6445,7 +6451,6 @@
     const c = Math.abs(Math.cos(t.h)), s = Math.abs(Math.sin(t.h)), ex = t.L / 2 * c + t.W / 2 * s + 0.2, ez = t.L / 2 * s + t.W / 2 * c + 0.2, R = t.room;
     t.x = Math.max(R.x0 + ex, Math.min(R.x1 - ex, t.x)); t.z = Math.max(R.z0 + ez, Math.min(R.z1 - ez, t.z));
   }
-  const chSlabBox = (t) => { const c = Math.abs(Math.cos(t.h)), s = Math.abs(Math.sin(t.h)), hx = t.L / 2 * c + t.W / 2 * s + 0.18, hz = t.L / 2 * s + t.W / 2 * c + 0.18; return { x0: t.x - hx, z0: t.z - hz, x1: t.x + hx, z1: t.z + hz, t }; };
   function chSlabCollide() {                   // 본게임 tableCollide — 깨어 있는 건물만, 둘레 칸의 몸만
     for (const B of chFurnSpaces) {
       if (!B.furnOn || !B.fs.length) continue;
@@ -6458,7 +6463,11 @@
           const dx = b.foot.x - t.x, dz = b.foot.z - t.z, hu = t.L / 2 + b.r, hv = t.W / 2 + b.r;
           let u = dx * fx + dz * fz, v = dx * rx + dz * rz;
           if (Math.abs(u) >= hu || Math.abs(v) >= hv) continue;
-          if (hu - Math.abs(u) < hv - Math.abs(v)) u = (u < 0 ? -1 : 1) * hu; else v = (v < 0 ? -1 : 1) * hv;
+          const qu = Math.abs(u) - t.L / 2, qv = Math.abs(v) - t.W / 2;
+          if (qu > 0 && qv > 0) {                // 모서리 밖 — 모서리 점에서 몸 반지름만큼 (둥근 모서리: 미끄러져 돌아간다)
+            const d = Math.hypot(qu, qv); if (d >= b.r) continue;
+            const k = b.r / (d || 1e-6); u = (u < 0 ? -1 : 1) * (t.L / 2 + qu * k); v = (v < 0 ? -1 : 1) * (t.W / 2 + qv * k);
+          } else if (hu - Math.abs(u) < hv - Math.abs(v)) u = (u < 0 ? -1 : 1) * hu; else v = (v < 0 ? -1 : 1) * hv;
           const ex = t.x + u * fx + v * rx - b.foot.x, ez = t.z + u * fz + v * rz - b.foot.z;
           const f = b === me ? 1 : (b.force || 1) * (b.mut === 'armor' ? 2 / 3 : 1), sh = isZombie(b) ? f / (f + t.mass) : 0;   // 좀비만 민다 — 사람은 돌아간다
           b.foot.x += ex * (1 - sh); b.foot.z += ez * (1 - sh);
@@ -6486,7 +6495,7 @@
         }
       }
       for (const t of B.fs) if (t.moved) { t.moved = false; t.obj.foot.set(t.x, 0, t.z); t.m.position.set(t.x, 0.04, t.z); t.m.rotation.y = -t.h; }
-      B.fbox = B.fs.filter((t) => !t.obj.dead).map(chSlabBox);
+      B.navDirty = true;                      // 길 찾기 격자를 다시 칠한다
     }
   }
   const chFurnSpaces = [];
@@ -6498,7 +6507,7 @@
       B.furnOn = on; B.fp.length = 0; }
     for (let i = chProps.length - 1; i >= 0; i--) { const p = chProps[i]; if (p.dead) { chProps.splice(i, 1); continue; }
       const S = p.space, T = S && (S.parent || S); p.sleep = !(T ? T.furnOn || (S.furnOn) : zombies.some((z) => Math.hypot(z.foot.x - p.foot.x, z.foot.z - p.foot.z) < 16));
-      if (S && S.fp) S.fp.push(p); }
+      if (S && S.fp) { S.fp.push(p); if (!S.navDirty && S.nav && (Math.abs(p.foot.x - p.nvx) > 0.1 || Math.abs(p.foot.z - p.nvz) > 0.1)) S.navDirty = true; } }   // 밀린 사물 → 그 방 격자 다시
   }
   function chNearFurn(z) {                     // 본게임 nearProp — 같은 공간 · 근접 거리 안 · 벽에 안 가린 가장 가까운 사물 (둥근 것 + 네모). 때리려고 다가가지 않는다
     const S = z.space; if (!S || !S.fp) return null;
@@ -6529,34 +6538,39 @@
   function chFurnPlace() {
     for (const t of chSlabs) { scene.remove(t.m); t.m.geometry.dispose(); t.m.material.dispose(); if (t.obj.hpBar) scene.remove(t.obj.hpBar); }
     chSlabs.length = 0; chProps.length = 0; chFurnSpaces.length = 0; chFurnN = {}; chFurnT = 0;
-    for (const B of buildings) { B.fs = []; B.fp = []; B.fbox = []; B.furnOn = false; if (B.type !== 'hill') chFurnSpaces.push(B); }
+    for (const B of buildings) { B.fs = []; B.fp = []; B.nav = null; B.navDirty = false; B.furnOn = false; if (B.type !== 'hill') chFurnSpaces.push(B); }
     for (const B of chFurnSpaces) chFurnOne(B);
-    for (const B of chFurnSpaces) B.fbox = B.fs.map(chSlabBox);
+    for (const p of chProps) if (p.space && p.space.fp) p.space.fp.push(p);
     for (const c of bodies) {                  // 사물 자리에 겹친 사람은 그 방 안 빈자리로
       if (c.kind !== 'citizen' || !c.space || !c.space.fs) continue;
-      for (let t = 0; t < 30 && chInFurn(c.space, c.foot.x, c.foot.z, 0.45); t++) { const g = pickGoal(c.space); c.foot.x = g.x; c.foot.z = g.y; c.px = g.x; c.pz = g.y; }
+      const N = chNavOf(c.space); if (!N) continue;
+      const k0 = chNavCell(N, c.foot.x, c.foot.z);
+      if (!N.cost[k0] && N.comp[k0] === N.main) {   // 빈 칸이고 큰 덩어리(문과 이어진 바닥)면 그대로 — 옆 칸이 막혀 있으면 칸 한가운데로만 옮긴다 (사물에 살짝 겹쳐 서지 않게)
+        const i = k0 % N.w, j = (k0 - i) / N.w; let tight = false;
+        for (let d = 0; d < 8 && !tight; d++) { const ni = i + CH_NAV_DI[d], nj = j + CH_NAV_DJ[d]; if (ni >= 1 && nj >= 1 && ni < N.w - 1 && nj < N.h - 1 && N.cost[nj * N.w + ni]) tight = true; }
+        if (tight) { c.foot.x = N.x0 + (i + 0.5) * CH_NAV_CS; c.foot.z = N.z0 + (j + 0.5) * CH_NAV_CS; c.px = c.foot.x; c.pz = c.foot.z; }
+        continue;
+      }
+      let k = chNavNear(N, c.foot.x, c.foot.z, 12, N.main);
+      for (let t = 0; t < 60 && k < 0; t++) { const q = Math.floor(Math.random() * N.cost.length); if (!N.cost[q] && N.comp[q] === N.main) k = q; }
+      if (k >= 0) { c.foot.x = N.x0 + (k % N.w + 0.5) * CH_NAV_CS; c.foot.z = N.z0 + (Math.floor(k / N.w) + 0.5) * CH_NAV_CS; c.px = c.foot.x; c.pz = c.foot.z; }
     }
-  }
-  function chInFurn(S, x, z, m) {              // 그 방의 사물(네모·둥근 것) 자리인가
-    for (const t of S.fs) { if (t.obj.dead) continue; const fx = Math.cos(t.h), fz = Math.sin(t.h), dx = x - t.x, dz = z - t.z; if (Math.abs(dx * fx + dz * fz) < t.L / 2 + m && Math.abs(-dx * fz + dz * fx) < t.W / 2 + m) return true; }
-    for (const p of chProps) if (!p.dead && p.space === S && Math.hypot(p.foot.x - x, p.foot.z - z) < p.r + m) return true;
-    return false;
   }
   function chFurnOne(S) {
     const T = S.parent || S, type = S.type, I = { x0: S.x0 + 0.45, z0: S.z0 + 0.45, x1: S.x1 - 0.45, z1: S.z1 - 0.45 }, W = I.x1 - I.x0, H = I.z1 - I.z0;
     if (W < 1.6 || H < 1.6 || type === 'jail') return;
     const keep = [], occ = [];
-    const doorKeep = (L, sgn, w) => { const cx = L.cx + L.nx * 1.15 * sgn, cz = L.cz + L.nz * 1.15 * sgn, hw = w / 2 + 0.45, hx = Math.abs(L.tx) * hw + Math.abs(L.nx) * 1.25, hz = Math.abs(L.tz) * hw + Math.abs(L.nz) * 1.25; keep.push([cx - hx, cz - hz, cx + hx, cz + hz]); };
+    const doorKeep = (L, sgn, w) => { const cx = L.cx + L.nx * 0.6 * sgn, cz = L.cz + L.nz * 0.6 * sgn, hw = w / 2 + 0.2, hx = Math.abs(L.tx) * hw + Math.abs(L.nx) * 0.75, hz = Math.abs(L.tz) * hw + Math.abs(L.nz) * 0.75; keep.push([cx - hx, cz - hz, cx + hx, cz + hz]); };   // 문 안쪽 1.35칸
     for (const o of objs) { if (o.type !== 'door' || o.off) continue; if (o.B === S) doorKeep(o.L, -1, o.L.w || DOOR); else if (o.L.out === S) doorKeep(o.L, 1, o.L.w || DOOR); }
     for (const D of S.doors || []) doorKeep(D, -1, D.w || DOOR);
-    if (S.garage) return chFurnGarage(S, I, keep, occ);
     for (const R of S.rooms || []) keep.push([R.x0 - 0.55, R.z0 - 0.55, R.x1 + 0.55, R.z1 + 0.55]);
     const sf = T.safe; if (sf && !sf.dead && (sf.room || T) === S) keep.push([sf.foot.x - sf.r - 0.6, sf.foot.z - sf.r - 0.6, sf.foot.x + sf.r + 0.6, sf.foot.z + sf.r + 0.6]);
+    if (S.garage) return chFurnGarage(S, I, keep, occ);
     const F = { S, I, keep, occ };
     const J = { x0: S.x0 + 0.15, z0: S.z0 + 0.15, x1: S.x1 - 0.15, z1: S.z1 - 0.15 };   // 벽에 붙여 놓을 수 있는 한계 (벽 한가운데 선에서 0.15칸)
     const free = (b, aisle) => b[0] >= J.x0 - 1e-6 && b[2] <= J.x1 + 1e-6 && b[1] >= J.z0 - 1e-6 && b[3] <= J.z1 + 1e-6 && !keep.some((k) => chBoxHit(b, k, 0)) && !occ.some((o) => chBoxHit(b, o, aisle));
     const slabBox = (type, x, z, h) => { const D = CH_SLAB[type], hx = (h ? D.W : D.L) / 2, hz = (h ? D.L : D.W) / 2; return [x - hx, z - hz, x + hx, z + hz]; };
-    const slab = (type, x, z, h, aisle = 0.95) => { const b = slabBox(type, x, z, h); if (!free(b, aisle)) return null; occ.push(b); return chAddSlab(type, x, z, h ? Math.PI / 2 : 0, S); };
+    const slab = (type, x, z, h, aisle = 1.1) => { const b = slabBox(type, x, z, h); if (!free(b, aisle)) return null; occ.push(b); return chAddSlab(type, x, z, h ? Math.PI / 2 : 0, S); };
     const prop = (type, x, z, aisle = 0.3) => { const r = CH_PROP[type].r, b = [x - r, z - r, x + r, z + r]; if (!free(b, aisle)) return null; occ.push(b); const p = chAddProp(type, x, z); p.space = S; return p; };
     const SIDES = [['n', 0, -1], ['s', 0, 1], ['w', -1, 0], ['e', 1, 0]];
     const wall = (kind, type, n, aisle) => {    // 벽에 붙여서 — 네모는 긴 변을 벽에 대고
@@ -6570,13 +6584,18 @@
       }
       return done;
     };
-    const rows = (type, n, cross, lane) => {   // 가운데에 나란히 — 줄 사이 통로 lane, 줄 안에서는 cross만큼 띄운다
-      const D = CH_SLAB[type], alongX = W >= H, la = D.L + cross, lw = D.W + lane; let done = 0;
-      const A0 = alongX ? I.x0 : I.z0, A1 = alongX ? I.x1 : I.z1, B0 = alongX ? I.z0 : I.x0, B1 = alongX ? I.z1 : I.x1;
-      const na = Math.max(1, Math.floor((A1 - A0 - 1.6 + cross) / la)), nb = Math.max(1, Math.floor((B1 - B0 - 1.8 + lane) / lw));
-      const a0 = (A0 + A1) / 2 - (na - 1) * la / 2, b0 = (B0 + B1) / 2 - (nb - 1) * lw / 2, cells = [];
-      for (let i = 0; i < na; i++) for (let j = 0; j < nb; j++) cells.push([a0 + i * la, b0 + j * lw]);
-      for (const [a, b] of cells) { if (done >= n) break; if (slab(type, alongX ? a : b, alongX ? b : a, alongX ? 0 : 1, 0.8)) done++; }
+    const rows = (type, n, cross, lane) => {   // 가운데에 나란히 — 줄 사이 통로 lane, 줄 안에서는 cross만큼 띄운다. 격자를 이리저리 밀어 보고 가장 많이 들어가는 배치로
+      const D = CH_SLAB[type]; let best = [], bh = 0;
+      for (let tr = 0; tr < 16 && best.length < n; tr++) {
+        const alongX = tr < 11 ? W >= H : W < H, la = D.L + cross, lw = D.W + lane, plan = [];
+        const A0 = alongX ? J.x0 : J.z0, A1 = alongX ? J.x1 : J.z1, B0 = alongX ? J.z0 : J.x0, B1 = alongX ? J.z1 : J.x1;
+        for (let a = A0 + D.L / 2 + 0.3 + rand(0, la); a <= A1 - D.L / 2 - 0.3; a += la) for (let b = B0 + D.W / 2 + 0.6 + rand(0, lw); b <= B1 - D.W / 2 - 0.6; b += lw) {
+          const x = alongX ? a : b, z = alongX ? b : a, bb = slabBox(type, x, z, alongX ? 0 : 1);
+          if (free(bb, 1.75)) plan.push([x, z]);
+        }
+        if (plan.length > best.length) { best = plan; bh = alongX ? 0 : 1; }
+      }
+      let done = 0; for (const [x, z] of best) { if (done >= n) break; if (slab(type, x, z, bh, 1.1)) done++; }   // 다른 줄·사물과는 두 사람이 비켜 갈 폭(1.75)을 띄우고 고른 자리다
       return done;
     };
     const scatter = (type, n, aisle) => { let done = 0; for (let t = 0; t < 30 * n && done < n; t++) if (prop(type, rand(I.x0 + 0.5, I.x1 - 0.5), rand(I.z0 + 0.5, I.z1 - 0.5), aisle)) done++; return done; };
@@ -6597,16 +6616,16 @@
       return false;
     };
     const N = (a, b) => a + Math.floor(Math.random() * (b - a + 1)), P = (p) => Math.random() < p;
-    if (S.parent) { if (type === 'room') { if (P(0.5)) { deskSet(P(0.5) ? 'pc' : 'desk'); wall('prop', 'cabinet', 1); } else { cluster(['box', 'crate'], N(2, 3)); wall('prop', 'locker', 1); } } return; }
+    if (S.parent) { if (type === 'room' && !(sf && !sf.dead && sf.room === S)) { if (P(0.5)) { deskSet(P(0.5) ? 'pc' : 'desk'); wall('prop', 'cabinet', 1); } else { cluster(['box', 'crate'], N(2, 3)); wall('prop', 'locker', 1); } } return; }
     switch (type) {
       case 'house': wall('slab', P(0.75) ? 'bed' : 'sofa', 1, 0.7); wall('prop', 'wardrobe', 1); if (P(0.6)) deskSet(); if (P(0.4)) wall('slab', 'sofa', 1, 0.7); if (P(0.45)) wall('prop', 'tv', 1); if (P(0.4)) wall('prop', 'plant', 1); if (P(0.3)) scatter('box', 1); if (P(0.3)) wall('prop', 'fridge', 1); break;
       case 'store': wall('slab', 'pallet', N(1, 2), 0.6); cluster(['box', 'box', 'crate'], N(3, 4)); cluster(['box', 'crate'], N(2, 4)); scatter('drum', N(2, 3)); scatter('crate', N(1, 2)); scatter('box', N(1, 3)); break;
-      case 'bank': rows('counter', 2, 0.9, 2.6); wall('prop', 'atm', 2); wall('prop', 'cabinet', 2); deskSet('pc'); scatter('chair', N(3, 4)); wall('prop', 'plant', 2); break;
-      case 'hospital': rows('hbed', N(4, 6), 1.1, 1.5); wall('slab', 'counter', 1, 0.8); scatter('iv', N(2, 4), 0.1); scatter('cart', 2); wall('prop', 'cabinet', 2); scatter('chair', N(2, 3)); break;
-      case 'library': rows('bookshelf', N(5, 7), 1.0, 1.45); tableSet(4); wall('prop', 'pc', 2); wall('slab', 'counter', 1, 0.8); wall('prop', 'plant', 1); break;
-      case 'conv': rows('shelf', N(2, 3), 1.0, 1.5); wall('slab', 'counter', 1, 0.8); wall('slab', 'cooler', N(1, 2), 0.8); wall('prop', 'vending', 1); break;
-      case 'mart': rows('shelf', N(6, 8), 1.1, 1.5); wall('slab', 'counter', 2, 0.8); wall('slab', 'cooler', 2, 0.8); scatter('cart', N(3, 4)); cluster(['box'], N(2, 3)); wall('prop', 'vending', 1); break;
-      case 'gym': rows('treadmill', N(3, 4), 0.9, 1.6); rows('bench', N(2, 3), 1.2, 1.7); wall('prop', 'rack', 2); scatter('sandbag', N(2, 3)); wall('prop', 'locker', 3, 0.02); break;
+      case 'bank': { const got = rows('counter', 2, 1.75, 2.4); if (got < 2) wall('slab', 'counter', 2 - got, 0.75); } wall('prop', 'atm', 2); wall('prop', 'cabinet', 2); deskSet('pc'); scatter('chair', N(3, 4)); wall('prop', 'plant', 2); break;
+      case 'hospital': { const want = N(4, 6), got = rows('hbed', want, 1.75, 1.75); if (got < want) wall('slab', 'hbed', want - got, 0.75); } wall('slab', 'counter', 1, 0.8); scatter('iv', N(2, 4), 0.1); scatter('cart', 2); wall('prop', 'cabinet', 2); scatter('chair', N(2, 3)); break;
+      case 'library': { const want = N(5, 7), got = rows('bookshelf', want, 1.75, 1.75); if (got < want) wall('slab', 'bookshelf', want - got, 0.75); } tableSet(4); wall('prop', 'pc', 2); wall('slab', 'counter', 1, 0.8); wall('prop', 'plant', 1); break;
+      case 'conv': { const want = N(2, 3), got = rows('shelf', want, 1.75, 1.75); if (got < want) wall('slab', 'shelf', want - got, 0.75); } wall('slab', 'counter', 1, 0.8); wall('slab', 'cooler', N(1, 2), 0.8); wall('prop', 'vending', 1); break;
+      case 'mart': { const want = N(6, 8), got = rows('shelf', want, 1.75, 1.75); if (got < want) wall('slab', 'shelf', want - got, 0.75); } wall('slab', 'counter', 2, 0.8); wall('slab', 'cooler', 2, 0.8); scatter('cart', N(3, 4)); cluster(['box'], N(2, 3)); wall('prop', 'vending', 1); break;
+      case 'gym': { const w1 = N(3, 4), g1 = rows('treadmill', w1, 1.75, 1.75); if (g1 < w1) wall('slab', 'treadmill', w1 - g1, 0.75); const w2 = N(2, 3), g2 = rows('bench', w2, 1.75, 1.75); if (g2 < w2) wall('slab', 'bench', w2 - g2, 0.75); } wall('prop', 'rack', 2); scatter('sandbag', N(2, 3)); wall('prop', 'locker', 3, 0.02); break;
       case 'fire': wall('prop', 'locker', 4, 0.02); wall('prop', 'hose', 2); tableSet(4); scatter('exting', N(3, 4)); cluster(['crate', 'box'], 2); break;
       case 'army': wall('prop', 'locker', 4, 0.02); cluster(['ammo'], N(3, 4)); cluster(['ammo', 'crate'], N(2, 3)); scatter('drum', N(2, 3)); wall('prop', 'radio', 1); tableSet(4); break;
       case 'police': deskSet('pc'); deskSet(); deskSet(); wall('prop', 'cabinet', 3); wall('prop', 'locker', 2, 0.02); tableSet(6); wall('prop', 'vending', 1); break;
@@ -6617,26 +6636,155 @@
     for (let i = 0, k = 0; i < 40 && k < n; i++) { const type = ['box', 'box', 'crate', 'drum'][Math.floor(Math.random() * 4)], r = CH_PROP[type].r, x = rand(I.x0 + r, I.x1 - r), z = rand(I.z0 + r, I.z1 - r), b = [x - r, z - r, x + r, z + r];
       if (keep.some((q) => chBoxHit(b, q, 0)) || occ.some((q) => chBoxHit(b, q, 0.1))) continue; occ.push(b); chAddProp(type, x, z).space = S; k++; }
   }
-  function chBoxPath(px, pz, tx, tz, boxes, lim) {   // 방 안 네모 사물을 모서리로 돌아간다 (건물 밖 around의 축소판)
-    for (const Q of boxes) {                   // 붙어 있는데 그쪽으로 파고드는 길이면 옆면을 타고 빠져나간다
-      const e = 0.26; if (px <= Q.x0 - e || px >= Q.x1 + e || pz <= Q.z0 - e || pz >= Q.z1 + e) continue;
-      const dW = px - (Q.x0 - e), dE = Q.x1 + e - px, dN = pz - (Q.z0 - e), dS = Q.z1 + e - pz, k = Math.min(dW, dE, dN, dS), nx = k === dW ? -1 : k === dE ? 1 : 0, nz = nx ? 0 : k === dN ? -1 : 1;
-      const L0 = Math.hypot(tx - px, tz - pz) || 1e-6, ux = (tx - px) / L0, uz = (tz - pz) / L0, into = ux * nx + uz * nz;
-      if (into >= -0.05) continue;
-      let sx = ux - into * nx, sz = uz - into * nz, sl = Math.hypot(sx, sz);
-      if (sl < 0.15) { const s = nx ? (tz >= (Q.z0 + Q.z1) / 2 ? 1 : -1) : (tx >= (Q.x0 + Q.x1) / 2 ? 1 : -1); sx = nx ? 0 : s; sz = nx ? s : 0; sl = 1; }
-      return wp.set(px + nx * 0.4 + sx / sl * 1.2, pz + nz * 0.4 + sz / sl * 1.2);
+  // ── 건물 안 길 찾기 (격자) ──
+  //   방마다 0.25칸 격자. 벽·안쪽 방·금고·사물 둘레(몸 반지름쯤)를 막힌 칸으로 칠해 두고, 사람은 A*로 빈 칸을 따라간다.
+  //   사물이 밀리거나 부서지면 그 방 격자만 다시 칠한다 (0.3초에 한 번까지). 좀비는 안 쓴다 (밀고 부수며 간다)
+  const CH_NAV_CS = 0.25, CH_NAV_R = 0.36, CH_NAV_RO = 0.42, chNavHF = [], chNavHI = [], CH_NAV_DI = [1, -1, 0, 0, 1, 1, -1, -1], CH_NAV_DJ = [0, 0, 1, -1, 1, -1, 1, -1];
+  let chNavCap = 0, chNavGs = null, chNavFrom = null, chNavMark = null, chNavSeq = 0, chNavQ = null;
+  function chNavBuild(S) {
+    const cs = CH_NAV_CS, R = CH_NAV_R, w = Math.max(1, Math.ceil((S.x1 - S.x0) / cs)), h = Math.max(1, Math.ceil((S.z1 - S.z0) / cs)), n = w * h;
+    let N = S.nav;
+    if (!N || N.w !== w || N.h !== h) N = S.nav = { w, h, x0: S.x0, z0: S.z0, cost: new Uint8Array(n), comp: new Uint16Array(n), ver: 0, main: 0, any: false, at: 0 };
+    const C = N.cost, K = N.comp; C.fill(0); K.fill(0); N.ver++; N.at = clock; N.any = false; S.navDirty = false;
+    const lo = (v, o) => Math.max(0, Math.ceil((v - o) / cs - 0.5)), hi = (v, o, m) => Math.min(m - 1, Math.floor((v - o) / cs - 0.5));
+    const box = (x0, z0, x1, z1) => { for (let j = lo(z0, S.z0), j1 = hi(z1, S.z0, h); j <= j1; j++) for (let i = lo(x0, S.x0), i1 = hi(x1, S.x0, w); i <= i1; i++) C[j * w + i] = 1; };
+    const disc = (x, z, r) => { for (let j = lo(z - r, S.z0), j1 = hi(z + r, S.z0, h); j <= j1; j++) for (let i = lo(x - r, S.x0), i1 = hi(x + r, S.x0, w); i <= i1; i++) { const dx = S.x0 + (i + 0.5) * cs - x, dz = S.z0 + (j + 0.5) * cs - z; if (dx * dx + dz * dz < r * r) C[j * w + i] = 1; } };
+    box(-1e9, -1e9, S.x0 + R, 1e9); box(S.x1 - R, -1e9, 1e9, 1e9); box(-1e9, -1e9, 1e9, S.z0 + R); box(-1e9, S.z1 - R, 1e9, 1e9);   // 벽
+    for (const Q of S.rooms || []) { box(Q.x0 - R, Q.z0 - R, Q.x1 + R, Q.z1 + R); N.any = true; }
+    for (const t of S.fs) {                    // 네모 사물 (돌아가 있을 수 있다)
+      if (t.obj.dead) continue; N.any = true;
+      const fx = Math.cos(t.h), fz = Math.sin(t.h), hu = t.L / 2 + CH_NAV_RO, hv = t.W / 2 + CH_NAV_RO, ex = Math.abs(fx) * hu + Math.abs(fz) * hv, ez = Math.abs(fz) * hu + Math.abs(fx) * hv;
+      for (let j = lo(t.z - ez, S.z0), j1 = hi(t.z + ez, S.z0, h); j <= j1; j++) for (let i = lo(t.x - ex, S.x0), i1 = hi(t.x + ex, S.x0, w); i <= i1; i++) { const dx = S.x0 + (i + 0.5) * cs - t.x, dz = S.z0 + (j + 0.5) * cs - t.z; if (Math.abs(dx * fx + dz * fz) < hu && Math.abs(-dx * fz + dz * fx) < hv) C[j * w + i] = 1; }
     }
-    let hit = null, first = Infinity;
-    for (const Q of boxes) { if (px > Q.x0 - GAP && px < Q.x1 + GAP && pz > Q.z0 - GAP && pz < Q.z1 + GAP) continue; const t = segRect(px, pz, tx, tz, Q, GAP); if (t < first) { first = t; hit = Q; } }
-    if (!hit) return null;
-    const m = BODY + 0.3, clear = (ax, az, bx, bz) => segRect(ax, az, bx, bz, hit, GAP) === Infinity;
-    const C = [[hit.x0 - m, hit.z0 - m], [hit.x1 + m, hit.z0 - m], [hit.x1 + m, hit.z1 + m], [hit.x0 - m, hit.z1 + m]].filter(([x, z]) => x > lim.x0 + 0.42 && x < lim.x1 - 0.42 && z > lim.z0 + 0.42 && z < lim.z1 - 0.42 && !boxes.some((Q) => Q !== hit && x > Q.x0 - 0.3 && x < Q.x1 + 0.3 && z > Q.z0 - 0.3 && z < Q.z1 + 0.3));
-    let best = null, bd = Infinity;
-    for (const c of C) { if (!clear(px, pz, c[0], c[1])) continue;
-      if (clear(c[0], c[1], tx, tz)) { const d = Math.hypot(c[0] - px, c[1] - pz) + Math.hypot(tx - c[0], tz - c[1]); if (d < bd) { bd = d; best = c; } }
-      else for (const e of C) { if (e === c || !clear(c[0], c[1], e[0], e[1]) || !clear(e[0], e[1], tx, tz)) continue; const d = Math.hypot(c[0] - px, c[1] - pz) + Math.hypot(e[0] - c[0], e[1] - c[1]) + Math.hypot(tx - e[0], tz - e[1]); if (d < bd) { bd = d; best = c; } } }
-    return best ? wp.set(best[0], best[1]) : null;
+    for (const p of S.fp) { if (p.dead || p.space !== S) continue; N.any = true; p.nvx = p.foot.x; p.nvz = p.foot.z; disc(p.foot.x, p.foot.z, p.r + CH_NAV_RO); }
+    const T = S.parent || S, sf = T.safe; if (sf && !sf.dead && (sf.room || T) === S) { N.any = true; disc(sf.foot.x, sf.foot.z, sf.r + CH_NAV_RO); }
+    if (!chNavQ || chNavQ.length < n) chNavQ = new Int32Array(n);
+    let id = 0, bestN = 0; N.main = 0;         // 이어진 바닥 덩어리 — 가장 큰 것이 '큰 바닥'
+    for (let s = 0; s < n; s++) {
+      if (C[s] || K[s]) continue;
+      let a = 0, b2 = 0; chNavQ[b2++] = s; K[s] = ++id;
+      while (a < b2) { const k = chNavQ[a++], i = k % w, j = (k - i) / w;
+        if (i > 0 && !C[k - 1] && !K[k - 1]) { K[k - 1] = id; chNavQ[b2++] = k - 1; } if (i < w - 1 && !C[k + 1] && !K[k + 1]) { K[k + 1] = id; chNavQ[b2++] = k + 1; }
+        if (j > 0 && !C[k - w] && !K[k - w]) { K[k - w] = id; chNavQ[b2++] = k - w; } if (j < h - 1 && !C[k + w] && !K[k + w]) { K[k + w] = id; chNavQ[b2++] = k + w; } }
+      if (b2 > bestN) { bestN = b2; N.main = id; }
+    }
+    return N;
+  }
+  function chNavOf(S) {                        // 그 방의 격자 (없거나 낡았으면 다시 칠한다)
+    if (!S || !S.fs) return null;
+    const N = S.nav;
+    return !N || (S.navDirty && (clock - N.at >= 0.3 || clock < N.at)) ? chNavBuild(S) : N;
+  }
+  const chNavCell = (N, x, z) => Math.max(0, Math.min(N.h - 1, Math.floor((z - N.z0) / CH_NAV_CS))) * N.w + Math.max(0, Math.min(N.w - 1, Math.floor((x - N.x0) / CH_NAV_CS)));
+  function chNavNear(N, x, z, rad, comp) {     // (x, z)에서 가장 가까운 빈 칸 (comp가 있으면 그 덩어리 안에서). 없으면 -1
+    const cs = CH_NAV_CS, w = N.w, ci = Math.floor((x - N.x0) / cs), cj = Math.floor((z - N.z0) / cs);
+    let best = -1, bd = Infinity;
+    for (let j = Math.max(0, cj - rad), j1 = Math.min(N.h - 1, cj + rad); j <= j1; j++) for (let i = Math.max(0, ci - rad), i1 = Math.min(w - 1, ci + rad); i <= i1; i++) {
+      const k = j * w + i; if (N.cost[k] || (comp && N.comp[k] !== comp)) continue;
+      const dx = N.x0 + (i + 0.5) * cs - x, dz = N.z0 + (j + 0.5) * cs - z, d = dx * dx + dz * dz; if (d < bd) { bd = d; best = k; }
+    }
+    return best;
+  }
+  function chNavLos(N, ax, az, bx, bz, skip) { // 곧장 갈 수 있나 — 반 칸씩 짚어 본다 (skip = 출발점에서 이만큼은 안 본다: 지금 서 있는 자리는 어쨌든 설 수 있는 자리)
+    const dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz), st = CH_NAV_CS * 0.5, w = N.w, h = N.h, C = N.cost;
+    if (L <= (skip || 0)) return true;
+    for (let d = skip || 0; ; d += st) {
+      if (d > L) d = L;
+      const i = Math.floor((ax + dx * d / L - N.x0) / CH_NAV_CS), j = Math.floor((az + dz * d / L - N.z0) / CH_NAV_CS);
+      if (i < 0 || j < 0 || i >= w || j >= h || C[j * w + i]) return false;
+      if (d >= L) return true;
+    }
+  }
+  function chNavAstar(N, s, g) {               // 칸 s → g (8방향, 모서리 스치기 없음). 길 = s 다음 칸부터 g까지, 못 가면 null
+    const w = N.w, h = N.h, C = N.cost, n = w * h;
+    if (chNavCap < n) { chNavCap = n; chNavGs = new Float32Array(n); chNavFrom = new Int32Array(n); chNavMark = new Uint32Array(n); chNavSeq = 0; }
+    const seq = (chNavSeq += 2), G = chNavGs, F = chNavFrom, M = chNavMark, hf = chNavHF, hi = chNavHI, gi = g % w, gj = (g - gi) / w;
+    let hn = 0, guard = 0;
+    const H = (k) => { const dx = Math.abs(k % w - gi), dz = Math.abs(Math.floor(k / w) - gj); return dx > dz ? dx + dz * 0.4142 : dz + dx * 0.4142; };
+    const push = (f, k) => { let i = hn++; while (i > 0) { const p = (i - 1) >> 1; if (hf[p] <= f) break; hf[i] = hf[p]; hi[i] = hi[p]; i = p; } hf[i] = f; hi[i] = k; };
+    const pop = () => { const top = hi[0], f = hf[--hn], k = hi[hn]; let i = 0; for (;;) { let c = i * 2 + 1; if (c >= hn) break; if (c + 1 < hn && hf[c + 1] < hf[c]) c++; if (hf[c] >= f) break; hf[i] = hf[c]; hi[i] = hi[c]; i = c; } if (hn) { hf[i] = f; hi[i] = k; } return top; };
+    G[s] = 0; F[s] = -1; M[s] = seq; push(H(s), s);
+    while (hn) {
+      const k = pop(); if (M[k] === seq + 1) continue; M[k] = seq + 1;
+      if (k === g) break;
+      if (++guard > 8000) return null;
+      const i = k % w, j = (k - i) / w, gk = G[k];
+      for (let d = 0; d < 8; d++) {
+        const di = CH_NAV_DI[d], dj = CH_NAV_DJ[d], ni = i + di, nj = j + dj;
+        if (ni < 0 || nj < 0 || ni >= w || nj >= h) continue;
+        const q = nj * w + ni; if (C[q] || M[q] === seq + 1) continue;
+        if (di && dj && (C[j * w + ni] || C[nj * w + i])) continue;
+        const ng = gk + (di && dj ? 1.4142 : 1);
+        if (M[q] === seq && G[q] <= ng) continue;
+        G[q] = ng; F[q] = k; M[q] = seq; push(ng + H(q), q);
+      }
+    }
+    if (M[g] !== seq + 1) return null;
+    const out = []; for (let k = g; k !== s && k >= 0; k = F[k]) out.push(k);
+    return out.reverse();
+  }
+  function chNavPlan(N, px, pz, tx, tz) {      // 경유점 [x, z, x, z …] — 마지막은 목적지 (막힌 자리면 그 옆 빈 칸). 못 가면 null
+    const cs = CH_NAV_CS, w = N.w, C = N.cost, K = N.comp, cx = (k) => N.x0 + (k % w + 0.5) * cs, cz = (k) => N.z0 + (Math.floor(k / w) + 0.5) * cs;
+    let s = chNavCell(N, px, pz), g = chNavCell(N, tx, tz), sOff = false, gOff = false;
+    if (C[s]) { s = chNavNear(N, px, pz, 6, 0); sOff = true; if (s < 0) return null; }
+    if (C[g] || K[g] !== K[s]) {              // 목적지가 막힌 칸이거나 걸어서 못 가는 덩어리 → 갈 수 있는 칸 중 가장 가까운 곳까지
+      g = chNavNear(N, tx, tz, 8, K[s]); gOff = true;
+      if (g < 0) { let bd = Infinity; for (let k = 0, n = C.length; k < n; k++) if (K[k] === K[s]) { const dx = cx(k) - tx, dz = cz(k) - tz, d = dx * dx + dz * dz; if (d < bd) { bd = d; g = k; } } }
+      if (g < 0) return null;
+    }
+    const cells = s === g ? [] : chNavAstar(N, s, g); if (!cells) return null;
+    const pts = []; let ax = px, az = pz, k = 0;
+    if (sOff) { ax = cx(s); az = cz(s); pts.push(ax, az); }
+    while (k < cells.length) {                 // 보이는 가장 먼 칸으로 건너뛴다
+      let m = -1;
+      for (let q = k; q < cells.length; q++) { if (chNavLos(N, ax, az, cx(cells[q]), cz(cells[q]), k || sOff ? 0 : 0.3)) m = q; else if (q - (m < 0 ? k : m) > 8) break; }
+      if (m < 0) m = k;
+      ax = cx(cells[m]); az = cz(cells[m]); pts.push(ax, az); k = m + 1;
+    }
+    if (gOff) { if (!pts.length) pts.push(cx(g), cz(g)); }
+    else if (cells.length) { pts[pts.length - 2] = tx; pts[pts.length - 1] = tz; }
+    else pts.push(tx, tz);
+    return pts;
+  }
+  function chNav(b, S, tx, tz) {               // 이번 걸음에 향할 자리 (wp) — 격자가 없거나 못 가면 null (예전 방식으로)
+    const N = chNavOf(S); if (!N || !N.any) return null;
+    const px = b.foot.x, pz = b.foot.z;
+    if (chNavLos(N, px, pz, tx, tz, 0.3)) { b.nav = null; return wp.set(tx, tz); }   // 곧장 보인다
+    const P = b.nav;
+    if (P && P.S === S && clock >= P.at) {
+      const same = P.ver === N.ver && Math.abs(P.tx - tx) < 0.4 && Math.abs(P.tz - tz) < 0.4, L = P.pts;
+      let i = P.i;
+      while (i < L.length - 2 && Math.hypot(L[i] - px, L[i + 1] - pz) < 0.3) i += 2;
+      if (i < L.length - 2 && chNavLos(N, px, pz, L[i + 2], L[i + 3], 0.3)) i += 2;
+      P.i = i;
+      const end = i >= L.length - 2 && Math.hypot(L[i] - px, L[i + 1] - pz) < 0.3;   // 길 끝 (목적지 옆 빈 칸)까지 왔다
+      if (end && same) return wp.set(tx, tz);                                        // 거기서부터는 곧장 (막힌 자리의 상대에게 붙으러)
+      if (!end && ((same && chNavLos(N, px, pz, L[i], L[i + 1], 0.3)) || clock < P.hold)) return wp.set(L[i], L[i + 1]);
+    }
+    const pts = chNavPlan(N, px, pz, tx, tz);
+    if (!pts) { b.nav = null; b.navBad = true; return null; }
+    b.nav = { S, ver: N.ver, tx, tz, pts, i: 0, at: clock, hold: clock + 0.3 };
+    return wp.set(pts[0], pts[1]);
+  }
+  const chSideL = [];
+  function chSidestep(c) {                     // 건물 안에서 걷다가 바로 앞에 사람이 있으면 (마주 오든 느리게 가든) 한쪽으로 비켜 간다 — 둘 다 자기 오른쪽이라 서로 엇갈린다
+    const vx = wantV.x, vz = wantV.y, sp = Math.hypot(vx, vz); if (sp < 0.01) return;
+    const ux = vx / sp, uz = vz / sp;
+    for (const o of nearIn(cCells, c.foot.x, c.foot.z, 1.0, chSideL)) {
+      if (o === c || o.sleep || o.space !== c.space) continue;
+      const dx = o.foot.x - c.foot.x, dz = o.foot.z - c.foot.z, d = Math.hypot(dx, dz);
+      if (d > 1.0 || d < 1e-6 || (dx * ux + dz * uz) / d < 0.6) continue;   // 앞쪽 53° 안, 한 칸 안
+      let sx = -uz, sz = ux;
+      const N = c.space.nav;
+      if (N) { const bad = (k) => N.cost[chNavCell(N, c.foot.x + sx * 0.5 * k, c.foot.z + sz * 0.5 * k)]; if (bad(1)) { if (bad(-1)) return; sx = -sx; sz = -sz; } }   // 그쪽이 막혀 있으면 반대쪽, 둘 다 막혔으면 그대로
+      wantV.set((ux * 0.5 + sx * 0.87) * sp, (uz * 0.5 + sz * 0.87) * sp); return;
+    }
+  }
+  function chGoalBad(a, x, z, c) {             // 배회 목표로 못 쓰는 자리 — 막힌 칸이거나, 그 사람이 걸어서 못 가는 덩어리
+    const N = chNavOf(a); if (!N) return false;
+    const k = chNavCell(N, x, z); if (N.cost[k]) return true;
+    if (c && c.space === a) { const s = chNavCell(N, c.foot.x, c.foot.z); if (!N.cost[s]) return N.comp[s] !== N.comp[k]; }
+    return N.comp[k] !== N.main;
   }
   function showDud() {                        // v288: 꽝 금고 — 멈추고 '꽝!' + 놀리는 글, 조이스틱 자리 [확인]
     acqOpen = true; paused = true; stopInput();
@@ -7223,7 +7371,7 @@
     window.__rdReady = true;
   }
 
-  window.__rd = { get me() { return me; }, bodies, spawn, fleeDir, step: stepWorld, buildings, explored, ch: CHAPTER ? CH_MAP : null, zombify: makeZombie, slotOf, pop: () => chPop, awaken: awakenMe, bar: () => chBar, furn: () => ({ props: chProps, slabs: chSlabs, n: chFurnN }), heart: chHeartDrop, deco: () => chDeco, bays: () => chBays, civCar: chDecoCarNow, decoObjs: () => chDecoObjs, carObs: () => carObs, carBoxes: () => chCarBoxes, teams: () => teamWait, park: chParked, kills: (n) => { if (n !== undefined) deaths = n; return deaths; }, teamEv: () => CH_TEAM_EVENTS, incident: (x, z) => callPolice({ x, z }), use: useItem, tier: chTier, hold: () => items, rooms: chRooms, spaceOf, linked, chStart, mutate, openDoor: chOpenDoor, cars: () => cars, objsL: () => objs, lastInc: () => lastIncident, stars: () => stars, setStars: (n, x, z) => { stars = n; deaths = Math.max(deaths, STAR_AT[n - 1]); lastIncident = new THREE.Vector2(x, z); }, xp: (n) => { for (let i = 0; i < n; i++) gainXp(); return { level, xp, pendingLv }; }, lvInfo: () => ({ level, xp, pendingLv, need: needXp(level + pendingLv) }), chips: () => chips.length, objs, breakObj, rageK: CHAPTER ? rageK : null, loot: CHAPTER ? chLoot : null, breakSafe, give: (k) => pendingAward.push(k), inv: () => ({ tools: items.map((x) => x.kind + ':' + (x.off ? 'off' : x.kind === 'awaken' ? (+x.acc.toFixed(1)) + 's' : x.ammo)), owned: Object.keys(owned), lv: Object.assign({}, ilv), cap: chToolCap(), pickups: pickups.map((p) => [p.kind, +p.x.toFixed(1), +p.z.toFixed(1)]), acq: acqOpen }), zDamage, route: CHAPTER ? chRoute : null, cf: () => ({ D: cfD, W: cfW, H: cfH, block: cfBlock, ready: cfReady, runs: cfRuns, dist: cfDist }), get armyK() { return armyK; } };   // 확인용 (콘솔에서 상태 보기·한 걸음씩 돌리기)
+  window.__rd = { get me() { return me; }, bodies, spawn, fleeDir, step: stepWorld, buildings, explored, ch: CHAPTER ? CH_MAP : null, zombify: makeZombie, slotOf, pop: () => chPop, awaken: awakenMe, bar: () => chBar, furn: () => ({ props: chProps, slabs: chSlabs, n: chFurnN }), heart: chHeartDrop, nav: chNavOf, navPlan: chNavPlan, hearts: () => pickups.filter((q) => q.kind === 'heart').length, deco: () => chDeco, bays: () => chBays, civCar: chDecoCarNow, decoObjs: () => chDecoObjs, carObs: () => carObs, carBoxes: () => chCarBoxes, teams: () => teamWait, park: chParked, kills: (n) => { if (n !== undefined) deaths = n; return deaths; }, teamEv: () => CH_TEAM_EVENTS, incident: (x, z) => callPolice({ x, z }), use: useItem, tier: chTier, hold: () => items, rooms: chRooms, spaceOf, linked, chStart, mutate, openDoor: chOpenDoor, cars: () => cars, objsL: () => objs, lastInc: () => lastIncident, stars: () => stars, setStars: (n, x, z) => { stars = n; deaths = Math.max(deaths, STAR_AT[n - 1]); lastIncident = new THREE.Vector2(x, z); }, xp: (n) => { for (let i = 0; i < n; i++) gainXp(); return { level, xp, pendingLv }; }, lvInfo: () => ({ level, xp, pendingLv, need: needXp(level + pendingLv) }), chips: () => chips.length, objs, breakObj, rageK: CHAPTER ? rageK : null, loot: CHAPTER ? chLoot : null, breakSafe, give: (k) => pendingAward.push(k), inv: () => ({ tools: items.map((x) => x.kind + ':' + (x.off ? 'off' : x.kind === 'awaken' ? (+x.acc.toFixed(1)) + 's' : x.ammo)), owned: Object.keys(owned), lv: Object.assign({}, ilv), cap: chToolCap(), pickups: pickups.map((p) => [p.kind, +p.x.toFixed(1), +p.z.toFixed(1)]), acq: acqOpen }), zDamage, route: CHAPTER ? chRoute : null, cf: () => ({ D: cfD, W: cfW, H: cfH, block: cfBlock, ready: cfReady, runs: cfRuns, dist: cfDist }), get armyK() { return armyK; } };   // 확인용 (콘솔에서 상태 보기·한 걸음씩 돌리기)
   // 내가 고쳐 올리면 열려 있는 화면이 저절로 바뀐다 — 새 버전은 판을 새로 깐다
   window.claude?.hot?.ready ? window.claude.hot.ready(start) : start();
 </script>

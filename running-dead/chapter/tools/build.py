@@ -690,6 +690,8 @@ from c68_patch import C68_R   # c68: 배회 멈춤 0 · 주황·빨강 바로 �
 R += C68_R
 from c69_patch import C69B_R   # c69: 순환도로 · 차종 · 주차된 차
 R += C69B_R
+from c70_patch import C70_R   # c70: 건물 안 사물 · 하트
+R += C70_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
