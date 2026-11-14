@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c38</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c39</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -453,7 +453,7 @@
   const BITE_GAP = RADIUS;   // 물 때 두 원 중심 거리 = 반지름 → 반쯤 겹친다
   const SPLIT = 1.5;      // 물기가 끝나고 둘이 떨어지는 속도 (유닛/초)
   const ICON_H = 0.55;    // 머리 위 ? ! !!! 높이 (유닛)
-  const COLOR = { me: 0x3366f2, citizen: CHAPTER ? 0xf2f2f2 : 0xffcf33, guard: CHAPTER ? 0xffcf33 : 0xff8c1a, attacker: 0xc62828, police: 0x8e24aa, sniper: 0x556b2f, soldier: 0x556b2f, ally: 0x8aa4f5, dead: 0x555555 };   // 나 = 유니티 큐브 파랑, 시민 = 노랑, 수비형 = 주황, 공격형 = 진한 빨강, 경찰 = 보라, 동료 좀비 = 연한 파랑
+  const COLOR = { me: 0x3366f2, citizen: CHAPTER ? 0xf2f2f2 : 0xffcf33, guard: CHAPTER ? 0xffcf33 : 0xff8c1a, attacker: CHAPTER ? 0xff8c1a : 0xc62828, attacker: 0xc62828, police: 0x8e24aa, sniper: 0x556b2f, soldier: 0x556b2f, ally: 0x8aa4f5, dead: 0x555555 };   // 나 = 유니티 큐브 파랑, 시민 = 노랑, 수비형 = 주황, 공격형 = 진한 빨강, 경찰 = 보라, 동료 좀비 = 연한 파랑
 
   // 그리는 층 (v132) — 바닥·벽·어둠·경찰차·캐릭터 < 모든 UI(체력바·머리 위 표시) < 내 UI(내 체력바·감염 시계·조준 테두리·명령 화살표)
   const UI = 10, UI_ME = 20;
@@ -784,7 +784,29 @@
   let chHot = null, CH_GW = 0, CH_GH = 0;
   const chNearRiver = (x, z, m) => CH_MAP.rivers.some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
   const CH_PEOPLE = 242,   /* c33: 하양 198 → 218 · 노랑 22 → 24 */   /* c32: 200 → 220 (10% 늘림) */ CH_ROOM = 30;         // c30: 인간(하양) 전체 수 · 건물 안 한 명당 넓이(칸²)
+  // c39: 길거리 적 — 경찰(배회) 20 · 자경단 25 · 공격형 인간 20을 맵 전체 바깥에 고르게 (건물 안 X). 같은 종류끼리 최대한 떨어지게 자리를 고른다
+  function chSpread(type, count) {
+    const placed = [];
+    for (let k = 0; k < count; k++) {
+      let best = null, bd = -1;
+      for (let t = 0; t < 400 && (bd < 0 || t < 60); t++) {
+        const x = rand(MM.x0 + 3, MM.x1 - 3), z = rand(MM.z0 + 3, MM.z1 - 3);
+        if (spaceOf(x, z) || chNearRiver(x, z, AREA / 2 + 1) || !freeSpot(x, z, null)) continue;
+        if (Math.hypot(x - me.foot.x, z - me.foot.z) < 18 || bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < 1.2)) continue;
+        const d = placed.reduce((m, p) => Math.min(m, Math.hypot(p[0] - x, p[1] - z)), 1e9);
+        if (d > bd) { bd = d; best = [x, z]; }
+      }
+      if (!best) continue;
+      placed.push(best);
+      const [x, z] = best, area = square(x, z), c = addCitizen(x, z, area, type === 'vig' ? 'attacker' : type);
+      if (type === 'police') c.post = area;   // 배회 경찰 = 자기 자리 둘레를 돈다 (테스트맵 순찰 경찰처럼)
+      if (type === 'vig') { c.vig = true; c.mesh.material.color.setHex(0xc62828); }   // 자경단 = 공격형과 같은 수치 + 근접 넉백 1 (빨강)
+      c.space = null; c.sleep = true;
+      enterNormal(c);
+    }
+  }
   function chPopulate() {                     // c30: 인간 200명 — 먼저 모든 건물 안에 골고루, 남은 사람은 바깥 맵 전체에
+    chSpread('police', 20); chSpread('vig', 25); chSpread('attacker', 20);   // c39: 길거리 적 먼저
     let n = 0;
     const kinds = Array.from({ length: CH_PEOPLE }, (_, i) => i < 24 ? 'guard' : '').sort(() => Math.random() - 0.5);   // c32: 10%는 노랑(강한 인간) — 건물 안·밖에 하양과 같은 비율로 섞인다
     const hs = buildings.filter((B) => B.type === 'house').sort(() => Math.random() - 0.5), empty = new Set(hs.slice(0, Math.round(hs.length / 3)));   // c31: 집 3분의 1은 빈집 (판마다 다른 집)
@@ -2509,6 +2531,11 @@
   const ARMOR_KB = 2.3, ARMOR_KT = 0.4;       // v295: 덩치에 맞으면 처음 이 속도(칸/초)로 밀려나 이 시간 동안 점점 느려진다 — v300: 거리 2배, v301: 0.32 → 0.46칸 (1.5배, 2 → 2.3칸/초 · 0.25 → 0.4초)
   function landHit(a, v, dmg = DAMAGE) {
     if (TEST_MAP && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적
+    if (CHAPTER && a && a.vig && isZombie(v) && v.mode !== 'bite' && v.mut !== 'armor' && !(v === me && absorbAmt() >= SNIPER_KD / 12 - 0.001)) {   // c39: 자경단 몽둥이 — 밀림 1
+      const T = ARMOR_KT / 12, D = SNIPER_KD / 12, V = D * 4 / (1 - Math.exp(-4 * T));
+      if (v.mode === 'pounce') stopPounce(v);
+      giveKnock(v, v.foot.x - a.foot.x, v.foot.z - a.foot.z, V, T);
+    }
     if (a && a.stim) dmg *= a.stimK || 1.5;   // v369 · v370: 스팀팩 (강화마다 +10%p)
     if ((v.kind === 'obj' || v.kind === 'safe') && a.mut === 'armor') dmg *= 3;   // v550: 덩치만 사물(문·차·금고)에 3배   // v378: 금고도   // v344: 2 → 4배   // v295: 덩치 — 문·경찰차 피해 2배
     if ((v.kind === 'obj' || v.kind === 'safe') && a === me && owned.crowbar) dmg *= 1 + 0.1 * (1 + lv('crowbar'));   /* c21: 빠루 +10%, 강화마다 +10%p (60%까지) */   /* v563: 빠루 처음 +40%, 강화마다 +10% */
@@ -5374,8 +5401,8 @@
   const TUT = {
     citizen: { col: CHAPTER ? '#f2f2f2' : '#ffcf33', name: CHAPTER ? '인간' : '좃밥', say: '살점을 뜯어먹어 체력을 회복하세요' },   // 이름 (v204) — 원 위에 뜬다
     guard: { col: CHAPTER ? '#ffcf33' : '#ff8c1a', name: CHAPTER ? '강한 인간' : '헬창', say: '깝침' },
-    attacker: { col: '#c62828', name: '만두귀', say: '좀 침' },
-    police: { col: '#8e24aa', name: '짭새', say: '건법 씀' },
+    attacker: { col: CHAPTER ? '#ff8c1a' : '#c62828', name: CHAPTER ? '위협적인 인간' : '만두귀', say: '좀 침' },
+    police: { col: '#8e24aa', name: CHAPTER ? '경찰' : '짭새', say: '건법 씀' },
     soldier: { col: '#' + COLOR.soldier.toString(16).padStart(6, '0'), name: '군인', say: '훈련받은 군인입니다.' },   // v480
     sniper: { col: '#ff2a2a', name: '저격수', say: '발빠른 저격수<br>제거 1순위' },   // v270: 총(건) — 권법 아님
     station: { col: '#b44ee6', name: '경찰서', say: '깝치면 개털림' },   // v223: 이름 줄에 '경찰서 발견!!!'이 있으니 설명은 짧게   // v221: 사람과 같은 방식 — 대상이 지붕 느낌표일 뿐

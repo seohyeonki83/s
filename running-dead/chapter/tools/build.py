@@ -64,7 +64,29 @@ ICONS = r'''
   let chHot = null, CH_GW = 0, CH_GH = 0;
   const chNearRiver = (x, z, m) => CH_MAP.rivers.some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
   const CH_PEOPLE = 242,   /* c33: 하양 198 → 218 · 노랑 22 → 24 */   /* c32: 200 → 220 (10% 늘림) */ CH_ROOM = 30;         // c30: 인간(하양) 전체 수 · 건물 안 한 명당 넓이(칸²)
+  // c39: 길거리 적 — 경찰(배회) 20 · 자경단 25 · 공격형 인간 20을 맵 전체 바깥에 고르게 (건물 안 X). 같은 종류끼리 최대한 떨어지게 자리를 고른다
+  function chSpread(type, count) {
+    const placed = [];
+    for (let k = 0; k < count; k++) {
+      let best = null, bd = -1;
+      for (let t = 0; t < 400 && (bd < 0 || t < 60); t++) {
+        const x = rand(MM.x0 + 3, MM.x1 - 3), z = rand(MM.z0 + 3, MM.z1 - 3);
+        if (spaceOf(x, z) || chNearRiver(x, z, AREA / 2 + 1) || !freeSpot(x, z, null)) continue;
+        if (Math.hypot(x - me.foot.x, z - me.foot.z) < 18 || bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < 1.2)) continue;
+        const d = placed.reduce((m, p) => Math.min(m, Math.hypot(p[0] - x, p[1] - z)), 1e9);
+        if (d > bd) { bd = d; best = [x, z]; }
+      }
+      if (!best) continue;
+      placed.push(best);
+      const [x, z] = best, area = square(x, z), c = addCitizen(x, z, area, type === 'vig' ? 'attacker' : type);
+      if (type === 'police') c.post = area;   // 배회 경찰 = 자기 자리 둘레를 돈다 (테스트맵 순찰 경찰처럼)
+      if (type === 'vig') { c.vig = true; c.mesh.material.color.setHex(0xc62828); }   // 자경단 = 공격형과 같은 수치 + 근접 넉백 1 (빨강)
+      c.space = null; c.sleep = true;
+      enterNormal(c);
+    }
+  }
   function chPopulate() {                     // c30: 인간 200명 — 먼저 모든 건물 안에 골고루, 남은 사람은 바깥 맵 전체에
+    chSpread('police', 20); chSpread('vig', 25); chSpread('attacker', 20);   // c39: 길거리 적 먼저
     let n = 0;
     const kinds = Array.from({ length: CH_PEOPLE }, (_, i) => i < 24 ? 'guard' : '').sort(() => Math.random() - 0.5);   // c32: 10%는 노랑(강한 인간) — 건물 안·밖에 하양과 같은 비율로 섞인다
     const hs = buildings.filter((B) => B.type === 'house').sort(() => Math.random() - 0.5), empty = new Set(hs.slice(0, Math.round(hs.length / 3)));   // c31: 집 3분의 1은 빈집 (판마다 다른 집)
@@ -467,7 +489,7 @@ R = [
   ("    position: absolute; left: calc(50% + 54px); bottom: calc(172px + env(safe-area-inset-bottom, 0px));", "    position: absolute; left: calc(50% + 54px); bottom: calc(172px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px));"),
   ("    el.style.bottom = `calc(118px + env(safe-area-inset-bottom, 0px) + ${dy}px)`;", "    el.style.bottom = `calc(118px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px) + ${dy}px)`;"),
   ("    const el = document.getElementById(id); el.style.bottom = 'auto';", "    const el = document.getElementById(id); el.style.bottom = 'auto'; if (CHAPTER) el.style.opacity = '0';   /* c9: 되감기·일시정지 버튼은 안 보이게 (자리와 누르는 건 그대로) */"),
-  ("citizen: 0xffcf33, guard: 0xff8c1a,", "citizen: CHAPTER ? 0xf2f2f2 : 0xffcf33, guard: CHAPTER ? 0xffcf33 : 0xff8c1a,"),   # c32: 강한 인간 = 노랑
+  ("citizen: 0xffcf33, guard: 0xff8c1a,", "citizen: CHAPTER ? 0xf2f2f2 : 0xffcf33, guard: CHAPTER ? 0xffcf33 : 0xff8c1a, attacker: CHAPTER ? 0xff8c1a : 0xc62828,"),   # c32: 강한 인간 = 노랑
   ("    guard: { col: '#ff8c1a', name: '헬창',", "    guard: { col: CHAPTER ? '#ffcf33' : '#ff8c1a', name: CHAPTER ? '강한 인간' : '헬창',"),   # c11: 인간 = 하양
   ("    citizen: { col: '#ffcf33', name: '좃밥',", "    citizen: { col: CHAPTER ? '#f2f2f2' : '#ffcf33', name: CHAPTER ? '인간' : '좃밥',"),
   ("    for (const b of bodies) if (isZombie(b)) zombies.push(b);\n    while (teamQueue.length)", "    for (const b of bodies) if (isZombie(b)) zombies.push(b);\n" + SLEEP + "    while (teamQueue.length)"),
@@ -498,8 +520,8 @@ R = [
   ("|| cand[Math.floor(Math.random() * cand.length)];   /* v431", "|| cand[B.sideK !== undefined ? B.sideK % cand.length : Math.floor(Math.random() * cand.length)];   /* c1: 챕터 맵은 쪽문 자리도 고정 */   /* v431"),
   ("bodies, spawn, fleeDir, step: stepWorld };", "bodies, spawn, fleeDir, step: stepWorld, buildings, explored, ch: CHAPTER ? CH_MAP : null, zombify: makeZombie, slotOf, route: CHAPTER ? chRoute : null, cf: () => ({ D: cfD, W: cfW, H: cfH, block: cfBlock, ready: cfReady, runs: cfRuns, dist: cfDist }), get armyK() { return armyK; } };"),
 ]
-from loot_patch import LOOT_R, ITEM_R, FX_R, LVUP_R, STAR_R, XP_R, AWAKE_R, SLOT_R, AWK_TXT_R, AWK_UI_R, AWK_RING_R, RANK_R   # c19: 금고와 아이템 · c21: 아이템 수치 · c24: 파편 · c25: 레벨업 · c26: 별 · c28: 경험치 · c29: 각성 주사
-R += LOOT_R + ITEM_R + FX_R + LVUP_R + STAR_R + XP_R + AWAKE_R + SLOT_R + AWK_TXT_R + AWK_UI_R + AWK_RING_R + RANK_R
+from loot_patch import LOOT_R, ITEM_R, FX_R, LVUP_R, STAR_R, XP_R, AWAKE_R, SLOT_R, AWK_TXT_R, AWK_UI_R, AWK_RING_R, RANK_R, VIG_R   # c19: 금고와 아이템 · c21: 아이템 수치 · c24: 파편 · c25: 레벨업 · c26: 별 · c28: 경험치 · c29: 각성 주사
+R += LOOT_R + ITEM_R + FX_R + LVUP_R + STAR_R + XP_R + AWAKE_R + SLOT_R + AWK_TXT_R + AWK_UI_R + AWK_RING_R + RANK_R + VIG_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

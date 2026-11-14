@@ -436,3 +436,15 @@ RANK_R = [   # c38: 군집 단계 10개 (챕터)
     [130, '죽음의 물결이 산 자들을 덮칩니다.'], [160, '압도적인 힘으로.'], [200, '너희의 신은 어디 있느냐?'], [250, '무저갱의 사자가 왔노라.'], [300, '나는 군단이다.']].map(([n, d]) => ({ n, t: n + '마리 돌파', d })));   // c38
   let rankNext = 0, rankAnim = false;"""),
 ]
+
+VIG_R = [   # c39: 자경단 근접 넉백 1 (= 저격수 넉백의 12분의 1, 시간도 12분의 1)
+  ("    if (TEST_MAP && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적\n",
+   "    if (TEST_MAP && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적\n"
+   "    if (CHAPTER && a && a.vig && isZombie(v) && v.mode !== 'bite' && v.mut !== 'armor' && !(v === me && absorbAmt() >= SNIPER_KD / 12 - 0.001)) {   // c39: 자경단 몽둥이 — 밀림 1\n"
+   "      const T = ARMOR_KT / 12, D = SNIPER_KD / 12, V = D * 4 / (1 - Math.exp(-4 * T));\n"
+   "      if (v.mode === 'pounce') stopPounce(v);\n"
+   "      giveKnock(v, v.foot.x - a.foot.x, v.foot.z - a.foot.z, V, T);\n"
+   "    }\n"),
+  ("    attacker: { col: '#c62828', name: '만두귀',", "    attacker: { col: CHAPTER ? '#ff8c1a' : '#c62828', name: CHAPTER ? '위협적인 인간' : '만두귀',"),
+  ("    police: { col: '#8e24aa', name: '짭새',", "    police: { col: '#8e24aa', name: CHAPTER ? '경찰' : '짭새',"),
+]
