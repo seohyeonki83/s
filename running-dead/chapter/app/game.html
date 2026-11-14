@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c35</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c36</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4372,7 +4372,7 @@
       it.el.classList.toggle('empty', it.ammo <= 0);
       it.el.style.filter = it.off ? 'grayscale(1)' : ''; it.el.style.opacity = it.off ? '0.45' : '';   // c21: 꺼진 도구는 회색
       if (it.off) { it.el.style.setProperty('--p', 0); it.el.querySelector('.n').textContent = ''; it.el.classList.remove('empty'); }
-      else if (it.kind === 'awaken') { it.el.style.setProperty('--p', Math.round(it.acc / chAccMax() * 100)); it.el.querySelector('.n').textContent = it.drain ? Math.ceil(it.acc) : Math.floor(it.acc); it.el.classList.toggle('empty', !it.drain && it.acc < 1); }   // 각성 주사는 모인 시간(초) — c29: 쓰는 동안은 남은 시간이 거꾸로 줄어든다
+      else if (it.kind === 'awaken') { it.el.style.setProperty('--p', Math.round(it.acc / 25 * 100)); { const v = it.drain ? Math.ceil(it.acc) : Math.floor(it.acc), N = it.el.querySelector('.n'), h = `<span style="font-size:13px">${v}</span><span style="font-size:8px;margin-left:1px">초</span>`; if (N.innerHTML !== h) N.innerHTML = h; } it.el.classList.toggle('empty', !it.drain && it.acc < 1); }   // 각성 주사는 모인 시간(초) — c29: 쓰는 동안은 남은 시간이 거꾸로 줄어든다
     }
   }
   const CASH_LIFE = 5;   /* v333: 10 → 5초 */                       // v235: 돈다발은 10초 뒤 사라진다

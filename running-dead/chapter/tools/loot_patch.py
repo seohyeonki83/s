@@ -421,3 +421,8 @@ AWK_TXT_R = [   # c35: 각성 주사 설명 글
   ("    awaken: (n) => `최대 ${10 + 3 * n}초 변이 · 변이가 끝나고 가득 모이는 데 40초`,",
    "    awaken: (n) => `최대 사용 시간 ${10 + 3 * n}초 · 게이지 충전 속도 ${n ? '+' + 30 * n + '%' : '기본'}`,"),
 ]
+
+AWK_UI_R = [   # c36: 각성 주사 버튼 — 게이지 한 바퀴 = 5강 최대(25초), 숫자는 조금 작게 + 작은 '초'
+  ("else if (it.kind === 'awaken') { it.el.style.setProperty('--p', Math.round(it.acc / chAccMax() * 100)); it.el.querySelector('.n').textContent = it.drain ? Math.ceil(it.acc) : Math.floor(it.acc);",
+   "else if (it.kind === 'awaken') { it.el.style.setProperty('--p', Math.round(it.acc / 25 * 100)); { const v = it.drain ? Math.ceil(it.acc) : Math.floor(it.acc), N = it.el.querySelector('.n'), h = `<span style=\"font-size:13px\">${v}</span><span style=\"font-size:8px;margin-left:1px\">초</span>`; if (N.innerHTML !== h) N.innerHTML = h; }"),
+]
