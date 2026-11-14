@@ -62,16 +62,27 @@ ICONS = r'''
   const CH_MEET = 14;                         // c12: 좀비가 이만큼(칸) 안에 오면 깨어난다 — 좀비 시야(7.2칸)의 두 배쯤이라, 내 눈에 들어올 땐 이미 돌아다니고 있다
   let chHot = null, CH_GW = 0, CH_GH = 0;
   const chNearRiver = (x, z, m) => CH_MAP.rivers.some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
-  function chPopulate() {                     // 인간 200명을 맵 전체에 — 건물 안에 떨어지면 그 건물 사람(갇혀 있다), 밖이면 그 자리 둘레를 돌아다닌다
+  const CH_PEOPLE = 200, CH_ROOM = 30;         // c30: 인간(하양) 전체 수 · 건물 안 한 명당 넓이(칸²)
+  function chPopulate() {                     // c30: 인간 200명 — 먼저 모든 건물 안에 골고루, 남은 사람은 바깥 맵 전체에
     let n = 0;
-    for (let t = 0; t < 40000 && n < 200; t++) {
-      const x = rand(MM.x0 + 3, MM.x1 - 3), z = rand(MM.z0 + 3, MM.z1 - 3), B = spaceOf(x, z);
-      if (B ? B.type === 'hill' : chNearRiver(x, z, AREA / 2 + 1)) continue;                 // 산 속 · 강가(돌아다니다 물에 막히는 자리)는 뺀다
-      if (!freeSpot(x, z, B) || Math.hypot(x - me.foot.x, z - me.foot.z) < 14) continue;     // 벽에 붙은 자리 · 시작 자리 둘레도 뺀다
+    for (const B of buildings) {              // ① 건물 안: 넓이 30칸²마다 1명, 판마다 ±1 (최소 1명) — 집 1~2 · 창고 1~3 · 랜드마크 1~6명 (테스트맵처럼 큰 건물일수록 많이)
+      if (B.type === 'hill') continue;
+      const base = Math.max(1, Math.round((B.x1 - B.x0) * (B.z1 - B.z0) / CH_ROOM)), k = Math.max(1, base + Math.floor(Math.random() * 3) - 1);
+      for (let i = 0; i < k && n < CH_PEOPLE; i++) {
+        let g = pickGoal(B);
+        for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(B);
+        const c = addCitizen(g.x, g.y, B, ''); c.home = B;
+        c.space = B; c.sleep = true;          // 처음엔 전부 잔다 (어느 건물 안인지는 미리 적어 둔다)
+        n++;
+      }
+    }
+    for (let t = 0; t < 40000 && n < CH_PEOPLE; t++) {   // ② 바깥: 남은 사람을 맵 전체에 — 그 자리 둘레를 돌아다닌다
+      const x = rand(MM.x0 + 3, MM.x1 - 3), z = rand(MM.z0 + 3, MM.z1 - 3);
+      if (spaceOf(x, z) || chNearRiver(x, z, AREA / 2 + 1)) continue;                       // 건물·산 속 · 강가(돌아다니다 물에 막히는 자리)는 뺀다
+      if (!freeSpot(x, z, null) || Math.hypot(x - me.foot.x, z - me.foot.z) < 14) continue;  // 벽에 붙은 자리 · 시작 자리 둘레도 뺀다
       if (bodies.some((b) => Math.hypot(b.foot.x - x, b.foot.z - z) < 1.2)) continue;
-      const c = addCitizen(x, z, B || square(x, z), '');
-      if (B) c.home = B;
-      c.space = B; c.sleep = true;            // 처음엔 전부 잔다 (어느 건물 안인지는 미리 적어 둔다)
+      const c = addCitizen(x, z, square(x, z), '');
+      c.space = null; c.sleep = true;
       n++;
     }
   }

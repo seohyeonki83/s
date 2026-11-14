@@ -36,6 +36,9 @@ LOOT = r'''  // ── c19: 금고와 아이템 (챕터) ──
         if (d >= R) continue;
         const ux = d > 1e-6 ? dx / d : 1, uz = d > 1e-6 ? dz / d : 0;
         c.foot.x = Math.max(B.x0 + 0.6, Math.min(B.x1 - 0.6, s.foot.x + ux * R)); c.foot.z = Math.max(B.z0 + 0.6, Math.min(B.z1 - 0.6, s.foot.z + uz * R));
+        for (let t = 0; t < 40 && (Math.hypot(c.foot.x - s.foot.x, c.foot.z - s.foot.z) < R || bodies.some((o) => o !== c && o.kind === 'citizen' && Math.hypot(o.foot.x - c.foot.x, o.foot.z - c.foot.z) < 1.0)); t++) {   // c30: 벽 쪽에 막혀 아직 겹치면 그 건물 안 다른 빈 자리로
+          c.foot.x = rand(B.x0 + 0.6, B.x1 - 0.6); c.foot.z = rand(B.z0 + 0.6, B.z1 - 0.6);
+        }
       }
     }
   }
