@@ -44,6 +44,10 @@ ROOM_FN = r"""  // ── c53: 건물 안 방 ──
     return best;
   }
   function via0(b, tx, tz) {
+    if (b.doorway) {                          // c58: 문틈에 서 있는데 (몸은 아직 그 건물·방 안) 갈 곳이 그 밖이면 먼저 문 밖으로 똑바로 나간다
+      const D = b.doorway, B0 = spaceOf(b.foot.x, b.foot.z), to0 = spaceOf(tx, tz);   //   (전엔 문틈에서 '밖'으로 쳐서 벽 너머 목적지로 곧장 가려다 도로 안으로 들어가, 문간에서 왔다 갔다 했다)
+      if (B0 && (to0 === (D.out || null) || (!B0.parent && !D.out && to0 !== B0 && !(to0 && to0.parent === B0)))) {   /* 문 너머가 바로 갈 곳이거나, 건물 바깥문에 서 있고 갈 곳이 이 건물 밖 (방의 문은 문 너머가 갈 곳일 때만 — 방 안을 거쳐 가는 길을 되돌리지 않게) */ const rx = b.foot.x - D.cx, rz = b.foot.z - D.cz, m = Math.max(0, (D.w || DOOR) / 2 - BODY - 0.1), al = Math.max(-m, Math.min(m, rx * D.tx + rz * D.tz)); return wp.set(D.cx + D.tx * al + D.nx * LANE, D.cz + D.tz * al + D.nz * LANE); }
+    }
     const from = b.space, to = spaceOf(tx, tz), ff = chFam(from), tf = chFam(to);
     if (!((ff && ff.rooms) || (tf && tf.rooms))) return via0_(b, tx, tz);   // 방 없는 건물은 원래대로
     if (from === to) return from ? chInside(b, from, tx, tz) : via0_(b, tx, tz);
@@ -172,7 +176,7 @@ ROOM_FN = r"""  // ── c53: 건물 안 방 ──
       const [x0, z0, x1, z1] = CH_MAP.zones[zi], W = x1 - x0 - 5, H = z1 - z0 - 5, q = Math.random() * 2 * (W + H), j = rand(0, 3.5);
       const [x, z] = q < W ? [x0 + 2.5 + q, z0 + 2.5 + j] : q < W + H ? [x1 - 2.5 - j, z0 + 2.5 + (q - W)] : q < 2 * W + H ? [x1 - 2.5 - (q - W - H), z1 - 2.5 - j] : [x0 + 2.5 + j, z1 - 2.5 - (q - 2 * W - H)];
       if (chNearRiver(x, z, 2) || buildings.some((B) => x > B.x0 - 1.5 && x < B.x1 + 1.5 && z > B.z0 - 1.5 && z < B.z1 + 1.5) || cop(x, z) || !far(x, z)) continue;
-      if (buildings.some((B) => B.doors.some((D) => !D.out && Math.hypot(x - D.cx, z - D.cz) < SIGHT + 1.5))) continue;   // 뚫린 문(차고) 앞도 피한다 — 안 사람이 보이면 시작하자마자 덮치러 간다
+      if (buildings.some((B) => B.doors.some((D) => !D.out) && Math.max(B.x0 - x, x - B.x1, B.z0 - z, z - B.z1, 0) < SIGHT * 1.1 + 1.5)) continue;   // 뚫린 문(차고) 건물은 건물째로 시야 밖에 둔다 — c58부터 문이 뚫린 건물은 안팎이 한 공간이라 벽 너머 사람도 나를 알아챈다
       return [x, z];
     }
     return CH_MAP.start;
