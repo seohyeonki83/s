@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c60</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c61</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2436,7 +2436,7 @@
       const A = cars[i], B = cars[j];
       if (Math.hypot(A.x - B.x, A.z - B.z) > CAR_L * 1.6 * Math.max(ck(A), ck(B))) continue;
       if ((A.wall && B.state !== 'parked') || (B.wall && A.state !== 'parked')) continue;   // c59: 달리는 경찰차·군인차는 건널목 바리케이트를 그냥 지나간다
-      const kA = A.barr ? (A.wreck ? 0.16 : 1) : A.state === 'parked' ? PARKED_K * (A.wreck ? 0.16 : 1) : MOVING_K, kB = B.barr ? (B.wreck ? 0.16 : 1) : B.state === 'parked' ? PARKED_K * (B.wreck ? 0.16 : 1) : MOVING_K;
+      const kA = A.wall ? (A.wreck ? 0.16 : 1) : A.state === 'parked' ? PARKED_K * (A.wreck ? 0.16 : 1) : MOVING_K, kB = B.wall ? (B.wreck ? 0.16 : 1) : B.state === 'parked' ? PARKED_K * (B.wreck ? 0.16 : 1) : MOVING_K;
       const ax = [[Math.cos(A.h), Math.sin(A.h)], [-Math.sin(A.h), Math.cos(A.h)]], bx = [[Math.cos(B.h), Math.sin(B.h)], [-Math.sin(B.h), Math.cos(B.h)]];
       const ha = [CAR_L / 2 * kA * ck(A), CAR_W / 2 * kA * ck(A) * (A.barr ? CH_BARR_W : 1)], hb = [CAR_L / 2 * kB * ck(B), CAR_W / 2 * kB * ck(B) * (B.barr ? CH_BARR_W : 1)];
       const dx = B.x - A.x, dz = B.z - A.z;
@@ -2465,12 +2465,13 @@
       for (const b of (CHAPTER && car.state === 'parked' ? chNearBodies(car) : bodies)) {
         if (b.fixed || b.knockT > 0) continue;
         if (car.wall && b.kind === 'citizen' && b.police && !b.post) continue;   // c59
-        const k = car.barr ? (car.wreck ? 0.16 : 1) : car.state === 'parked' ? PARKED_K * (car.wreck ? 0.16 : 1) : MOVING_K;   // 잔해는 1/5 (v239)   // 서 있으면 작고 (v171), 달리면 크다 (v178)
+        const k = car.wall ? (car.wreck ? 0.16 : 1) : car.state === 'parked' ? PARKED_K * (car.wreck ? 0.16 : 1) : MOVING_K;   // 잔해는 1/5 (v239)   // 서 있으면 작고 (v171), 달리면 크다 (v178)
         const dx = b.foot.x - car.x, dz = b.foot.z - car.z, hu = CAR_L * ck(car) / 2 * k + b.r, hv = CAR_W * ck(car) / 2 * k * (car.barr ? CH_BARR_W : 1) + b.r;   /* c60: 바리케이트는 폭이 3분의 1 */
         if (b.hitT > 0 && b.hitT < clock) b.hitT = 0;
         let u = dx * fx + dz * fz, v = dx * rx + dz * rz;
         if (Math.abs(u) >= hu || Math.abs(v) >= hv) continue;
         const sp = Math.hypot(car.vx, car.vz);
+        if (CHAPTER && b.kind === 'citizen' && b.gar && sp > 0.8) { const sd = v >= 0 ? 1 : -1, T = 0.25; giveKnock(b, rx * sd, rz * sd, (hv - Math.abs(v) + 0.1) * 4 / (1 - Math.exp(-4 * T)), T); continue; }   // c61
         if (sp > 0.8 && !b.hitT) {            // 치였다 (한 번 치인 몸은 1초 동안은 다시 안 치인다 — 밀려나기만)
           b.hitT = clock + 1;
           const nl = Math.hypot(dx, dz) || 1;
@@ -5909,20 +5910,21 @@
     return { x: seg.x, z: seg.z };
   }
   // ── c59: 건널목 바리케이트와 수비대 ──
-  //   바리케이트 = 서 있는 경찰차와 같은 물건 (밀리고, 부서지고, 가로막으면 좀비가 때린다). 무게 3배 · 체력 3배.
+  //   바리케이트 = 서 있는 경찰차와 같은 물건 (밀리고, 부서지고, 가로막으면 좀비가 때린다). 무게 3배 · 체력 4배 · 길이는 경찰차 길이 · 두께 1칸 (c61 — 건너편에서 못 때리게. 밀려서 돌아간 조각의 모서리 너머로 닿는 건 그대로 둔다).
+  //   c61: 수상함 = 경찰 4명 · 줄을 조금 더 다리 안쪽으로 · 수비대는 지나가는 자기편 차에 안 치이고 옆으로 비켜선다.
   //   경찰차와 같은 방식으로 밀린다 (무게만 3배): 좀비가 겹친 만큼을 힘 : 무게로 나눠 밀린다 — 나와 보통 좀비는 거의 못 밀고(겹친 만큼의 5%쯤) 덩치도 힘들게 민다(26%쯤). 사람은 못 민다.
   //   경보 1단계(수상함)가 되는 순간 모든 건널목(다리 3 · 산 길목 2)의 양 끝에 바리케이트와 경찰차가 놓이고, 내가 있는 구역 쪽 바리케이트 뒤에 수비대가 선다.
   //   단계가 오를 때마다 바리케이트와 수비대가 는다 (수와 놓이는 모양은 건널목마다 조금씩 다르다). 줄이 꽉 차면 안쪽에 한 겹 더 — 앞줄의 가장 큰 틈 뒤부터 막는다.
   //   수비대는 자리(사수지역)에 묶여 있다: 자리 둘레(근접 거리)에 서 있고, 지배 거리 밖으로 벗어나면 싸우다가도 돌아온다. 앞에서부터 경찰 → 군인 → 저격수.
   //   수비대는 먼저 다가가서 쏘지 않는다 (자리를 지킨다). 저격수는 맨 앞 바리케이트를 때리는 좀비가 보이는 거리에 선다. 내가 다른 구역으로 넘어가면 수비대는 그쪽 바리케이트 뒤로 옮겨 서고 순서도 뒤집힌다.
-  const CH_BARR_K = 3, CH_BARR_HP = 4, CH_BARR_W = 1 / 3;   // c60: 무게 = 경찰차의 3배 · 체력 = 경찰차의 4배 · 모양 = 경찰차 길이의 막대 (폭은 경찰차의 3분의 1)
+  const CH_BARR_K = 3, CH_BARR_HP = 4, CH_BARR_T = 1.0, CH_BARR_W = CH_BARR_T / CAR_W;   // 무게 = 경찰차의 3배 · 체력 = 경찰차의 4배 · 길이 = 경찰차 길이. c61: 두께 1칸 — 근접 공격 거리(몸 가운데끼리 1.7칸)에서 몸 반지름 둘(0.8)을 빼면 0.9칸이라, 그보다 두꺼워야 건너편 사람을 못 때린다
   const CH_HOLD_NEAR = 1.7, CH_HOLD_DOM = 3.2;
-  const CH_BAR_ROW0 = 5.55, CH_BAR_ROWD = 0.8, CH_BAR_ROWS = 3, CH_BAR_HALF = 4;   // 첫 줄 = 건널목 한가운데에서 5.55칸 (건널목 끝에서 한 칸쯤 안쪽) · 줄 간격 · 건널목 반폭
-  const chBarrTex = (() => { const c = document.createElement('canvas'); c.width = 448; c.height = 80; const g = c.getContext('2d');   // c60: 막대 — 노랑·검정 빗금, 양 끝에 받침
-    g.fillStyle = '#141416'; g.fillRect(0, 0, 448, 80); g.fillStyle = '#e8b21c'; g.fillRect(6, 6, 436, 68);
-    g.save(); g.beginPath(); g.rect(6, 6, 436, 68); g.clip(); g.fillStyle = '#1c1c1e';
-    for (let x = -80; x < 500; x += 64) { g.beginPath(); g.moveTo(x, 74); g.lineTo(x + 32, 74); g.lineTo(x + 100, 6); g.lineTo(x + 68, 6); g.closePath(); g.fill(); }
-    g.restore(); g.fillStyle = '#8f8f8a'; g.fillRect(6, 6, 26, 68); g.fillRect(416, 6, 26, 68); g.strokeStyle = 'rgba(0, 0, 0, 0.6)'; g.lineWidth = 3; g.strokeRect(32, 6, 384, 68);
+  const CH_BAR_ROW0 = 4.75, CH_BAR_ROWD = 1.25, CH_BAR_ROWS = 2, CH_BAR_HALF = 4;   // c61: 첫 줄 = 건널목 한가운데에서 4.75칸 (앞면이 다리 끝에서 1.25칸 안쪽 — c60은 0.77칸) · 줄 간격 · 두 겹까지 (두꺼워져서) · 건널목 반폭
+  const chBarrTex = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 128; const g = c.getContext('2d');   // c61: 두꺼운 블록 — 회색 몸통에 노랑·검정 빗금 띠
+    g.fillStyle = '#141416'; g.fillRect(0, 0, 256, 128); g.fillStyle = '#8b8b86'; g.fillRect(6, 6, 244, 116); g.fillStyle = '#a6a69f'; g.fillRect(12, 12, 232, 104);
+    g.save(); g.beginPath(); g.rect(12, 36, 232, 56); g.clip(); g.fillStyle = '#e8b21c'; g.fillRect(12, 36, 232, 56); g.fillStyle = '#1c1c1e';
+    for (let x = -70; x < 300; x += 50) { g.beginPath(); g.moveTo(x, 92); g.lineTo(x + 25, 92); g.lineTo(x + 81, 36); g.lineTo(x + 56, 36); g.closePath(); g.fill(); }
+    g.restore(); g.strokeStyle = 'rgba(0, 0, 0, 0.55)'; g.lineWidth = 3; g.strokeRect(12, 36, 232, 56);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
   const chBarrGeo = new THREE.PlaneGeometry(CAR_L, CAR_W * CH_BARR_W).rotateX(-Math.PI / 2);
   function chParked(x, z, h, barr) {           // 처음부터 서 있는 것 — 바리케이트(barr) 또는 빈 경찰차
@@ -5957,7 +5959,7 @@
   const chBarXZ = (X, s, l) => [X.cx + X.ux * s + X.wx * l, X.cz + X.uz * s + X.wz * l];   // 한가운데에서 건너는 방향으로 s, 폭 방향으로 l
   const chBarLive = (p) => !p.car.wreck && cars.includes(p.car);
   function chBarPut(X, e, r, l, barr) {
-    const sg = e ? 1 : -1, [x, z] = chBarXZ(X, sg * (CH_BAR_ROW0 - r * CH_BAR_ROWD) + rand(-0.12, 0.12), l);
+    const sg = e ? 1 : -1, [x, z] = chBarXZ(X, sg * (CH_BAR_ROW0 - r * CH_BAR_ROWD) + rand(-0.08, 0.08), l);
     const car = chParked(x, z, Math.atan2(X.wz, X.wx) + rand(-0.13, 0.13) + (Math.random() < 0.5 ? Math.PI : 0), barr);   // 폭 방향으로 눕혀 놓는다 — 조금씩 비뚤게
     (X.rows[e][r] = X.rows[e][r] || []).push({ l, car });
   }
@@ -5968,7 +5970,7 @@
   }
   function chBarAdd(X, e, barr) {              // 조각 하나 더 — 바깥 줄부터 들어갈 자리를 찾고, 없으면 안쪽 줄에 (앞줄의 가장 큰 틈 뒤부터)
     const Lp = CAR_L + 0.05, R = X.rows[e];
-    for (let r = 0; r < CH_BAR_ROWS; r++) {   // 다리가 13칸뿐이라 한쪽에 세 겹까지만 — 더는 놓을 데가 없으면 안 는다
+    for (let r = 0; r < CH_BAR_ROWS; r++) {   // 다리가 13칸뿐이라 한쪽에 두 겹까지만 (여섯 조각) — 더는 놓을 데가 없으면 안 는다
       const fit = chBarFree(R[r]).filter(([a, b]) => b - a >= Lp);
       if (!fit.length) continue;
       let l = null;
@@ -5992,6 +5994,11 @@
     X.rows[e].forEach((row, i) => { const L = (row || []).filter(chBarLive); if (L.length) { r = i; hd = L.some((p) => !p.car.barr) ? CAR_W / 2 : CAR_W * CH_BARR_W / 2; } });
     return CH_BAR_ROW0 - r * CH_BAR_ROWD - hd;
   }
+  function chBarInnerAt(X, e, l) {             // c61: 그 폭 자리(l) 바로 앞을 막고 있는 조각의 안쪽 가장자리 — 둘째 줄 조각이 그 앞에 있을 때만 그만큼 더 물러선다 (없으면 첫 줄 바로 뒤)
+    let r = -1, hd = CAR_W * CH_BARR_W / 2;
+    X.rows[e].forEach((row, i) => { for (const p of row || []) if (chBarLive(p) && Math.abs(p.l - l) < CAR_L / 2 + 0.6 && i >= r) { r = i; hd = (p.car.barr ? CAR_W * CH_BARR_W : CAR_W) / 2; } });
+    return CH_BAR_ROW0 - Math.max(0, r) * CH_BAR_ROWD - hd;
+  }
   function chBarSeat(X, c, tele) {             // 그 사람의 자리(사수지역) — 수비대가 선 쪽 바리케이트 뒤. 경찰이 맨 앞, 군인은 그 뒤에 흩어져 서고, 저격수는 맨 앞 바리케이트가 보이는 데까지만 물러선다
     const sg = X.side ? 1 : -1, inner = chBarInner(X, X.side), back = 1 - chBarInner(X, 1 - X.side);
     for (let t = 0; t < 30; t++) {
@@ -6000,7 +6007,7 @@
         l = rand(-1.8, 1.8);
         const R = c.sight * 0.92, zf = CH_BAR_ROW0 + CAR_W * CH_BARR_W / 2 + 0.45, need = zf - Math.sqrt(Math.max(0, R * R - (CH_BAR_HALF + Math.abs(l)) ** 2));
         d = Math.min(inner - 0.9, Math.max(need, inner - rand(3.3, 4.0)));
-      } else d = inner - (c.soldier ? rand(2.0, 3.2) : rand(1.0, 1.8));
+      } else d = c.soldier ? inner - rand(2.4, 3.4) : chBarInnerAt(X, X.side, l) - rand(1.3, 2.1);   // c61: 경찰을 조금 더 뒤로 (자기 앞 조각의 안쪽 면에서 1.3~2.1칸 — c60은 1.0~1.8). 군인은 가장 안쪽 줄 뒤에 흩어져 선다
       const [x, z] = chBarXZ(X, sg * Math.max(back, d), l);
       if (t < 29 && X.units.some((o) => o !== c && o.kind === 'citizen' && o.hold && Math.hypot(o.hold.x - x, o.hold.z - z) < 0.95)) continue;
       c.hold = { x, z }; break;
@@ -6025,8 +6032,8 @@
         else { const q = Math.random(), k = s === 4 ? (q < 0.25 ? 1 : 0) : q < 0.2 ? 0 : q < 0.8 ? 1 : 2;   // 단계마다 양쪽에 하나씩 (4단계는 그대로) — 가끔 안 늘거나 둘이 는다
           for (let i = 0; i < k; i++) chBarAdd(X, e, true); if (Math.random() < 0.2) chBarAdd(X, e, false); }   // 가끔 경찰차도 한 대
       }
-      const r2 = Math.random();                // 수비대: 말한 수에서 한두 명씩 다르게 — 1단계 경찰 3 · 2단계 경찰 +2 · 3단계 군인 +3 저격수 +1 · 4단계 군인 +2 저격수 +1 · 그 뒤로 군인 +3씩
-      const add = s === 1 ? { police: N(2, 4) } : s === 2 ? { police: N(1, 3) } : s === 3 ? { soldier: N(2, 4), sniper: r2 < 0.75 ? 1 : 2 } : s === 4 ? { soldier: N(1, 3), sniper: r2 < 0.2 ? 0 : r2 < 0.8 ? 1 : 2 } : { soldier: N(2, 4) };
+      const r2 = Math.random();                // 수비대: 말한 수에서 한두 명씩 다르게 — 1단계 경찰 4 · 2단계 경찰 +2 · 3단계 군인 +3 저격수 +1 · 4단계 군인 +2 저격수 +1 · 그 뒤로 군인 +3씩
+      const add = s === 1 ? { police: r2 < 0.2 ? 3 : r2 < 0.8 ? 4 : 5 } :   /* c61: 수상함 = 경찰 4명 (열에 둘은 3명, 열에 둘은 5명) */ s === 2 ? { police: N(1, 3) } : s === 3 ? { soldier: N(2, 4), sniper: r2 < 0.75 ? 1 : 2 } : s === 4 ? { soldier: N(1, 3), sniper: r2 < 0.2 ? 0 : r2 < 0.8 ? 1 : 2 } : { soldier: N(2, 4) };
       for (const type of ['police', 'soldier', 'sniper']) for (let i = 0; i < (add[type] || 0); i++) { const c = addCitizen(X.cx, X.cz, square(X.cx, X.cz), type); c.gar = X; c.fresh = true; X.units.push(c); }
       chBarForm(X);
     }
