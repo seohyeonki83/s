@@ -516,7 +516,7 @@ DISP_FN = r"""  // ── c46: 경찰 출동 (챕터) ──
     if (Math.random() < 0.5) addCar(p.x, p.z, Math.atan2(site.y - p.z, site.x - p.x), site, n);
     else for (let i = 0; i < n; i++) {
       let x = p.x + (i - (n - 1) / 2) * 0.9, z = p.z; if (!freeSpot(x, z, null) || spaceOf(x, z)) { x = p.x; z = p.z; }
-      addCitizen(x, z, null, 'police').calls.push(site.clone());
+      const c = addCitizen(x, z, null, 'police'); c.calls.push(site.clone()); c.met = true;   // c52: 출동한 경찰은 처음부터 깨어 있다 (전엔 좀비가 14칸 안에 올 때까지 가장자리에 잠든 채 서 있었다)
     }
   }
 """
@@ -572,8 +572,8 @@ CAR_FN = r"""  // ── c47: 차 다시 타기 · 끼임 풀기 ──
 CAR_R = [
   ("  function showDud() {", CAR_FN + "  function showDud() {"),
   # 내린 사람을 차에 적어 둔다
-  ("      const c = addCitizen(car.x + rx * off * sd - fx * back, car.z + rz * off * sd - fz * back, null, 'police');", "      const c = addCitizen(car.x + rx * off * sd - fx * back, car.z + rz * off * sd - fz * back, null, 'police');\n      if (CHAPTER) (car.crew = car.crew || []).push(c);   // c47"),
-  ("      const c = addCitizen(p.x, p.z, square(p.x, p.z), t);", "      const c = addCitizen(p.x, p.z, square(p.x, p.z), t);\n      if (CHAPTER) (car.crew = car.crew || []).push(c);   // c47"),
+  ("      const c = addCitizen(car.x + rx * off * sd - fx * back, car.z + rz * off * sd - fz * back, null, 'police');", "      const c = addCitizen(car.x + rx * off * sd - fx * back, car.z + rz * off * sd - fz * back, null, 'police');\n      if (CHAPTER) { (car.crew = car.crew || []).push(c); c.met = true; }   // c47 · c52: 내린 사람은 깨어 있다"),
+  ("      const c = addCitizen(p.x, p.z, square(p.x, p.z), t);", "      const c = addCitizen(p.x, p.z, square(p.x, p.z), t);\n      if (CHAPTER) { (car.crew = car.crew || []).push(c); c.met = true; }   // c47 · c52: 내린 사람은 깨어 있다"),
   ("          unload(car);", "          if (CHAPTER) car.crew = [];\n          unload(car);\n          if (CHAPTER && car.arrived) car.done = true;   // c47: 목적지(사수할 문 앞)에서 내린 사람은 다시 안 탄다"),
   ("          if (k >= 0 && d < 2.5 && car.guard) { car.state = 'brake'; car.brakeT = 0; }", "          if (k >= 0 && d < 2.5 && car.guard) { car.state = 'brake'; car.brakeT = 0; car.arrived = true; }"),
   # 건물과 부딪히는 차 크기 3분의 2 · 강도 막는다 · 다리·길목으로 돌아가는 길

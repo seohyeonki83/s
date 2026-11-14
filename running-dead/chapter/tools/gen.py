@@ -148,7 +148,7 @@ for z in ZONES:
     else: raise SystemExit('zone pack failed')
     for bi, (r, lot) in enumerate(res):
         LOTS.append(lot)
-        for b in r: b['zone'] = z['id']; b['unit'] = (z['id'], bi, b.pop('u')); bld.append(b)
+        for b in r: b['zone'] = z['id']; b['unit'] = (z['id'], bi, b.pop('u')); b['_blk'] = blocks[order[bi]]; b['_lot'] = lot; bld.append(b)   # c52: 블록·공터를 적어 둔다 (크기 바꿀 때 쓴다)
 
 def clear(b, side):                                    # 그 벽 문 앞이 얼마나 트여 있나
     lim = {'n': b['z'] - b['d'] / 2 - Z0, 's': Z0 + H - (b['z'] + b['d'] / 2), 'w': b['x'] - b['w'] / 2 - X0, 'e': X0 + W - (b['x'] + b['w'] / 2)}[side]
@@ -244,12 +244,63 @@ _gone = set()
 for zid in range(4): _gone |= thin_zone(zid)
 CUT = [b for b in bld if id(b) in _gone]
 bld[:] = [b for b in bld if id(b) not in _gone]
+# c52: 랜드마크 크기만 바꾼다 (넓이 기준) — 마트 = 전의 1.2배 · 헬스장·은행·병원·소방서·경찰서·군부대 = 마트의 3분의 2 · 도서관 = 그 90% · 편의점·창고·집은 그대로
+#   맵을 새로 뽑지 않는다: 위에서 옛 크기로 똑같이 만든 뒤 (난수 흐름 그대로 = 건물 자리·집·공터·길이 전부 그대로) 여기서 크기만 바꾼다.
+#   정문이 난 벽은 제자리에 두고 뒤쪽으로만 커지거나 줄어든다 (정문 자리 그대로 — 가운데 기준으로 키우면 마트 정문이 시작 자리의 인지거리 7.2 안으로 들어와서, 시작하자마자 내가 문을 때리러 간다).
+#   옆으로는 가운데 기준. 그 자리가 이웃·공터·길목·블록 가장자리와 너무 붙으면 가장 조금만 옮긴다. 정문·쪽문 방향도 그대로
+LM2 = {'mart': (14.9, 10.4), 'gym': (12.0, 8.6), 'bank': (12.0, 8.6), 'hospital': (12.0, 8.6), 'fire': (12.0, 8.6), 'police': (12.0, 8.6), 'army': (12.0, 8.6), 'library': (11.4, 8.15)}
+RESIZED = []
+def resize(b):
+    w, d = LM2[b['t']]
+    blk, lot, E = b['_blk'], b['_lot'], 0.011
+    f = b['doors'][0]                                    # 정문 벽은 제자리
+    px = b['x'] + (b['w'] - w) / 2 if f == 'e' else b['x'] - (b['w'] - w) / 2 if f == 'w' else b['x']
+    pz = b['z'] + (b['d'] - d) / 2 if f == 's' else b['z'] - (b['d'] - d) / 2 if f == 'n' else b['z']
+    hit = lambda r, q, m: r[0] < q[2] + m and r[2] > q[0] - m and r[1] < q[3] + m and r[3] > q[1] - m
+    others = [(o['x'] - o['w'] / 2, o['z'] - o['d'] / 2, o['x'] + o['w'] / 2, o['z'] + o['d'] / 2) for o in bld if o is not b]
+    def ok(x, z, gap, pad):
+        r = (x - w / 2, z - d / 2, x + w / 2, z + d / 2)
+        if r[0] < blk[0] + pad - E or r[2] > blk[2] - pad + E or r[1] < blk[1] + pad - E or r[3] > blk[3] - pad + E: return False
+        if hit(r, lot, 0.8 - E) or any(hit(r, q, 1.0 - E) for q in RESERVED): return False
+        return not any(hit(r, o, gap - E) for o in others)
+    for gap, pad in [(2.5, 1.5), (2.0, 1.5), (2.0, 1.0)]:
+        best = None
+        for i in range(-40, 41):
+            for j in range(-40, 41):
+                dx, dz = i * 0.1, j * 0.1
+                if ok(px + dx, pz + dz, gap, pad):
+                    k = (round(dx * dx + dz * dz, 4), abs(i) + abs(j), i, j)
+                    if best is None or k < best[0]: best = (k, dx, dz)
+        if best: break
+    else: raise SystemExit('resize failed: ' + b['t'])
+    RESIZED.append((b['t'], b['w'], b['d'], w, d, round(best[1], 1), round(best[2], 1), gap, pad))
+    b['x'], b['z'], b['w'], b['d'] = round(px + best[1], 2), round(pz + best[2], 2), w, d
+for b in bld:
+    if b['t'] in LM2: resize(b)
+for i, a in enumerate(bld):                              # 다시 검사
+    for b in bld[i + 1:]:
+        gx = abs(a['x'] - b['x']) - (a['w'] + b['w']) / 2; gz = abs(a['z'] - b['z']) - (a['d'] + b['d']) / 2
+        assert max(gx, gz) >= MIN_GAP - 0.02, (a, b)
 from collections import Counter
+print('크기 바꿈 (종류, 옛 가로·세로, 새 가로·세로, 옮긴 x·z, 이웃 간격, 블록 여백)')
+for r in RESIZED: print('  ', r)
 print('건물', len(bld), dict(Counter(b['t'] for b in bld)))
 for z in ZONES: print(' 구역', z['id'], '큰' if z['big'] else '작은', dict(Counter(b['t'] for b in bld if b['zone'] == z['id'])))
 print(' 차고', sum(1 for b in bld if b.get('garage')), ' 공터', len(LOTS), [round((l[2] - l[0]) * (l[3] - l[1])) for l in LOTS])
 print(' 뺀 집', len(CUT), [(b['zone'], round(b['x']), round(b['z']), 'G' if b.get('garage') else '') for b in CUT])
 print(' 산 덩어리', len(hills), ' 강 토막', len(rivers), ' 다리', len(bridges), ' 산 길목', sum(1 for a, c in PASSES if a == 'h'))
+def door_gap(b, side, x, z):                             # (x, z)에서 그 벽 문(폭 3.4, 벽 한가운데)까지
+    nx, nz = {'n': (0, -1), 's': (0, 1), 'w': (-1, 0), 'e': (1, 0)}[side]
+    cx, cz = b['x'] + nx * b['w'] / 2, b['z'] + nz * b['d'] / 2
+    if nx: return ((x - cx) ** 2 + max(0, abs(z - cz) - 1.7) ** 2) ** 0.5
+    return (max(0, abs(x - cx) - 1.7) ** 2 + (z - cz) ** 2) ** 0.5
+_A = ZONES[0]['r']; _sx, _sz = (_A[0] + _A[2]) / 2, _A[3] - 3
+_dg = []
+for b in bld:
+    sides = b['doors'] + ([] if b.get('garage') else [[q for q in 'nesw' if q != b['doors'][0]][b['sideK']]])
+    for sd in sides: _dg.append((round(door_gap(b, sd, _sx, _sz), 2), b['t'], sd))
+print(' 시작 자리에서 가장 가까운 문', sorted(_dg)[:3], '(내 인지거리 7.2 밖이어야 한다)')
+assert min(_dg)[0] > 7.2, min(_dg)
 print(' 정문 방향', dict(Counter(b['doors'][0] for b in bld)), ' 가장 좁은 정문 앞', round(min(clear(b, b['doors'][0]) for b in bld), 2))
 A = ZONES[0]['r']
 out = dict(seed=SEED, mm=dict(x0=X0 - 3, z0=Z0 - 3, x1=X0 + W + 3, z1=Z0 + H + 3), start=[(A[0] + A[2]) / 2, A[3] - 3],
