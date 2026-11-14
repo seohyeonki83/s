@@ -392,3 +392,25 @@ AWAKE_R = [   # c29: 각성 주사 — 쓰는 동안은 게이지가 줄어들�
    "    awaken: ['모아 둔 시간만큼 내가 변이 좀비로 변합니다. 변이가 끝나면 다시 시간이 모입니다.', '강화 시 모을 수 있는 시간이 늘어납니다.'],"),
   ("    awaken: (n) => `최대 ${10 + 3 * n}초 변이 · 가득 모이는 데 40초`,", "    awaken: (n) => `최대 ${10 + 3 * n}초 변이 · 변이가 끝나고 가득 모이는 데 40초`,"),
 ]
+
+SLOT_FN = r"""  // c34: 빈 도구 칸 — 쓸 수 있는 칸이 남아 있으면 그 자리에 가방 그림이 박혀 있다 (처음엔 1칸이라 시작하자마자 하나). 누르면 '도구를 하나 채울 수 있습니다'
+  const chEmpty = [];
+  function chEmptySlots() {
+    const want = Math.max(0, chToolCap() - items.length);
+    while (chEmpty.length > want) chEmpty.pop().remove();
+    chEmpty.forEach((el, j) => { const [dx, dy] = slotPos(items.length + j); el.style.left = `calc(50% + ${dx}px)`; el.style.bottom = `calc(118px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px) + ${dy}px)`; });
+    while (chEmpty.length < want) {
+      const i = items.length + chEmpty.length, [dx, dy] = slotPos(i), el = document.createElement('div');
+      el.className = 'item'; el.style.left = `calc(50% + ${dx}px)`; el.style.bottom = `calc(118px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px) + ${dy}px)`;
+      el.style.setProperty('--c', '#6b6b78'); el.style.setProperty('--p', 100); el.style.opacity = '0.6';
+      el.innerHTML = `<div class="core"><span class="ic" style="font-size:22px">${IC.bag}</span></div>`;
+      el.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); toast('도구를 하나 채울 수 있습니다'); });
+      stage.appendChild(el); chEmpty.push(el);
+    }
+  }
+"""
+SLOT_R = [
+  ("  function showDud() {", SLOT_FN + "  function showDud() {"),
+  ("      if ((it.t += dt) >= itemReload(it.kind)) { it.t = 0; it.ammo++; }\n    }\n    refreshItems();", "      if ((it.t += dt) >= itemReload(it.kind)) { it.t = 0; it.ammo++; }\n    }\n    refreshItems();\n    if (CHAPTER) chEmptySlots();   // c34"),
+  ("color:${has ? '#ffd34d' : '#7dffa0'}\">${has ? chStars(n) : 'NEW'}", "color:#ffd34d\">${has ? chStars(n + 1) : 'NEW'}"),   # c34: 강화 카드 = 강화 뒤 별 수 (노랑), NEW도 노랑
+]

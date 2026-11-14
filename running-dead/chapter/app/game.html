@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c33</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c34</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4390,6 +4390,7 @@
       if ((it.t += dt) >= itemReload(it.kind)) { it.t = 0; it.ammo++; }
     }
     refreshItems();
+    if (CHAPTER) chEmptySlots();   // c34
   }
   function useItem(kind) {
     const it = items.find((x) => x.kind === kind);
@@ -5226,7 +5227,7 @@
     ov.id = 'pick';
     ov.innerHTML = `<div class="hd">LEVEL UP!</div><div class="sub">Lv ${level} → Lv ${level + 1} · 하나를 고르세요</div><div class="cards">` +
       keys.map((k) => { const has = chHas(k), n = lv(k), S = CH_SHORT[k];
-        return `<div class="card" data-k="${k}" style="min-height:158px;padding-top:8px"><div style="height:14px;font:900 12px/14px var(--font);letter-spacing:-0.5px;color:${has ? '#ffd34d' : '#7dffa0'}">${has ? chStars(n) : 'NEW'}</div>` +
+        return `<div class="card" data-k="${k}" style="min-height:158px;padding-top:8px"><div style="height:14px;font:900 12px/14px var(--font);letter-spacing:-0.5px;color:#ffd34d">${has ? chStars(n + 1) : 'NEW'}</div>` +
           `<div class="ic" style="margin-top:4px">${ITEM[k].icon}</div><div class="nm" style="margin-top:8px">${ITEM[k].name}</div><div class="ds" style="margin-top:8px">${has ? '강화' : CH_BRIEF[k]}</div>` +
           `<div class="vl">${S[0]} ${has ? S[1](n) + ' → ' + S[1](n + 1) : S[1](0)}</div></div>`; }).join('') +
       `</div><button class="ok okBtn">확인</button>`;
@@ -5266,6 +5267,21 @@
     z.rage = true;
     z.flame = new THREE.Sprite(flameMat); z.flame.scale.set(0.6, 0.6, 1); z.flame.renderOrder = UI; scene.add(z.flame); stimmed.push(z);   // 머리 위 작은 불꽃 (따라다니기·지우기는 스팀팩 코드가 한다)
     for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; puff(z.foot.x, 0.4, z.foot.z, 0xff5a3c, 0.4, 1.1, 0.4, Math.cos(a) * 2.2, 0.4, Math.sin(a) * 2.2, 0.85); }
+  }
+  // c34: 빈 도구 칸 — 쓸 수 있는 칸이 남아 있으면 그 자리에 가방 그림이 박혀 있다 (처음엔 1칸이라 시작하자마자 하나). 누르면 '도구를 하나 채울 수 있습니다'
+  const chEmpty = [];
+  function chEmptySlots() {
+    const want = Math.max(0, chToolCap() - items.length);
+    while (chEmpty.length > want) chEmpty.pop().remove();
+    chEmpty.forEach((el, j) => { const [dx, dy] = slotPos(items.length + j); el.style.left = `calc(50% + ${dx}px)`; el.style.bottom = `calc(118px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px) + ${dy}px)`; });
+    while (chEmpty.length < want) {
+      const i = items.length + chEmpty.length, [dx, dy] = slotPos(i), el = document.createElement('div');
+      el.className = 'item'; el.style.left = `calc(50% + ${dx}px)`; el.style.bottom = `calc(118px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px) + ${dy}px)`;
+      el.style.setProperty('--c', '#6b6b78'); el.style.setProperty('--p', 100); el.style.opacity = '0.6';
+      el.innerHTML = `<div class="core"><span class="ic" style="font-size:22px">${IC.bag}</span></div>`;
+      el.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); toast('도구를 하나 채울 수 있습니다'); });
+      stage.appendChild(el); chEmpty.push(el);
+    }
   }
   function showDud() {                        // v288: 꽝 금고 — 멈추고 '꽝!' + 놀리는 글, 조이스틱 자리 [확인]
     acqOpen = true; paused = true; stopInput();
