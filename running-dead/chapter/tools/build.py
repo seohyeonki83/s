@@ -67,6 +67,19 @@ ICONS = r'''
   //   하양 145 (건물 안 먼저 골고루, 빈집 3분의 1) · 노랑 48 (길거리에 띄엄띄엄, 4분의 1은 건물 안에 한 명씩) · 배회 경찰 20 (길거리)
   //   주황 48 · 빨강(자경단) 48 = 길거리에 2~4명씩 무리. 주황 2 + 빨강 3 (또는 3 + 2)이 섞인 5명 무리도 몇 개
   const CH_WHITE = 145, CH_YELLOW = 48, CH_YELLOW_IN = 12, CH_GANG = 48, CH_COPS = 20, CH_ROOM = 45;
+  const CH_WHITE_OUT = 81, CH_YELLOW_OUT = 36;   // c48: 길거리 하양 · 노랑 (건물 안은 아래 표)
+  const CH_INSIDE = {                         // c48: 건물 안 인원 [종류, 최소, 최대] — '' 하양 · guard 노랑 · attacker 주황 · vig 빨강 · police 경찰 · soldier 군인
+    army: [['soldier', 2, 4]],
+    hospital: [['', 5, 10], ['attacker', 2, 3], ['vig', 2, 3], ['police', 1, 2]],
+    police: [['police', 4, 7], ['', 2, 4]],
+    fire: [['police', 1, 2], ['vig', 3, 5], ['attacker', 2, 4]],
+    conv: [['', 1, 3], ['guard', 1, 2]],
+    mart: [['', 7, 12], ['police', 3, 4], ['vig', 2, 3], ['guard', 2, 4]],
+    gym: [['', 2, 3], ['guard', 3, 5], ['attacker', 7, 10], ['vig', 1, 2], ['police', 1, 1]],
+    store: [['attacker', 4, 6], ['vig', 4, 7]],
+    bank: [['', 4, 7], ['guard', 4, 7], ['attacker', 1, 2], ['police', 3, 4], ['vig', 3, 4]],
+    library: [['police', 1, 2], ['guard', 2, 3], ['', 4, 5]],
+  };
   function chOutSpot(placed, minOwn, keepStart) {   // 바깥 빈자리 — placed(같은 종류 자리들)에서 최대한 먼 곳 (고르게)
     let best = null, bd = -1;
     for (let t = 0; t < 400 && (bd < 0 || t < 50); t++) {
@@ -120,19 +133,26 @@ ICONS = r'''
         chPut(x, z, area, t);
       });
     }
-    // 하양: 건물 안 먼저 (빈집 3분의 1은 그대로 비운다) · 노랑 12명은 건물 안 한 명씩
+    // c48: 건물 안 — 랜드마크·창고는 건물마다 정한 인원, 집은 넓이대로 하양 (빈집 3분의 1)
     const hs = buildings.filter((B) => B.type === 'house').sort(() => Math.random() - 0.5), empty = new Set(hs.slice(0, Math.round(hs.length / 3)));
-    const rooms = buildings.filter((B) => B.type !== 'hill' && !empty.has(B));
-    const inPut = (B, type) => { let g = pickGoal(B); for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.2); t++) g = pickGoal(B); chPut(g.x, g.y, B, type, B); };
-    let w = 0;
-    for (const B of rooms) {
+    const inPut = (B, type) => { let g = pickGoal(B); for (let t = 0; t < 30 && bodies.some((b) => Math.hypot(b.foot.x - g.x, b.foot.z - g.y) < 1.0); t++) g = pickGoal(B); const c = chPut(g.x, g.y, B, type, B); if (type === 'police' || type === 'soldier') c.post = B; return c; };
+    const R2 = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+    for (const B of buildings) {
+      if (B.type === 'hill') continue;
+      const T = CH_INSIDE[B.type];
+      if (T) { for (const [type, lo, hi] of T) for (let i = 0, k = R2(lo, hi); i < k; i++) inPut(B, type); continue; }
+      if (B.type !== 'house' || empty.has(B)) continue;
       const base = Math.max(1, Math.round((B.x1 - B.x0) * (B.z1 - B.z0) / CH_ROOM)), k = Math.max(1, base + Math.floor(Math.random() * 3) - 1);
-      for (let i = 0; i < k && w < CH_WHITE; i++, w++) inPut(B, '');
+      for (let i = 0; i < k; i++) inPut(B, '');
     }
-    for (const B of rooms.slice().sort(() => Math.random() - 0.5).slice(0, CH_YELLOW_IN)) inPut(B, 'guard');
+    for (const B of buildings) if (B.type === 'police') for (let i = 0; i < 3; i++) {   // 경찰서 밖 배회 경찰 3명 (죽어도 채워지지 않는다)
+      const ring = { x0: B.x0 - 5, z0: B.z0 - 5, x1: B.x1 + 5, z1: B.z1 + 5 }; let g = pickGoal(ring); for (let t = 0; t < 40 && (spaceOf(g.x, g.y) || chNearRiver(g.x, g.y, 1)); t++) g = pickGoal(ring);
+      chPut(g.x, g.y, ring, 'police');
+    }
     const ys = [];
-    for (let k = 0; k < CH_YELLOW - CH_YELLOW_IN; k++) { const p = chOutSpot(ys, 1.2, 14); if (!p) continue; ys.push(p); chPut(p[0], p[1], square(p[0], p[1]), 'guard'); }
-    for (let t = 0; t < 40000 && w < CH_WHITE; t++) {   // 남은 하양은 바깥 맵 전체에
+    for (let k = 0; k < CH_YELLOW_OUT; k++) { const p = chOutSpot(ys, 1.2, 14); if (!p) continue; ys.push(p); chPut(p[0], p[1], square(p[0], p[1]), 'guard'); }
+    let w = 0;
+    for (let t = 0; t < 40000 && w < CH_WHITE_OUT; t++) {   // 길거리 하양
       const x = rand(MM.x0 + 3, MM.x1 - 3), z = rand(MM.z0 + 3, MM.z1 - 3);
       if (spaceOf(x, z) || chNearRiver(x, z, AREA / 2 + 1) || !freeSpot(x, z, null) || Math.hypot(x - me.foot.x, z - me.foot.z) < 14) continue;
       if (bodies.some((b) => Math.hypot(b.foot.x - x, b.foot.z - z) < 1.2)) continue;

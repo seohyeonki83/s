@@ -482,7 +482,8 @@ DISP_FN = r"""  // ── c46: 경찰 출동 (챕터) ──
   const CH_LM = new Set(['bank', 'police', 'fire', 'mart', 'hospital', 'army', 'library', 'conv', 'gym']);
   const CH_DISP_N = [[1, 1], [1, 2], [2, 3], [3, 3], [3, 4], [4, 4], [4, 5], [5, 5]];   // 경보 단계별 출동 인원 (최소, 최대)
   let chDispT = -1, chDispStage = 0;
-  function chDispReset() { chDispT = -1; chDispStage = 0; for (const B of buildings) B.called = false; }
+  const CH_TWICE = new Set(['mart', 'hospital', 'bank', 'library']);   // c48: 두 번 출동 (3분의 1 깎였을 때 · 문 하나가 부서졌을 때)
+  function chDispReset() { chDispT = -1; chDispStage = 0; for (const B of buildings) { B.called = 0; B.firstSpot = null; } }
   function chZoneAt(x, z) { const Z = CH_MAP.zones; for (let i = 0; i < Z.length; i++) if (x >= Z[i][0] - 2 && x <= Z[i][2] + 2 && z >= Z[i][1] - 2 && z <= Z[i][3] + 2) return i; return chZoneOf(x, z); }
   function chEdgeSpot(zi) {                  // 그 구역 바깥 라인(가장자리 띠) 위 빈자리 — 내 화면과 좀비 시야 밖
     const [x0, z0, x1, z1] = CH_MAP.zones[zi], W = x1 - x0 - 4, H = z1 - z0 - 4;
@@ -495,9 +496,13 @@ DISP_FN = r"""  // ── c46: 경찰 출동 (챕터) ──
   }
   function chDispatchTick(dt) {
     for (const o of objs) {                   // ① 랜드마크 사수
-      if (o.type !== 'door' || !CH_LM.has(o.B.type) || o.B.called || !(o.dead || o.hp <= o.maxHp * 2 / 3)) continue;
-      const B = o.B, L = o.L; B.called = true;
-      const tx = L.cx + L.nx * 2.6, tz = L.cz + L.nz * 2.6, p = chEdgeSpot(B.zone >= 0 ? B.zone : chZoneAt(tx, tz));
+      if (o.type !== 'door' || !CH_LM.has(o.B.type)) continue;
+      const B = o.B, L = o.L, k = B.called || 0;
+      if (!(k === 0 && (o.dead || o.hp <= o.maxHp * 2 / 3)) && !(k === 1 && CH_TWICE.has(B.type) && o.dead)) continue;
+      B.called = k + 1;
+      const tx = L.cx + L.nx * 2.6, tz = L.cz + L.nz * 2.6, zi = B.zone >= 0 ? B.zone : chZoneAt(tx, tz);
+      let p = chEdgeSpot(zi); for (let t = 0; t < 20 && B.firstSpot && Math.hypot(p.x - B.firstSpot.x, p.z - B.firstSpot.z) < 15; t++) p = chEdgeSpot(zi);   // 두 번째 차는 다른 자리에서
+      if (!B.firstSpot) B.firstSpot = p;
       addCar(p.x, p.z, Math.atan2(tz - p.z, tx - p.x), new THREE.Vector2(tx, tz), 2 + Math.floor(Math.random() * 2));
       cars[cars.length - 1].guard = B;
     }
