@@ -177,10 +177,11 @@ ROOM_FN = r"""  // ── c53: 건물 안 방 ──
     }
     return CH_MAP.start;
   }
+  const CH_PINK = 0xff5fa8;
   function chBoss(B, type, x, z) {             // 변이 좀비가 되는 사람 — 덩치 좀비만 한 몸, 무기 없이 주황처럼 때린다 (넉백 없음). 덩치형: 체력 4배·공격력 2배 / 히드라형: 체력 2배·공격력 4배 (자경단 기준). 머리 위 변이 주사 색 다이아몬드
     const c = chPut(x, z, B, 'attacker', B);
-    c.boss = type; c.mesh.material.color.setHex(0xc62828);
-    c.r = BODY * 1.5; c.halfH = RADIUS * 1.5; c.mesh.scale.setScalar(1.5);
+    c.boss = type; c.mesh.material.color.setHex(CH_PINK);   // c55: 변이 좀비가 될 사람은 분홍
+    if (type === 'armor') { c.r = BODY * 1.5; c.halfH = RADIUS * 1.5; c.mesh.scale.setScalar(1.5); }   // c55: 덩치가 될 사람만 크다 — 히드라가 될 사람은 보통 크기 (다이아몬드로 알아본다)
     c.hp = c.maxHp = GUARD_HP * (type === 'armor' ? 4 : 2); c.hpDisp = c.hp; c.dmgK = type === 'armor' ? 2 : 4;
     const g = new THREE.Group();
     const mk = (sz, col, zz) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(sz, sz), new THREE.MeshBasicMaterial({ color: col, transparent: true, depthTest: false, depthWrite: false })); m.rotation.z = Math.PI / 4; m.position.z = zz; m.renderOrder = 1; return m; };

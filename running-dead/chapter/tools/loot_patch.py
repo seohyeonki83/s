@@ -16,7 +16,7 @@ LOOT = r'''  // ── c19: 금고와 아이템 (챕터) ──
   };
   const CH_HOUSE_SAFE = 0.05;
   function chLoot(type) {                     // 그 건물 금고에서 나올 것 — 아이템 이름, 꽝이면 null
-    const T = CH_DROP[type]; let r = Math.random() * 100;
+    const T = CH_DROP[type]; let r = Math.random() * (CH_LM.has(type) ? T.spec.length * T.p + T.rest : 100);   // c55: 랜드마크는 꽝 없음 — 꽝 몫을 나머지가 비율대로 나눠 갖는다 (창고는 꽝 10% 그대로)
     for (const k of T.spec) if ((r -= T.p) < 0) return k;
     if (r >= T.rest) return null;
     const pool = CH_ITEMS.filter((k) => !T.spec.includes(k)), w = pool.map((k) => T.flat || !CH_RARE.includes(k) ? 1 : 0.1);
@@ -417,7 +417,7 @@ SLOT_R = [
 
 AWK_TXT_R = [   # c35: 각성 주사 설명 글
   ("    awaken: ['모아 둔 시간만큼 내가 변이 좀비로 변합니다. 변이가 끝나면 다시 시간이 모입니다.', '강화 시 모을 수 있는 시간이 늘어납니다.'],",
-   "    awaken: ['충전한 시간만큼 변이합니다.', '강화 시 최대 사용 시간과 게이지 충전 속도가 늘어납니다.'],"),
+   "    awaken: ['충전한 시간만큼 변이하고, 게이지가 찬 만큼 체력을 회복합니다 (가득이면 20%).', '강화 시 최대 사용 시간과 게이지 충전 속도가 늘어납니다.'],"),
   ("    awaken: (n) => `최대 ${10 + 3 * n}초 변이 · 변이가 끝나고 가득 모이는 데 40초`,",
    "    awaken: (n) => `최대 사용 시간 ${10 + 3 * n}초 · 게이지 충전 속도 ${n ? '+' + 30 * n + '%' : '기본'}`,"),
 ]
