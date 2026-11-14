@@ -118,10 +118,10 @@ LOOT = r'''  // ── c19: 금고와 아이템 (챕터) ──
   }
   function chBadgeGrid() {                    // c26: 장비 배지 — 왼쪽 아래 두 줄(3개씩)이 차면 오른쪽 아래에 이어서 (유전자 버튼이 있던 자리)
     Object.values(pBadges).forEach((el, i) => {
-      const right = i >= 6, j = right ? i - 6 : i, side = right ? 'right' : 'left';
-      el.style.left = 'auto'; el.style.right = 'auto';
-      el.style[side] = `calc(max(16px, env(safe-area-inset-${side}, 0px)) + ${(j % 3) * 40}px)`;
-      el.style.bottom = `calc(6px + env(safe-area-inset-bottom, 0px) + ${Math.floor(j / 3) * 48}px)`;
+      const row = i < 3 ? 0 : 1 + Math.floor((i - 3) / 2), col = i < 3 ? i : (i - 3) % 2;   // c37: 첫 줄 3개, 그 위로 2개씩
+      el.style.right = 'auto';
+      el.style.left = `calc(max(16px, env(safe-area-inset-left, 0px)) + ${col * 40}px)`;
+      el.style.bottom = `calc(6px + env(safe-area-inset-bottom, 0px) + ${row * 48}px)`;
       el.style.width = el.style.height = '36px';
       const m = el.querySelector('.mag'); if (m) m.style.display = 'none';
     });
@@ -425,4 +425,8 @@ AWK_TXT_R = [   # c35: 각성 주사 설명 글
 AWK_UI_R = [   # c36: 각성 주사 버튼 — 게이지 한 바퀴 = 5강 최대(25초), 숫자는 조금 작게 + 작은 '초'
   ("else if (it.kind === 'awaken') { it.el.style.setProperty('--p', Math.round(it.acc / chAccMax() * 100)); it.el.querySelector('.n').textContent = it.drain ? Math.ceil(it.acc) : Math.floor(it.acc);",
    "else if (it.kind === 'awaken') { it.el.style.setProperty('--p', Math.round(it.acc / 25 * 100)); { const v = it.drain ? Math.ceil(it.acc) : Math.floor(it.acc), N = it.el.querySelector('.n'), h = `<span style=\"font-size:13px\">${v}</span><span style=\"font-size:8px;margin-left:1px\">초</span>`; if (N.innerHTML !== h) N.innerHTML = h; }"),
+]
+
+AWK_RING_R = [   # c37: 각성 주사 둘레 — 반투명 빈칸까지 최대 사용 시간만큼만 (한 바퀴 = 25초)
+  ("it.el.style.setProperty('--p', Math.round(it.acc / 25 * 100));", "it.el.style.setProperty('--p', Math.round(it.acc / 25 * 100)); { const m = chAccMax() / 25 * 100, bg = `conic-gradient(var(--c) calc(var(--p) * 1%), rgba(255, 255, 255, 0.16) 0 ${m}%, transparent 0)`; if (it.el.style.background !== bg) it.el.style.background = bg; }"),
 ]
