@@ -567,9 +567,14 @@ CAR_FN = r"""  // ── c47: 차 다시 타기 · 끼임 풀기 ──
     if (car.state !== 'drive') { car.stuckT = 0; return; }
     if (car.sx === undefined || Math.hypot(car.x - car.sx, car.z - car.sz) > 1) { car.sx = car.x; car.sz = car.z; car.stuckT = 0; return; }
     if ((car.stuckT += dt) < 3) return;
-    const p = chFreeCarSpot(car.x, car.z, car);
+    // c57: 빼 줬는데 그 둘레(8칸 안)에서 또 끼면 갈 곳 쪽으로 8칸, 16칸… 점점 멀리 빼 준다
+    //      (집 두 채 사이 좁은 틈 앞 같은 막다른 자리에서 나온 차가 제자리 빼기만 끝없이 되풀이하고 못 오던 것)
+    car.wn = car.wx !== undefined && Math.hypot(car.x - car.wx, car.z - car.wz) < 8 ? car.wn + 1 : 1;
+    let bx = car.x, bz = car.z;
+    if (car.wn > 1) { const g = carGoal(car); if (g) { const r = chRoute({ foot: { x: car.x, z: car.z }, laneK: 0 }, g[0], g[1]), dx = r[0] - car.x, dz = r[1] - car.z, d = Math.hypot(dx, dz) || 1, st = Math.min(8 * (car.wn - 1), Math.max(0, d - 3)); bx += dx / d * st; bz += dz / d * st; } }
+    const p = chFreeCarSpot(bx, bz, car);
     if (p) { car.x = p[0]; car.z = p[1]; car.vx = car.vz = 0; car.g.position.set(car.x, car.g.position.y, car.z); }
-    car.sx = car.x; car.sz = car.z; car.stuckT = 0; car.warps = (car.warps || 0) + 1;
+    car.sx = car.x; car.sz = car.z; car.stuckT = 0; car.warps = (car.warps || 0) + 1; car.wx = car.x; car.wz = car.z;
   }
 """
 CAR_R = [

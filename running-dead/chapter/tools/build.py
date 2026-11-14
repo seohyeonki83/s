@@ -78,6 +78,7 @@ ICONS = r'''
   const CH_WHITE = 145, CH_YELLOW = 48, CH_YELLOW_IN = 12, CH_GANG = 48, CH_COPS = 20, CH_ROOM = 45;
   const CH_CALM = 30;                         // c55: 시작 자리에서 이만큼 안에는 길거리 주황·빨강 무리와 배회 경찰이 없고, 집 안 사람도 하양뿐 — 처음 만나는 사람은 하양이나 노랑
   const CH_WHITE_OUT = 81, CH_YELLOW_OUT = 36;   // c48: 길거리 하양 · 노랑 (건물 안은 아래 표)
+  const CH_ONE_K = 1.1;                          // c57: 길거리에 혼자 다니는 사람 (하양 · 노랑 · 배회 경찰) 10% 더 — 무리는 그대로
   const CH_INSIDE = {                         // c48: 건물 안 인원 [종류, 최소, 최대] — '' 하양 · guard 노랑 · attacker 주황 · vig 빨강 · police 경찰 · soldier 군인
     army: [['sniper', 1, 1], ['soldier', 2, 4]],   // c51: 저격수 1명은 늘
     hospital: [['', 5, 10], ['attacker', 2, 3], ['vig', 1, 2], ['police', 1, 2]],   // c54: 빨강은 건물마다 한 명씩 뺐다 (최소 1)
@@ -177,7 +178,7 @@ ICONS = r'''
   function chPopulate() {
     chPopReset();
     const placed = [];
-    for (let k = 0; k < CH_COPS; k++) { const p = chOutSpot(placed, 1.2, CH_CALM); if (!p) continue; placed.push(p); chReg(chPut(p[0], p[1], chRoamArea(p[0], p[1]), 'police'), 'police'); }
+    for (let k = 0; k < Math.round(CH_COPS * CH_ONE_K); k++) { const p = chOutSpot(placed, 1.2, CH_CALM); if (!p) continue; placed.push(p); chReg(chPut(p[0], p[1], chRoamArea(p[0], p[1]), 'police'), 'police'); }
     // 무리: 주황·빨강 각 48 — 2~4명 무리로 쪼갠다. 섞인 5명 무리 2개 (주황 2 + 빨강 3, 주황 3 + 빨강 2)
     // c44: 무리 세 가지 — 주황만 (2~4) · 빨강만 (2~4) · 섞인 무리 (4~6, 둘 다 2명 이상). 섞인 무리에 주황·빨강 각 3분의 1쯤
     const groups = [];
@@ -225,9 +226,9 @@ ICONS = r'''
       for (let t = 0; t < 300 && nearW + nearY < 3; t++) tryAt(Math.random() * Math.PI * 2);   // 가장자리라 막힌 쪽이 많으면 아무 쪽에나 채워서 적어도 셋
     }
     const ys = [];
-    for (let k = 0; k < CH_YELLOW_OUT - nearY; k++) { const p = chOutSpot(ys, 1.2, 14); if (!p) continue; ys.push(p); chReg(chPut(p[0], p[1], chRoamArea(p[0], p[1]), 'guard'), 'guard'); }
+    for (let k = 0; k < Math.round(CH_YELLOW_OUT * CH_ONE_K) - nearY; k++) { const p = chOutSpot(ys, 1.2, 14); if (!p) continue; ys.push(p); chReg(chPut(p[0], p[1], chRoamArea(p[0], p[1]), 'guard'), 'guard'); }
     let w = nearW;
-    const whiteOut = Math.round((CH_WHITE_OUT + houseOut) * 1.15);   // c54: 길거리 하양 15% 더
+    const whiteOut = Math.round((CH_WHITE_OUT + houseOut) * 1.15 * CH_ONE_K);   // c54: 길거리 하양 15% 더 · c57: 10% 더
     for (let t = 0; t < 40000 && w < whiteOut; t++) {   // 길거리 하양
       const x = rand(MM.x0 + 3, MM.x1 - 3), z = rand(MM.z0 + 3, MM.z1 - 3);
       if (spaceOf(x, z) || chNearRiver(x, z, AREA / 2 + 1) || !freeSpot(x, z, null) || Math.hypot(x - me.foot.x, z - me.foot.z) < 14) continue;
@@ -663,6 +664,8 @@ from c55_patch import C55_R   # c55: 위험 티어 · 각성 체력 회복
 R += C55_R
 from c56_patch import C56_R   # c56: 내 테두리 · 다시 채우기
 R += C56_R
+from c57_patch import C57_R   # c57: 변이한 나는 덮치기 맨 끝
+R += C57_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
