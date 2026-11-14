@@ -682,6 +682,8 @@ from c59_patch import C59_R   # c59: 군인팀 출동 · 건널목 바리케이�
 R += C59_R
 from c62_patch import C62_R   # c62: 특수부대 출동 차례표
 R += C62_R
+from c64_patch import C64_R   # c64: 경찰 출동 간격 · 근접 적 먼저
+R += C64_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
