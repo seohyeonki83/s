@@ -65,8 +65,9 @@ ICONS = r'''
   const CH_PEOPLE = 200, CH_ROOM = 30;         // c30: 인간(하양) 전체 수 · 건물 안 한 명당 넓이(칸²)
   function chPopulate() {                     // c30: 인간 200명 — 먼저 모든 건물 안에 골고루, 남은 사람은 바깥 맵 전체에
     let n = 0;
+    const hs = buildings.filter((B) => B.type === 'house').sort(() => Math.random() - 0.5), empty = new Set(hs.slice(0, Math.round(hs.length / 3)));   // c31: 집 3분의 1은 빈집 (판마다 다른 집)
     for (const B of buildings) {              // ① 건물 안: 넓이 30칸²마다 1명, 판마다 ±1 (최소 1명) — 집 1~2 · 창고 1~3 · 랜드마크 1~6명 (테스트맵처럼 큰 건물일수록 많이)
-      if (B.type === 'hill') continue;
+      if (B.type === 'hill' || empty.has(B)) continue;
       const base = Math.max(1, Math.round((B.x1 - B.x0) * (B.z1 - B.z0) / CH_ROOM)), k = Math.max(1, base + Math.floor(Math.random() * 3) - 1);
       for (let i = 0; i < k && n < CH_PEOPLE; i++) {
         let g = pickGoal(B);
