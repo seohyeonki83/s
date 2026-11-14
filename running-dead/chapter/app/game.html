@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c44</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c45</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2054,8 +2054,8 @@
     landHit(c, z, z === me && hasVest ? base * vestK(lv('vest')) : base);   // 방탄복 — 내 총알 피해 감소 (v201)
     if (c.sniper && isZombie(z)) sniperHit(c, z);
     else if (c.soldier && isZombie(z)) soldierHit(c, z);   // v478
-    else if (CHAPTER && c.police && !c.military && isZombie(z) && z.hp > 0 && z.mode !== 'bite' && z.mut !== 'armor' && !(z === me && absorbAmt() >= SNIPER_KD * 2 / 12 - 0.001)) {   // c41
-      const T = ARMOR_KT * 2 / 12, D = SNIPER_KD * 2 / 12, V = D * 4 / (1 - Math.exp(-4 * T));
+    else if (CHAPTER && c.police && !c.military && isZombie(z) && z.hp > 0 && z.mode !== 'bite' && z.mut !== 'armor' && !(z === me && absorbAmt() >= SNIPER_KD * 3 / 12 - 0.001)) {   // c41
+      const T = ARMOR_KT * 3 / 12, D = SNIPER_KD * 3 / 12, V = D * 4 / (1 - Math.exp(-4 * T));   // c45: 2 → 3
       if (z.mode === 'pounce') stopPounce(z);
       giveKnock(z, z.foot.x - c.foot.x, z.foot.z - c.foot.z, V, T);
     }
@@ -2564,8 +2564,8 @@
   const ARMOR_KB = 2.3, ARMOR_KT = 0.4;       // v295: 덩치에 맞으면 처음 이 속도(칸/초)로 밀려나 이 시간 동안 점점 느려진다 — v300: 거리 2배, v301: 0.32 → 0.46칸 (1.5배, 2 → 2.3칸/초 · 0.25 → 0.4초)
   function landHit(a, v, dmg = DAMAGE) {
     if (TEST_MAP && !CHAPTER && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적 (c42: 챕터는 빼고)
-    if (CHAPTER && a && a.vig && isZombie(v) && v.mode !== 'bite' && v.mut !== 'armor' && !(v === me && absorbAmt() >= SNIPER_KD / 12 - 0.001)) {   // c39: 자경단 몽둥이 — 밀림 1
-      const T = ARMOR_KT / 12, D = SNIPER_KD / 12, V = D * 4 / (1 - Math.exp(-4 * T));
+    if (CHAPTER && a && a.vig && isZombie(v) && v.mode !== 'bite' && v.mut !== 'armor' && !(v === me && absorbAmt() >= SNIPER_KD * 2 / 12 - 0.001)) {   // c39: 자경단 몽둥이 — 밀림 1
+      const T = ARMOR_KT * 2 / 12, D = SNIPER_KD * 2 / 12, V = D * 4 / (1 - Math.exp(-4 * T));   // c45: 1 → 2
       if (v.mode === 'pounce') stopPounce(v);
       giveKnock(v, v.foot.x - a.foot.x, v.foot.z - a.foot.z, V, T);
     }
@@ -4176,7 +4176,7 @@
       if (b.lungeT >= 0) {                    // 때리는 모션 시간 — 붙는 순간 데미지
         const before = b.lungeT;
         b.lungeT += dt;
-        if (before < LUNGE_IN && b.lungeT >= LUNGE_IN && b.lungeVictim) { landHit(b, b.lungeVictim, isZombie(b) ? zDamage(b) : DAMAGE); b.lungeVictim = null; }   // 좀비 공격력 = 강한 팔 반영 (v201)
+        if (before < LUNGE_IN && b.lungeT >= LUNGE_IN && b.lungeVictim) { landHit(b, b.lungeVictim, isZombie(b) ? zDamage(b) : DAMAGE * (CHAPTER && b.attacker ? (b.vig ? 2 : 1.5) : 1)); b.lungeVictim = null; }   // 좀비 공격력 = 강한 팔 반영 (v201)
         if (b.lungeT >= LUNGE_IN + LUNGE_OUT) b.lungeT = -1;
       }
     }

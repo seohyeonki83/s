@@ -440,8 +440,8 @@ RANK_R = [   # c38: 군집 단계 10개 (챕터)
 VIG_R = [   # c39: 자경단 근접 넉백 1 (= 저격수 넉백의 12분의 1, 시간도 12분의 1)
   ("    if (TEST_MAP && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적\n",
    "    if (TEST_MAP && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적\n"
-   "    if (CHAPTER && a && a.vig && isZombie(v) && v.mode !== 'bite' && v.mut !== 'armor' && !(v === me && absorbAmt() >= SNIPER_KD / 12 - 0.001)) {   // c39: 자경단 몽둥이 — 밀림 1\n"
-   "      const T = ARMOR_KT / 12, D = SNIPER_KD / 12, V = D * 4 / (1 - Math.exp(-4 * T));\n"
+   "    if (CHAPTER && a && a.vig && isZombie(v) && v.mode !== 'bite' && v.mut !== 'armor' && !(v === me && absorbAmt() >= SNIPER_KD * 2 / 12 - 0.001)) {   // c39: 자경단 몽둥이 — 밀림 1\n"
+   "      const T = ARMOR_KT * 2 / 12, D = SNIPER_KD * 2 / 12, V = D * 4 / (1 - Math.exp(-4 * T));   // c45: 1 → 2\n"
    "      if (v.mode === 'pounce') stopPounce(v);\n"
    "      giveKnock(v, v.foot.x - a.foot.x, v.foot.z - a.foot.z, V, T);\n"
    "    }\n"),
@@ -459,8 +459,8 @@ STICK_R = [   # c40: 자경단 몽둥이 휘두르기 — 때리는 모션 동�
 COPKB_R = [   # c41: 경찰 권총 넉백 2 (= 저격수 넉백의 12분의 2, 시간도 같은 비율). 흡수복 2부터 안 밀린다
   ("    else if (c.soldier && isZombie(z)) soldierHit(c, z);   // v478",
    "    else if (c.soldier && isZombie(z)) soldierHit(c, z);   // v478\n"
-   "    else if (CHAPTER && c.police && !c.military && isZombie(z) && z.hp > 0 && z.mode !== 'bite' && z.mut !== 'armor' && !(z === me && absorbAmt() >= SNIPER_KD * 2 / 12 - 0.001)) {   // c41\n"
-   "      const T = ARMOR_KT * 2 / 12, D = SNIPER_KD * 2 / 12, V = D * 4 / (1 - Math.exp(-4 * T));\n"
+   "    else if (CHAPTER && c.police && !c.military && isZombie(z) && z.hp > 0 && z.mode !== 'bite' && z.mut !== 'armor' && !(z === me && absorbAmt() >= SNIPER_KD * 3 / 12 - 0.001)) {   // c41\n"
+   "      const T = ARMOR_KT * 3 / 12, D = SNIPER_KD * 3 / 12, V = D * 4 / (1 - Math.exp(-4 * T));   // c45: 2 → 3\n"
    "      if (z.mode === 'pounce') stopPounce(z);\n"
    "      giveKnock(z, z.foot.x - c.foot.x, z.foot.z - c.foot.z, V, T);\n"
    "    }"),
@@ -468,4 +468,8 @@ COPKB_R = [   # c41: 경찰 권총 넉백 2 (= 저격수 넉백의 12분의 2, �
 
 HP_R = [   # c42: 챕터는 무적이 아니다 — 체력은 테스트맵(본판)과 같다
   ("    if (TEST_MAP && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적\n", "    if (TEST_MAP && !CHAPTER && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적 (c42: 챕터는 빼고)\n"),
+]
+
+DMG_R = [   # c45: 주황 공격력 1.5배 · 빨강(자경단) 2배 (전에는 둘 다 같았다)
+  ("landHit(b, b.lungeVictim, isZombie(b) ? zDamage(b) : DAMAGE)", "landHit(b, b.lungeVictim, isZombie(b) ? zDamage(b) : DAMAGE * (CHAPTER && b.attacker ? (b.vig ? 2 : 1.5) : 1))"),
 ]
