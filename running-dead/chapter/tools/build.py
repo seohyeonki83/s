@@ -680,6 +680,8 @@ from c58_patch import C58_R   # c58: 맞은 동료는 사물을 안 노린다 ·
 R += C58_R
 from c59_patch import C59_R   # c59: 군인팀 출동 · 건널목 바리케이트와 수비대 · 건물 사람은 건물로 돌아간다
 R += C59_R
+from c62_patch import C62_R   # c62: 특수부대 출동 차례표
+R += C62_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
