@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c100</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c101</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -883,8 +883,9 @@
   const CH_SOFT_SIGHT = 0.8, CH_SOFT_ALERT = 0.6, CH_SOFT_MOVE = 1.15;
   const chSight0 = (c) => c.soft ? c.sight / CH_SOFT_SIGHT : c.sight;   // 줄이기 전 시야 (돈다발용)
   function chSoftOff(c) { if (c.soft) { c.soft = false; c.sight /= CH_SOFT_SIGHT; } }   // 빨강·분홍이 되면 되돌린다
+  let chExact = false;                        // c101: 색을 한 단계 낮추지 않고 말한 그대로 만든다 (현금 수송차에서 내리는 사람)
   function chPut(x, z, area, type, B) {
-    if (Math.random() < 0.1) type = type === 'guard' ? '' : type === 'attacker' ? 'guard' : type === 'vig' ? 'attacker' : type;   // c98: 열에 하나는 한 단계 약한 색으로 (노랑 → 하양 · 주황 → 노랑 · 빨강 → 주황)
+    if (!chExact && Math.random() < 0.1) type = type === 'guard' ? '' : type === 'attacker' ? 'guard' : type === 'vig' ? 'attacker' : type;   // c98: 열에 하나는 한 단계 약한 색으로 (노랑 → 하양 · 주황 → 노랑 · 빨강 → 주황)
     const c = addCitizen(x, z, area, type === 'vig' ? 'attacker' : type);
     if (type === 'police') { c.post = area; c.area = area; }     // 배회 경찰 = 자기 자리 둘레를 돈다 (c56: 만들 때 자리가 다른 네모로 바뀌어서 경찰만 안 돌아다녔다 — 같은 자리로 맞춘다)
     if (type === 'vig') chVig(c);
@@ -7125,7 +7126,7 @@
       car.state = 'civ'; car.sight = SIGHT * 0.7 * rand(0.8, 1.2) * CH_TR_SEE; car.vx = g.d1x * spd; car.vz = g.d1z * spd;
       chCarObj(car, false); car.obj.off = true;
       car.tr = Object.assign(T, { g, mode: 'go', off: 0, spd, who, hp: car.obj.hp, hitT: 0, exitDmg: rand(0.1, 0.3), exitAt: rand(3, 5), zT: 0, jamT: 0, clearT: 0, resume: 'go', swT: 0, swDir: 0, swLat: null, back: false, pickT: 0, scanT: Math.random() * 0.07, dFree: Infinity, blk: null, stuckT: 0, uT: 0, born: clock });
-      if (loot === 'cash') { who.length = 0; who.push('guard', 'guard'); } else if (loot === 'ambul') { who.length = 0; who.push('', ''); }   // c80: 현금 수송차 = 경비 둘 · 구급차 = 구급대원 둘
+      if (loot === 'cash') { who.length = 0; who.push('police', Math.random() < 0.5 ? 'vig' : 'attacker'); }   /* c101: 현금 수송차 = 경찰 1 + 빨강 또는 주황 1 (전엔 노랑 둘) */ else if (loot === 'ambul') { who.length = 0; who.push('', ''); }   // c80: 현금 수송차 = 경비 둘 · 구급차 = 구급대원 둘
       chTrDriver(car, loot);
       chTr.cars.push(car); return car;
     }
@@ -7170,7 +7171,7 @@
         if (freeSpot(x, z, null) && !spaceOf(x, z) && !chOnCar(x, z) && !chNearRiver(x, z, 0.6)) { ok = true; break; }
       }
       if (!ok) { x = car.x; z = car.z; }       // 내릴 자리가 다 막혔으면 차 자리에서 (차가 옆으로 밀어낸다) — 벽 속에 서지 않게
-      const c = chPut(x, z, chSideArea(x, z), w, null); c.sleep = false; c.met = true; c.tick = 0; c.fromCar = true;
+      chExact = car.loot === 'cash'; const c = chPut(x, z, chSideArea(x, z), w, null); chExact = false; c.sleep = false; c.met = true; c.tick = 0; c.fromCar = true;
     });
     chTr.gone[T.zone].push(car);
     chTrTrim(T.zone);
