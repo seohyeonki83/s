@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c116</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c117</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -7144,7 +7144,7 @@
       if (t < 30 && chTrSeen(x, z, 5, all)) continue;
       if (cars.some((c) => Math.abs(c.x - x) < 4.5 && Math.abs(c.z - z) < 4.5)) continue;
       const F = window.__trForce || null, loot = F && F.loot !== undefined ? F.loot : chLootRoll();   // c80: 30대 중 1대는 수송차
-      const type = loot || (F && F.type) || chCarPick(), car = chCivCar(type, x, z, Math.atan2(g.d1z, g.d1x)), spd = CAR_SPEED * CH_TR_SPD[type] * rand(1, CH_TR_FAST) * CH_TR_SLOW, who = [];
+      const type = loot || (F && F.type) || chCarPick(), car = chCivCar(type, x, z, Math.atan2(g.d1z, g.d1x)), spd = CAR_SPEED * (loot ? CH_TR_SPD.sedan * 1.1 : CH_TR_SPD[type]) * rand(1, CH_TR_FAST) * CH_TR_SLOW,   /* c117: 수송차 = 승용차 속도의 1.1배 */ who = [];
       for (let k = 1 + Math.floor(Math.random() * 3); k > 0; k--) { let r = Math.random() * 100, w = ''; for (const [q, p] of CH_TR_WHO) if ((r -= p) < 0) { w = q; break; } who.push(w); }
       car.state = 'civ'; car.sight = SIGHT * 0.7 * rand(0.8, 1.2) * CH_TR_SEE; car.vx = g.d1x * spd; car.vz = g.d1z * spd;
       chCarObj(car, false); car.obj.off = true;
