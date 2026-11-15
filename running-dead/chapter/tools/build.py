@@ -786,6 +786,8 @@ from c117_patch import C117_R   # c117: 수송차 속도 +10%
 R += C117_R
 from c118_patch import C118_R   # c118: 특수부대 첫 출동 앞당김
 R += C118_R
+from c119_patch import C119_R   # c119: 건물 찾기 격자 NaN 방어
+R += C119_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

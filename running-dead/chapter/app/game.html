@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c118</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c119</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1361,7 +1361,7 @@
   }
   const spaceOf = (x, z) => {
     if (chSpN !== buildings.length * 1000 + chRooms.length) chSpBuild();
-    const c = Math.floor((x - chSpX) / 4), r = Math.floor((z - chSpZ) / 4); if (c < 0 || r < 0 || c >= chSpW || r >= chSpH) return null;
+    const c = Math.floor((x - chSpX) / 4), r = Math.floor((z - chSpZ) / 4); if (!(c >= 0 && r >= 0 && c < chSpW && r < chSpH)) return null;   /* c119: NaN도 걸러낸다 */
     const G = chSpG[r * chSpW + c], A = G[0], B2 = G[1];
     for (let i = 0; i < A.length; i++) if (chIn(A[i], x, z)) return A[i];
     for (let i = 0; i < B2.length; i++) if (chIn(B2[i], x, z)) return B2[i];

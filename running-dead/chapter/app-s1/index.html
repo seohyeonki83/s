@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="러닝데드 작은 맵">
+<meta name="theme-color" content="#1f1f23">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>러닝데드 작은 맵</title>
+<style>html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #1f1f23; -webkit-text-size-adjust: 100%; }</style>
+</head>
+<body>
+<script>
+fetch('game.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.text(); })
+  .then(function (t) { document.open(); document.write(t); document.close(); })
+  .catch(function () { location.replace('game.html'); });
+</script>
+</body>
+</html>
