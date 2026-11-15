@@ -52,7 +52,7 @@
   for (const S of Object.values(CH_SLAB)) S.tex = chTexOf(S.px[0], S.px[1], S.draw);
   const CH_SLAB_MASS = CAR_MASS * 2 / 3 / 3, CH_SLAB_HP = MY_DAMAGE * 9.5 / 3;   // 큰 탁자 = 경찰차의 1/3 (본게임 그대로)
   const chProps = [], chSlabs = [];
-  let chFurnT = 0, chFurnN = {};
+  let chFurnT = 0, chFurnN = {}, chFurnPlan = null;   // chFurnPlan = 놓기로 한 것들 (c73: 만들기 전에 5분의 1을 뺀다)
   function chAddProp(type, x, z) {             // 본게임 addProp 그대로 — 종류만 늘렸다
     const P = CH_PROP[type], b = addBody('safe', x, z);
     b.mesh.material.dispose();
@@ -164,7 +164,15 @@
     for (const t of chSlabs) { scene.remove(t.m); t.m.geometry.dispose(); t.m.material.dispose(); if (t.obj.hpBar) scene.remove(t.obj.hpBar); }
     chSlabs.length = 0; chProps.length = 0; chFurnSpaces.length = 0; chFurnN = {}; chFurnT = 0;
     for (const B of buildings) { B.fs = []; B.fp = []; B.nav = null; B.navDirty = false; B.furnOn = false; if (B.type !== 'hill') chFurnSpaces.push(B); }
+    chFurnPlan = [];
     for (const B of chFurnSpaces) chFurnOne(B);
+    {                                          // c73: 5분의 1을 뺀다 — 아무거나 고르되, 탁자를 빼면 둘레 의자도, 책상을 빼면 그 앞 의자도 같이 뺀다
+      const P = chFurnPlan, want = Math.round(P.length / 5), idx = P.map((e, i) => i); let cut = 0;
+      for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)), q = idx[i]; idx[i] = idx[j]; idx[j] = q; }
+      for (const i of idx) { if (cut >= want) break; const e = P[i]; if (e.cut) continue; const kids = P.filter((q) => q.dep === e && !q.cut); if (cut + 1 + kids.length > want + 1) continue; e.cut = true; for (const q of kids) q.cut = true; cut += 1 + kids.length; }
+      for (const e of P) if (!e.cut) { if (e.slab) chAddSlab(e.type, e.x, e.z, e.h ? Math.PI / 2 : 0, e.S); else chAddProp(e.type, e.x, e.z).space = e.S; }
+      chFurnPlan = null;
+    }
     for (const p of chProps) if (p.space && p.space.fp) p.space.fp.push(p);
     for (const c of bodies) {                  // 사물 자리에 겹친 사람은 그 방 안 빈자리로
       if (c.kind !== 'citizen' || !c.space || !c.space.fs) continue;
@@ -195,8 +203,8 @@
     const J = { x0: S.x0 + 0.15, z0: S.z0 + 0.15, x1: S.x1 - 0.15, z1: S.z1 - 0.15 };   // 벽에 붙여 놓을 수 있는 한계 (벽 한가운데 선에서 0.15칸)
     const free = (b, aisle) => b[0] >= J.x0 - 1e-6 && b[2] <= J.x1 + 1e-6 && b[1] >= J.z0 - 1e-6 && b[3] <= J.z1 + 1e-6 && !keep.some((k) => chBoxHit(b, k, 0)) && !occ.some((o) => chBoxHit(b, o, aisle));
     const slabBox = (type, x, z, h) => { const D = CH_SLAB[type], hx = (h ? D.W : D.L) / 2, hz = (h ? D.L : D.W) / 2; return [x - hx, z - hz, x + hx, z + hz]; };
-    const slab = (type, x, z, h, aisle = 1.1) => { const b = slabBox(type, x, z, h); if (!free(b, aisle)) return null; occ.push(b); return chAddSlab(type, x, z, h ? Math.PI / 2 : 0, S); };
-    const prop = (type, x, z, aisle = 0.3) => { const r = CH_PROP[type].r, b = [x - r, z - r, x + r, z + r]; if (!free(b, aisle)) return null; occ.push(b); const p = chAddProp(type, x, z); p.space = S; return p; };
+    const slab = (type, x, z, h, aisle = 1.1) => { const b = slabBox(type, x, z, h); if (!free(b, aisle)) return null; occ.push(b); const e = { S, slab: true, type, x, z, h: h ? 1 : 0, dep: null }; chFurnPlan.push(e); return e; };
+    const prop = (type, x, z, aisle = 0.3, dep = null) => { const r = CH_PROP[type].r, b = [x - r, z - r, x + r, z + r]; if (!free(b, aisle)) return null; occ.push(b); const e = { S, slab: false, type, x, z, dep }; chFurnPlan.push(e); return e; };   // dep = 딸린 사물 (그게 빠지면 같이 빠진다)
     const SIDES = [['n', 0, -1], ['s', 0, 1], ['w', -1, 0], ['e', 1, 0]];
     const wall = (kind, type, n, aisle) => {    // 벽에 붙여서 — 네모는 긴 변을 벽에 대고
       let done = 0;
@@ -230,14 +238,14 @@
       const spots = []; const m = Math.max(1, Math.floor(n / 2));
       for (let i = 0; i < m; i++) { const a = (i + 0.5) / m * D.L - D.L / 2, d = D.W / 2 + P.r + 0.12; spots.push([a, d], [a, -d]); }
       if (n > 2 * m - 1) spots.push([D.L / 2 + P.r + 0.12, 0], [-D.L / 2 - P.r - 0.12, 0]);
-      for (const [a, d] of spots.slice(0, n)) prop(type, t.x + (hz ? d : a), t.z + (hz ? a : d), 0.02);
+      for (const [a, d] of spots.slice(0, n)) prop(type, t.x + (hz ? d : a), t.z + (hz ? a : d), 0.02, t.e || null);
     };
-    const tableSet = (nChairs) => { for (let t = 0; t < 40; t++) { const h = Math.random() < 0.5 ? 1 : 0, D = CH_SLAB.table, hx = (h ? D.W : D.L) / 2 + 0.9, hz = (h ? D.L : D.W) / 2 + 0.9; if (W < 2 * hx || H < 2 * hz) continue; const tb = slab('table', rand(I.x0 + hx, I.x1 - hx), rand(I.z0 + hz, I.z1 - hz), h, 1.3); if (tb) { tb.h = h ? Math.PI / 2 : 0; around({ x: tb.x, z: tb.z, h, type: 'table' }, 'chair', nChairs); return tb; } } return null; };
+    const tableSet = (nChairs) => { for (let t = 0; t < 40; t++) { const h = Math.random() < 0.5 ? 1 : 0, D = CH_SLAB.table, hx = (h ? D.W : D.L) / 2 + 0.9, hz = (h ? D.L : D.W) / 2 + 0.9; if (W < 2 * hx || H < 2 * hz) continue; const tb = slab('table', rand(I.x0 + hx, I.x1 - hx), rand(I.z0 + hz, I.z1 - hz), h, 1.3); if (tb) { around({ x: tb.x, z: tb.z, h, type: 'table', e: tb }, 'chair', nChairs); return tb; } } return null; };
     const deskSet = (type = 'desk') => {       // 벽에 책상, 그 앞에 의자
       for (let t = 0; t < 40; t++) { const [, nx, nz] = SIDES[Math.floor(Math.random() * 4)], r = CH_PROP[type].r, a = nx ? rand(J.z0 + r + 0.2, J.z1 - r - 0.2) : rand(J.x0 + r + 0.2, J.x1 - r - 0.2);
         const x = nx ? (nx < 0 ? S.x0 + r + 0.2 : S.x1 - r - 0.2) : a, z = nx ? a : (nz < 0 ? S.z0 + r + 0.2 : S.z1 - r - 0.2), cx = x - nx * (r + 0.42), cz = z - nz * (r + 0.42);
         const cb = [cx - 0.34, cz - 0.34, cx + 0.34, cz + 0.34]; if (!free(cb, 0.25)) continue;
-        if (prop(type, x, z, 0.25)) { prop('chair', cx, cz, 0.02); return true; } }
+        const dk = prop(type, x, z, 0.25); if (dk) { prop('chair', cx, cz, 0.02, dk); return true; } }
       return false;
     };
     const N = (a, b) => a + Math.floor(Math.random() * (b - a + 1)), P = (p) => Math.random() < p;
@@ -259,7 +267,7 @@
   function chFurnGarage(S, I, keep, occ) {      // 차고 — 박스 몇 개와 드럼통
     const n = 2 + Math.floor(Math.random() * 3);
     for (let i = 0, k = 0; i < 40 && k < n; i++) { const type = ['box', 'box', 'crate', 'drum'][Math.floor(Math.random() * 4)], r = CH_PROP[type].r, x = rand(I.x0 + r, I.x1 - r), z = rand(I.z0 + r, I.z1 - r), b = [x - r, z - r, x + r, z + r];
-      if (keep.some((q) => chBoxHit(b, q, 0)) || occ.some((q) => chBoxHit(b, q, 0.1))) continue; occ.push(b); chAddProp(type, x, z).space = S; k++; }
+      if (keep.some((q) => chBoxHit(b, q, 0)) || occ.some((q) => chBoxHit(b, q, 0.1))) continue; occ.push(b); chFurnPlan.push({ S, slab: false, type, x, z, dep: null }); k++; }
   }
   // ── 건물 안 길 찾기 (격자) ──
   //   방마다 0.25칸 격자. 벽·안쪽 방·금고·사물 둘레(몸 반지름쯤)를 막힌 칸으로 칠해 두고, 사람은 A*로 빈 칸을 따라간다.

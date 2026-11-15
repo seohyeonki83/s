@@ -117,7 +117,7 @@ C69B_FN = r"""  // ── c69: 차종 — 길이·폭·체력·무게 = 경찰�
   function chDecoPut(type, x, z, h, host, tag) {
     const hh = h + rand(-0.06, 0.06), box = chCarBox(x, z, h, type);
     if (!chDecoStatic(box, host) || !chDecoOk(box)) return false;
-    chDecoCar(type, x + rand(-0.08, 0.08), z + rand(-0.08, 0.08), hh); chDeco.boxes.push(box); chDeco.n[tag] = (chDeco.n[tag] || 0) + 1; return true;
+    chDecoCar(type, x + rand(-0.08, 0.08), z + rand(-0.08, 0.08), hh).tag = tag; chDeco.boxes.push(box); chDeco.n[tag] = (chDeco.n[tag] || 0) + 1; return true;
   }
   function chDecoBeside(B, types, perp, sides) {   // 그 건물 벽 옆에 한 줄로 — 벽을 따라(가로) 또는 벽에 머리를 대고(세로). 자리가 안 나면 다른 벽으로
     const dim = (t) => t === 'police' ? [CAR_L, CAR_W] : t === 'mil' ? [CAR_L * MIL_K, CAR_W * MIL_K] : [CAR_L * CH_CAR[t].kl, CAR_W * CH_CAR[t].kw];
@@ -163,6 +163,10 @@ C69B_FN = r"""  // ── c69: 차종 — 길이·폭·체력·무게 = 경찰�
       const r = Math.random(), n = r < 0.16 ? 2 : r < 0.72 ? 1 : 0; if (!n) continue;
       const sides = Math.random() < 0.5 ? front(B).concat(others(B)) : others(B).concat(front(B));
       if (!chDecoBeside(B, civ(n), Math.random() < 0.45, sides) && n === 2) chDecoBeside(B, civ(1), Math.random() < 0.45, sides);
+    }
+    {                                          // c73: 주차된 차 5분의 1을 뺀다 — 아무 차나 (경찰차·군인차·소방차·구급차는 그대로 둔다)
+      const all = cars.filter((c) => c.deco), pool = shuffle(all.filter((c) => c.civ && c.civ !== 'fire' && c.civ !== 'ambul'));
+      for (let i = 0, n = Math.min(pool.length, Math.round(all.length / 5)); i < n; i++) { const c = pool[i]; if (c.tag) chDeco.n[c.tag]--; chTrGone(c); }
     }
     for (const b of bodies) {                  // 먼저 깔린 사람이 차 밑에 깔렸으면 차 옆으로 빼 준다
       if (b.kind !== 'citizen' || b.space) continue;
