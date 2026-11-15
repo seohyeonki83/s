@@ -720,6 +720,8 @@ from c84_patch import C84_R   # c84: 하양·노랑·주황 — 알아보는 거
 R += C84_R
 from c85_patch import C85_R   # c85: 마을 꾸미기 (공원·주유소·농구장·공사 현장·길거리 사물)
 R += C85_R
+from c86_patch import C86_R   # c86: 사물·차 통일 규칙 · 경보단계 조건 2배 · 포인트 군집 · 자폭 점수
+R += C86_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
