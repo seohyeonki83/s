@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c120</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c121</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5336,7 +5336,7 @@
         if (c.kind !== 'citizen' || c.space !== z.space) continue;
         const e = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z);
         if (e > R) continue;
-        n++; const t = tier(c); if (CHAPTER) sc += CH_BOMB_PT[t];
+        n++; const t = tier(c); if (CHAPTER) sc += c.boss ? 40 : CH_BOMB_PT[t];   /* c121: 분홍 = 저격수와 같은 40점 */
         if (t > top) { top = t; d = e; } else if (t === top && e < d) d = e;
       }
       if (top < 0) continue;
