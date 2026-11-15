@@ -698,6 +698,8 @@ from c72_patch import C72_R   # c72: 건널목 수비대 절반 · 바리케이�
 R += C72_R
 from c74_patch import C74_R   # c74: 레벨업 10명·1.3배 · 가장 큰 무리에서 빨강 한 명
 R += C74_R
+from c75_patch import C75_R   # c75: 5명·4명 무리에서도 빨강 한 명씩
+R += C75_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
