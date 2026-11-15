@@ -758,6 +758,8 @@ from c103_patch import C103_R   # c103: 경보 출동 빈도 15% 줄임
 R += C103_R
 from c104_patch import C104_R   # c104: 얻은 변이 좀비
 R += C104_R
+from c105_patch import C105_R   # c105: 덩치 무게 +2
+R += C105_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
