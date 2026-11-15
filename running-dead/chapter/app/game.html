@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c80</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c81</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6923,7 +6923,7 @@
       if (t < 30 && chTrSeen(x, z, 5, all)) continue;
       if (cars.some((c) => Math.abs(c.x - x) < 4.5 && Math.abs(c.z - z) < 4.5)) continue;
       const F = window.__trForce || null, loot = F && F.loot !== undefined ? F.loot : chLootRoll();   // c80: 30대 중 1대는 수송차
-      const type = loot || (F && F.type) || chCarPick(), car = chCivCar(type, x, z, Math.atan2(g.d1z, g.d1x)), spd = CAR_SPEED * CH_TR_SPD[type] * rand(1, CH_TR_FAST), who = [];
+      const type = loot || (F && F.type) || chCarPick(), car = chCivCar(type, x, z, Math.atan2(g.d1z, g.d1x)), spd = CAR_SPEED * CH_TR_SPD[type] * rand(1, CH_TR_FAST) * CH_TR_SLOW, who = [];
       for (let k = 1 + Math.floor(Math.random() * 3); k > 0; k--) { let r = Math.random() * 100, w = ''; for (const [q, p] of CH_TR_WHO) if ((r -= p) < 0) { w = q; break; } who.push(w); }
       car.state = 'civ'; car.sight = SIGHT * 0.7 * rand(0.8, 1.2) * CH_TR_SEE; car.vx = g.d1x * spd; car.vz = g.d1z * spd;
       chCarObj(car, false); car.obj.off = true;
@@ -6936,7 +6936,7 @@
   }
   function chTrReset() {                       // 새 판 — 구역마다 3~4대를 바로 채운다
     if (!chRoadG) chRoadG = chRoadGraphs();
-    chTr = { cars: [], Z: CH_MAP.zones.map(() => ({ n: 0, want: 3 + (Math.random() < 0.5 ? 1 : 0), t: 0 })), gone: CH_MAP.zones.map(() => []) };
+    chTr = { cars: [], Z: CH_MAP.zones.map(() => ({ n: 0, want: chTrWant(), t: 0 })), gone: CH_MAP.zones.map(() => []) };
     chTr.Z.forEach((Z, zi) => { for (let k = 0; k < Z.want; k++) if (chTrSpawn(zi, true)) Z.n++; Z.t = rand(8, 16); });
   }
   function chTrBox(car, g, s, off) {           // 그 차선(옆으로 off)으로 앞 7칸이 비었나 — 건물·강·서 있는 차
@@ -7001,7 +7001,7 @@
     if ((chTr.trimT = (chTr.trimT || 0) - dt) <= 0) { chTr.trimT = 2; let cut = false; chTr.gone.forEach((Q, zi) => { if (Q.length > CH_TR_KEEP && chTrTrim(zi)) cut = true; }); if (cut) updateCarObs(); }   // 다 보여서 못 치운 빈 차는 2초마다 다시 본다
     for (let k = chTr.cars.length - 1; k >= 0; k--) {
       const car = chTr.cars[k], T = car.tr;
-      if (car.wreck || T.mode === 'left' || T.mode === 'gone') { chTr.cars.splice(k, 1); const Z = chTr.Z[T.zone]; Z.n--; Z.want = 3 + (Math.random() < 0.5 ? 1 : 0); Z.t = T.swap ? rand(1, 4) : rand(8, 16); continue; }   /* c80: 떠난 차 자리는 곧 새 차가 채운다 */
+      if (car.wreck || T.mode === 'left' || T.mode === 'gone') { chTr.cars.splice(k, 1); const Z = chTr.Z[T.zone]; Z.n--; Z.want = chTrWant(); Z.t = T.swap ? rand(1, 4) : rand(8, 16); continue; }   /* c80: 떠난 차 자리는 곧 새 차가 채운다 */
       if (T.mode === 'go' && clock - T.born > T.life && (T.lifeT -= dt) <= 0) { T.lifeT = 1; if (!chTrSeen(car.x, car.z, 6)) { chTrGone(car); T.mode = 'gone'; T.swap = true; continue; } }   // c80
       chTrDrive(car, T, dt);
     }
@@ -7177,7 +7177,9 @@
   let chDt = 1 / 60;
   const chCarW = (b) => b.mut === 'armor' ? MY_FORCE * 1.3 * 2 / 3 : b.mut === 'hydra' ? 2 : 1;   // 차에 대한 몸의 무게 — 보통 1 · 덩치 6.93 · 히드라 2 (나도 같다)
   const chCarM = (car) => car.massK || (car.mil ? 1.6 : 1);
-  const chCarCap = (car) => CH_PUSH * chCarM(car) * (car.pushK || 1);
+  const CH_TR_PUSH = 2 / 3, CH_TR_SLOW = 0.8;   // c81: 길거리 차 — 운전 중 미는 힘 3분의 2 · 속도 80%
+  const chTrWant = () => 2 + (Math.random() < 1 / 3 ? 1 : 0);   // c81: 구역마다 달리는 차 2~3대 (평균 2.33)
+  const chCarCap = (car) => CH_PUSH * chCarM(car) * (car.tr ? CH_TR_PUSH : 1);
   function chSkid(b, dt) {                     // 바닥에 쓸리는 먼지 — 내 둘레에서만
     if ((b.skidT = (b.skidT || 0) - dt) > 0) return; b.skidT = 0.1;
     if (Math.abs(b.foot.x - me.foot.x) > 13 || Math.abs(b.foot.z - me.foot.z) > 13) return;
