@@ -716,6 +716,8 @@ from c82_patch import C82_R   # c82: 사물·주차된 차 줄임 · 길거리 �
 R += C82_R
 from c83_patch import C83_R   # c83: 건널목을 길게 (만·산 덩어리·휜 순환도로) · 교통망
 R += C83_R
+from c84_patch import C84_R   # c84: 하양·노랑·주황 — 알아보는 거리 80% · 경계 시간 60% · 이동 속도 115%
+R += C84_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

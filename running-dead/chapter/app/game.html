@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c83</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c84</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -876,6 +876,12 @@
       return;
     }
   }
+  // ── c84: 하양·노랑·주황 — 좀비를 알아보는 거리(시야 7.2) 80% · 경계 시간 60% · 이동 속도 115% ──
+  //   나(좀비 시야 7.2)는 보는데 그 사람은 아직 나를 못 보는 거리가 생긴다. 가까운 인식거리(인지거리 3.6)는 그대로.
+  //   빨강·분홍·경찰·군인은 그대로. 돈다발을 보는 거리와 돈을 보고 서 있는 시간도 그대로 (원래 시야로 잰다)
+  const CH_SOFT_SIGHT = 0.8, CH_SOFT_ALERT = 0.6, CH_SOFT_MOVE = 1.15;
+  const chSight0 = (c) => c.soft ? c.sight / CH_SOFT_SIGHT : c.sight;   // 줄이기 전 시야 (돈다발용)
+  function chSoftOff(c) { if (c.soft) { c.soft = false; c.sight /= CH_SOFT_SIGHT; } }   // 빨강·분홍이 되면 되돌린다
   function chPut(x, z, area, type, B) {
     const c = addCitizen(x, z, area, type === 'vig' ? 'attacker' : type);
     if (type === 'police') { c.post = area; c.area = area; }     // 배회 경찰 = 자기 자리 둘레를 돈다 (c56: 만들 때 자리가 다른 네모로 바뀌어서 경찰만 안 돌아다녔다 — 같은 자리로 맞춘다)
@@ -886,7 +892,7 @@
     return c;
   }
   function chVig(c) {                         // 자경단 = 공격형과 같은 수치 + 근접 넉백 1, 빨강, 몽둥이
-    c.vig = true; c.mesh.material.color.setHex(0xc62828);
+    c.vig = true; c.mesh.material.color.setHex(0xc62828); chSoftOff(c);   /* c84 */
     const s = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.95), new THREE.MeshBasicMaterial({ color: 0x8a5a30, transparent: true, depthTest: false, depthWrite: false }));
     s.geometry.translate(0, 0.45, 0);         // 손잡이 쪽이 축
     s.position.set(0.42, 0.05, 0.01); s.rotation.z = -0.5; s.renderOrder = 1;
@@ -1625,6 +1631,7 @@
     }
     c.sense = SENSE * rand(0.9, 1.1);
     c.sight = SIGHT * rand(0.9, 1.1);
+    if (CHAPTER && !c.police) { c.soft = true; c.sight *= CH_SOFT_SIGHT; }   // c84: 하양·노랑·주황 (빨강·분홍은 chVig·chBoss에서 되돌린다)
     if (c.soldier) c.sense = c.sight;    // v410: 군인은 경계 없이 시야 안이면 바로 싸움
     if (c.sniper) { c.evadeR = sniperEvadeR(); c.sight = SIGHT * 1.1; c.sense = c.sight;   /* v432: 시야(사거리) = 경찰의 1.1배 → 7.92칸 */   /* v404: 경찰과 차이를 절반으로 (1.5 → 1.25배, 9칸) */ c.mark = new THREE.Sprite(diamondMat); c.mark.scale.set(1.3, 1.3, 1); /* v482: 테두리 + 십자 */ c.mark.renderOrder = UI; c.mark.visible = false; scene.add(c.mark); }   // v396: 저격수 시야 10.8칸 — 시야 안이면 경계 없이 바로 싸움
     c.flee = new THREE.Vector2();
@@ -1677,7 +1684,7 @@
     c.back = !!c.goal;                              // 돌아가는 길은 일반 속도, 영역 안 배회는 그 1/3
     c.timer = CHAPTER && !c.gar ? 0 : rand(...IDLE_TIME);   // c68: 챕터 — 배회하다 서 있는 시간 없음 (바리케이트 수비대는 그대로 선다)
   }
-  function enterAlert(c) { c.state = 'alert'; c.timer = rand(...ALERT_TIME) * (c.police || (CHAPTER && c.attacker) ? POLICE_ALERT : 1); }   /* c54: 주황·빨강도 경찰만큼 짧게 경계 (3분의 1) */
+  function enterAlert(c) { c.state = 'alert'; c.timer = rand(...ALERT_TIME) * (c.police || (CHAPTER && c.attacker) ? POLICE_ALERT : 1) * (c.soft ? CH_SOFT_ALERT : 1); }   /* c84: 하양·노랑·주황은 경계 시간 60% */   /* c54: 주황·빨강도 경찰만큼 짧게 경계 (3분의 1) */
   function enterPanic(c, spots, quiet) {
     c.state = 'panic';
     c.panicLen = rand(...PANIC_TIME);
@@ -1913,7 +1920,7 @@
     if (c.state === 'lured') { luredStep(c, dt); return; }
     if (c.lureAlert) {                        // 돈다발 쪽을 보며 경계 — 끝나면 유혹 (그 사이 맞으면 풀린다)
       steer(c.vel, wantV.set(0, 0), ACCEL * dt);
-      if ((c.timer -= dt) <= 0) { c.lureAlert = false; if (seeCash(c, c.sight * cashK())) enterLured(c); else enterNormal(c); }
+      if ((c.timer -= dt) <= 0) { c.lureAlert = false; if (seeCash(c, chSight0(c) * cashK())) enterLured(c); else enterNormal(c); }
       return;
     }
     if (c.state === 'evade') { sniperEvade(c, dt); return; }   // v396: 저격수 회피
@@ -1925,6 +1932,7 @@
       wantV.set(0, 0);
       superPanic(c);
       if (c.guard) wantV.multiplyScalar(GUARD_PACE);
+      if (c.soft) wantV.multiplyScalar(CH_SOFT_MOVE);   // c84
       steer(c.vel, wantV, ACCEL * dt);
       return;
     }
@@ -1963,6 +1971,7 @@
       else { toward(c, c.goal.x, c.goal.y, Math.min((c.back ? WALK_SPEED : CIT_WANDER) * (c.police ? POLICE_PACE : 1), d * 3)); if (CHAPTER && c.space) chSidestep(c); }   // c70: 건물 안에서는 앞사람을 비켜 간다
     } else if ((c.timer -= dt) <= 0) { if (CHAPTER && c.area.roam) chRoam(c); c.goal = pickGoal(c.area, c); if (CHAPTER && c.area.roam && !inArea(c)) c.back = true; }   // 일반: 서 있다가 다음 곳으로 (c55: 길거리 사람은 가끔 자리째 옮겨 간다 — 그땐 걷는 속도로)
     if (c.guard) wantV.multiplyScalar(GUARD_PACE);   // 수비형은 모든 이동이 20% 느리다 (v150)
+    if (c.soft) wantV.multiplyScalar(CH_SOFT_MOVE);   // c84: 하양·노랑·주황은 모든 이동이 15% 빠르다
     steer(c.vel, wantV, accelOf(c) * dt);
   }
 
@@ -2008,7 +2017,7 @@
     if (pick) c.foe = nearestZombie(c, c.sight);
     if (!c.foe) { enterNormal(c); return; }
     const z = c.foe, d = Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
-    if (d > MELEE || z.space !== c.space) { steer(c.vel, toward(c, z.foot.x, z.foot.z, PANIC_SPEED), ACCEL * dt); return; }   // v296: 다른 공간이면 문으로 들어가서 때린다
+    if (d > MELEE || z.space !== c.space) { steer(c.vel, toward(c, z.foot.x, z.foot.z, PANIC_SPEED * (c.soft ? CH_SOFT_MOVE : 1)), ACCEL * dt); return; }   /* c84 */   // v296: 다른 공간이면 문으로 들어가서 때린다
     c.locked = true;                            // 근접 거리에 붙었다 = 때리기 시작 → 이 상대로 고정
     steer(c.vel, wantV.set(0, 0), ACCEL * dt);
     if (c.atkT <= 0) { strike(c, z); c.atkT = HIT_EVERY; }
@@ -4835,11 +4844,11 @@
         for (const k of fresh) {
           if (k.space !== c.space && !(CHAPTER && linked(k.space, c.space))) continue;   /* c58 */
           const d = Math.hypot(k.x - c.foot.x, k.z - c.foot.z);
-          if (d > c.sight * cashK() || blocked(c.foot.x, c.foot.z, k.x, k.z)) continue;
+          if (d > chSight0(c) * cashK() || blocked(c.foot.x, c.foot.z, k.x, k.z)) continue;
           k.who.add(c); bd = Math.min(bd, d);
         }
         if (bd === Infinity) continue;
-        if (bd <= c.sense * cashK()) enterLured(c); else { enterAlert(c); c.lureAlert = true; c.timer *= 0.5; }   // v275: 돈 보고 경계하는 시간 절반
+        if (bd <= c.sense * cashK()) enterLured(c); else { enterAlert(c); c.lureAlert = true; c.timer *= 0.5 / (c.soft ? CH_SOFT_ALERT : 1); }   /* c84: 돈을 보고 서 있는 시간은 그대로 */   // v275: 돈 보고 경계하는 시간 절반
       }
     }
     refreshItems();
@@ -4858,7 +4867,7 @@
   function enterLured(c) { c.state = 'lured'; c.lureAlert = false; c.foe = null; c.locked = false; c.lureHit = 0; c.pickT = 0; c.lureT = 0; }
   function luredStep(c, dt) {                 // 유혹: 좀비는 안 보고 가장 가까운 돈다발로 달려간다. 닿으면 돈다발이 사라진다
     if (c.police && (c.lureT = (c.lureT || 0) + dt) >= (c.military ? 0.7 : 1.5)) {   /* v516: 군인·저격수 0.7초, 경찰 1.5초 */ c.state = 'normal'; c.ignoreCash = new Set(cashes); enterNormal(c); return; }   // v456: 군인·저격수는 최대 1.5초만 홀린다
-    const s = seeCash(c, c.sight * cashK());
+    const s = seeCash(c, chSight0(c) * cashK());
     if (!s) { enterNormal(c); return; }      // 볼 수 있는 돈다발이 없으면 유혹 끝
     if (s.d < CASH_GET) {                    // v237: 돈다발에 닿으면 1.5초 동안 가만히 서서 줍고, 그다음 돈다발이 사라진다
       c.vel.set(0, 0);
@@ -4866,7 +4875,7 @@
       return;
     }
     c.pickT = 0;
-    const sp = PANIC_SPEED * (c.police ? POLICE_PACE : 1) * (c.guard ? GUARD_PACE : 1);
+    const sp = PANIC_SPEED * (c.police ? POLICE_PACE : 1) * (c.guard ? GUARD_PACE : 1) * (c.soft ? CH_SOFT_MOVE : 1);   /* c84 */
     steer(c.vel, toward(c, s.k.x, s.k.z, sp), ACCEL * dt);
   }
   // 금고 (v190): 경찰서마다 안쪽 왼쪽·오른쪽·왼쪽 아래·오른쪽 아래 중 한 곳. 나만 때려 부술 수 있다 (체력 = 경찰의 1.5배)
@@ -5987,7 +5996,7 @@
   const CH_PINK = 0xff5fa8;
   function chBoss(B, type, x, z) {             // 변이 좀비가 되는 사람 — 덩치 좀비만 한 몸, 무기 없이 주황처럼 때린다 (넉백 없음). 덩치형: 체력 4배·공격력 2배 / 히드라형: 체력 2배·공격력 4배 (자경단 기준). 머리 위 변이 주사 색 다이아몬드
     const c = chPut(x, z, B, 'attacker', B);
-    c.boss = type; c.mesh.material.color.setHex(CH_PINK);   // c55: 변이 좀비가 될 사람은 분홍
+    c.boss = type; c.mesh.material.color.setHex(CH_PINK); chSoftOff(c);   /* c84 */   // c55: 변이 좀비가 될 사람은 분홍
     if (type === 'armor') { c.r = BODY * 1.5; c.halfH = RADIUS * 1.5; c.mesh.scale.setScalar(1.5); }   // c55: 덩치가 될 사람만 크다 — 히드라가 될 사람은 보통 크기 (다이아몬드로 알아본다)
     c.hp = c.maxHp = GUARD_HP * (type === 'armor' ? 4 : 2); c.hpDisp = c.hp; c.dmgK = type === 'armor' ? 2 : 4;
     const g = new THREE.Group();
