@@ -63,6 +63,10 @@ M['cross']['ends'] = [[zi, sd, round(fz(c) if sd in 'EW' else fx(c), 3), o] for 
 
 # ── 건물 ──
 B = M['b']; TR = []
+HK = math.sqrt(0.8)                                       # c93: 집은 넓이 80% (한 변 0.894배) — 차고·주유소 사무실은 그대로. 한 변이 4.4칸보다 짧아지지는 않게 (문 폭 3.4칸)
+for b in B:
+    if b['t'] == 'house' and not b.get('garage') and not any(abs(b['x'] - x) < 0.6 and abs(b['z'] - z) < 0.6 for x, z in GAS_HOUSES) and not any(c.get('parent') == B.index(b) for c in B):
+        b['w'] = round(max(min(b['w'], 4.0), b['w'] * HK), 2); b['d'] = round(max(min(b['d'], 4.0), b['d'] * HK), 2)
 LK = math.sqrt(0.75)                                    # 랜드마크(창고·집·편의점 빼고)는 넓이를 4분의 3으로 — 한 변 0.866배. 방은 크기 그대로, 붙어 있던 벽에 그대로 붙인다
 for i, b in enumerate(B):
     if b['t'] not in ('army', 'fire', 'mart', 'gym', 'bank', 'hospital', 'library', 'police'): continue
@@ -95,7 +99,7 @@ DOORD = 2.4
 def door_box(b):
     x0, z0, x1, z1 = rect(b); s = b['doors'][0]; cx, cz = b['x'], b['z']
     return dict(n=[cx - 1.9, z0 - DOORD, cx + 1.9, z0], s=[cx - 1.9, z1, cx + 1.9, z1 + DOORD], w=[x0 - DOORD, cz - 1.9, x0, cz + 1.9], e=[x1, cz - 1.9, x1 + DOORD, cz + 1.9])[s]
-G_B, G_R, G_A = 1.0, 0.3, 0.4
+G_B, G_R, G_A = 1.3, 0.3, 0.4                               # c93: 건물 사이(골목) 최소 간격 1.0 → 1.3칸
 def front(b):                                             # 정문 쪽 벽 앞 띠 — 랜드마크·창고는 여기에 어울리는 사물을 놓는다 (다른 건물·길·자리가 들어오면 안 된다)
     if b['t'] == 'house': return None
     x0, z0, x1, z1 = rect(b); s = b['doors'][0]; D = 1.5 if b['t'] == 'store' else 1.8
@@ -108,7 +112,7 @@ def bad(b, others):                                       # 이 건물 자리가
     for q in hills: v += max(0, 0.3 - gap(r, q))
     for p in M['paths']: v += max(0, G_R - rect_path(r, p))
     if not isgas(b):
-        for q in arects: v += max(0, G_A - gap(r, q))
+        for q in arects: v += max(0, (G_B if q in AREAS['gas'] else G_A) - gap(r, q))   # 주유소 둘레도 골목 폭만큼
     d = door_box(b); f = front(b)
     if f:
         for q in M['roads'] + M['rivers'] + hills + arects: v += max(0, 0.05 - gap(f, q))

@@ -734,6 +734,8 @@ from c91_patch import C91_R   # c91: 집 7채만 뺀 맵
 R += C91_R
 from c92_patch import C92_R   # c92: 레벨업 처음 7명
 R += C92_R
+from c93_patch import C93_R   # c93: 집 넓이 80% · 골목 넓힘
+R += C93_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
