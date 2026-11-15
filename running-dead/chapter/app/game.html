@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c81</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c82</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -834,6 +834,7 @@
   const CH_WHITE_OUT = 81, CH_YELLOW_OUT = 36;   // c48: 길거리 하양 · 노랑 (건물 안은 아래 표)
   const CH_RED_K = 0.9;                          // c59: 빨강(자경단) 10% 줄임 — 길거리 무리 · 건물 안 · 집 안 모두. 1 밑으로는 안 내려간다
   const chRedN = (k) => { const v = k * CH_RED_K, f = Math.floor(v); return Math.max(1, f + (Math.random() < v - f ? 1 : 0)); };   // 소수는 확률로 올림 (2명 → 80%는 2명, 20%는 1명)
+  const CH_YELLOW_UP = 1.1;                      // c82: 노랑 10% 더 (안·밖 모두)
   const CH_WHITE_GANG = 0.5;                     // c58: 길거리 하양 가운데 무리(2~3명)로 다니는 몫
   const CH_ONE_K = 1.1;                          // c57: 길거리에 혼자 다니는 사람 (하양 · 노랑 · 배회 경찰) 10% 더 — 무리는 그대로
   const CH_INSIDE = {                         // c48: 건물 안 인원 [종류, 최소, 최대] — '' 하양 · guard 노랑 · attacker 주황 · vig 빨강 · police 경찰 · soldier 군인
@@ -976,7 +977,7 @@
       const T = CH_INSIDE[B.type];
       if (T) {
         const list = [];
-        for (const [type, lo, hi] of T) { let k = R2(lo, hi); if (B.type !== 'store' && (type === '' || type === 'guard')) k = Math.round(k * 2 / 3);   /* c49: 랜드마크 하양·노랑 3분의 1 줄임 */ if (type === 'vig') k = chRedN(k);   /* c59: 빨강 10% 줄임 (1 밑으로는 안 내려간다) */ for (let i = 0; i < k; i++) list.push(type); }
+        for (const [type, lo, hi] of T) { let k = R2(lo, hi); if (B.type !== 'store' && (type === '' || type === 'guard')) k = Math.round(k * 2 / 3);   /* c49: 랜드마크 하양·노랑 3분의 1 줄임 */ if (type === 'guard') { const q = k * CH_YELLOW_UP; k = Math.floor(q) + (Math.random() < q - Math.floor(q) ? 1 : 0); }   /* c82: 건물 안 노랑 10% 더 (열 번에 한 번꼴로 한 명 더) */ if (type === 'vig') k = chRedN(k);   /* c59: 빨강 10% 줄임 (1 밑으로는 안 내려간다) */ for (let i = 0; i < k; i++) list.push(type); }
         for (const R of B.rooms || []) {        // c53: 방 안 — 그 건물 사람 중 몇 명 (없을 수도 있다). 경찰·저격수는 방에 안 들어간다. 철창엔 수감자 1명
           if (R.type === 'jail') { chPrisoner(R); continue; }
           const cap = Math.max(1, Math.floor((R.x1 - R.x0) * (R.z1 - R.z0) / 4.5)), pool = list.map((t, i) => i).filter((i) => list[i] !== null && list[i] !== 'police' && list[i] !== 'sniper');
@@ -999,8 +1000,8 @@
     }
     // c58: 처음 만나는 사람을 하양·노랑으로 맞추던 것(c55)을 뺐다 — 시작 자리 둘레도 다른 곳과 똑같이 놓는다
     const ys = [];
-    for (let k = 0; k < Math.round(CH_YELLOW_OUT * CH_ONE_K); k++) { const p = chOutSpot(ys, 1.2, 14); if (!p) continue; ys.push(p); chReg(chPut(p[0], p[1], chRoamArea(p[0], p[1]), 'guard'), 'guard'); }
-    const whiteOut = Math.round((CH_WHITE_OUT + houseOut) * 1.15 * CH_ONE_K);   // c54: 길거리 하양 15% 더 · c57: 10% 더
+    for (let k = 0, nY = Math.round((CH_YELLOW_OUT * CH_ONE_K + Math.round(CH_GANG / 5)) * CH_YELLOW_UP) - Math.round(CH_GANG / 5); k < nY; k++)   /* c82: 길거리 노랑(혼자 다니는 노랑 + 무리에 섞인 노랑) 10% 더 — 늘어난 몫은 혼자 다니는 노랑으로 */ { const p = chOutSpot(ys, 1.2, 14); if (!p) continue; ys.push(p); chReg(chPut(p[0], p[1], chRoamArea(p[0], p[1]), 'guard'), 'guard'); }
+    const whiteOut = Math.round((CH_WHITE_OUT + houseOut) * 1.15 * CH_ONE_K * 1.2);   /* c82: 길거리 하양 20% 더 */   // c54: 길거리 하양 15% 더 · c57: 10% 더
     // c58: 길거리 하양의 절반은 2~3명 무리 — 같은 자리를 쓰며 함께 돌아다닌다 (전체 수는 그대로, 무리끼리는 고르게 떨어뜨린다)
     let w = 0;
     { let left = Math.round(whiteOut * CH_WHITE_GANG); const wc = [];
@@ -6244,6 +6245,7 @@
     truck:   { name: '트럭',   kl: 1.58, kw: 1.36, hp: 1.8, mass: 2.2, col: [0x3b6fd4, 0xd97a1a, 0x4f8a3a, 0x8c8c8c, 0xb53a2e] },
     fire:    { name: '소방차', kl: 1.62, kw: 1.4, hp: 2.0, mass: 2.4, col: [0xd42a1e] },
     ambul:   { name: '구급차', kl: 1.3, kw: 1.3, hp: 1.3, mass: 1.4, col: [0xf6f6f4] },
+    moto:    { name: '오토바이', kl: 0.68, kw: 0.6, hp: 1.0, mass: 1.0, col: [0xd42a1e, 0x1e6fd4, 0x2b2c31, 0xe0b23c, 0x2f8a4a, 0xf0f0ee] },   // c82: 서 있기만 한다 — 무게·체력은 세단과 같고 크기만 작다
     cash:    { name: '현금 수송차', kl: 1.3, kw: 1.3, hp: 1.3, mass: 1.4, col: [0x55615a] },   // c80: 크기·체력·무게는 밴(구급차)과 똑같다 — 새로 지어내지 않는다
     parcel:  { name: '택배차', kl: 1.58, kw: 1.36, hp: 1.8, mass: 2.2, col: [0xd9a020, 0x2f6fb0, 0xc8452c] },   // c80: 크기·체력·무게는 트럭과 똑같다
   };
@@ -6261,8 +6263,13 @@
       rr(x0 + 14, y0 + 9, x1 - x0 - 32, y1 - y0 - 18, 6, mix(col, 0.16));
       g.fillStyle = GL2; g.fillRect(x1 - 15, y0 + 12, 4, y1 - y0 - 24);
     };
-    rr(2, 4, 252, 120, type === 'truck' || type === 'fire' || type === 'cash' || type === 'parcel' ? 10 : 24, '#0c0c0e');
-    if (type === 'truck') {
+    if (type !== 'moto') rr(2, 4, 252, 120, type === 'truck' || type === 'fire' || type === 'cash' || type === 'parcel' ? 10 : 24, '#0c0c0e');
+    if (type === 'moto') {                    // c82: 오토바이 — 바퀴 둘 · 몸통 · 연료통 · 안장 · 핸들 (바탕은 비운다)
+      rr(4, 32, 82, 64, 22, '#101013'); rr(174, 36, 78, 56, 22, '#101013');
+      rr(50, 22, 152, 84, 30, mix(col, 0)); rr(118, 32, 64, 64, 22, mix(col, 0.24)); rr(56, 34, 60, 60, 20, '#1b1b1f');
+      g.fillStyle = '#2c2c33'; g.fillRect(180, 4, 14, 120); rr(171, 0, 32, 20, 8, '#4a4a54'); rr(171, 108, 32, 20, 8, '#4a4a54');
+      rr(240, 50, 14, 28, 5, '#fff4b8'); rr(2, 54, 8, 20, 3, '#d02222');
+    } else if (type === 'truck') {
       rr(6, 8, 168, 112, 6, '#d6d6cf'); g.strokeStyle = 'rgba(0, 0, 0, 0.28)'; g.lineWidth = 3; for (let x = 28; x < 170; x += 24) { g.beginPath(); g.moveTo(x, 10); g.lineTo(x, 118); g.stroke(); }
       rr(180, 12, 70, 104, 12, mix(col, 0)); rr(200, 20, 34, 88, 8, GL); rr(206, 28, 14, 72, 4, mix(col, 0.16)); lamps(18, 90);
     } else if (type === 'fire') {
@@ -6426,7 +6433,10 @@
     }
     {                                          // c73: 주차된 차 5분의 1을 뺀다 — 아무 차나 (경찰차·군인차·소방차·구급차는 그대로 둔다)
       const all = cars.filter((c) => c.deco), pool = shuffle(all.filter((c) => c.civ && c.civ !== 'fire' && c.civ !== 'ambul'));
-      for (let i = 0, n = Math.min(pool.length, Math.round(all.length / 5)); i < n; i++) { const c = pool[i]; if (c.tag) chDeco.n[c.tag]--; chTrGone(c); }
+      const nCut = Math.min(pool.length, Math.round(all.length * (1 - 0.8 * 0.8)));   // c82: 20% 더 줄임
+      for (let i = 0; i < nCut; i++) { const c = pool[i]; if (c.tag) chDeco.n[c.tag]--; chTrGone(c); }
+      const rest = pool.slice(nCut);           // c82: 남은 민간 차 열 대에 한 대는 오토바이 (같은 자리 · 무게는 차와 같고 크기만 작다)
+      for (let i = 0, n = Math.round((all.length - nCut) * 0.1); i < n && i < rest.length; i++) { const c = rest[i], x = c.x, z = c.z, h = c.h, tag = c.tag; chTrGone(c); chDecoCar('moto', x, z, h).tag = tag; }
     }
     for (const b of bodies) {                  // 먼저 깔린 사람이 차 밑에 깔렸으면 차 옆으로 빼 준다
       if (b.kind !== 'citizen' || b.space) continue;
@@ -6614,7 +6624,7 @@
     chFurnPlan = [];
     for (const B of chFurnSpaces) chFurnOne(B);
     {                                          // c73: 5분의 1을 뺀다 — 아무거나 고르되, 탁자를 빼면 둘레 의자도, 책상을 빼면 그 앞 의자도 같이 뺀다
-      const P = chFurnPlan, want = Math.round(P.length / 5), idx = P.map((e, i) => i); let cut = 0;
+      const P = chFurnPlan, want = Math.round(P.length * (1 - 0.8 * 0.75))   /* c82: 25% 더 줄임 */, idx = P.map((e, i) => i); let cut = 0;
       for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)), q = idx[i]; idx[i] = idx[j]; idx[j] = q; }
       for (const i of idx) { if (cut >= want) break; const e = P[i]; if (e.cut) continue; const kids = P.filter((q) => q.dep === e && !q.cut); if (cut + 1 + kids.length > want + 1) continue; e.cut = true; for (const q of kids) q.cut = true; cut += 1 + kids.length; }
       for (const e of P) if (!e.cut) { if (e.slab) chAddSlab(e.type, e.x, e.z, e.h ? Math.PI / 2 : 0, e.S); else chAddProp(e.type, e.x, e.z).space = e.S; }

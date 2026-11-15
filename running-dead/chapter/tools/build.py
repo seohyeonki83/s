@@ -712,6 +712,8 @@ from c80_patch import C80_R   # c80: 물음표 수송차 · 운전자 성격과 
 R += C80_R
 from c81_patch import C81_R   # c81: 길거리 차 수·미는 힘 3분의 1 줄임 · 속도 20% 줄임
 R += C81_R
+from c82_patch import C82_R   # c82: 사물·주차된 차 줄임 · 길거리 하양·노랑 늘림 · 오토바이
+R += C82_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
