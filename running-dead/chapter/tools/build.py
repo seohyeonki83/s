@@ -754,6 +754,8 @@ from c101_patch import C101_R   # c101: 현금 수송차 탑승자
 R += C101_R
 from c102_patch import C102_R   # c102: 부활 체력 100%
 R += C102_R
+from c103_patch import C103_R   # c103: 경보 출동 빈도 15% 줄임
+R += C103_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
