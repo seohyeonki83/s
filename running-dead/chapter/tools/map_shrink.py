@@ -153,9 +153,9 @@ def solve():
         if not moved: break
 solve()
 houses = lambda: [b for b in top if b['t'] == 'house' and not b.get('garage') and not isgas(b) and not any(c.get('parent') == B.index(b) for c in B)]
-WANT = round(sum(1 for b in top if b['t'] == 'house' and not b.get('garage') and not isgas(b)) / 4)
+WANT = 12                                                 # c89: 27채의 4분의 1 = 7 · c107: 남은 20채의 4분의 1 = 5 더
 def free(b): return min([gap(rect(b), rect(o)) for o in top if o is not b] + [gap(rect(b), q) for q in arects])
-QUOTA = {0: 3, 1: 2, 2: 1, 3: 1}                          # 구역마다 고르게 (큰 구역 3·2, 작은 구역 1·1 = 7채)
+QUOTA = {0: 5, 1: 3, 2: 2, 3: 2}                          # c107: 4분의 1을 한 번 더 (20 → 15채)  — 전:                        # 구역마다 고르게 (큰 구역 3·2, 작은 구역 1·1 = 7채)
 while len(removed) < WANT:                                # 집을 4분의 1 뺀다 — 그 구역에서 자리가 가장 안 나오는 집부터, 다 풀렸으면 가장 끼어 있는 집
     hs = [b for b in houses() if QUOTA[b['zone']] > 0]
     pick = max(hs, key=lambda b: (bad(b, top), -free(b)))

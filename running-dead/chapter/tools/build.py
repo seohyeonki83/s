@@ -762,6 +762,8 @@ from c105_patch import C105_R   # c105: 덩치 무게 +2
 R += C105_R
 from c106_patch import C106_R   # c106: 덩치 무게 11 · 얻은 덩치 체력 570
 R += C106_R
+from c107_patch import C107_R   # c107: 집 15채 · 열린 집
+R += C107_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
