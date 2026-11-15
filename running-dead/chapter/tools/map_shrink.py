@@ -63,16 +63,24 @@ M['cross']['ends'] = [[zi, sd, round(fz(c) if sd in 'EW' else fx(c), 3), o] for 
 
 # ── 건물 ──
 B = M['b']; TR = []
+AK = math.sqrt(0.85)                                      # c95: 모든 건물 넓이를 15% 더 줄인다 (한 변 0.922배. 랜드마크·방 포함, 주유소 사무실만 그대로)
 HK = math.sqrt(0.8)                                       # c93: 집은 넓이 80% (한 변 0.894배) — 차고·주유소 사무실은 그대로. 한 변이 4.4칸보다 짧아지지는 않게 (문 폭 3.4칸)
 for b in B:
     if b['t'] == 'house' and not b.get('garage') and not any(abs(b['x'] - x) < 0.6 and abs(b['z'] - z) < 0.6 for x, z in GAS_HOUSES) and not any(c.get('parent') == B.index(b) for c in B):
-        b['w'] = round(max(min(b['w'], 4.0), b['w'] * HK), 2); b['d'] = round(max(min(b['d'], 4.0), b['d'] * HK), 2)
+        b['w'] = round(max(min(b['w'], 3.6), b['w'] * HK * AK), 2); b['d'] = round(max(min(b['d'], 3.6), b['d'] * HK * AK), 2)
+    elif b['t'] in ('store', 'conv') or b.get('garage'):   # c95: 창고·편의점·차고도 15%
+        b['w'] = round(max(min(b['w'], 3.6), b['w'] * AK), 2); b['d'] = round(max(min(b['d'], 3.6), b['d'] * AK), 2)
 LK = math.sqrt(0.75)                                    # 랜드마크(창고·집·편의점 빼고)는 넓이를 4분의 3으로 — 한 변 0.866배. 방은 크기 그대로, 붙어 있던 벽에 그대로 붙인다
 for i, b in enumerate(B):
     if b['t'] not in ('army', 'fire', 'mart', 'gym', 'bank', 'hospital', 'library', 'police'): continue
-    ow, od = b['w'], b['d']; b['w'], b['d'] = round(ow * LK, 2), round(od * LK, 2)
+    ow, od = b['w'], b['d']; b['w'], b['d'] = round(ow * LK * AK, 2), round(od * LK * AK, 2)
     for c in B:
         if c.get('parent') != i: continue
+        cw, cd = c['w'], c['d']; c['w'], c['d'] = round(cw * AK, 2), round(cd * AK, 2)   # 방도 15% (벽에 붙은 쪽은 그대로 붙게 가운데를 옮긴다)
+        for ax, o_, n_ in (('x', cw, c['w']), ('z', cd, c['d'])):
+            lo, hi = c[ax] - o_ / 2, c[ax] + o_ / 2; pc, ph = b[ax], (ow if ax == 'x' else od) / 2
+            if abs(lo - (pc - ph)) < 0.06: c[ax] = round(lo + n_ / 2, 2)
+            elif abs(hi - (pc + ph)) < 0.06: c[ax] = round(hi - n_ / 2, 2)
         for ax, sz, o, n in (('x', 'w', ow, b['w']), ('z', 'd', od, b['d'])):
             c0, c1 = c[ax] - c[sz] / 2, c[ax] + c[sz] / 2
             if abs(c0 - (b[ax] - o / 2)) < 0.06: c[ax] = round(b[ax] - n / 2 + c[sz] / 2, 2)
@@ -99,7 +107,7 @@ DOORD = 2.4
 def door_box(b):
     x0, z0, x1, z1 = rect(b); s = b['doors'][0]; cx, cz = b['x'], b['z']
     return dict(n=[cx - 1.9, z0 - DOORD, cx + 1.9, z0], s=[cx - 1.9, z1, cx + 1.9, z1 + DOORD], w=[x0 - DOORD, cz - 1.9, x0, cz + 1.9], e=[x1, cz - 1.9, x1 + DOORD, cz + 1.9])[s]
-G_B, G_R, G_A = 1.3, 0.3, 0.4                               # c93: 건물 사이(골목) 최소 간격 1.0 → 1.3칸
+G_B, G_R, G_A = 2.1, 0.3, 0.4                               # c93: 건물 사이(골목) 최소 간격 1.0 → 1.3칸
 def front(b):                                             # 정문 쪽 벽 앞 띠 — 랜드마크·창고는 여기에 어울리는 사물을 놓는다 (다른 건물·길·자리가 들어오면 안 된다)
     if b['t'] == 'house': return None
     x0, z0, x1, z1 = rect(b); s = b['doors'][0]; D = 1.5 if b['t'] == 'store' else 1.8
@@ -147,14 +155,14 @@ solve()
 houses = lambda: [b for b in top if b['t'] == 'house' and not b.get('garage') and not isgas(b) and not any(c.get('parent') == B.index(b) for c in B)]
 WANT = round(sum(1 for b in top if b['t'] == 'house' and not b.get('garage') and not isgas(b)) / 4)
 def free(b): return min([gap(rect(b), rect(o)) for o in top if o is not b] + [gap(rect(b), q) for q in arects])
-while len(removed) < WANT:                                # 집을 4분의 1 뺀다 — 자리가 안 나오는 집부터, 그 다음엔 걸리는 건물 옆의 집, 다 풀렸으면 가장 끼어 있는 집
-    worst = max(top, key=lambda b: bad(b, top)); w = bad(worst, top)
-    cand = [b for b in houses() if bad(b, top) > 1e-6]
-    pick = max(cand, key=lambda b: bad(b, top)) if cand else min(houses(), key=(lambda h: gap(rect(h), rect(worst))) if w > 1e-6 else free)
-    top.remove(pick); removed.append(pick); print('remove', pick['t'], pick['zone'], round(w, 2), flush=True); solve()
+QUOTA = {0: 3, 1: 2, 2: 1, 3: 1}                          # 구역마다 고르게 (큰 구역 3·2, 작은 구역 1·1 = 7채)
+while len(removed) < WANT:                                # 집을 4분의 1 뺀다 — 그 구역에서 자리가 가장 안 나오는 집부터, 다 풀렸으면 가장 끼어 있는 집
+    hs = [b for b in houses() if QUOTA[b['zone']] > 0]
+    pick = max(hs, key=lambda b: (bad(b, top), -free(b)))
+    QUOTA[pick['zone']] -= 1; top.remove(pick); removed.append(pick); print('remove', pick['t'], pick['zone'], round(bad(pick, top), 2), flush=True); solve()
 for extra in range(6):                                    # 그래도 길·건물과 겹치는 것이 남으면 — 빼지 않고 같은 구역의 빈 땅을 찾아 옮긴다 (가장 가까운 데로). 정말 없을 때만 집을 뺀다
     worst = max(top, key=lambda b: bad(b, top)); w = bad(worst, top)
-    if w <= 0.05: break
+    if w <= 0.25: break
     ox, oz, ozn = worst['x'], worst['z'], worst['zone']; best = None
     for zi in [ozn] + ([k for k in range(4) if k != ozn] if worst['t'] == 'house' else []):   # 집은 제 구역에 자리가 없으면 다른 구역으로
         zr = M['zones'][zi]; worst['zone'] = zi
