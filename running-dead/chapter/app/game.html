@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c97</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c98</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -884,6 +884,7 @@
   const chSight0 = (c) => c.soft ? c.sight / CH_SOFT_SIGHT : c.sight;   // 줄이기 전 시야 (돈다발용)
   function chSoftOff(c) { if (c.soft) { c.soft = false; c.sight /= CH_SOFT_SIGHT; } }   // 빨강·분홍이 되면 되돌린다
   function chPut(x, z, area, type, B) {
+    if (Math.random() < 0.1) type = type === 'guard' ? '' : type === 'attacker' ? 'guard' : type === 'vig' ? 'attacker' : type;   // c98: 열에 하나는 한 단계 약한 색으로 (노랑 → 하양 · 주황 → 노랑 · 빨강 → 주황)
     const c = addCitizen(x, z, area, type === 'vig' ? 'attacker' : type);
     if (type === 'police') { c.post = area; c.area = area; }     // 배회 경찰 = 자기 자리 둘레를 돈다 (c56: 만들 때 자리가 다른 네모로 바뀌어서 경찰만 안 돌아다녔다 — 같은 자리로 맞춘다)
     if (type === 'vig') chVig(c);
@@ -950,7 +951,7 @@
   function chPopulate() {
     chPopReset();
     const placed = [];
-    for (let k = 0; k < Math.round(CH_COPS * CH_ONE_K); k++) { const p = chOutSpot(placed, 1.2, 18); if (!p) continue; placed.push(p); chReg(chPut(p[0], p[1], chRoamArea(p[0], p[1]), 'police'), 'police'); }
+    for (let k = 0; k < Math.round(CH_COPS * CH_ONE_K * 0.8); k++)   /* c98: 길거리 경찰 5분의 1 줄임 */ { const p = chOutSpot(placed, 1.2, 18); if (!p) continue; placed.push(p); chReg(chPut(p[0], p[1], chRoamArea(p[0], p[1]), 'police'), 'police'); }
     // 무리: 주황·빨강 각 48 — 2~4명 무리로 쪼갠다. 섞인 5명 무리 2개 (주황 2 + 빨강 3, 주황 3 + 빨강 2)
     // c44: 무리 세 가지 — 주황만 (2~4) · 빨강만 (2~4) · 섞인 무리 (4~6, 둘 다 2명 이상). 섞인 무리에 주황·빨강 각 3분의 1쯤
     const groups = [];

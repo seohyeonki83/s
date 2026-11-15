@@ -744,6 +744,8 @@ from c96_patch import C96_R   # c96: 레벨업 1.2배씩
 R += C96_R
 from c97_patch import C97_R   # c97: 노랑·주황·빨강 체력 10% 줄임
 R += C97_R
+from c98_patch import C98_R   # c98: 길거리 경찰 줄임 · 색 한 단계씩 10%
+R += C98_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
