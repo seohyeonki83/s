@@ -722,6 +722,8 @@ from c85_patch import C85_R   # c85: 마을 꾸미기 (공원·주유소·농구
 R += C85_R
 from c86_patch import C86_R   # c86: 사물·차 통일 규칙 · 경보단계 조건 2배 · 포인트 군집 · 자폭 점수
 R += C86_R
+from c87_patch import C87_R   # c87: 내가 치는 차도 동료를 부른다
+R += C87_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c86</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c87</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4961,7 +4961,7 @@
     }
     if (CHAPTER && !z.space) {               // c69: 꾸밈 차 — 나는 손 닿는 차(와 이미 때리던 차)만, 동료는 내가 때리는 차만
       for (const o of chDecoObjs) {   // c85: 서 있는 민간 차도 경찰차와 똑같은 규칙 — 나는 인지거리, 동료는 근접 거리의 1.5배 안 (내가 때리는 차는 인지거리) · 한 대에 동료 3명까지
-        if (o.dead) continue; const lim = chReach(z);   /* c86 */ if (Math.abs(o.car.x - z.foot.x) > lim + 3 || Math.abs(o.car.z - z.foot.z) > lim + 3) continue;
+        if (o.dead) continue; const lim = chObjLim(z, o);   /* c86 · c87 */ if (Math.abs(o.car.x - z.foot.x) > lim + 3 || Math.abs(o.car.z - z.foot.z) > lim + 3) continue;
         const g = objGap(o, z); if (g > lim || (g >= bd && g >= ad)) continue; const [px, pz] = objPoint(o, z); if (blocked(z.foot.x, z.foot.z, px, pz)) continue;
         if (g < ad) { ad = g; any = o; } const n = (objCrowd.get(o) || 0) - (z.objC === o ? 1 : 0); if (g < bd && (CHAPTER || z === me || n < CROWD_MAX)) { bd = g; best = o; } }
     }
@@ -7616,7 +7616,7 @@
   const CH_BOMB_PT = [0, 1, 3, 4, 6, 8, 40];   // 자폭 점수 (chTier 순서): 하양 0 · 노랑 1 · 주황 3 · 빨강 4 · 경찰 6 · 군인 8 · 저격수 40
   const CH_HIT_STOP = 0.05;                    // 가면서 칠 때 휘두르는 순간 서는 시간 (초)
   function chReach(z) { return MELEE - RADIUS + Math.max(0, (z.r || BODY) - BODY); }   // 사물 겉면까지 공격 거리
-  function chObjLim(z, o) { return o.type === 'door' && z !== me && hotObj(o) ? 4 * MELEE : chReach(z); }   // 내가 치는 문만 공격 거리 4배 안 동료를 부른다
+  function chObjLim(z, o) { return (o.type === 'door' || o.type === 'car') && z !== me && hotObj(o) ? 4 * MELEE : chReach(z); }   /* c87: 차도 */   // 내가 치는 문만 공격 거리 4배 안 동료를 부른다
   function chTouch(z) {                        // 지금 손 닿는 것 하나 (차·문·바리케이트 → 금고 → 둥근·네모 사물)
     const o = nearObj(z); if (o && objGap(o, z) <= chReach(z)) return o;
     const s = nearSafe(z); if (s && Math.hypot(s.foot.x - z.foot.x, s.foot.z - z.foot.z) - s.r <= MELEE) return s;
