@@ -704,6 +704,8 @@ from c76_patch import C76_R   # c76: 차 무게 최소 = 경찰차 · 편의점 
 R += C76_R
 from c77_patch import C77_R   # c77: 차 크기 등급 · 체력 높은 사물 20% 깎음
 R += C77_R
+from c78_patch import C78_R   # c78: 사람은 평소 도로를 피한다 · 도망·싸움 중엔 차에 치인다
+R += C78_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
