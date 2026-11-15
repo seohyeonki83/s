@@ -726,6 +726,8 @@ from c87_patch import C87_R   # c87: 내가 치는 차도 동료를 부른다
 R += C87_R
 from c88_patch import C88_R   # c88: 수비대 인원 · 바리케이트 한계
 R += C88_R
+from c89_patch import C89_R   # c89: 줄인 맵
+R += C89_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

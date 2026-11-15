@@ -14,11 +14,19 @@ def mk(x0, z0, x1, z1, **k):
     d = dict(x=round((x0 + x1) / 2, 2), z=round((z0 + z1) / 2, 2), w=round(x1 - x0, 2), d=round(z1 - z0, 2), kinds={}, local=0, block=-1, t='house', sideK=0); d.update(k); return d
 
 # ── 1. 주유소: 집 12 (구역 0) · 집 34·35 (구역 1)를 치운다 ──
-def find(t, x, z): return next(i for i, b in enumerate(B) if b['t'] == t and abs(b['x'] - x) < 0.6 and abs(b['z'] - z) < 0.6)
+TRM = M.pop('_tr', None); NEWA = M.pop('_areas', None)       # c89: 줄인 맵 (map_shrink.py) — 건물의 옛 자리 → 새 자리, 새 자리 네모들
+def find(t, x, z):
+    if TRM: x, z = next((q[2], q[3]) for q in TRM if abs(q[0] - x) < 0.6 and abs(q[1] - z) < 0.6)
+    return next(i for i, b in enumerate(B) if b['t'] == t and abs(b['x'] - x) < 0.6 and abs(b['z'] - z) < 0.6)
 i12, i34, i35 = find('house', -46.66, 37.26), find('house', 26.83, 17.95), find('house', 27.95, 24.2)
 # 사무실은 어느 변이든 4칸 이상 (문 폭이 3.4칸이라 그보다 짧은 벽은 문 양옆 벽 토막이 0이 돼서 벽 부딪힘 계산이 깨진다)
 GAS = [dict(zone=0, r=[-50.5, 33.6, -40.0, 44.1], off=[-50.2, 40.0, -45.2, 44.0], door='e', can=[-48.3, 34.4, -40.6, 39.6], isl=[-46.3, -42.6], iz=37.0, sign=[-40.7, 43.4], yardp=[('tires', -41.85, 43.4), ('bin', -41.9, 40.75), ('drum', -41.45, 41.95), ('cone', -49.3, 34.9), ('cone', -49.3, 36.3)]),
        dict(zone=1, r=[23.3, 17.8, 33.0, 27.5], off=[23.6, 18.0, 28.6, 22.0], door='e', can=[25.0, 22.35, 32.4, 27.2], isl=[27.0, 30.6], iz=24.78, sign=[32.4, 18.5], yardp=[('tires', 32.3, 19.6), ('drum', 32.55, 20.72), ('bin', 23.95, 22.7), ('cone', 24.05, 24.2), ('cone', 24.05, 25.6)])]
+if NEWA:                                                  # 주유소는 통째로 옮긴다
+    for G, nr in zip(GAS, NEWA['gas']):
+        dx, dz = nr[0] - G['r'][0], nr[1] - G['r'][1]; sh = lambda r: [round(r[0] + dx, 2), round(r[1] + dz, 2), round(r[2] + dx, 2), round(r[3] + dz, 2)]
+        G['r'] = sh(G['r']); G['off'] = sh(G['off']); G['can'] = sh(G['can']); G['isl'] = [round(v + dx, 2) for v in G['isl']]; G['iz'] = round(G['iz'] + dz, 2); G['sign'] = [round(G['sign'][0] + dx, 2), round(G['sign'][1] + dz, 2)]
+        G['yardp'] = [(t, round(px + dx, 2), round(pz + dz, 2)) for t, px, pz in G['yardp']]
 B[i12] = mk(*GAS[0]['off'], doors=[GAS[0]['door']], zone=0, local=B[i12]['local'], gas=1, sideK=1)   # 쪽문은 남쪽 벽 (주유기 반대쪽)
 B[i34] = mk(*GAS[1]['off'], doors=[GAS[1]['door']], zone=1, local=B[i34]['local'], gas=1)
 del B[i35]
@@ -30,9 +38,14 @@ for b in B:                                               # 방(부모 번호)·
 AREAS = []
 for G in GAS: AREAS.append(dict(k='gas', r=G['r'], can=G['can'], isl=G['isl'], iz=G['iz'], zone=G['zone']))
 PARKS = [dict(k='park', r=[-61.5, 8.4, -40.5, 17.8], zone=0, v='fountain', gate='e'), dict(k='park', r=[41.0, 3.6, 61.5, 13.6], zone=1, v='statue', gate='w')]
+if NEWA:
+    for P_, nr in zip(PARKS, NEWA['park']): P_['wk'] = (nr[2] - nr[0]) / (P_['r'][2] - P_['r'][0]); P_['r'] = nr
 AREAS += PARKS
 COURT = dict(k='court', r=[18.5, -65.6, 28.5, -56.2], zone=3); AREAS.append(COURT)
+if NEWA: COURT['r'] = NEWA['court'][0]
 SITES = [dict(k='site', r=[-32.5, 48.7, -23.2, 56.9], zone=0), dict(k='site', r=[24.2, 47.4, 32.5, 55.5], zone=1), dict(k='site', r=[-50.0, -56.5, -40.5, -47.3], zone=2), dict(k='site', r=[52.0, -61.2, 61.5, -55.6], zone=3)]
+if NEWA:
+    for S_, nr in zip(SITES, NEWA['site']): S_['r'] = nr
 AREAS += SITES
 # 공터: 자리가 들어선 곳은 지우거나 줄인다
 def cut_lot(l, a):                                        # 공터 l 에서 네모 a 와 겹치는 쪽을 잘라 낸다 (남는 쪽이 큰 것 하나만)
@@ -134,7 +147,7 @@ def by_door(b, typ, sd):                                   # 정문 바로 옆 (
 SPOTS, FUEL = [], []
 for G in GAS:
     A = next(a for a in AREAS if a['k'] == 'gas' and a['zone'] == G['zone']); c = G['can']
-    for px, pz in ((c[0] + .35, c[1] + .35), (c[2] - .35, c[1] + .35), (c[0] + .35, c[3] - .35), (c[2] - .35, c[3] - .35)): force('pillar', px, pz)
+    for px, pz in ((c[0] + .35, c[1] + .7), (c[2] - .35, c[1] + .7), (c[0] + .35, c[3] - .7), (c[2] - .35, c[3] - .7)): force('pillar', px, pz)   # c89: 기둥을 지붕 안쪽으로 (사무실 벽과 기둥 사이에 몸이 끼지 않게 — 틈 1칸 이상)
     for ix in G['isl']:
         force('pump', ix, G['iz'] - 0.85); force('pump', ix, G['iz'] + 0.85)
     force('gsign', *G['sign'])
@@ -147,15 +160,15 @@ for G in GAS:
 
 # ── 5. 공원 ──
 for P in PARKS:
-    x0, z0, x1, z1 = P['r']; cx, cz = (x0 + x1) / 2, (z0 + z1) / 2
+    x0, z0, x1, z1 = P['r']; cx, cz = (x0 + x1) / 2, (z0 + z1) / 2; wk = P.get('wk', 1); hk = min(1, (z1 - z0) / 9.4)
     force(P['v'], cx, cz - 0.2)
-    for bx, bz in ((cx - 3.6, cz - 2.9), (cx + 3.6, cz - 2.9), (cx - 3.6, cz + 3.0), (cx + 3.6, cz + 3.0)): put('bench', bx, bz, area=P)
-    for lx, lz in ((cx - 6.2, z0 + 0.7), (cx + 6.2, z0 + 0.7), (cx - 6.2, z1 - 0.7), (cx + 6.2, z1 - 0.7)):
+    for bx, bz in ((cx - 3.6 * wk, cz - 2.9 * hk), (cx + 3.6 * wk, cz - 2.9 * hk), (cx - 3.6 * wk, cz + 3.0 * hk), (cx + 3.6 * wk, cz + 3.0 * hk)): put('bench', bx, bz, area=P)
+    for lx, lz in ((cx - 6.2 * wk, z0 + 0.7), (cx + 6.2 * wk, z0 + 0.7), (cx - 6.2 * wk, z1 - 0.7), (cx + 6.2 * wk, z1 - 0.7)):
         if not put('lamp', lx, lz, area=P): put('lamp', lx + 1.6, lz + (1.6 if lz < cz else -1.6), area=P)
     sg = 1 if P['gate'] == 'e' else -1                    # 큰길 쪽 (들머리)
     ex = x1 if sg > 0 else x0
     put('vending', ex - sg * 1.0, z0 + 1.0, area=P); put('booth', ex - sg * 1.0, z1 - 1.0, area=P); put('bin', ex - sg * 2.3, z0 + 0.7, area=P)
-    bx = cx - sg * 6.6                                    # 버스킹: 들머리 반대쪽 잔디밭 — 하양(기타) + 앰프, 둘레에 하양·노랑
+    bx = cx - sg * 6.6 * wk                                    # 버스킹: 들머리 반대쪽 잔디밭 — 하양(기타) + 앰프, 둘레에 하양·노랑
     put('amp', bx - sg * 0.2, cz - 1.0, area=P); put('bench', bx - sg * 2.6, z1 - 1.2, area=P); put('bin', bx - sg * 3.2, z0 + 0.7, area=P)
     SPOTS.append(dict(k='busker', zone=P['zone'], at=[round(bx - sg * 0.9, 2), round(cz - 0.2, 2)], tool='guitar', mix=[['', 1, 1]]))
     SPOTS.append(dict(k='crowd', zone=P['zone'], ring=[round(bx - sg * 0.9, 2), round(cz - 0.2, 2), 2.2, 3.7, sg], mix=[['', 3, 4], ['guard', 2, 3]]))
