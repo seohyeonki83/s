@@ -788,6 +788,8 @@ from c118_patch import C118_R   # c118: 특수부대 첫 출동 앞당김
 R += C118_R
 from c119_patch import C119_R   # c119: 건물 찾기 격자 NaN 방어
 R += C119_R
+from c120_patch import C120_R   # c120: 맵 선택 · 테이저건 우선순위
+R += C120_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
