@@ -702,6 +702,8 @@ from c75_patch import C75_R   # c75: 5명·4명 무리에서도 빨강 한 명�
 R += C75_R
 from c76_patch import C76_R   # c76: 차 무게 최소 = 경찰차 · 편의점 경찰 · 길거리 주황 5분의 1은 노랑
 R += C76_R
+from c77_patch import C77_R   # c77: 차 크기 등급 · 체력 높은 사물 20% 깎음
+R += C77_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

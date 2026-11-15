@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c76</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c77</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6224,13 +6224,13 @@
   }
   // ── c69: 차종 — 길이·폭·체력·무게 = 경찰차(2.02 × 1.08칸 · 체력 459 · 무게 1)의 몇 배 ──
   const CH_CAR = {
-    compact: { name: '소형차', kl: 0.82, kw: 0.9,  hp: 0.8, mass: 1, col: [0xe9e9e4, 0x3f7fd9, 0xe0b23c, 0x4fa35a, 0xc94a3a, 0x8d6fc4, 0x2e2e33] },
+    compact: { name: '소형차', kl: 0.9, kw: 0.94, hp: 0.8, mass: 1, col: [0xe9e9e4, 0x3f7fd9, 0xe0b23c, 0x4fa35a, 0xc94a3a, 0x8d6fc4, 0x2e2e33] },
     sedan:   { name: '세단',   kl: 1.0,  kw: 1.0,  hp: 1.0, mass: 1.0, col: [0x2b2c31, 0xf0f0ee, 0x9097a1, 0x24508a, 0x7c2323, 0x4b5a3a] },
-    sports:  { name: '스포츠카', kl: 1.06, kw: 0.96, hp: 0.8, mass: 1, col: [0xe22828, 0xf5c518, 0x1e9cf0, 0xff6a13, 0x16161a] },
-    van:     { name: '밴',     kl: 1.22, kw: 1.1,  hp: 1.3, mass: 1.4, col: [0xf4f4f2, 0x9aa3ad, 0x2f5d50, 0x374a7a, 0x6b4a2e] },
-    truck:   { name: '트럭',   kl: 1.58, kw: 1.2,  hp: 1.8, mass: 2.2, col: [0x3b6fd4, 0xd97a1a, 0x4f8a3a, 0x8c8c8c, 0xb53a2e] },
-    fire:    { name: '소방차', kl: 1.62, kw: 1.25, hp: 2.0, mass: 2.4, col: [0xd42a1e] },
-    ambul:   { name: '구급차', kl: 1.25, kw: 1.12, hp: 1.3, mass: 1.4, col: [0xf6f6f4] },
+    sports:  { name: '스포츠카', kl: 1.0, kw: 1.0, hp: 0.8, mass: 1, col: [0xe22828, 0xf5c518, 0x1e9cf0, 0xff6a13, 0x16161a] },
+    van:     { name: '밴',     kl: 1.3, kw: 1.3, hp: 1.3, mass: 1.4, col: [0xf4f4f2, 0x9aa3ad, 0x2f5d50, 0x374a7a, 0x6b4a2e] },
+    truck:   { name: '트럭',   kl: 1.58, kw: 1.36, hp: 1.8, mass: 2.2, col: [0x3b6fd4, 0xd97a1a, 0x4f8a3a, 0x8c8c8c, 0xb53a2e] },
+    fire:    { name: '소방차', kl: 1.62, kw: 1.4, hp: 2.0, mass: 2.4, col: [0xd42a1e] },
+    ambul:   { name: '구급차', kl: 1.3, kw: 1.3, hp: 1.3, mass: 1.4, col: [0xf6f6f4] },
   };
   const CH_CAR_MIX = [['compact', 30], ['sedan', 34], ['sports', 8], ['van', 17], ['truck', 11]];   // 길에서 보이는 비율
   const chCarPick = () => { let r = Math.random() * 100; for (const [k, w] of CH_CAR_MIX) if ((r -= w) < 0) return k; return 'sedan'; };
@@ -6460,6 +6460,7 @@
   };
   for (const S of Object.values(CH_SLAB)) S.tex = chTexOf(S.px[0], S.px[1], S.draw);
   const CH_SLAB_MASS = CAR_MASS * 2 / 3 / 3, CH_SLAB_HP = MY_DAMAGE * 9.5 / 3;   // 큰 탁자 = 경찰차의 1/3 (본게임 그대로)
+  const CH_FURN_CUT = 0.8;                    // c77: 체력이 높은 사물은 20% 깎는다
   const chProps = [], chSlabs = [];
   let chFurnT = 0, chFurnN = {}, chFurnPlan = null;   // chFurnPlan = 놓기로 한 것들 (c73: 만들기 전에 5분의 1을 뺀다)
   function chAddProp(type, x, z) {             // 본게임 addProp 그대로 — 종류만 늘렸다
@@ -6467,7 +6468,7 @@
     b.mesh.material.dispose();
     b.mesh.geometry = P.geo; b.mesh.material = new THREE.MeshBasicMaterial({ map: P.tex, color: 0xffffff, transparent: true, depthTest: false, depthWrite: false });
     b.prop = type; b.fixed = false; b.force = P.f; b.r = P.r; b.halfH = P.h / 2;
-    b.hp = b.maxHp = MY_DAMAGE * P.hits; b.sleep = true;
+    b.hp = b.maxHp = MY_DAMAGE * P.hits * (P.hits >= 4 ? CH_FURN_CUT : 1); b.sleep = true;   /* c77: 4대 이상짜리(옷장·사물함·냉장고·샌드백·덤벨 거치대·현금인출기·자판기)만 */
     addHpBar(b, hpFoeMat);
     chProps.push(b); chFurnN[type] = (chFurnN[type] || 0) + 1;
     return b;
@@ -6476,7 +6477,7 @@
     const D = CH_SLAB[type], m = new THREE.Mesh(new THREE.PlaneGeometry(D.L, D.W).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: D.tex, transparent: true, depthTest: false, depthWrite: false }));
     m.renderOrder = -0.6; m.position.set(x, 0.04, z); m.rotation.y = -h; scene.add(m);   // 지붕(-0.46)·어둠(-0.52) 밑 — 지붕이 덮여 있으면 안 보이고, 시야 밖이면 어둡게 보인다
     const t = { room: S, B: S, x, z, h, L: D.L, W: D.W, m, type, mass: CH_SLAB_MASS * D.mass };
-    t.obj = { kind: 'obj', type: 'table', t, B: S, foot: new THREE.Vector3(x, 0, z), hp: CH_SLAB_HP * D.hp, maxHp: CH_SLAB_HP * D.hp, dead: false };
+    t.obj = { kind: 'obj', type: 'table', t, B: S, foot: new THREE.Vector3(x, 0, z), hp: CH_SLAB_HP * D.hp * (D.hp >= 1.2 ? CH_FURN_CUT : 1), maxHp: CH_SLAB_HP * D.hp * (D.hp >= 1.2 ? CH_FURN_CUT : 1), dead: false };   /* c77: 1.2배 이상짜리(책장·냉장 진열대·계산대)만 */
     addHpBar(t.obj, hpFoeMat); objs.push(t.obj);
     chSlabs.push(t); S.fs.push(t); chFurnN[type] = (chFurnN[type] || 0) + 1;
     return t;
