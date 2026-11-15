@@ -772,6 +772,8 @@ from c110_patch import C110_R   # c110: 주유소 지붕 없앰 · 시작 하양
 R += C110_R
 from c111_patch import C111_R   # c111: 주유소 기둥 없앰
 R += C111_R
+from c112_patch import C112_R   # c112: 사물에서 하트·유전자 안 나옴
+R += C112_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

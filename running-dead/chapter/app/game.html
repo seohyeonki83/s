@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c111</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c112</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6799,7 +6799,7 @@
     me.hp = Math.min(me.maxHp, me.hp + me.maxHp * 0.3);   /* c108: 30% */
     for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; puff(me.foot.x, 0.8, me.foot.z, i % 2 ? 0xff5577 : 0x6dff9a, 0.5, 1.6, 0.6, Math.cos(a) * 2.2, 1.2, Math.sin(a) * 2.2, 0.9); }
   }
-  const CH_HEART_P = 1 / 20, CH_GENE_P = 1 / 20;   // c108: 사물이 부서질 때 하트 20분의 1 · 유전자 20분의 1 (어느 사물이든)
+  const CH_HEART_P = 0, CH_GENE_P = 0;   /* c112: 사물에서는 아무것도 안 나온다 */   // c108: 사물이 부서질 때 하트 20분의 1 · 유전자 20분의 1 (어느 사물이든)
   function chFurnBreak(x, z, D, space, n, size) {   // 먼지 + 조각 · 보관함이면 50번에 한 번 하트
     dust(x, z, Math.round(n * 0.8), 1.2); debris(x, z, n, CH_BITS[D.bits], size, 5.8);
     if (Math.random() < CH_HEART_P) chHeartDrop(x, z, space);
