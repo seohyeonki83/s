@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c99</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c100</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -346,7 +346,7 @@
   const STAR_MAX = 5;
   const STAR_BASE = 10, STAR_GROW = 2.1;   /* v395: 10명 시작 · 2.1배 → 누적 [10, 31, 75, 168, 362] */   // 별 사이에 더 필요한 감염 수가 2.5배씩 늘어난다: +5, +12.5, +31, +78, +195 (v135)
   const STAR_AT = (() => { let t = 0, d = STAR_BASE; return Array.from({ length: 5 }, () => { t += d; d *= STAR_GROW; return Math.round(t); }); })();   // [5, 18, 49, 127, 322]
-  for (let i = 1; i < STAR_AT.length; i++) STAR_AT[i] = Math.round(STAR_AT[i] * 2 * 1.3);   /* c99: 1.3배 더 → [10, 81, 195, 437, 941] */   // c86: [10, 62, 150, 336, 724]
+  for (let i = 1; i < STAR_AT.length; i++) STAR_AT[i] = Math.round(STAR_AT[i] * 2 * 1.3 * 1.05);   /* c100: 5% 더 → [10, 85, 205, 459, 988] */   /* c99: 1.3배 더 → [10, 81, 195, 437, 941] */   // c86: [10, 62, 150, 336, 724]
   const TEAM_COMP = { 2: ['sniper', 'soldier', 'soldier', 'soldier', 'sniper', 'soldier', 'soldier', 'soldier'], 1: ['sniper', 'soldier', 'soldier', 'sniper', 'soldier', 'soldier', 'sniper', 'soldier', 'soldier'] };   /* v474: 1팀 = 분대 셋 (저격수 1 + 군인 2씩, 10초 간격), 군인차 한 대 = 저격수 2 + 군인 3씩 */   /* v458: 분대마다 군인 한 명씩 줄임 — 1단계 저격수 1 + 군인 2 (×2), 2단계 군인차 한 대에 저격수 1 + 군인 3 */   /* v426: 1팀 = 저격수 2 + 군인 6 (저격수 하나에 군인 셋씩) */   /* v418: 1팀 = 저격수 2 + 군인 4 (저격수 하나에 군인 둘씩) */   // v410: 군인팀 구성 — 1팀 = 군인 2 + 저격수 1 (2~4팀은 아직 미정 → 그 차례엔 안 나온다)
   const TEAM_EVENTS = (() => {               // v410: 군인팀 출동 시점 = 경보 3단계(개판)부터 단계마다 도달할 때 + 다음 단계와의 중간 (데프콘 뒤로도 2.1배씩 계속)
     const th = []; let t = 0, d = STAR_BASE;
@@ -4605,7 +4605,7 @@
     crowbar: { icon: IC.crowbar, name: '빠루', passive: true },     // v275: 내가 건물·사물에 입히는 피해 +25%
     book: { icon: IC.book, name: '백과사전', passive: true },      // v286: 권총 대신 — 사용 도구 쿨타임 7% 줄임 (장비 강화마다 3%씩 더)
     stim: { icon: IC.stim, name: '스팀팩', passive: true },
-    revive: { icon: IC.revive, name: '부활', passive: true },   // v375: 죽으면 체력 가득으로 되살아난다 (1번, 쿨타임 60초)   // v369: 깃발 대신 — 근접 거리 안 동료 하나에 자동 주사 (흰색 · 피해 1.5배 · 체력 1.5배 가득)           // v275: 복귀하는 동료 속도 +20%
+    revive: { icon: IC.revive, name: '변이 줄기세포', passive: true },   // v375: 죽으면 체력 가득으로 되살아난다 (1번, 쿨타임 60초)   // v369: 깃발 대신 — 근접 거리 안 동료 하나에 자동 주사 (흰색 · 피해 1.5배 · 체력 1.5배 가득)           // v275: 복귀하는 동료 속도 +20%
     bag: { icon: IC.bag, name: '가방', passive: true }, rage: { icon: IC.rage, name: '분노 바이러스', passive: true }, catalyst: { icon: IC.catalyst, name: '촉매제', passive: true }, blood: { icon: IC.blood, name: '혈액팩', passive: true },   // c19: 챕터 장비 4종
     shoes: { icon: IC.shoes, name: '운동화', passive: true },       // v275: 내 이동 속도 +10%                         // 패시브 (v201) — 총알 피해 30% 감소, 똑똑한 두뇌마다 10% 더
   };
@@ -4622,7 +4622,7 @@
     crowbar: ['건물과 사물에 입히는 피해가 늘어납니다.', '강화 시 피해가 더 늘어납니다.'],
     book: ['당신이 가진 모든 도구의 쿨타임이 감소합니다.', '강화 시 쿨타임이 더 줄어듭니다.'],
     stim: ['일정 시간마다 동료 한 마리를 강화시키는 주사를 주입합니다.', '강화 시 주사 효과가 더 강해집니다.'],
-    revive: ['죽으면 되살아납니다. 다시 쓰려면 시간이 지나야 합니다.', '강화 시 더 많은 체력으로 되살아납니다.'],
+    revive: ['죽으면 되살아납니다. 다시 쓰려면 2분이 지나야 합니다.', '강화 시 기다리는 시간이 10%씩 줄어듭니다.'],
     shoes: ['나의 이동 속도가 빨라집니다.', '강화 시 더 빨라집니다.'],
     bag: ['들 수 있는 도구가 하나 늘어납니다.', '강화 시 하나 더 늘어납니다.'],
     rage: ['일정 시간마다 동료 한 명의 공격 속도와 이동 속도가 오릅니다.', '강화 시 더 자주 퍼집니다.'],
@@ -5400,8 +5400,8 @@
     z.flame = new THREE.Sprite(flameMat); z.flame.scale.set(0.9, 0.9, 1); z.flame.renderOrder = UI; scene.add(z.flame); stimmed.push(z);
     for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; puff(z.foot.x, 0.4, z.foot.z, 0xffffff, 0.45, 1.2, 0.45, Math.cos(a) * 2.5, 0.4, Math.sin(a) * 2.5, 0.85); }
   }
-  const reviveCd = () => 120;   // v376: 부활 쿨타임 2분 고정
-  const reviveHp = (n = up.brain) => Math.min(1, 0.3 + 0.1 * n);   // v376: 부활 체력 30%, 장비 강화마다 +10%p
+  const reviveCd = () => CHAPTER ? 120 * Math.pow(0.9, lv('revive')) : 120;   /* c100: 강화마다 남은 시간의 10%씩 줄어든다 (120 → 108 → 97 → 87 → 79 → 71초) */   // v376: 부활 쿨타임 2분 고정
+  const reviveHp = (n = CHAPTER ? 0 : up.brain) => Math.min(1, 0.3 + 0.1 * n);   // v376: 부활 체력 30%, 장비 강화마다 +10%p
   let reviveT = 0;
   function itemsTick(dt) {
     if (reviveT > 0) { const p = Math.ceil(reviveT); reviveT = Math.max(0, reviveT - dt); if (Math.ceil(reviveT) !== p) refreshBadges(); }
@@ -5509,13 +5509,13 @@
   //   금고를 깨면 건물 종류에 따라 아이템 하나 또는 꽝. 아이템은 그 자리에 떨어지고 내가 가서 닿아야 얻는다 (테스트맵과 같다)
   //   아이템 14종 = 도구 5 (자폭 스위치 · 변이 주사 · 테이저건 · 각성 주사 · 현금) + 장비 9 (백과사전 · 가방 · 분노 바이러스 · 빠루 · 충격 흡수복 · 방탄복 · 운동화 · 촉매제 · 혈액팩)
   //   같은 아이템을 또 얻으면 그 아이템만 강화 +1 (최대 5단계). 가방은 4개까지 (도구 칸 1 → 5). 끝까지 올린 아이템은 더 안 나온다 (c21)
-  const CH_ITEMS = ['bomb', 'mutate', 'taser', 'awaken', 'cash', 'book', 'bag', 'rage', 'crowbar', 'absorb', 'vest', 'shoes', 'catalyst', 'blood'];
+  const CH_ITEMS = ['bomb', 'mutate', 'taser', 'awaken', 'cash', 'book', 'bag', 'rage', 'crowbar', 'absorb', 'vest', 'shoes', 'catalyst', 'blood', 'revive'];   /* c100: 변이 줄기세포 */
   const CH_RARE = ['cash', 'book', 'bomb'];   // '나머지' 안에서 다른 아이템의 10분의 1 확률 (집·창고는 균등)
   const CH_SPEC_1 = 46.1893, CH_SPEC_2 = 19.8265;   // 지정 아이템 하나의 확률(%) — 랜드마크를 하나씩 다 털면 14종이 똑같이 나오게 맞춘 값 (표의 46.2 · 19.8)
   const CH_DROP = {                           // spec = 지정 아이템, p = 지정 하나의 확률(%), rest = 나머지 전체(%), 남는 것 = 꽝
     bank: { spec: ['cash'], p: CH_SPEC_1, rest: 90 - CH_SPEC_1 }, library: { spec: ['book'], p: CH_SPEC_1, rest: 90 - CH_SPEC_1 }, army: { spec: ['bomb'], p: CH_SPEC_1, rest: 90 - CH_SPEC_1 },
     police: { spec: ['taser', 'vest'], p: CH_SPEC_2, rest: 90 - 2 * CH_SPEC_2 }, fire: { spec: ['crowbar', 'absorb'], p: CH_SPEC_2, rest: 90 - 2 * CH_SPEC_2 }, mart: { spec: ['shoes', 'bag'], p: CH_SPEC_2, rest: 90 - 2 * CH_SPEC_2 },
-    hospital: { spec: ['mutate', 'awaken', 'catalyst', 'rage', 'blood'], p: 16, rest: 10 },
+    hospital: { spec: ['mutate', 'awaken', 'catalyst', 'rage', 'blood', 'revive'], p: 14, rest: 6 },
     store: { spec: [], p: 0, rest: 90, flat: true }, conv: { spec: [], p: 0, rest: 30 }, gym: { spec: [], p: 0, rest: 30 },
     house: { spec: [], p: 0, rest: 100, flat: true },   // 집: 금고가 있는 집(5%)이면 꽝 없이 14종 균등
   };
@@ -5582,6 +5582,7 @@
     absorb: (n) => `충격 흡수 ${1 + n} (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12)`,
     vest: (n) => `총격 피해 -${10 * (1 + n)}%`,
     shoes: (n) => `이동 속도 +${5 * (1 + n)}%`,
+    revive: (n) => `체력 30%로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,
     catalyst: (n) => `변이 좀비 공격력 +${5 * (1 + n)}%`,
     blood: (n) => `내 최대 체력 +${10 * (1 + n)}%`,
   };
@@ -5637,11 +5638,11 @@
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
     bomb: ['범위', (n) => n ? `+${20 * n}%` : '기본'], mutate: ['', (n) => `${1 + n}개·${10 + 3 * n}초`], taser: ['대상', (n) => `${1 + n}명`], awaken: ['최대', (n) => `${10 + 3 * n}초`], cash: ['유혹', (n) => n ? `+${n}` : '기본'],
     book: ['쿨타임', (n) => `-${5 * (1 + n)}%`], bag: ['도구', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${5 + 2 * n}%`], crowbar: ['사물', (n) => `+${10 * (1 + n)}%`], absorb: ['흡수', (n) => `${1 + n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
-    shoes: ['이동', (n) => `+${5 * (1 + n)}%`], catalyst: ['변이', (n) => `+${5 * (1 + n)}%`], blood: ['체력', (n) => `+${10 * (1 + n)}%`],
+    shoes: ['이동', (n) => `+${5 * (1 + n)}%`], catalyst: ['변이', (n) => `+${5 * (1 + n)}%`], blood: ['체력', (n) => `+${10 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
   const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
     bomb: '동료 하나가 자폭', mutate: '동료 하나를 변이', taser: '적을 감전', awaken: '내가 변이', cash: '적을 유혹',
-    book: '도구 쿨타임 단축', bag: '쓸 수 있는 도구 +1', rage: '동료 속도 강화', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해 감소', shoes: '내 이동 속도 증가', catalyst: '변이 좀비 공격력 증가', blood: '내 최대 체력 증가',
+    book: '도구 쿨타임 단축', bag: '쓸 수 있는 도구 +1', rage: '동료 속도 강화', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해 감소', shoes: '내 이동 속도 증가', catalyst: '변이 좀비 공격력 증가', blood: '내 최대 체력 증가', revive: '죽으면 되살아남',
   };
   function chUpPool() {                       // 레벨업에 나올 수 있는 것 — 14종 전부, 끝까지 올린 것만 뺀다
     return CH_ITEMS.filter((k) => !(chHas(k) && lv(k) >= chLvMax(k)));
@@ -6024,6 +6025,7 @@
     if (b.gem) { b.mesh.remove(b.gem); b.gem = null; }
     b.r = BODY; delete b.halfH; b.mesh.scale.setScalar(1);
     mutate(b, t);   // c56: 검은 테두리는 뺐다 (테두리는 변이한 나만)
+    if (t === 'armor') { b.maxHp *= 2; b.hp = b.maxHp; }   // c100: 얻은 덩치는 체력 2배
   }
   function chSafeInRoom(s, R) {                // c54: 금고를 방 안에 — 방문에서 가장 먼 자리. 작은 방이면 그 방 사람은 복도로 옮긴다
     const D = R.locks.find((L) => L.out) || R.locks[0], m = s.r + 0.3;
@@ -7437,10 +7439,11 @@
   //   운전자: 조심형(지금까지의 운전 — 가운데 좀비 앞에 서고, 맞으면 얼어붙었다가 내린다) · 가속형(서 있다가 냅다 밟는다 — 좀비도 사람도 안 가린다) ·
   //           비비기형(물러났다가 옆으로 다시 들이민다) · 돌진형(좀비를 아예 신경 안 쓴다 — 현금 수송차는 늘 이쪽). 패닉 중엔 더 밟는다 (1.3~1.6배).
   const CH_LOOT_P = 1 / 15;   // c90: 2배
-  const CH_LOOT_CAR = { cash: ['cash'], ambul: ['mutate', 'awaken', 'catalyst', 'rage', 'blood'], parcel: ['bomb', 'taser', 'book', 'bag', 'crowbar', 'absorb', 'vest', 'shoes'] };
+  const CH_LOOT_CAR = { cash: ['cash'], ambul: ['mutate', 'awaken', 'catalyst', 'rage', 'blood', 'revive'], parcel: ['bomb', 'taser', 'book', 'bag', 'crowbar', 'absorb', 'vest', 'shoes'] };
   const CH_LOOT_N = Object.values(CH_LOOT_CAR).reduce((a, l) => a + l.length, 0);
   const chLootType = () => { let r = Math.random() * CH_LOOT_N; for (const k in CH_LOOT_CAR) if ((r -= CH_LOOT_CAR[k].length) < 0) return k; return 'parcel'; };
-  const chLootRoll = () => { let r = Math.random() * CH_LOOT_N / CH_LOOT_P; if (r >= CH_LOOT_N) return null; for (const k in CH_LOOT_CAR) if ((r -= CH_LOOT_CAR[k].length) < 0) return k; return 'parcel'; };   // 한 번의 추첨으로: 30분의 1 안에서 가짓수대로 (1 : 5 : 8)
+  const chLootBag = [];                        // c100: 다음에 나올 수송차 종류들 (실은 가짓수만큼 들어 있고 섞여 있다)
+  const chLootRoll = () => { if (Math.random() >= CH_LOOT_P) return null; if (!chLootBag.length) { for (const k in CH_LOOT_CAR) for (const _ of CH_LOOT_CAR[k]) chLootBag.push(k); chLootBag.sort(() => Math.random() - 0.5); } return chLootBag[chLootBag.length - 1]; };   // 한 번의 추첨으로: 30분의 1 안에서 가짓수대로 (1 : 5 : 8)
   const CH_TR_FAST = 1.25;                     // 기본 속도 = 지금 속도(최저) ~ 그 1.25배, 차마다 다르다
   const CH_DRV_RAM = 10 / 3, CH_DRV_K = (100 - CH_DRV_RAM) / 90;   // 돌진형은 3분의 1로 (10% → 3.33%) — 줄어든 몫은 나머지 셋이 원래 비율대로 나눠 갖는다. 현금 수송차는 늘 돌진형
   const CH_DRV = [['calm', 40 * CH_DRV_K], ['floor', 25 * CH_DRV_K], ['wiggle', 25 * CH_DRV_K], ['ram', CH_DRV_RAM]];
@@ -7455,7 +7458,7 @@
     T.life = rand(CH_TR_LIFE[0], CH_TR_LIFE[1]) * (loot ? CH_TR_LIFE_LOOT : 1); T.lifeT = 0;
     T.exitDmg = drv === 'calm' ? rand(0.1, 0.3) : drv === 'ram' ? rand(0.4, 0.65) : rand(0.2, 0.45);
     if (loot) {
-      car.loot = loot;
+      car.loot = loot; if (chLootBag[chLootBag.length - 1] === loot) chLootBag.pop();   // c100
       const q = new THREE.Sprite(new THREE.SpriteMaterial({ map: SAFE_Q, transparent: true, depthTest: false, depthWrite: false }));
       q.renderOrder = UI - 1; q.scale.set(2.7 / car.kl, 1.35, 1); q.position.set(0, 1.6, 0); car.g.add(q); car.qm = q;
     }

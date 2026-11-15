@@ -748,6 +748,8 @@ from c98_patch import C98_R   # c98: 길거리 경찰 줄임 · 색 한 단계�
 R += C98_R
 from c99_patch import C99_R   # c99: 경보단계 조건 1.3배 더
 R += C99_R
+from c100_patch import C100_R   # c100: 수송차 비율 · 경보 5% · 덩치 체력 · 변이 줄기세포
+R += C100_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
