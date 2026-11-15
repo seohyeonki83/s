@@ -778,6 +778,8 @@ from c113_patch import C113_R   # c113: 시작 하양 — 움직인 뒤 앞쪽�
 R += C113_R
 from c114_patch import C114_R   # c114: 큰 무리 성능 · 경보 20% 앞당김
 R += C114_R
+from c115_patch import C115_R   # c115: 얻은 변이 좀비 체력 3분의 2
+R += C115_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

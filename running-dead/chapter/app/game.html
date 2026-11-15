@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c114</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c115</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6048,7 +6048,7 @@
     // c104: 다이아몬드 표시는 떼지 않는다 (얻은 변이 좀비 표시)
     b.r = BODY; delete b.halfH; b.mesh.scale.setScalar(1);
     mutate(b, t);   // c56: 검은 테두리는 뺐다 (테두리는 변이한 나만)
-    if (t === 'armor') b.maxHp = 570; else b.maxHp *= 1.5;   /* c106: 얻은 덩치 체력 570 */ b.hp = b.maxHp;   // c100 · c104: 얻은 덩치는 체력 2.4배 · 얻은 히드라는 1.5배
+    if (t === 'armor') b.maxHp = 380; else b.maxHp *= 1.0;   /* c115: 3분의 2로 (570 → 380 · 히드라 142 → 95) */   /* c106: 얻은 덩치 체력 570 */ b.hp = b.maxHp;   // c100 · c104: 얻은 덩치는 체력 2.4배 · 얻은 히드라는 1.5배
   }
   function chSafeInRoom(s, R) {                // c54: 금고를 방 안에 — 방문에서 가장 먼 자리. 작은 방이면 그 방 사람은 복도로 옮긴다
     const D = R.locks.find((L) => L.out) || R.locks[0], m = s.r + 0.3;
