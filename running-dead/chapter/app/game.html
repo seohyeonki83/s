@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c78</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c79</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1858,11 +1858,12 @@
   const wantV = new THREE.Vector2();
   function knockStep(b, dt) {                 // 차에 치여 날아가는 중 — 그 방향으로 튕겨 가다가 점점 느려져 멈춘다 (v137)
     b.vel.set(b.knockVX, b.knockVZ);
+    if (b.knockCar) chSkid(b, dt);   // c79
     const f = Math.exp(-4 * dt);
     b.knockVX *= f; b.knockVZ *= f;
     b.knockT -= dt;
     if (b.knockT <= 0 || Math.hypot(b.knockVX, b.knockVZ) < 0.3) {
-      b.knockT = 0; b.knockSlide = false;
+      b.knockT = 0; b.knockSlide = false; b.knockCar = false;
       b.vel.set(0, 0);
       if (b.knockDie) { b.knockDie = false; dying.push(b); }   // 멈췄는데 죽었다 → 사라진다
       else if (b.kind === 'citizen' && b.maxHp > 0 && b.hp <= 0 && !b.police && b.state !== 'panic' && b.state !== 'held') {   // 체력이 다한 수비형·공격형 → 놀라서 도망 (때려서 0이 됐을 때와 같다)
@@ -2459,7 +2460,7 @@
             let gx = tx, gz = tz; if (CHAPTER) { const r = chRoute({ foot: { x: car.x, z: car.z }, laneK: 0 }, tx, tz); gx = r[0]; gz = r[1]; }   // c47: 강·산 건너면 다리·길목으로
             const w = around(car.x, car.z, gx, gz, CAR_W * ck(car) / 2 + 0.6, CAR_L * ckl(car) / 2 + 1.3);   // 건물은 넉넉히 돌아간다
             const dx = w.x - car.x, dz = w.y - car.z, l = Math.hypot(dx, dz) || 1;
-            const sp = CAR_SPEED * (car.mil ? 2 / 3 : 1);   // v447: 군인차는 1/3 느리다
+            const sp = CAR_SPEED * (car.mil ? 2 / 3 : 1) * (car.loadK ?? 1);   /* c79 */   // v447: 군인차는 1/3 느리다
             carSteer(car, dx / l * sp, dz / l * sp, CAR_ACCEL * dt);
           }
         }
@@ -2540,7 +2541,8 @@
     for (const car of cars) {
       const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx;
       for (const b of (CHAPTER && (car.state === 'parked' || car.tr) ? chNearBodies(car) : bodies)) {
-        if (b.fixed || b.knockT > 0 || (car.tr && b.sleep)) continue;   // c71
+        if (b.fixed || (car.tr && b.sleep)) continue;   // c71
+        if (b.knockT > 0 && (!CHAPTER || b.gar)) continue;   // c79: 미끄러지는 몸도 차에 걸린다 (통과하지 않는다)
         if (car.wall && b.kind === 'citizen' && b.police && !b.post) continue;   // c59
         const k = car.wall ? (car.wreck ? 0.16 : 1) : car.state === 'parked' || (car.tr && Math.abs(car.vx) + Math.abs(car.vz) < 0.8) ? PARKED_K * (car.wreck ? 0.16 : 1) : car.tr ? 1 : MOVING_K;   /* c73: 달리는 민간 차는 보이는 크기 그대로 (경찰차는 1.22배) */   // 잔해는 1/5 (v239)   // 서 있으면 작고 (v171), 달리면 크다 (v178)
         const dx = b.foot.x - car.x, dz = b.foot.z - car.z, hu = CAR_L * ckl(car) / 2 * k + b.r, hv = CAR_W * ck(car) / 2 * k * (car.barr ? CH_BARR_W : 1) + b.r;   /* c60: 바리케이트는 폭이 3분의 1 */
@@ -2549,7 +2551,9 @@
         if (Math.abs(u) >= hu || Math.abs(v) >= hv) continue;
         const sp = Math.hypot(car.vx, car.vz);
         if (CHAPTER && b.kind === 'citizen' && b.gar && sp > 0.8) { const sd = v >= 0 ? 1 : -1, T = 0.25; giveKnock(b, rx * sd, rz * sd, (hv - Math.abs(v) + 0.1) * 4 / (1 - Math.exp(-4 * T)), T); continue; }   // c61
-        if (sp > 0.8 && !b.hitT && !(car.tr && ((!isZombie(b) && !chBlind(b)) || (b.trHit === car && b.trHitT > clock)))) {   /* c71: 민간 차는 사람을 안 친다 · c73: 방금 친 좀비는 3초 동안 다시 안 친다 */            // 치였다 (한 번 치인 몸은 1초 동안은 다시 안 치인다 — 밀려나기만)
+        const mov = CHAPTER && car.state !== 'parked' && !car.barr && !car.wall;   // c79: 달리는 차 (민간 차 · 경찰차 · 군인차)
+        if (mov) { car.ldT = clock + 0.6; chCarHit(car, b, u, v, hu, hv, fx, fz, rx, rz, sp); }
+        else if (sp > 0.8 && !b.hitT && !(car.tr && ((!isZombie(b) && !chBlind(b)) || (b.trHit === car && b.trHitT > clock)))) {   /* c71: 민간 차는 사람을 안 친다 · c73: 방금 친 좀비는 3초 동안 다시 안 친다 */            // 치였다 (한 번 치인 몸은 1초 동안은 다시 안 치인다 — 밀려나기만)
           b.hitT = clock + 1;
           const nl = Math.hypot(dx, dz) || 1;
           let kx = car.vx / sp * 0.7 + dx / nl * 0.3, kz = car.vz / sp * 0.7 + dz / nl * 0.3;   // 차가 가던 쪽 + 살짝 옆으로
@@ -2589,7 +2593,9 @@
         }
         b.foot.x = nx;
         b.foot.z = nz;
+        if (mov && u > 0 && sp > 1.5 && Math.abs(v) < hv) chSkid(b, chDt);   // c79: 범퍼에 끌려간다
       }
+      if (CHAPTER && car.state !== 'parked' && !car.barr && !car.wall && !car.wreck && (car.load > 0 || clock < car.ldT)) chCarLoad(car, fx, fz); else if (car.load) { car.load = 0; car.loadK = 1; }   // c79
     }
     if (pushedCar && (!CHAPTER || clock - chObsAt >= 0.25 || clock < chObsAt)) { pushedCar = false; chObsAt = clock; updateCarObs(); }   // c69: 챕터는 0.25초에 한 번
   }
@@ -6292,6 +6298,7 @@
   }
   const chDecoCarNow = (type, x, z, h) => { const c = chDecoCar(type, x, z, h); updateCarObs(); return c; };
   // ── c69: 주차 — 공터의 주차 칸(맵과 함께 고정, 선이 그려져 있다) · 집 앞 한두 대 · 랜드마크 옆 (경찰서 경찰차 2 · 군사시설 군인차 1 · 소방서 소방차 · 병원 구급차 · 가게 손님 차) ──
+  const chZebras = [];   // c79: 횡단보도 자리 (네모)
   const CH_BAY_PITCH = 1.95, CH_BAY_LEN = 2.5;
   const chRoadRects = CH_MAP.roads.concat(CH_MAP.bridges), chBays = [];
   const chBoxHit = (a, b, m) => a[0] < b[2] + m && a[2] > b[0] - m && a[1] < b[3] + m && a[3] > b[1] - m;
@@ -6329,7 +6336,20 @@
     const dq = (x0, z0, x1, z1) => dp.push(x0, 0, z0, x0, 0, z1, x1, 0, z1, x0, 0, z0, x1, 0, z1, x1, 0, z0);
     for (const [x0, z0, x1, z1] of CH_MAP.roads) { const w = x1 - x0, d = z1 - z0; if (Math.min(w, d) > 7 || Math.max(w, d) < 30) continue;
       if (w > d) for (let x = x0 + 1; x < x1 - 1.6; x += 2.4) dq(x, (z0 + z1) / 2 - 0.06, x + 1.1, (z0 + z1) / 2 + 0.06); else for (let z = z0 + 1; z < z1 - 1.6; z += 2.4) dq((x0 + x1) / 2 - 0.06, z, (x0 + x1) / 2 + 0.06, z + 1.1); }
-    for (const [P, mat, o] of [[pos, lineMat, -0.89], [dp, dashMat, -0.895]]) { if (!P.length) continue; const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(P), 3)); const m = new THREE.Mesh(geo, mat); m.position.y = 0.031; m.renderOrder = o; m.frustumCulled = false; scene.add(m); }
+    const zebraMat = new THREE.MeshBasicMaterial({ color: 0xf3f3ef, transparent: true, opacity: 0.74, depthTest: false, depthWrite: false }), zp = [];   // c79: 횡단보도 — 꾸밈만 (아무 일도 안 한다)
+    const zq = (x0, z0, x1, z1) => zp.push(x0, 0, z0, x0, 0, z1, x1, 0, z1, x0, 0, z0, x1, 0, z1, x1, 0, z0);
+    const zebra = (alongZ, c, hw, at) => {   // alongZ = 길이 z쪽으로 뻗는다 (건너는 쪽 = x). c·hw = 그 길 한가운데·반폭, at = 횡단보도 한가운데 (길 방향)
+      let lo = c - hw, hi = c + hw;          // 그 자리에서 길이 더 넓으면 (다리 앞 넓은 길) 그 폭까지
+      for (const [a, b, c2, d] of CH_MAP.roads) { if (alongZ ? (at > b && at < d && c > a && c < c2 && d - b < 40) : (at > a && at < c2 && c > b && c < d && c2 - a < 40)) { lo = Math.min(lo, alongZ ? a : b); hi = Math.max(hi, alongZ ? c2 : d); } }
+      const n = Math.floor((hi - lo - 0.5) / 0.62), q0 = (lo + hi) / 2 - (n * 0.62 - 0.32) / 2;
+      for (let k = 0; k < n; k++) { const q = q0 + k * 0.62; alongZ ? zq(q, at - 0.7, q + 0.3, at + 0.7) : zq(at - 0.7, q, at + 0.7, q + 0.3); }
+      chZebras.push(alongZ ? [lo, at - 0.7, hi, at + 0.7] : [at - 0.7, lo, at + 0.7, hi]);
+    };
+    for (const G of chRoadGraphs()) { const nV = G.V.length, nH = G.H.length;
+      for (let i = 1; i < nV - 1; i++) for (let j = 0; j < nH; j++) { const v = G.V[i], h = G.H[j], d = h.hw + 1.25; if (j > 0) zebra(true, v.c, v.hw, h.c - d); if (j < nH - 1) zebra(true, v.c, v.hw, h.c + d); }
+      for (let j = 1; j < nH - 1; j++) for (let i = 0; i < nV; i++) { const h = G.H[j], v = G.V[i], d = v.hw + 1.25; if (i > 0) zebra(false, h.c, h.hw, v.c - d); if (i < nV - 1) zebra(false, h.c, h.hw, v.c + d); }
+    }
+    for (const [P, mat, o] of [[pos, lineMat, -0.89], [dp, dashMat, -0.895], [zp, zebraMat, -0.893]]) { if (!P.length) continue; const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(P), 3)); const m = new THREE.Mesh(geo, mat); m.position.y = 0.031; m.renderOrder = o; m.frustumCulled = false; scene.add(m); }
   }
   const chObjLists1 = [objs], chObjLists2 = [objs, chDecoObjs];
   let chDeco = { boxes: [], n: {} };
@@ -6956,6 +6976,7 @@
     if (car.obj) car.obj.dead = true;
   }
   function chTrafficTick(dt) {
+    chDt = dt;   // c79
     if (!chTr) return;
     chTr.Z.forEach((Z, zi) => { if (Z.n < Z.want && (Z.t -= dt) <= 0) { if (chTrSpawn(zi)) Z.n++; Z.t = rand(8, 16); } });
     if ((chTr.trimT = (chTr.trimT || 0) - dt) <= 0) { chTr.trimT = 2; let cut = false; chTr.gone.forEach((Q, zi) => { if (Q.length > CH_TR_KEEP && chTrTrim(zi)) cut = true; }); if (cut) updateCarObs(); }   // 다 보여서 못 치운 빈 차는 2초마다 다시 본다
@@ -7023,7 +7044,8 @@
     const limR = Math.max(g.hw1 - g.o1 - W / 2 + CH_TR_OUT, T.off), limL = Math.min(-(g.hw1 + g.o1 - W / 2 + CH_TR_OUT), T.off);   // 차 옆구리가 도로 밖으로 CH_TR_OUT칸까지
     if ((latNow > limR + 0.3 || latNow < limL - 0.3) && s > 2.5 && (!g.turn || sc - s > 3.5)) { T.back = true; T.swT = 0; T.swLat = null; }   // 교차로에서 도는 중엔 안 따진다
     else if (T.back && Math.abs(latNow - T.off) < 0.35) T.back = false;
-    const halt = zMid || hMid || T.hitT > 0;           // 가운데 좀비 · 맞는 중 → 선다
+    const held = car.load > 0 && car.loadK < 0.4 && sp < 1;   // c79: 몸들에 막혀 못 간다
+    const halt = zMid || hMid || T.hitT > 0 || held;           // 가운데 좀비 · 맞는 중 → 선다
     if (!halt && !T.back && zL !== zR) {       // 오른쪽에 있으면 왼쪽으로, 왼쪽에 있으면 오른쪽으로
       const dir = zR ? -1 : 1; T.swT = CH_TR_SW_HOLD;
       if (T.swLat === null || T.swDir !== dir) { T.swDir = dir; T.swLat = Math.max(limL, Math.min(limR, latNow + dir * CH_TR_SW_D)); }
@@ -7038,6 +7060,7 @@
       if (blk && !blk.kind && blk.state !== 'parked') { const v2 = Math.hypot(blk.vx, blk.vz); if (v2 > 0.5 && blk.vx * ux + blk.vz * uz > 0 && T.dFree > 0.9) lim = Math.max(lim, v2 * 0.9); }   // 앞차를 따라간다
       want = Math.min(want, lim);
     }
+    if (car.load > 0) want *= car.loadK;   // c79: 앞을 막은 몸들 무게만큼 느려진다
     if (halt && T.mode !== 'stop') { T.resume = T.mode; T.mode = 'stop'; T.clearT = 0; T.swT = 0; T.swLat = null; }
     if (T.mode === 'stop') {
       want = 0;
@@ -7053,7 +7076,7 @@
       if (stat && T.jamT > 1 && (T.pickT -= dt) <= 0) { T.pickT = 0.5; const off = chTrPick(car, T, g, s); if (off !== null) { T.mode = 'avoid'; T.off = off; T.backT = 1.2; } }
     }
     // 좀비에 막혀(가운데 좀비 · 맞는 중) 서 있는 시간 → 3~5초면 내린다
-    if (T.mode === 'stop') { if (sp < 0.6 && (zMid || T.hitT > 0) && (T.zT += dt) >= T.exitAt) { chTrExit(car); return; } }   /* c78: 사람 때문에 선 시간은 안 센다 */
+    if (T.mode === 'stop') { if (sp < 0.6 && (zMid || T.hitT > 0 || held) && (T.zT += dt) >= T.exitAt) { chTrExit(car); return; } }   /* c78: 사람 때문에 선 시간은 안 센다 · c79: 몸들에 막힌 시간은 센다 */
     else T.zT = Math.max(0, T.zT - dt);
     // 오래 못 가면 (좀비 때문이 아닌데) 돌아서 간다 · 그래도 안 되고 아무도 안 보면 조용히 치운다
     if (sp < 0.3 && T.mode !== 'stop') T.stuckT += dt; else T.stuckT = Math.max(0, T.stuckT - dt * 3);
@@ -7095,6 +7118,70 @@
       return chRoamArea(px, pz);
     }
     return square(x, z);
+  }
+  // ── c79: 달리는 차와 몸 — 진짜 물리 ──
+  //   처음 부딪힌 순간에만 다친다. 세기는 '차가 그 몸 쪽으로 밀고 드는 빠르기'(닿은 자리의 법선 방향)에 비례 — 정면으로 받으면 세고, 모서리로 스치면 약하다.
+  //   마주 달려들던 몸은 더 세게, 같은 쪽으로 가던 몸은 약하게 받힌다. 튕긴 몸은 뜨지 않고 바닥을 미끄러진다 (저격총 넉백과 같다).
+  //   무거운 몸(덩치)은 덜 튕기고 차를 더 많이 늦춘다. 그 뒤로는 그냥 밀린다 — 범퍼 앞에 낀 몸은 끌려간다 (같은 차에 다시 다치지 않는다).
+  //   앞을 막은 몸들(범퍼에 닿은 몸 + 그 몸에 줄줄이 닿은 몸)의 무게 합만큼 차가 느려지고, 차의 미는 힘을 넘으면 아예 못 간다.
+  const CH_PUSH = 8, CH_DRAG = 16, CH_VN_MIN = 0.8, CH_SCRAPE = 0.35;   // 차의 미는 힘 = 보통 몸 8개 × 차 무게 · 막혔을 때 줄어드는 빠르기(초당) · 이보다 느리게 밀고 들면 충돌이 아니다
+  let chDt = 1 / 60;
+  const chCarW = (b) => b.mut === 'armor' ? MY_FORCE * 1.3 * 2 / 3 : b.mut === 'hydra' ? 2 : 1;   // 차에 대한 몸의 무게 — 보통 1 · 덩치 6.93 · 히드라 2 (나도 같다)
+  const chCarM = (car) => car.massK || (car.mil ? 1.6 : 1);
+  const chCarCap = (car) => CH_PUSH * chCarM(car) * (car.pushK || 1);
+  function chSkid(b, dt) {                     // 바닥에 쓸리는 먼지 — 내 둘레에서만
+    if ((b.skidT = (b.skidT || 0) - dt) > 0) return; b.skidT = 0.1;
+    if (Math.abs(b.foot.x - me.foot.x) > 13 || Math.abs(b.foot.z - me.foot.z) > 13) return;
+    puff(b.foot.x + rand(-0.12, 0.12), 0.16, b.foot.z + rand(-0.12, 0.12), 0xb4ad9f, 0.3, rand(0.75, 1.05), rand(0.35, 0.5), 0, rand(0.15, 0.3), 0, 0.42);
+  }
+  function chCarHit(car, b, u, v, hu, hv, fx, fz, rx, rz, sp) {   // 달리는 차의 네모 안에 든 몸 — 처음 닿은 순간이면 친다 (튕김 + 데미지 + 차 감속). 아니면 밀리기만 한다
+    const same = b.carC === car && clock < b.carCT;                // 이 차와 닿은 지 3초가 안 지났다 = 같은 충돌
+    b.carC = car; b.carCT = clock + 3;
+    if (same || sp < CH_VN_MIN || b.hitT || b.knockT > 0) return;
+    if (car.tr && !isZombie(b) && !chBlind(b)) return;             // 평소 상태의 사람은 민간 차가 안 친다 (미리 보고 선다 — 닿아도 밀어내기만)
+    const a = hu - b.r, c = hv - b.r, qu = Math.max(-a, Math.min(a, u)), qv = Math.max(-c, Math.min(c, v));   // 차의 실제 네모에서 그 몸에 가장 가까운 점
+    let lu = u - qu, lv = v - qv; const ll = Math.hypot(lu, lv);
+    if (ll > 1e-4) { lu /= ll; lv /= ll; } else if (hu - Math.abs(u) < hv - Math.abs(v)) { lu = u < 0 ? -1 : 1; lv = 0; } else { lu = 0; lv = v < 0 ? -1 : 1; }
+    const nX = lu * fx + lv * rx, nZ = lu * fz + lv * rz, vcn = car.vx * nX + car.vz * nZ;   // 법선 (차 → 몸) · 차가 그쪽으로 밀고 드는 빠르기
+    const rvx = car.vx - b.vel.x, rvz = car.vz - b.vel.y, rn = rvx * nX + rvz * nZ, vn = Math.max(0, rn);   // 둘이 가까워지던 빠르기 (법선 쪽) — 마주 달려들면 크고, 같은 쪽으로 가던 중이면 작다
+    const tX = rvx - rn * nX, tZ = rvz - rn * nZ, vt = Math.hypot(tX, tZ);   // 스치는 쪽 (옆구리에 쓸릴 때)
+    const ve = Math.min(CAR_SPEED * 1.6, Math.hypot(vn, CH_SCRAPE * vt));    // 충돌 세기 — 정면이면 그대로, 모서리면 조금 덜, 옆구리에 쓸리기만 하면 3분의 1쯤
+    if (ve < CH_VN_MIN) return;
+    const m = chCarW(b), M = CAR_MASS * chCarM(car), k2 = M / (M + m);
+    const kx = nX * vn * KNOCK * k2 + tX * 0.6 * k2, kz = nZ * vn * KNOCK * k2 + tZ * 0.6 * k2;   // 법선 쪽으로 튕기고, 스친 쪽으로는 조금 쓸려 간다
+    b.hitT = clock + 1; if (car.tr) { b.trHit = car; b.trHitT = clock + 3; }
+    const dmg = CAR_HIT_DMG * ve / CAR_SPEED;
+    if (isZombie(b)) { b.hp = Math.max(0, b.hp - dmg); if (b.hp <= 0) b.knockDie = true; }   // 좀비는 죽으면 밀려가서 멈춘 뒤에 사라진다
+    else if (b.hp > 0) b.hp = Math.max(0, b.hp - dmg);             // 시민·경찰은 체력이 깎인다 (0이 되면 덮칠 수 있게 된다)
+    if (giveKnock(b, kx, kz, Math.hypot(kx, kz), KNOCK_T)) b.knockCar = true;
+    else if (b.knockDie) { b.knockDie = false; dying.push(b); }    // 흡수복으로 안 밀렸는데 죽었다
+    const dv = 1.1 * ve * m / (M + m) * Math.max(0.25, vcn / sp), ns = Math.max(0, sp - dv);   // 차는 그 몸 무게만큼 운동량을 잃는다 (보통 몸 하나를 정면으로 = 경찰차 최고 속도의 10분의 1)
+    car.vx *= ns / sp; car.vz *= ns / sp;
+    car.lastHit = clock;
+  }
+  const chLd = [], chLd2 = [], chLdRow = [];
+  function chCarLoad(car, fx, fz) {            // 앞을 막은 몸들의 무게 합 → car.load · 그만큼 느려진 비율 car.loadK (0 = 못 간다)
+    const k = car.tr ? 1 : MOVING_K, hu1 = CAR_L * ckl(car) / 2 * k, hv1 = CAR_W * ck(car) / 2 * k, R = hu1 + 4.8;
+    nearIn(zCells, car.x, car.z, R, chLd); const n0 = chLd.length; nearIn(cCells, car.x, car.z, R, chLd2); for (let i = 0; i < chLd2.length; i++) chLd[n0 + i] = chLd2[i];
+    const row = chLdRow; row.length = 0;
+    for (let i = 0, n = n0 + chLd2.length; i < n; i++) { const b = chLd[i];
+      if (b.fixed || b.sleep || b.space) continue;
+      const dx = b.foot.x - car.x, dz = b.foot.z - car.z, u = dx * fx + dz * fz, v = -dx * fz + dz * fx;
+      if (u < hu1 * 0.4 || u > hu1 + 4.2 || Math.abs(v) > hv1 + b.r * 0.6 + 0.35) continue;
+      b.ldU = u; b.ldV = v; b.ldOn = false; row.push(b);
+    }
+    row.sort((p, q) => p.ldU - q.ldU);
+    let load = 0;
+    for (let i = 0; i < row.length; i++) { const b = row[i];
+      if (b.ldU < hu1 + b.r + 0.14 && Math.abs(b.ldV) < hv1 + b.r * 0.6) b.ldOn = true;   // 범퍼에 닿았다
+      else for (let j = 0; j < i; j++) { const o = row[j]; if (o.ldOn && Math.hypot(o.ldU - b.ldU, o.ldV - b.ldV) < o.r + b.r + 0.12) { b.ldOn = true; break; } }   // 막고 있는 몸에 닿아 있다 (뒤에서 받치는 몸)
+      if (b.ldOn) load += chCarW(b);
+    }
+    car.load = load; car.loadK = load > 0 ? Math.max(0, 1 - load / chCarCap(car)) : 1;
+    if (load > 0) {                            // 미는 힘보다 무거우면 그만큼 느려진다 (운전자가 밟아도 못 넘는다)
+      const sp = Math.hypot(car.vx, car.vz), base = car.tr ? car.tr.spd * (car.tr.spdK || 1) : CAR_SPEED * (car.mil ? 2 / 3 : 1), vmax = base * car.loadK;
+      if (sp > vmax + 0.02) { const ns = Math.max(vmax, sp - CH_DRAG * chDt); car.vx *= ns / sp; car.vz *= ns / sp; }
+    }
   }
   function showDud() {                        // v288: 꽝 금고 — 멈추고 '꽝!' + 놀리는 글, 조이스틱 자리 [확인]
     acqOpen = true; paused = true; stopInput();
@@ -7681,7 +7768,7 @@
     window.__rdReady = true;
   }
 
-  window.__rd = { get me() { return me; }, bodies, spawn, fleeDir, step: stepWorld, buildings, explored, ch: CHAPTER ? CH_MAP : null, zombify: makeZombie, slotOf, pop: () => chPop, awaken: awakenMe, bar: () => chBar, tr: () => chTr, roadG: () => chRoadG, trSpawn: chTrSpawn, trExit: chTrExit, trReset: chTrReset, trOff: () => { for (const c of chTr.cars) { chTrGone(c); c.tr.mode = 'gone'; } chTr.cars.length = 0; for (const Z of chTr.Z) { Z.n = 0; Z.want = 0; } }, furn: () => ({ props: chProps, slabs: chSlabs, n: chFurnN }), heart: chHeartDrop, nav: chNavOf, navPlan: chNavPlan, hearts: () => pickups.filter((q) => q.kind === 'heart').length, deco: () => chDeco, bays: () => chBays, civCar: chDecoCarNow, decoObjs: () => chDecoObjs, carObs: () => carObs, carBoxes: () => chCarBoxes, teams: () => teamWait, park: chParked, kills: (n) => { if (n !== undefined) deaths = n; return deaths; }, teamEv: () => CH_TEAM_EVENTS, incident: (x, z) => callPolice({ x, z }), use: useItem, tier: chTier, hold: () => items, rooms: chRooms, spaceOf, linked, chStart, mutate, openDoor: chOpenDoor, cars: () => cars, objsL: () => objs, lastInc: () => lastIncident, stars: () => stars, setStars: (n, x, z) => { stars = n; deaths = Math.max(deaths, STAR_AT[n - 1]); lastIncident = new THREE.Vector2(x, z); }, xp: (n) => { for (let i = 0; i < n; i++) gainXp(); return { level, xp, pendingLv }; }, lvInfo: () => ({ level, xp, pendingLv, need: needXp(level + pendingLv) }), chips: () => chips.length, objs, breakObj, rageK: CHAPTER ? rageK : null, loot: CHAPTER ? chLoot : null, breakSafe, give: (k) => pendingAward.push(k), inv: () => ({ tools: items.map((x) => x.kind + ':' + (x.off ? 'off' : x.kind === 'awaken' ? (+x.acc.toFixed(1)) + 's' : x.ammo)), owned: Object.keys(owned), lv: Object.assign({}, ilv), cap: chToolCap(), pickups: pickups.map((p) => [p.kind, +p.x.toFixed(1), +p.z.toFixed(1)]), acq: acqOpen }), zDamage, route: CHAPTER ? chRoute : null, cf: () => ({ D: cfD, W: cfW, H: cfH, block: cfBlock, ready: cfReady, runs: cfRuns, dist: cfDist }), get armyK() { return armyK; } };   // 확인용 (콘솔에서 상태 보기·한 걸음씩 돌리기)
+  window.__rd = { get me() { return me; }, bodies, spawn, fleeDir, step: stepWorld, buildings, explored, ch: CHAPTER ? CH_MAP : null, zombify: makeZombie, slotOf, pop: () => chPop, awaken: awakenMe, bar: () => chBar, zebras: () => chZebras, carLoad: chCarLoad, carCap: chCarCap, carW: chCarW, tr: () => chTr, roadG: () => chRoadG, trSpawn: chTrSpawn, trExit: chTrExit, trReset: chTrReset, trOff: () => { for (const c of chTr.cars) { chTrGone(c); c.tr.mode = 'gone'; } chTr.cars.length = 0; for (const Z of chTr.Z) { Z.n = 0; Z.want = 0; } }, furn: () => ({ props: chProps, slabs: chSlabs, n: chFurnN }), heart: chHeartDrop, nav: chNavOf, navPlan: chNavPlan, hearts: () => pickups.filter((q) => q.kind === 'heart').length, deco: () => chDeco, bays: () => chBays, civCar: chDecoCarNow, decoObjs: () => chDecoObjs, carObs: () => carObs, carBoxes: () => chCarBoxes, teams: () => teamWait, park: chParked, kills: (n) => { if (n !== undefined) deaths = n; return deaths; }, teamEv: () => CH_TEAM_EVENTS, incident: (x, z) => callPolice({ x, z }), use: useItem, tier: chTier, hold: () => items, rooms: chRooms, spaceOf, linked, chStart, mutate, openDoor: chOpenDoor, cars: () => cars, objsL: () => objs, lastInc: () => lastIncident, stars: () => stars, setStars: (n, x, z) => { stars = n; deaths = Math.max(deaths, STAR_AT[n - 1]); lastIncident = new THREE.Vector2(x, z); }, xp: (n) => { for (let i = 0; i < n; i++) gainXp(); return { level, xp, pendingLv }; }, lvInfo: () => ({ level, xp, pendingLv, need: needXp(level + pendingLv) }), chips: () => chips.length, objs, breakObj, rageK: CHAPTER ? rageK : null, loot: CHAPTER ? chLoot : null, breakSafe, give: (k) => pendingAward.push(k), inv: () => ({ tools: items.map((x) => x.kind + ':' + (x.off ? 'off' : x.kind === 'awaken' ? (+x.acc.toFixed(1)) + 's' : x.ammo)), owned: Object.keys(owned), lv: Object.assign({}, ilv), cap: chToolCap(), pickups: pickups.map((p) => [p.kind, +p.x.toFixed(1), +p.z.toFixed(1)]), acq: acqOpen }), zDamage, route: CHAPTER ? chRoute : null, cf: () => ({ D: cfD, W: cfW, H: cfH, block: cfBlock, ready: cfReady, runs: cfRuns, dist: cfDist }), get armyK() { return armyK; } };   // 확인용 (콘솔에서 상태 보기·한 걸음씩 돌리기)
   // 내가 고쳐 올리면 열려 있는 화면이 저절로 바뀐다 — 새 버전은 판을 새로 깐다
   window.claude?.hot?.ready ? window.claude.hot.ready(start) : start();
 </script>
