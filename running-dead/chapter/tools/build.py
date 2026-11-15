@@ -780,6 +780,8 @@ from c114_patch import C114_R   # c114: 큰 무리 성능 · 경보 20% 앞당�
 R += C114_R
 from c115_patch import C115_R   # c115: 얻은 변이 좀비 체력 3분의 2
 R += C115_R
+from c116_patch import C116_R   # c116: 수송차 전부 돌진형
+R += C116_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
