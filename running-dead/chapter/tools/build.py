@@ -784,6 +784,8 @@ from c116_patch import C116_R   # c116: 수송차 전부 돌진형
 R += C116_R
 from c117_patch import C117_R   # c117: 수송차 속도 +10%
 R += C117_R
+from c118_patch import C118_R   # c118: 특수부대 첫 출동 앞당김
+R += C118_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

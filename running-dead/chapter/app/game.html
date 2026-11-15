@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c117</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c118</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6081,7 +6081,7 @@
   // ── c59: 군인팀 (특수부대) — 테스트 맵과 같은 방식. 경보 3단계(감염 75명)에 처음, 그 뒤로 감염 60명마다 (사람·경찰·군인·저격수 다 합쳐서).
   //    처음 두 번은 걸어서 오는 분대 셋 (저격수 1 + 군인 2씩), 그 뒤로는 군인차 두 대 (한 대에 저격수 2 + 군인 6). 나오는 곳 = 내가 있는 구역 바깥 라인 (경찰 출동과 같다). 목표 = 나 ──
   const CH_TEAM_GAP = 60;
-  const CH_TEAM_EVENTS = Array.from({ length: 200 }, (_, i) => ({ at: STAR_AT[2] + CH_TEAM_GAP * i, tier: i }))   /* c62: tier = 몇 번째 출동인지 (chQueueTeam) */;
+  const CH_TEAM_EVENTS = Array.from({ length: 200 }, (_, i) => ({ at: Math.round((STAR_AT[1] + STAR_AT[2]) / 2) + CH_TEAM_GAP * i, tier: i })   /* c118: 난리남과 개판 사이 한가운데부터 */)   /* c62: tier = 몇 번째 출동인지 (chQueueTeam) */;
   function chTeamSpot(seg) {                   // 그 자리(seg) 둘레 6칸 안, 같은 구역, 내 화면과 좀비 시야 밖 — 분대·군인차가 같은 곳 둘레에서 나온다
     for (let k = 0; k < 90; k++) {
       const a = Math.random() * Math.PI * 2, r = rand(0, 6), x = seg.x + Math.cos(a) * r, z = seg.z + Math.sin(a) * r;
