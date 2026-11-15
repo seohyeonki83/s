@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c89</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c90</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6793,7 +6793,7 @@
     me.hp = Math.min(me.maxHp, me.hp + me.maxHp * 0.5);
     for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; puff(me.foot.x, 0.8, me.foot.z, i % 2 ? 0xff5577 : 0x6dff9a, 0.5, 1.6, 0.6, Math.cos(a) * 2.2, 1.2, Math.sin(a) * 2.2, 0.9); }
   }
-  const CH_HEART_P = 1 / 50;
+  const CH_HEART_P = 3 / 50;   // c90: 3배
   function chFurnBreak(x, z, D, space, n, size) {   // 먼지 + 조각 · 보관함이면 50번에 한 번 하트
     dust(x, z, Math.round(n * 0.8), 1.2); debris(x, z, n, CH_BITS[D.bits], size, 5.8);
     if (D.store && Math.random() < CH_HEART_P) chHeartDrop(x, z, space);
@@ -7435,7 +7435,7 @@
   //   수송차는 위에 물음표가 뜬다 (금고와 같은 노란 물음표). 부수면 실은 것 하나가 그 자리에 떨어지고, 랜드마크 문이 부서졌을 때처럼 사수 경찰차 1대가 그 자리로 온다.
   //   운전자: 조심형(지금까지의 운전 — 가운데 좀비 앞에 서고, 맞으면 얼어붙었다가 내린다) · 가속형(서 있다가 냅다 밟는다 — 좀비도 사람도 안 가린다) ·
   //           비비기형(물러났다가 옆으로 다시 들이민다) · 돌진형(좀비를 아예 신경 안 쓴다 — 현금 수송차는 늘 이쪽). 패닉 중엔 더 밟는다 (1.3~1.6배).
-  const CH_LOOT_P = 1 / 30;
+  const CH_LOOT_P = 1 / 15;   // c90: 2배
   const CH_LOOT_CAR = { cash: ['cash'], ambul: ['mutate', 'awaken', 'catalyst', 'rage', 'blood'], parcel: ['bomb', 'taser', 'book', 'bag', 'crowbar', 'absorb', 'vest', 'shoes'] };
   const CH_LOOT_N = Object.values(CH_LOOT_CAR).reduce((a, l) => a + l.length, 0);
   const chLootType = () => { let r = Math.random() * CH_LOOT_N; for (const k in CH_LOOT_CAR) if ((r -= CH_LOOT_CAR[k].length) < 0) return k; return 'parcel'; };

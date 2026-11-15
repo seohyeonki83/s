@@ -728,6 +728,8 @@ from c88_patch import C88_R   # c88: 수비대 인원 · 바리케이트 한계
 R += C88_R
 from c89_patch import C89_R   # c89: 줄인 맵
 R += C89_R
+from c90_patch import C90_R   # c90: 하트 3배 · 물음표 차 2배
+R += C90_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
