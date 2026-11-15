@@ -708,6 +708,8 @@ from c78_patch import C78_R   # c78: 사람은 평소 도로를 피한다 · 도
 R += C78_R
 from c79_patch import C79_R   # c79: 횡단보도 · 달리는 차와 몸의 진짜 물리
 R += C79_R
+from c80_patch import C80_R   # c80: 물음표 수송차 · 운전자 성격과 패닉
+R += C80_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
