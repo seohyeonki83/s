@@ -148,9 +148,26 @@ while len(removed) < WANT:                                # 집을 4분의 1 뺀
     cand = [b for b in houses() if bad(b, top) > 1e-6]
     pick = max(cand, key=lambda b: bad(b, top)) if cand else min(houses(), key=(lambda h: gap(rect(h), rect(worst))) if w > 1e-6 else free)
     top.remove(pick); removed.append(pick); print('remove', pick['t'], pick['zone'], round(w, 2), flush=True); solve()
-for extra in range(3):                                    # 그래도 길·건물과 겹치는 것이 남으면 집을 더 뺀다 (많아야 셋)
+for extra in range(6):                                    # 그래도 길·건물과 겹치는 것이 남으면 — 빼지 않고 같은 구역의 빈 땅을 찾아 옮긴다 (가장 가까운 데로). 정말 없을 때만 집을 뺀다
     worst = max(top, key=lambda b: bad(b, top)); w = bad(worst, top)
     if w <= 0.05: break
+    ox, oz, ozn = worst['x'], worst['z'], worst['zone']; best = None
+    for zi in [ozn] + ([k for k in range(4) if k != ozn] if worst['t'] == 'house' else []):   # 집은 제 구역에 자리가 없으면 다른 구역으로
+        zr = M['zones'][zi]; worst['zone'] = zi
+        x = zr[0] + 4.9 + worst['w'] / 2
+        while x <= zr[2] - 4.9 - worst['w'] / 2:
+            z = zr[1] + 4.9 + worst['d'] / 2
+            while z <= zr[3] - 4.9 - worst['d'] / 2:
+                worst['x'], worst['z'] = round(x, 2), round(z, 2)
+                if bad(worst, top) <= 1e-6:
+                    c = math.hypot(x - ox, z - oz)
+                    if best is None or c < best[0]: best = (c, round(x, 2), round(z, 2), zi)
+                z += 0.5
+            x += 0.5
+        if best: break
+    worst['zone'] = best[3] if best else ozn
+    if best: worst['x'], worst['z'] = best[1], best[2]; print('moved far', worst['t'], worst['zone'], round(best[0], 1), flush=True); continue
+    worst['x'], worst['z'] = ox, oz
     pick = worst if worst in houses() else min(houses(), key=lambda h: gap(rect(h), rect(worst)))
     top.remove(pick); removed.append(pick); print('remove extra', pick['t'], pick['zone'], round(w, 2), flush=True); solve()
 # 차고: 가장 가까운 집이 빠졌으면 같이 뺀다 (집에서 6칸 넘게 떨어진 차고)

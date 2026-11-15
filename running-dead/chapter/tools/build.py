@@ -730,6 +730,8 @@ from c89_patch import C89_R   # c89: 줄인 맵
 R += C89_R
 from c90_patch import C90_R   # c90: 하트 3배 · 물음표 차 2배
 R += C90_R
+from c91_patch import C91_R   # c91: 집 7채만 뺀 맵
+R += C91_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
