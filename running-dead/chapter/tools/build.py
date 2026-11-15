@@ -740,6 +740,8 @@ from c94_patch import C94_R   # c94: 집 문 폭 3분의 2
 R += C94_R
 from c95_patch import C95_R   # c95: 모든 건물 15% 줄임 · 골목 넓힘
 R += C95_R
+from c96_patch import C96_R   # c96: 레벨업 1.2배씩
+R += C96_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
