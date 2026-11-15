@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c110</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c111</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6662,7 +6662,7 @@
       else if (A.k === 'gas') { mk(A, (g, w, h, X, Z) => {
         g.fillStyle = '#b3b3ae'; g.fillRect(0, 0, w, h); speck(g, w, h, 70, ['rgba(255, 255, 255, 0.05)', 'rgba(0, 0, 0, 0.05)'], 8, 20);
         g.strokeStyle = 'rgba(0, 0, 0, 0.1)'; g.lineWidth = 1.5; for (let x = 2.6 * K; x < w; x += 2.6 * K) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); } for (let y = 2.6 * K; y < h; y += 2.6 * K) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
-        const [c0, c1, c2, c3] = A.can; g.fillStyle = 'rgba(0, 0, 0, 0.12)'; g.fillRect(X(c0), Z(c1), (c2 - c0) * K, (c3 - c1) * K);
+        const [c0, c1, c2, c3] = A.can; g.fillStyle = 'rgba(0, 0, 0, 0)';   /* c111: 지붕 그림자도 없앤다 */ g.fillRect(X(c0), Z(c1), (c2 - c0) * K, (c3 - c1) * K);
         for (const ix of A.isl) { const x = X(ix) - 0.5 * K, y = Z(A.iz) - 1.45 * K; g.fillStyle = '#e2c84a'; g.fillRect(x - 3, y - 3, K + 6, 2.9 * K + 6); g.fillStyle = '#6a6a66'; g.fillRect(x, y, K, 2.9 * K); }
         g.fillStyle = 'rgba(40, 40, 40, 0.35)'; for (let i = 0; i < 5; i++) { g.beginPath(); g.ellipse(X(c0) + rs() * (c2 - c0) * K, Z(c1) + rs() * (c3 - c1) * K, 4 + rs() * 7, 3 + rs() * 4, rs() * 3, 0, 6.283); g.fill(); }   // 기름 얼룩
         g.strokeStyle = '#f2f2ee'; g.lineWidth = 3; g.strokeRect(1.5, 1.5, w - 3, h - 3);
@@ -7503,7 +7503,7 @@
     for (const o of objs) if (o.type === 'door' && !o.off && !(o.B.parent && !o.L.ext)) door(o.L);
     for (const B of buildings) for (const D of B.doors || []) door(D);
     for (const [t, x, z, inv] of CH_MAP.props || []) {
-      const P = CH_PROP[t]; if (!P) continue;
+      const P = CH_PROP[t]; if (!P || t === 'pillar') continue;   /* c111: 지붕이 없으니 기둥도 안 세운다 */
       if (!(P.inv || inv) && keep.some((k) => x > k[0] - P.r && x < k[2] + P.r && z > k[1] - P.r && z < k[3] + P.r)) continue;
       const b = chAddProp(t, x, z); b.out = true; b.space = null; b.fixed = !!P.fix; b.inv = !!(P.inv || inv);
       if (b.inv) b.hp = b.maxHp = 1e12;

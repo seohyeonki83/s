@@ -770,6 +770,8 @@ from c109_patch import C109_R   # c109: 미는 힘 그대로
 R += C109_R
 from c110_patch import C110_R   # c110: 주유소 지붕 없앰 · 시작 하양
 R += C110_R
+from c111_patch import C111_R   # c111: 주유소 기둥 없앰
+R += C111_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

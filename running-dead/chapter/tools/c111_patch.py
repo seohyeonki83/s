@@ -1,0 +1,2 @@
+# c111: 주유소 기둥·지붕 그림자 없앰 (gen_c111.py가 만든다)
+C111_R = [('    for (const [t, x, z, inv] of CH_MAP.props || []) {\n      const P = CH_PROP[t]; if (!P) continue;', "    for (const [t, x, z, inv] of CH_MAP.props || []) {\n      const P = CH_PROP[t]; if (!P || t === 'pillar') continue;   /* c111: 지붕이 없으니 기둥도 안 세운다 */"), ("const [c0, c1, c2, c3] = A.can; g.fillStyle = 'rgba(0, 0, 0, 0.12)';", "const [c0, c1, c2, c3] = A.can; g.fillStyle = 'rgba(0, 0, 0, 0)';   /* c111: 지붕 그림자도 없앤다 */")]
