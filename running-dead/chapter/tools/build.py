@@ -766,6 +766,8 @@ from c107_patch import C107_R   # c107: 집 15채 · 열린 집
 R += C107_R
 from c108_patch import C108_R   # c108: 집 금고 · 하트 · 유전자
 R += C108_R
+from c109_patch import C109_R   # c109: 미는 힘 그대로
+R += C109_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

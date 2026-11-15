@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c108</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c109</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2593,7 +2593,7 @@
         if (hu - Math.abs(u) < hv - Math.abs(v)) u = (u < 0 ? -1 : 1) * hu; else v = (v < 0 ? -1 : 1) * hv;
         const nx = car.x + u * fx + v * rx, nz = car.z + u * fz + v * rz;
         if (car.barr) {                       // c59 · c60: 바리케이트 — 경찰차와 같은 방식으로 밀린다 (무게 3배). 좀비만 민다 (사람은 못 민다)
-          const f = b === me ? 1 : (b.force || 1) * (b.mut === 'armor' && !CHAPTER ? 2 / 3 : 1), sh = isZombie(b) && !car.wreck ? f / (f + CAR_MASS * 2 / 3 * CH_BARR_K) : 0, ex = nx - b.foot.x, ez = nz - b.foot.z;
+          const f = CHAPTER ? (b.force || 1) : b === me ? 1 : (b.force || 1) * (b.mut === 'armor' ? 2 / 3 : 1), sh = isZombie(b) && !car.wreck   /* c109: 바리케이트 — 제 힘 그대로 */ ? f / (f + CAR_MASS * 2 / 3 * CH_BARR_K) : 0, ex = nx - b.foot.x, ez = nz - b.foot.z;
           b.foot.x += ex * (1 - sh); b.foot.z += ez * (1 - sh);
           if (sh) { car.x -= ex * sh; car.z -= ez * sh; car.pushT = clock;
             const px = b.foot.x - car.x, pz = b.foot.z - car.z, mx = -ex * sh, mz = -ez * sh, Wb = CAR_W * CH_BARR_W;
@@ -2602,7 +2602,7 @@
           continue;
         }
         if (car.state === 'parked') {         // v464: 서 있는 차는 누구에게나 밀린다 — 겹친 만큼을 힘으로 나눈다 (몸 힘 : 차 무게 10). 여럿이 밀면 쌓인다. 나는 예외로 보통 몸과 같은 힘(1)
-          const f = b === me || b.sniper ? 1 : (b.force || 1) * (b.mut === 'armor' && !CHAPTER ? 2 / 3 : 1),   /* c106: 덩치도 제 무게 그대로 차를 민다 */   /* v469: 덩치는 차에 미는 힘의 2/3만 (10.4 → 6.93) */   /* v465: 나·저격수는 차에 보통 몸 힘(1)만 */ sh = CHAPTER && car.deco && !isZombie(b) ? 0 : f / (f + CAR_MASS * 2 / 3 * (car.massK || 1)),   /* c69 */   /* v468: 미는 데 쓰는 차 무게 2/3 (10 → 6.67) */ ex = nx - b.foot.x, ez = nz - b.foot.z;
+          const f = CHAPTER ? (isZombie(b) ? (b.force || 1) : 1) : b === me || b.sniper ? 1 : (b.force || 1) * (b.mut === 'armor' ? 2 / 3 : 1),   /* c109: 서 있는 차 — 좀비는 제 힘 그대로 (나 8 · 덩치 11), 사람은 1 */   /* c106: 덩치도 제 무게 그대로 차를 민다 */   /* v469: 덩치는 차에 미는 힘의 2/3만 (10.4 → 6.93) */   /* v465: 나·저격수는 차에 보통 몸 힘(1)만 */ sh = CHAPTER && car.deco && !isZombie(b) ? 0 : f / (f + CAR_MASS * 2 / 3 * (car.massK || 1)),   /* c69 */   /* v468: 미는 데 쓰는 차 무게 2/3 (10 → 6.67) */ ex = nx - b.foot.x, ez = nz - b.foot.z;
           b.foot.x += ex * (1 - sh); b.foot.z += ez * (1 - sh);
           car.x -= ex * sh; car.z -= ez * sh;
           {                                   // v470: 본편도 — v467: 미는 자리에 따라 돈다 — 중심에서 민 자리까지(r) × 밀린 거리(d) = 회전
@@ -6738,7 +6738,7 @@
             const k = b.r / (d || 1e-6); u = (u < 0 ? -1 : 1) * (t.L / 2 + qu * k); v = (v < 0 ? -1 : 1) * (t.W / 2 + qv * k);
           } else if (hu - Math.abs(u) < hv - Math.abs(v)) u = (u < 0 ? -1 : 1) * hu; else v = (v < 0 ? -1 : 1) * hv;
           const ex = t.x + u * fx + v * rx - b.foot.x, ez = t.z + u * fz + v * rz - b.foot.z;
-          const f = b === me ? 1 : (b.force || 1) * (b.mut === 'armor' ? 2 / 3 : 1), sh = isZombie(b) ? f / (f + t.mass) : 0;   // 좀비만 민다 — 사람은 돌아간다
+          const f = CHAPTER ? (b.force || 1) : b === me ? 1 : (b.force || 1) * (b.mut === 'armor' ? 2 / 3 : 1), sh = isZombie(b) ? f / (f + t.mass) : 0;   /* c109: 건물 안 네모 사물 */   // 좀비만 민다 — 사람은 돌아간다
           b.foot.x += ex * (1 - sh); b.foot.z += ez * (1 - sh);
           if (!sh) continue;
           t.x -= ex * sh; t.z -= ez * sh;
@@ -7377,7 +7377,7 @@
   //   앞을 막은 몸들(범퍼에 닿은 몸 + 그 몸에 줄줄이 닿은 몸)의 무게 합만큼 차가 느려지고, 차의 미는 힘을 넘으면 아예 못 간다.
   const CH_PUSH = 8, CH_DRAG = 16, CH_VN_MIN = 0.8, CH_SCRAPE = 0.35;   // 차의 미는 힘 = 보통 몸 8개 × 차 무게 · 막혔을 때 줄어드는 빠르기(초당) · 이보다 느리게 밀고 들면 충돌이 아니다
   let chDt = 1 / 60;
-  const chCarW = (b) => b.mut === 'armor' ? MY_FORCE * 1.3 * 2 / 3 : b.mut === 'hydra' ? 2 : 1;   // 차에 대한 몸의 무게 — 보통 1 · 덩치 6.93 · 히드라 2 (나도 같다)
+  const chCarW = (b) => isZombie(b) ? (b.force || 1) : 1;   /* c109: 달리는 차를 막는 무게 = 제 힘 그대로 (나 8 · 덩치 11 · 히드라 4 · 동료 1). 사람은 1 */   // 차에 대한 몸의 무게 — 보통 1 · 덩치 6.93 · 히드라 2 (나도 같다)
   const chCarM = (car) => car.massK || (car.mil ? 1.6 : 1);
   const CH_TR_PUSH = 2 / 3, CH_TR_SLOW = 0.8;   // c81: 길거리 차 — 운전 중 미는 힘 3분의 2 · 속도 80%
   const chTrWant = () => 2 + (Math.random() < 1 / 3 ? 1 : 0);   // c81: 구역마다 달리는 차 2~3대 (평균 2.33)
