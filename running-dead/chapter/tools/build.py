@@ -700,6 +700,8 @@ from c74_patch import C74_R   # c74: 레벨업 10명·1.3배 · 가장 큰 무�
 R += C74_R
 from c75_patch import C75_R   # c75: 5명·4명 무리에서도 빨강 한 명씩
 R += C75_R
+from c76_patch import C76_R   # c76: 차 무게 최소 = 경찰차 · 편의점 경찰 · 길거리 주황 5분의 1은 노랑
+R += C76_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
