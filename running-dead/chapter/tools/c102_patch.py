@@ -1,0 +1,2 @@
+# c102: 변이 줄기세포 — 체력 100%로 부활 (gen_c102.py가 만든다)
+C102_R = [('  const reviveHp = (n = CHAPTER ? 0 : up.brain) => Math.min(1, 0.3 + 0.1 * n);', '  const reviveHp = (n = up.brain) => CHAPTER ? 1 : Math.min(1, 0.3 + 0.1 * n);   /* c102: 챕터는 체력 가득 */'), ('    revive: (n) => `체력 30%로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,', '    revive: (n) => `체력 가득으로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,')]

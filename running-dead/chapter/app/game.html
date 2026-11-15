@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c101</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c102</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5402,7 +5402,7 @@
     for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; puff(z.foot.x, 0.4, z.foot.z, 0xffffff, 0.45, 1.2, 0.45, Math.cos(a) * 2.5, 0.4, Math.sin(a) * 2.5, 0.85); }
   }
   const reviveCd = () => CHAPTER ? 120 * Math.pow(0.9, lv('revive')) : 120;   /* c100: 강화마다 남은 시간의 10%씩 줄어든다 (120 → 108 → 97 → 87 → 79 → 71초) */   // v376: 부활 쿨타임 2분 고정
-  const reviveHp = (n = CHAPTER ? 0 : up.brain) => Math.min(1, 0.3 + 0.1 * n);   // v376: 부활 체력 30%, 장비 강화마다 +10%p
+  const reviveHp = (n = up.brain) => CHAPTER ? 1 : Math.min(1, 0.3 + 0.1 * n);   /* c102: 챕터는 체력 가득 */   // v376: 부활 체력 30%, 장비 강화마다 +10%p
   let reviveT = 0;
   function itemsTick(dt) {
     if (reviveT > 0) { const p = Math.ceil(reviveT); reviveT = Math.max(0, reviveT - dt); if (Math.ceil(reviveT) !== p) refreshBadges(); }
@@ -5583,7 +5583,7 @@
     absorb: (n) => `충격 흡수 ${1 + n} (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12)`,
     vest: (n) => `총격 피해 -${10 * (1 + n)}%`,
     shoes: (n) => `이동 속도 +${5 * (1 + n)}%`,
-    revive: (n) => `체력 30%로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,
+    revive: (n) => `체력 가득으로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,
     catalyst: (n) => `변이 좀비 공격력 +${5 * (1 + n)}%`,
     blood: (n) => `내 최대 체력 +${10 * (1 + n)}%`,
   };
