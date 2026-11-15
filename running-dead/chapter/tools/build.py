@@ -1,7 +1,7 @@
 # 챕터 줄기 c1 — 테스트 버전 v589를 바탕으로 새 파일을 뜬다 (v589는 그대로). 구역 4개 · 건물만 · 지붕 아이콘 · 세 겹 미니맵
 import pathlib, json, sys
 SRC = pathlib.Path('/home/user/s/running-dead/v589.html'); OUT = pathlib.Path('/home/user/s/running-dead/chapter/' + sys.argv[1] + '.html')
-s = SRC.read_text(encoding='utf8'); MAP = pathlib.Path('map_c83.json').read_text(encoding='utf8')   # c83: 새 맵
+s = SRC.read_text(encoding='utf8'); MAP = pathlib.Path('map_c85.json').read_text(encoding='utf8')   # c83: 새 맵 · c85: 꾸민 맵
 VER = sys.argv[1]
 ICONS = r'''
   // ── 챕터: 건물 종류 (c1) — 지붕 색 + 지붕 위 아이콘 (금고 건물의 보물상자처럼 어둠 위에 뜬다). 들어가면 지붕과 같이 사라지고, 잠식하면 X ──
@@ -718,6 +718,8 @@ from c83_patch import C83_R   # c83: 건널목을 길게 (만·산 덩어리·�
 R += C83_R
 from c84_patch import C84_R   # c84: 하양·노랑·주황 — 알아보는 거리 80% · 경계 시간 60% · 이동 속도 115%
 R += C84_R
+from c85_patch import C85_R   # c85: 마을 꾸미기 (공원·주유소·농구장·공사 현장·길거리 사물)
+R += C85_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
