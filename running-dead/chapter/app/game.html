@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c113</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c114</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -346,7 +346,7 @@
   const STAR_MAX = 5;
   const STAR_BASE = 10, STAR_GROW = 2.1;   /* v395: 10명 시작 · 2.1배 → 누적 [10, 31, 75, 168, 362] */   // 별 사이에 더 필요한 감염 수가 2.5배씩 늘어난다: +5, +12.5, +31, +78, +195 (v135)
   const STAR_AT = (() => { let t = 0, d = STAR_BASE; return Array.from({ length: 5 }, () => { t += d; d *= STAR_GROW; return Math.round(t); }); })();   // [5, 18, 49, 127, 322]
-  for (let i = 1; i < STAR_AT.length; i++) STAR_AT[i] = Math.round(STAR_AT[i] * 2 * 1.3 * 1.05);   /* c100: 5% 더 → [10, 85, 205, 459, 988] */   /* c99: 1.3배 더 → [10, 81, 195, 437, 941] */   // c86: [10, 62, 150, 336, 724]
+  for (let i = 1; i < STAR_AT.length; i++) STAR_AT[i] = Math.round(STAR_AT[i] * 2 * 1.3 * 1.05 * 0.8);   /* c114: 20% 앞당김 → [10, 68, 164, 367, 791] */   /* c100: 5% 더 → [10, 85, 205, 459, 988] */   /* c99: 1.3배 더 → [10, 81, 195, 437, 941] */   // c86: [10, 62, 150, 336, 724]
   const TEAM_COMP = { 2: ['sniper', 'soldier', 'soldier', 'soldier', 'sniper', 'soldier', 'soldier', 'soldier'], 1: ['sniper', 'soldier', 'soldier', 'sniper', 'soldier', 'soldier', 'sniper', 'soldier', 'soldier'] };   /* v474: 1팀 = 분대 셋 (저격수 1 + 군인 2씩, 10초 간격), 군인차 한 대 = 저격수 2 + 군인 3씩 */   /* v458: 분대마다 군인 한 명씩 줄임 — 1단계 저격수 1 + 군인 2 (×2), 2단계 군인차 한 대에 저격수 1 + 군인 3 */   /* v426: 1팀 = 저격수 2 + 군인 6 (저격수 하나에 군인 셋씩) */   /* v418: 1팀 = 저격수 2 + 군인 4 (저격수 하나에 군인 둘씩) */   // v410: 군인팀 구성 — 1팀 = 군인 2 + 저격수 1 (2~4팀은 아직 미정 → 그 차례엔 안 나온다)
   const TEAM_EVENTS = (() => {               // v410: 군인팀 출동 시점 = 경보 3단계(개판)부터 단계마다 도달할 때 + 다음 단계와의 중간 (데프콘 뒤로도 2.1배씩 계속)
     const th = []; let t = 0, d = STAR_BASE;
@@ -1349,7 +1349,24 @@
   }
 
   const chIn = (B, x, z) => x > B.x0 && x < B.x1 && z > B.z0 && z < B.z1;
-  const spaceOf = (x, z) => chRooms.find((B) => chIn(B, x, z)) || buildings.find((B) => chIn(B, x, z)) || null;   /* c53: 방이 먼저 */   // 이 자리가 들어 있는 건물 (밖이면 null)
+  let chSpG = null, chSpN = -1, chSpW = 0, chSpH = 0, chSpX = 0, chSpZ = 0;   // c114: 건물 찾기 격자 (칸마다 [방들, 건물들] — 원래 목록 순서 그대로)
+  function chSpBuild() {
+    let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
+    for (const B of buildings) { if (B.x0 < x0) x0 = B.x0; if (B.z0 < z0) z0 = B.z0; if (B.x1 > x1) x1 = B.x1; if (B.z1 > z1) z1 = B.z1; }
+    chSpX = x0 - 1; chSpZ = z0 - 1; chSpW = Math.max(1, Math.ceil((x1 - x0 + 2) / 4)); chSpH = Math.max(1, Math.ceil((z1 - z0 + 2) / 4));
+    chSpG = Array.from({ length: chSpW * chSpH }, () => [[], []]);
+    const put = (B, k) => { for (let r = Math.max(0, Math.floor((B.z0 - chSpZ) / 4)); r <= Math.min(chSpH - 1, Math.floor((B.z1 - chSpZ) / 4)); r++) for (let c = Math.max(0, Math.floor((B.x0 - chSpX) / 4)); c <= Math.min(chSpW - 1, Math.floor((B.x1 - chSpX) / 4)); c++) chSpG[r * chSpW + c][k].push(B); };
+    for (const B of chRooms) put(B, 0); for (const B of buildings) put(B, 1);
+    chSpN = buildings.length * 1000 + chRooms.length;
+  }
+  const spaceOf = (x, z) => {
+    if (chSpN !== buildings.length * 1000 + chRooms.length) chSpBuild();
+    const c = Math.floor((x - chSpX) / 4), r = Math.floor((z - chSpZ) / 4); if (c < 0 || r < 0 || c >= chSpW || r >= chSpH) return null;
+    const G = chSpG[r * chSpW + c], A = G[0], B2 = G[1];
+    for (let i = 0; i < A.length; i++) if (chIn(A[i], x, z)) return A[i];
+    for (let i = 0; i < B2.length; i++) if (chIn(B2[i], x, z)) return B2[i];
+    return null;
+  };   /* c53: 방이 먼저 */   // 이 자리가 들어 있는 건물 (밖이면 null)
   function doorwaySpace(b, B) {               // v264: 건물 안이지만 열린 문틈(벽에서 0.6칸 안, 문 폭 안)에 서 있으면 밖(null)으로
     b.doorway = null;
     if (!B) return null;
@@ -1738,7 +1755,7 @@
   // 틱마다 주변을 본다. 좀비 = 나 + 동료 좀비 전부. 같은 공간(같은 건물 안, 또는 둘 다 밖)에 있는 좀비만 보인다
   // ── 근처 찾기 칸 (v177) — 걸음마다 좀비·시민을 4칸 네모 칸에 나눠 담는다. 근처를 찾을 땐 둘레 칸만 본다 (지도 전체 330명을 매번 훑지 않게) ──
   const G_CELL = 4;
-  let G_W = 0, G_H = 0, zCells = [], cCells = [];
+  let G_W = 0, G_H = 0, zCells = [], cCells = []; const chWkBuf = [];
   const seBuf = [], nzBuf = [], ncBuf = [], poBuf = [], viBuf = [], lzBuf = [];
   const gUsed = [];
   const gCol = (x) => Math.max(0, Math.min(G_W - 1, Math.floor((x - MM.x0) / G_CELL)));
@@ -3393,8 +3410,8 @@
         let sf = !t && !noObj && !(CHAPTER && go) ? nearSafe(z) : null;   /* v353: 동료도 금고를 때린다 */   // 나만: 금고가 가장 가까우면 가서 때린다 (v190)
         let forced = null;                     // v492: 공격 거리 안에서 차가 가장 가까운 상태로 2.5초 넘게 → 3명 제한·덮치기보다 먼저 그 차를 때린다
         { let cb = null, cd = Infinity; const reach = MELEE - RADIUS + Math.max(0, (z.r || BODY) - BODY);
-          if (!z.space) for (const OL of (CHAPTER ? chObjLists2 : chObjLists1)   /* c85: 동료도 — 서 있는 민간 차에 1.25초 막히면 그 차를 때린다 */) for (const o of OL) if (o.type === 'car' && !o.dead && !o.off && Math.abs(o.car.x - z.foot.x) < 4 && Math.abs(o.car.z - z.foot.z) < 4) { const g = objGap(o, z); if (g <= reach && g < cd) { cd = g; cb = o; } }
-          if (CHAPTER && z.space && z.space.fs) for (const t of z.space.fs) { if (t.obj.dead) continue; const g = objGap(t.obj, z); if (g <= reach && g < cd) { cd = g; cb = t.obj; } }   // c70: 네모 사물이 가로막고 있으면
+          if (!z.space && !CHAPTER) for (const OL of (CHAPTER ? chObjLists2 : chObjLists1)   /* c85: 동료도 — 서 있는 민간 차에 1.25초 막히면 그 차를 때린다 */) for (const o of OL) if (o.type === 'car' && !o.dead && !o.off && Math.abs(o.car.x - z.foot.x) < 4 && Math.abs(o.car.z - z.foot.z) < 4) { const g = objGap(o, z); if (g <= reach && g < cd) { cd = g; cb = o; } }
+          /* c114: 챕터에선 안 쓴다 (가면서 치기로 바뀌었다) */   // c70: 네모 사물이 가로막고 있으면
           if (cb && (!go || cd < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z) - RADIUS)) { z.carT = z.carHold === cb ? (z.carT || 0) + dt : dt; z.carHold = cb; } else { z.carT = 0; z.carHold = null; }
           if (z.carT >= 1.25) forced = z.carHold; if (noObj || CHAPTER) forced = null; }   // v501: 2.5 → 1.25초
         let ob = forced || (!t && !noObj && !(CHAPTER && go) ? nearObj(z) : null);
@@ -3587,11 +3604,12 @@
     gx /= eyes.length || 1; gz /= eyes.length || 1;
     const far2 = (z) => (z.foot.x - gx) ** 2 + (z.foot.z - gz) ** 2;
     const others = eyes.filter((z) => z !== me).sort((a, b) => far2(b) - far2(a));
+    const eyeMerge = CHAPTER && eyes.length > 40 ? Math.min(2.6, EYE_MERGE + (eyes.length - 40) / 60) : EYE_MERGE;   // c114
     const order = eyes.includes(me) ? [me, ...others] : others;
     for (const z of order) {
       const x = z.foot.x, y = z.foot.z, R = z.sense;
       if (!onView(x, y, R)) continue;          // 시야가 화면에 안 걸치면 안 그린다
-      if (z !== me && kept.some((k) => k.space === z.space && k.sense >= R - 0.3 && Math.hypot(k.foot.x - x, k.foot.z - y) < EYE_MERGE)) continue;   // 바로 옆 눈이 이미 그렸다
+      if (z !== me && kept.some((k) => k.space === z.space && k.sense >= R - 0.3 && Math.hypot(k.foot.x - x, k.foot.z - y) < eyeMerge)) continue;   // 바로 옆 눈이 이미 그렸다
       const RAYS = z === me ? VIEW_RAYS : ALLY_RAYS;
       const nb = bldgsNear(x - R - 0.5, y - R - 0.5, x + R + 0.5, y + R + 0.5);   // 시야 둘레에 걸치는 건물만 (v177)
       nearBuf.length = 0;
@@ -4466,12 +4484,12 @@
           b.zzT = 0.5;
           if (!chCanSleep(b)) continue;
           const far = (z) => { const dx = z.foot.x - b.foot.x, dz = z.foot.z - b.foot.z; return dx * dx + dz * dz > CH_SLEEP * CH_SLEEP; };
-          if (far(me) && zombies.every(far)) { b.met = false; b.sleep = true; b.vel.set(0, 0); }
+          if (far(me) && (G_W ? nearIn(zCells, b.foot.x, b.foot.z, CH_SLEEP, chWkBuf).every((z) => !isZombie(z) || far(z)) : zombies.every(far))) { b.met = false; b.sleep = true; b.vel.set(0, 0); }   /* c114 */
           continue;
         }
         const cx = col(b.foot.x), cz = row(b.foot.z); let hot = false;
         for (let dz = -1; dz <= 1 && !hot; dz++) for (let dx = -1; dx <= 1; dx++) { const X = cx + dx, Z = cz + dz; if (X >= 0 && X < CH_GW && Z >= 0 && Z < CH_GH && chHot[Z * CH_GW + X]) { hot = true; break; } }
-        if (hot && (near(b, me) || zombies.some((z) => near(b, z)))) { b.met = true; chWakeUp(b); }
+        if (hot && (near(b, me) || (G_W ? nearIn(zCells, b.foot.x, b.foot.z, CH_MEET, chWkBuf).some((z) => isZombie(z) && near(b, z)) : zombies.some((z) => near(b, z))))) { b.met = true; chWakeUp(b); }   /* c114 */
         b.sleep = !b.met;
       }
     }
@@ -4947,6 +4965,7 @@
   const hotObj = (o) => o.hotF !== undefined && o.hotF >= objFrame - (CHAPTER ? 45 : 1);   /* c86: 가면서 칠 때는 한 대씩 띄엄띄엄 치므로 1.5초 동안 '치는 중' */   // v360: 내가 지금 때리고 있는 사물 — 동료가 보통 인지거리로 알아챈다 (멈추면 바로 원래대로)
   const objCrowd = new Map();
   function nearObj(z) {
+    if (CHAPTER && z !== me && z.noT > clock) { const o = z.noV; if (!o || (!o.dead && !o.off)) { nearObj.any = o; return o; } }   // c114
     let best = null, bd = Infinity, any = null, ad = Infinity;
     for (const o of objs) {
       if (o.dead || o.off || o.type === 'table') continue;   // c70: 건물 안 사물은 따로 (맨 마지막 순위)
@@ -4967,6 +4986,7 @@
         const g = objGap(o, z); if (g > lim || (g >= bd && g >= ad)) continue; const [px, pz] = objPoint(o, z); if (blocked(z.foot.x, z.foot.z, px, pz)) continue;
         if (g < ad) { ad = g; any = o; } const n = (objCrowd.get(o) || 0) - (z.objC === o ? 1 : 0); if (g < bd && (CHAPTER || z === me || n < CROWD_MAX)) { bd = g; best = o; } }
     }
+    if (CHAPTER && z !== me) { z.noV = best; z.noT = clock + 0.1 + Math.random() * 0.06; }   // c114
     nearObj.any = any;                        // v245: 3명 찬 것까지 포함한 가장 가까운 사물 — 다른 타겟이 하나도 없으면 이걸로 (제한 없이 붙는다)
     return best;
   }

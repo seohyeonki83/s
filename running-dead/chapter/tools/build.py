@@ -776,6 +776,8 @@ from c112_patch import C112_R   # c112: 사물에서 하트·유전자 안 나�
 R += C112_R
 from c113_patch import C113_R   # c113: 시작 하양 — 움직인 뒤 앞쪽에
 R += C113_R
+from c114_patch import C114_R   # c114: 큰 무리 성능 · 경보 20% 앞당김
+R += C114_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
