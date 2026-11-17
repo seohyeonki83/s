@@ -798,6 +798,8 @@ from c123_patch import C123_R   # c123: 산성 10초 · 도트 2
 R += C123_R
 from c124_patch import C124_R   # c124: 레벨업에 새 도구 없음
 R += C124_R
+from c125_patch import C125_R   # c125: 무기/장비 분리 · 특공대 시간표
+R += C125_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

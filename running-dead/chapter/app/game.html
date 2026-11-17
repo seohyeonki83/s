@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c124</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c125</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4658,11 +4658,11 @@
     mutate: ['가장 가까운 동료 하나가 체력이 가득 차며 잠시 변이합니다.', '강화 시 주사를 더 들고 다니고 변이가 더 오래 갑니다.'],
     bomb: ['가장 위험한 적 곁의 동료 하나가 터지며 산성 덩어리를 뿌립니다.', '강화 시 더 빨리 다시 쓸 수 있습니다.'],
     crowbar: ['건물과 사물에 입히는 피해가 늘어납니다.', '강화 시 피해가 더 늘어납니다.'],
-    book: ['당신이 가진 모든 도구의 쿨타임이 감소합니다.', '강화 시 쿨타임이 더 줄어듭니다.'],
+    book: ['당신이 가진 모든 무기의 쿨타임이 감소합니다.', '강화 시 쿨타임이 더 줄어듭니다.'],
     stim: ['일정 시간마다 동료 한 마리를 강화시키는 주사를 주입합니다.', '강화 시 주사 효과가 더 강해집니다.'],
     revive: ['죽으면 되살아납니다. 다시 쓰려면 2분이 지나야 합니다.', '강화 시 기다리는 시간이 10%씩 줄어듭니다.'],
     shoes: ['나의 이동 속도가 빨라집니다.', '강화 시 더 빨라집니다.'],
-    bag: ['들 수 있는 도구가 하나 늘어납니다.', '강화 시 하나 더 늘어납니다.'],
+    bag: ['들 수 있는 무기가 하나 늘어납니다.', '강화 시 하나 더 늘어납니다.'],
     rage: ['일정 시간마다 동료 한 명의 공격 속도와 이동 속도가 오릅니다.', '강화 시 더 자주 퍼집니다.'],
     catalyst: ['변이한 좀비의 공격력이 오릅니다.', '강화 시 더 오릅니다.'],
     blood: ['나의 최대 체력이 늘어납니다.', '강화 시 더 늘어납니다.'],
@@ -4767,6 +4767,7 @@
       const card = e.target.closest('.card'), ok = e.target.closest('.ok');
       if (card) { chosen = card.dataset.k; for (const c of ov.querySelectorAll('.card')) c.classList.toggle('on', c === card); ov.querySelector('.ok').classList.add('ready'); return; }
       if (!ok || !chosen) return;
+      if (chosen === '__w') { chWupPick(ov); chosen = null; return; }   // c125: 강화할 무기를 고르는 화면으로
       ov.dataset.done = '1';
       for (const c of ov.querySelectorAll('.card')) { c.classList.remove('on'); c.classList.add(c.dataset.k === chosen ? 'win' : 'gone'); }   // 고른 카드가 커지며 빛나고 나머지는 사라진다
       ov.querySelector('.ok').style.opacity = '0';
@@ -5174,7 +5175,7 @@
       mutate: () => `주사 ${1 + n}개 · 변이 ${23 + 4 * n}초`, bomb: () => `쿨타임 ${Math.round(Math.max(10, 40 - 3 * n) * 1.15 * 1.1)}초`,
       vest: () => `원거리 공격 ${vestPct(n)}% 감쇄`, absorb: () => `넉백 ${(SNIPER_KD / 4 * (1 + n)).toFixed(2)}칸 흡수 (저격수 넉백의 ${Math.min(100, 25 * (1 + n))}%${n + 1 >= 4 ? ' · 완전 무효' : ''})`, crowbar: () => `건물·사물 피해 +${40 + 10 * n}%`, book: () => `도구 쿨타임 -${Math.round((1 - Math.pow(0.93, n + 1)) * 100)}%`,
       revive: () => `체력 ${Math.round(Math.min(1, 0.3 + 0.1 * n) * 100)}%로 부활 · 쿨타임 120초`, stim: () => `${stimCd()}초마다 1명 · 공격력·체력 x${(1.5 + 0.1 * n).toFixed(1)}`, shoes: () => `이동 속도 +${10 + 3 * n}%`,
-      bag: () => `도구 ${Math.min(5, 3 + n)}칸`, rage: () => `${25 - n}초마다 동료 1명 · 공격 속도·이동 속도 +5%`, catalyst: () => `변이 좀비 공격력 +${5 * (1 + n)}%`, blood: () => `내 최대 체력 +${10 * (1 + n)}%`,   // c19
+      bag: () => `무기 ${Math.min(5, 3 + n)}칸`, rage: () => `${25 - n}초마다 동료 1명 · 공격 속도·이동 속도 +5%`, catalyst: () => `변이 좀비 공격력 +${5 * (1 + n)}%`, blood: () => `내 최대 체력 +${10 * (1 + n)}%`,   // c19
     }[kind]();
   }
   const pBadges = {};                         // 왼쪽 아래 패시브 배지
@@ -5621,8 +5622,8 @@
     taser: (n) => `한 번에 ${1 + n}명 · 3초 감전`,
     awaken: (n) => `최대 사용 시간 ${10 + 3 * n}초 · 게이지 충전 속도 ${n ? '+' + 30 * n + '%' : '기본'}`,
     cash: (n) => n ? `유혹 강도와 범위 +${n}` : '유혹 강도와 범위 기본',
-    book: (n) => `도구 쿨타임 -${5 * (1 + n)}%`,
-    bag: (n) => `도구 ${Math.min(5, 2 + n)}칸`,
+    book: (n) => `무기 쿨타임 -${5 * (1 + n)}%`,
+    bag: (n) => `무기 ${Math.min(5, 2 + n)}칸`,
     rage: (n) => `30초마다 동료 1명 · 공격 속도·이동 속도 +${5 + 2 * n}%`,
     crowbar: (n) => `사물 피해 +${10 * (1 + n)}%`,
     absorb: (n) => `충격 흡수 ${1 + n} (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12)`,
@@ -5637,7 +5638,7 @@
     taser: ['대상을 3초 동안 감전시킵니다.', '강화 시 감전 대상이 늘어납니다.'],
     awaken: ['충전한 시간만큼 변이하고, 게이지가 찬 만큼 체력을 회복합니다 (가득이면 20%).', '강화 시 최대 사용 시간과 게이지 충전 속도가 늘어납니다.'],
     bomb: ['가장 위험한 적 곁의 동료 하나가 터지며 산성 덩어리를 뿌립니다.', '강화 시 터지는 범위가 넓어집니다.'],
-    bag: ['쓸 수 있는 도구가 하나 늘어납니다.', '하나 더 얻을 때마다 한 칸씩 더 늘어납니다.'],
+    bag: ['쓸 수 있는 무기가 하나 늘어납니다.', '하나 더 얻을 때마다 한 칸씩 더 늘어납니다.'],
     absorb: ['총격과 충격에 덜 밀려납니다. 약한 충격은 아예 받지 않습니다.', '강화 시 더 강한 충격도 흡수합니다.'],
     vest: ['총격 피해를 줄여 줍니다.', '강화 시 더 많이 줄여 줍니다.'],
     crowbar: ['사물에 입히는 피해가 늘어납니다.', '강화 시 피해가 더 늘어납니다.'],
@@ -5655,7 +5656,7 @@
     acqOpen = true; paused = true; stopInput();
     const d = ITEM[kind], n = lv(kind), max = n >= chLvMax(kind), ov = document.createElement('div');
     ov.id = 'acq';
-    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name} ${max ? '(이미 최대 강화)' : '강화'}</div>` +
+    ov.innerHTML = (d.passive ? '' : `<div style="font:900 40px/1 var(--font);letter-spacing:2px;color:#ff7a4a;text-shadow:0 0 14px rgba(255,80,0,0.9),0 4px 10px rgba(0,0,0,0.85);animation:wpnpop 0.45s ease-out both;margin-bottom:12px">무기 강화</div>`) + `<div class="big">${d.icon}</div><div class="t">${d.name} ${max ? '(이미 최대 강화)' : '강화'}</div>` +
       `<div style="margin-top:6px;font:900 22px/1 var(--font);color:#ffd34d;letter-spacing:1px;text-shadow:0 2px 6px rgba(0, 0, 0, 0.7)">${chStars(max ? n : n + 1)}</div><div class="ds">${itemDesc(kind)}<div class="up">` +   // c26: 강화 단계는 별로
       (max ? `지금${starTag(n)} (최대): ${statLine(kind, n)}` : `지금${starTag(n)}: ${statLine(kind, n)}<br>강화 뒤${starTag(n + 1)}: ${statLine(kind, n + 1)}`) + `</div></div>`;
     stage.appendChild(ov);
@@ -5683,15 +5684,15 @@
   // ── c25 · c27: 레벨업 = 도구·장비 14종 가운데 랜덤 3장 중 하나를 고른다 — 없는 것이면 새로 얻고, 가진 것이면 강화 +1 ──
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
     bomb: ['범위', (n) => n ? `+${20 * n}%` : '기본'], mutate: ['', (n) => `${1 + n}개·${10 + 3 * n}초`], taser: ['대상', (n) => `${1 + n}명`], awaken: ['최대', (n) => `${10 + 3 * n}초`], cash: ['유혹', (n) => n ? `+${n}` : '기본'],
-    book: ['쿨타임', (n) => `-${5 * (1 + n)}%`], bag: ['도구', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${5 + 2 * n}%`], crowbar: ['사물', (n) => `+${10 * (1 + n)}%`], absorb: ['흡수', (n) => `${1 + n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
+    book: ['쿨타임', (n) => `-${5 * (1 + n)}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${5 + 2 * n}%`], crowbar: ['사물', (n) => `+${10 * (1 + n)}%`], absorb: ['흡수', (n) => `${1 + n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
     shoes: ['이동', (n) => `+${5 * (1 + n)}%`], catalyst: ['변이', (n) => `+${5 * (1 + n)}%`], blood: ['체력', (n) => `+${10 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
   const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
     bomb: '동료 하나가 자폭', mutate: '동료 하나를 변이', taser: '적을 감전', awaken: '내가 변이', cash: '적을 유혹',
-    book: '도구 쿨타임 단축', bag: '쓸 수 있는 도구 +1', rage: '동료 속도 강화', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해 감소', shoes: '내 이동 속도 증가', catalyst: '변이 좀비 공격력 증가', blood: '내 최대 체력 증가', revive: '죽으면 되살아남',
+    book: '무기 쿨타임 단축', bag: '쓸 수 있는 무기 +1', rage: '동료 속도 강화', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해 감소', shoes: '내 이동 속도 증가', catalyst: '변이 좀비 공격력 증가', blood: '내 최대 체력 증가', revive: '죽으면 되살아남',
   };
   function chUpPool() {                       // 레벨업에 나올 수 있는 것 — 14종 전부, 끝까지 올린 것만 뺀다
-    return CH_ITEMS.filter((k) => !(chHas(k) && lv(k) >= chLvMax(k)) && (ITEM[k].passive || chHas(k)));   /* c124: 도구의 첫 등장은 레벨업에 없다 */
+    return CH_ITEMS.filter((k) => ITEM[k].passive && !(chHas(k) && lv(k) >= chLvMax(k)));   /* c125: 레벨업에는 장비만 (무기는 '무기 강화' 카드로) */
   }
   function chGain(kind) {                     // c27: 획득창 없이 바로 얻는다 (레벨업에서 고른 새 아이템) — 금고에서 얻을 때와 같은 자리에 붙는다
     const d = ITEM[kind]; let el;
@@ -5707,15 +5708,42 @@
     }
     chItemChanged(kind); el.classList.add('pop');
   }
+  // ── c125: 무기 강화 카드 · 특공대 시간표 · 카운트다운 연출 ──
+  const chWeapons = () => items.map((x) => x.kind);                     // 가진 무기 (쓰는 것)
+  const chWupN = () => chWeapons().filter((k) => lv(k) < chLvMax(k)).length;   // 강화할 수 있는 무기 수
+  function chWupCard() {
+    return `<div class="card" data-k="__w" style="min-height:158px;padding-top:8px;border-color:#ff7a4a"><div style="height:14px;font:900 12px/14px var(--font);letter-spacing:-0.5px;color:#ff7a4a">무기</div>` +
+      `<div class="ic" style="margin-top:4px">${IC.tool}</div><div class="nm" style="margin-top:8px">무기 강화</div><div class="ds" style="margin-top:8px">가진 무기 하나를 골라 강화</div><div class="vl"></div></div>`;
+  }
+  function chWupPick(ov) {                     // '무기 강화'를 골랐다 → 가진 무기가 다 뜬다 (끝까지 올린 것은 못 고른다)
+    ov.querySelector('.hd').textContent = '무기 강화';
+    ov.querySelector('.sub').textContent = '강화할 무기를 선택하세요';
+    const box = ov.querySelector('.cards'); box.style.flexWrap = 'wrap'; box.style.justifyContent = 'center';
+    box.innerHTML = chWeapons().map((k) => { const n = lv(k), S = CH_SHORT[k], max = n >= chLvMax(k);
+      return `<div class="card" data-k="${k}" style="min-height:158px;padding-top:8px${max ? ';opacity:0.4;pointer-events:none' : ''}"><div style="height:14px;font:900 12px/14px var(--font);letter-spacing:-0.5px;color:#ffd34d">${max ? 'MAX' : chStars(n + 1)}</div>` +
+        `<div class="ic" style="margin-top:4px">${ITEM[k].icon}</div><div class="nm" style="margin-top:8px">${ITEM[k].name}</div><div class="ds" style="margin-top:8px">${max ? '최대 강화' : '강화'}</div>` +
+        `<div class="vl">${S[0]} ${max ? S[1](n) : S[1](n) + ' → ' + S[1](n + 1)}</div></div>`; }).join('');
+    ov.querySelector('.ok').classList.remove('ready');
+  }
+  const chSfAt = (n) => { let t = 0; for (let i = 0; i < n; i++) t += 100 - 5 * i; return t; };   // n번째 출동 시각: 100 · 195 · 285 · 370 · 450(보스)
+  { const st = document.createElement('style'); st.textContent = '@keyframes sfpop { 0% { transform: translateY(30vh) scale(2.3); opacity: 0; } 10% { transform: translateY(30vh) scale(2.3); opacity: 1; } 60% { transform: translateY(30vh) scale(2.3); opacity: 1; } 100% { transform: none; opacity: 1; } }' +
+      ' @keyframes wpnpop { 0% { transform: scale(3); opacity: 0; } 60% { transform: scale(0.92); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }'; document.head.appendChild(st); }
+  function chSfPop(force) {                    // 카운트다운이 가운데 크게 떴다가 제자리에 박힌다
+    if (!chSf.hide && !force) return;
+    chSf.hide = false;
+    if (!chSf.on || chSf.boss) return;
+    chSfHud();
+    chSfEl.style.animation = 'none'; chSfEl.offsetWidth; chSfEl.style.animation = 'sfpop 1.9s ease-in-out';
+  }
   function chLevelUp() {
-    const pool = chUpPool(), keys = [];
-    while (keys.length < 3 && pool.length) keys.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);   // 그냥 랜덤 3장 (서로 다른 것)
+    let pool = chUpPool().concat(Array(chWupN()).fill('__w')); const keys = [];   // c125
+    while (keys.length < 3 && pool.length) { const k = pool.splice(Math.floor(Math.random() * pool.length), 1)[0]; keys.push(k); if (k === '__w') pool = pool.filter((q) => q !== '__w'); }   // 랜덤 3장 — 무기 강화 카드는 한 장만
     if (!keys.length) { lvQueued = Math.max(0, lvQueued - 1); return; }   // 전부 끝까지 올렸으면 뜰 게 없다
     lvOpen = true; paused = true; stopInput();
     const ov = document.createElement('div');
     ov.id = 'pick';
     ov.innerHTML = `<div class="hd">LEVEL UP!</div><div class="sub">Lv ${level} → Lv ${level + 1} · 하나를 고르세요</div><div class="cards">` +
-      keys.map((k) => { const has = chHas(k), n = lv(k), S = CH_SHORT[k];
+      keys.map((k) => { if (k === '__w') return chWupCard(); const has = chHas(k), n = lv(k), S = CH_SHORT[k];
         return `<div class="card" data-k="${k}" style="min-height:158px;padding-top:8px"><div style="height:14px;font:900 12px/14px var(--font);letter-spacing:-0.5px;color:#ffd34d">${has ? chStars(n + 1) : 'NEW'}</div>` +
           `<div class="ic" style="margin-top:4px">${ITEM[k].icon}</div><div class="nm" style="margin-top:8px">${ITEM[k].name}</div><div class="ds" style="margin-top:8px">${has ? '강화' : CH_BRIEF[k]}</div>` +
           `<div class="vl">${S[0]} ${has ? S[1](n) + ' → ' + S[1](n + 1) : S[1](0)}</div></div>`; }).join('') +
@@ -5730,6 +5758,7 @@
       const card = e.target.closest('.card'), ok = e.target.closest('.ok');
       if (card) { chosen = card.dataset.k; for (const c of ov.querySelectorAll('.card')) c.classList.toggle('on', c === card); ov.querySelector('.ok').classList.add('ready'); return; }
       if (!ok || !chosen) return;
+      if (chosen === '__w') { chWupPick(ov); chosen = null; return; }   // c125: 강화할 무기를 고르는 화면으로
       ov.dataset.done = '1';
       for (const c of ov.querySelectorAll('.card')) { c.classList.remove('on'); c.classList.add(c.dataset.k === chosen ? 'win' : 'gone'); }   // 고른 카드가 커지며 빛나고 나머지는 사라진다
       ov.querySelector('.ok').style.opacity = '0';
@@ -5768,7 +5797,7 @@
       el.className = 'item'; el.style.left = `calc(50% + ${dx}px)`; el.style.bottom = `calc(118px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px) + ${dy}px)`;
       el.style.setProperty('--c', '#6b6b78'); el.style.setProperty('--p', 100); el.style.opacity = '0.6';
       el.innerHTML = `<div class="core"><span class="ic" style="font-size:22px">${IC.bag}</span></div>`;
-      el.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); toast('도구를 하나 채울 수 있습니다'); });
+      el.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); toast('무기를 하나 채울 수 있습니다'); });
       stage.appendChild(el); chEmpty.push(el);
     }
   }
@@ -6302,14 +6331,14 @@
   stage.appendChild(chSfEl);
   function chSfHud() {
     let s = '';
-    if (chSf.on && !chSf.boss) {
-      const left = Math.max(0, Math.ceil(CH_SF_GAP * (chSf.n + 1) - chSf.T));
+    if (chSf.on && !chSf.boss && !chSf.hide) {
+      const left = Math.max(0, Math.ceil(chSfAt(chSf.n + 1) - chSf.T));
       s = chSf.n < 4 ? '특공대 도착까지 ' + left + '초' : '<b style="color:#ff4a3a">보스</b> 군부대 도착까지 ' + left + '초';
     }
     if (s !== chSf.shown) { chSf.shown = s; chSfEl.innerHTML = s; chSfEl.style.display = s ? 'block' : 'none'; }
   }
   function chSfReset() {
-    Object.assign(chSf, { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0 });
+    Object.assign(chSf, { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, hide: false, hideT: 0 });
     chBanner.length = 0;
     if (chTank && chTank.tracer) scene.remove(chTank.tracer);
     chTank = null;
@@ -6320,10 +6349,11 @@
     if (!chSf.on) {
       if (stars >= 2) chSf.on = true;                                             // 난리남
       else if (stars >= 1 && (chSf.susT += dt) >= CH_SF_FORCE) chSf.on = true;    // 수상함에서 3분 버팀 → 강제
+      if (chSf.on) chSfPop(true);
     } else if (!chSf.boss) {
-      chSf.T += dt;
-      while (!chSf.boss && chSf.T >= CH_SF_GAP * (chSf.n + 1)) {
-        chSf.n++;
+      chSf.T += dt; if (chSf.hide && (chSf.hideT -= dt) <= 0) chSfPop();
+      while (!chSf.boss && chSf.T >= chSfAt(chSf.n + 1)) {
+        chSf.n++; chSf.hide = true; chSf.hideT = 8;   // c125: 다음 카운트다운은 출동 알림이 끝나면 크게 뜬다
         if (chSf.n <= 4) chQueueTeam(chSf.n - 1);
         else { chSf.boss = true; teamsSpawned++; chBanner.push('boss'); teamWait.push({ boss: true, t: 0, seg: teamSeg(), hold: true }); }
       }
@@ -8065,7 +8095,7 @@
     acqOpen = true; paused = true; stopInput();
     const d = ITEM[kind], ov = document.createElement('div');
     ov.id = 'acq';
-    ov.innerHTML = `<div class="big">${d.icon}</div><div class="t">${d.name} 획득</div><div class="ds">${itemDesc(kind)}<div class="up">${lvText(kind)}</div></div>`;   // 자세한 설명 (v226) — v265: 꾹 누르기 대신 [획득] 버튼
+    ov.innerHTML = (CHAPTER && !d.passive ? `<div style="font:900 54px/1 var(--font);letter-spacing:3px;color:#ff4a3a;text-shadow:0 0 16px rgba(255,60,0,0.95),0 0 44px #ff2a00,0 4px 10px rgba(0,0,0,0.85);animation:wpnpop 0.45s ease-out both;margin-bottom:14px">무기 획득</div><div class="big">${d.icon}</div><div class="t" style="font-size:30px;color:#ffd34d">${d.name}</div>` : `<div class="big">${d.icon}</div><div class="t">${d.name} 획득</div>`) + `<div class="ds">${itemDesc(kind)}<div class="up">${lvText(kind)}</div></div>`;   /* c125 */   // 자세한 설명 (v226) — v265: 꾹 누르기 대신 [획득] 버튼
     stage.appendChild(ov);
     tapOk(ov, '획득', () => {                 // v265: 조이스틱 자리 [획득] 버튼을 한 번 누르면
       if (ov.dataset.done) return;
@@ -8429,7 +8459,7 @@
     el.innerHTML = CHAPTER && chBanner.shift() === 'boss' ? '<div class="rbox"><div class="rt">군부대 출동</div><div class="rd" style="color:#ff4a3a">보스</div></div>' : '<div class="rbox"><div class="rt">특공대 출동</div></div>';
     stage.appendChild(el);
     const fx = curFx = { ev: { t: 'squad' }, els: [el], timers: [] };   // v428
-    fxTimer(fx, () => { el.remove(); squadAnim = false; if (curFx === fx) curFx = null; for (const w of teamWait) if (w.hold) { w.hold = false; w.t += 2; } }, 3050);   // v486: 알림이 사라지면 2초 뒤부터 출동
+    fxTimer(fx, () => { el.remove(); squadAnim = false; if (curFx === fx) curFx = null; if (CHAPTER) chSfPop(); for (const w of teamWait) if (w.hold) { w.hold = false; w.t += 2; } }, 3050);   // v486: 알림이 사라지면 2초 뒤부터 출동
   }
   const dangerEl = document.getElementById('danger');
   function dangerTick() {                     // v450: 내 체력 20% 이하 (시작 체력이 딱 20%라 시작하자마자 깜빡인다 — 위험한 상태) → 화면 가장자리 빨간 경고가 깜빡인다 (0에 가까울수록 진하게)
