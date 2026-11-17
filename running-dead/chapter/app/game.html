@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c133</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c134</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2602,7 +2602,7 @@
     for (const car of cars) {
       const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx;
       for (const b of (CHAPTER && (car.state === 'parked' || car.tr) ? chNearBodies(car) : bodies)) {
-        if (car.tank && (b.fixed || b.prop || b.kind === 'safe')) { chTankCrush(car, b, fx, fz, rx, rz); continue; }   /* c122 */ if (b.fixed) { if (CHAPTER && b.out) chCarSmash(car, b, fx, fz, rx, rz); continue; } if (b.sleep && (car.tr || b.out)) continue;   // c71 · c85: 달리는 차는 박힌 사물을 부수고 지나간다 · 자는 길거리 사물(좀비 시야 밖)은 차와 서로 없는 셈 친다
+        if (car.tank && b.kind === 'safe') { chTankCrush(car, b, fx, fz, rx, rz); continue; }   /* c134: 사물·금고만 (무는 중인 몸은 사물이 아니다) */   /* c122 */ if (b.fixed) { if (CHAPTER && b.out) chCarSmash(car, b, fx, fz, rx, rz); continue; } if (b.sleep && (car.tr || b.out)) continue;   // c71 · c85: 달리는 차는 박힌 사물을 부수고 지나간다 · 자는 길거리 사물(좀비 시야 밖)은 차와 서로 없는 셈 친다
         if (b.knockT > 0 && (!CHAPTER || b.gar)) continue;   // c79: 미끄러지는 몸도 차에 걸린다 (통과하지 않는다)
         if (car.wall && b.kind === 'citizen' && b.police && !b.post) continue;   // c59
         const k = car.wall ? (car.wreck ? 0.16 : 1) : car.state === 'parked' || (car.tr && Math.abs(car.vx) + Math.abs(car.vz) < 0.8) ? PARKED_K * (car.wreck ? 0.16 : 1) : car.tr ? 1 : MOVING_K;   /* c73: 달리는 민간 차는 보이는 크기 그대로 (경찰차는 1.22배) */   // 잔해는 1/5 (v239)   // 서 있으면 작고 (v171), 달리면 크다 (v178)
