@@ -802,6 +802,8 @@ from c125_patch import C125_R   # c125: 무기/장비 분리 · 특공대 시간
 R += C125_R
 from c126_patch import C126_R   # c126: 특공대 120초부터 5초씩 · 보스 카운트다운
 R += C126_R
+from c127_patch import C127_R   # c127: 카운트다운 검은 판
+R += C127_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
