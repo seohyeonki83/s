@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c129</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c130</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -900,6 +900,7 @@
   function chSoftOff(c) { if (c.soft) { c.soft = false; c.sight /= CH_SOFT_SIGHT; } }   // 빨강·분홍이 되면 되돌린다
   let chExact = false;                        // c101: 색을 한 단계 낮추지 않고 말한 그대로 만든다 (현금 수송차에서 내리는 사람)
   let chNoW = false;
+  function chCop(p) { const y = Math.random() < 0.1; if (y) chExact = true; const c = chPut(p[0], p[1], chRoamArea(p[0], p[1]), y ? 'guard' : 'police'); if (y) chExact = false; return c; }   // c130: 배회 경찰 열에 하나는 노랑
   function chPut(x, z, area, type, B) {
     let wOut = false; if (!chExact && !chNoW && !B && (type === 'vig' || type === 'attacker') && Math.random() < 0.1) { type = ''; wOut = true; }   // c129: 길거리 빨강·주황 열에 하나는 하양
     if (!chExact && Math.random() < 0.1) type = type === 'guard' ? '' : type === 'attacker' ? 'guard' : type === 'vig' ? 'attacker' : type;   // c98: 열에 하나는 한 단계 약한 색으로 (노랑 → 하양 · 주황 → 노랑 · 빨강 → 주황)
@@ -952,7 +953,7 @@
         P.t = CH_RE_ONE;
         const gSum = deadW.reduce((n, G) => n + G.types.length, 0);
         if (gSum && Math.random() * (miss + gSum) >= miss) { const G = deadW[Math.floor(Math.random() * deadW.length)], p = chHiddenSpot(zi, 2.5); if (p) { chGang(G, p); P.t = CH_RE_ONE * G.types.length; } }
-        else { const p = chHiddenSpot(zi, 1.2); if (p) P.list.push(chPut(p[0], p[1], chRoamArea(p[0], p[1]), type)); }
+        else { const p = chHiddenSpot(zi, 1.2); if (p) P.list.push(type === 'police' ? chCop(p) : chPut(p[0], p[1], chRoamArea(p[0], p[1]), type)); }
       }
       const dead = chPop.gangs.filter((G) => G.zone === zi && !G.members.some((c) => c.kind === 'citizen'));
       if (!dead.length) { chPop.gt[zi] = CH_RE_GANG; continue; }
@@ -969,7 +970,7 @@
   function chPopulate() {
     chPopReset();
     const placed = [];
-    for (let k = 0; k < Math.round(CH_COPS * CH_ONE_K * 0.8); k++)   /* c98: 길거리 경찰 5분의 1 줄임 */ { const p = chOutSpot(placed, 1.2, 18); if (!p) continue; placed.push(p); chReg(chPut(p[0], p[1], chRoamArea(p[0], p[1]), 'police'), 'police'); }
+    for (let k = 0; k < Math.round(CH_COPS * CH_ONE_K * 0.8); k++)   /* c98: 길거리 경찰 5분의 1 줄임 */ { const p = chOutSpot(placed, 1.2, 18); if (!p) continue; placed.push(p); chReg(chCop(p), 'police'); }
     // 무리: 주황·빨강 각 48 — 2~4명 무리로 쪼갠다. 섞인 5명 무리 2개 (주황 2 + 빨강 3, 주황 3 + 빨강 2)
     // c44: 무리 세 가지 — 주황만 (2~4) · 빨강만 (2~4) · 섞인 무리 (4~6, 둘 다 2명 이상). 섞인 무리에 주황·빨강 각 3분의 1쯤
     const groups = [];

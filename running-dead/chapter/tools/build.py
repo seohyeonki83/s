@@ -808,6 +808,8 @@ from c128_patch import C128_R   # c128: 보스 단독 · 15초마다 1팀
 R += C128_R
 from c129_patch import C129_R   # c129: 길거리 빨강·주황 10% 하양
 R += C129_R
+from c130_patch import C130_R   # c130: 배회 경찰 10% 노랑
+R += C130_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
