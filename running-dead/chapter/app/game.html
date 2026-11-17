@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c132</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c133</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -900,6 +900,7 @@
   function chSoftOff(c) { if (c.soft) { c.soft = false; c.sight /= CH_SOFT_SIGHT; } }   // 빨강·분홍이 되면 되돌린다
   let chExact = false;                        // c101: 색을 한 단계 낮추지 않고 말한 그대로 만든다 (현금 수송차에서 내리는 사람)
   let chNoW = false;
+  const chRoundP = (x) => Math.floor(x) + (Math.random() < x - Math.floor(x) ? 1 : 0);   // c133: 소수점 아래는 그 확률로 한 명
   function chCop(p) { const y = Math.random() < 0.1; if (y) chExact = true; const c = chPut(p[0], p[1], chRoamArea(p[0], p[1]), y ? 'guard' : 'police'); if (y) chExact = false; return c; }   // c130: 배회 경찰 열에 하나는 노랑
   function chPut(x, z, area, type, B) {
     let wOut = false; if (!chExact && !chNoW && !B && (type === 'vig' || type === 'attacker') && Math.random() < (type === 'vig' ? 0.19 : 0.1)) { type = ''; wOut = true; }   /* c132: 빨강은 10% 한 번 더 */   // c129: 길거리 빨강·주황 열에 하나는 하양
@@ -928,7 +929,7 @@
   function chGang(G, p) {                       // 무리 하나를 그 자리에 놓는다 — 자리(area)를 같이 쓴다 (함께 옮겨 다닌다)
     const area = chRoamArea(p[0], p[1]); area.roam.members = G.members = [];
     G.types.forEach((t, i) => {
-      if (t === 'vig' && Math.random() < 0.1) return;   // c131: 길거리 빨강 열에 하나는 안 나온다
+      if (t === 'vig' && Math.random() < 0.19) return;   /* c133: 10% 더 (합쳐서 19%) */   // c131: 길거리 빨강 열에 하나는 안 나온다
       let x = p[0], z = p[1];
       for (let tt = 0; tt < 40; tt++) { const a = Math.random() * Math.PI * 2, r = i ? rand(0.9, 1.8) : 0; x = p[0] + Math.cos(a) * r; z = p[1] + Math.sin(a) * r; if (!spaceOf(x, z) && freeSpot(x, z, null) && !(tt < 30 && chOnRoad(x, z, 0.45)) && !bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < 0.9)) break; }
       { const c = chPut(x, z, area, t); if (c.wOut) c.area = chRoamArea(x, z); else G.members.push(c); }   // c129: 하양이 된 자리는 무리에서 빠진다
@@ -971,7 +972,7 @@
   function chPopulate() {
     chPopReset();
     const placed = [];
-    for (let k = 0; k < Math.round(CH_COPS * CH_ONE_K * 0.8 * 0.9); k++)   /* c131: 10% 더 줄임 */   /* c98: 길거리 경찰 5분의 1 줄임 */ { const p = chOutSpot(placed, 1.2, 18); if (!p) continue; placed.push(p); chReg(chCop(p), 'police'); }
+    for (let k = 0, nCop = chRoundP(CH_COPS * CH_ONE_K * 0.8 * 0.9 * 0.9); k < nCop; k++)   /* c133: 10% 더 — 소수점은 확률로 (14.26명 = 14명 또는 15명) */   /* c131: 10% 더 줄임 */   /* c98: 길거리 경찰 5분의 1 줄임 */ { const p = chOutSpot(placed, 1.2, 18); if (!p) continue; placed.push(p); chReg(chCop(p), 'police'); }
     // 무리: 주황·빨강 각 48 — 2~4명 무리로 쪼갠다. 섞인 5명 무리 2개 (주황 2 + 빨강 3, 주황 3 + 빨강 2)
     // c44: 무리 세 가지 — 주황만 (2~4) · 빨강만 (2~4) · 섞인 무리 (4~6, 둘 다 2명 이상). 섞인 무리에 주황·빨강 각 3분의 1쯤
     const groups = [];
@@ -7984,7 +7985,7 @@
     return b.hidC;
   }
   function chCanopyDraw(eyes) {                // 주유소 지붕 — 좀비가 밑(이나 바로 옆 1.2칸)에 있으면 사라진다
-    if (CHAPTER) { for (const C of chCanopies) { C.open = true; C.m.visible = false; } return; }   // c110: 지붕을 아예 없앤다 (늘 열린 것으로 — 밑에 있는 것도 그대로 보인다)
+    if (CHAPTER) { chDrawF++; for (const C of chCanopies) { C.open = true; C.m.visible = false; } return; }   /* c133: 그림 차례는 계속 세야 한다 — 안 세면 길거리 사물 4개 중 3개가 안 보이는 채로 굳는다 */   // c110: 지붕을 아예 없앤다 (늘 열린 것으로 — 밑에 있는 것도 그대로 보인다)
     chDrawF++;
     for (const C of chCanopies) { C.open = eyes.some((z) => !z.space && z.foot.x > C.x0 - 1.2 && z.foot.x < C.x1 + 1.2 && z.foot.z > C.z0 - 1.2 && z.foot.z < C.z1 + 1.2); C.m.visible = !C.open; }
   }
