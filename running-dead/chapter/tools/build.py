@@ -796,6 +796,8 @@ from c122_patch import C122_R   # c122: 시간제 특공대 · 보스 장갑차
 R += C122_R
 from c123_patch import C123_R   # c123: 산성 10초 · 도트 2
 R += C123_R
+from c124_patch import C124_R   # c124: 레벨업에 새 도구 없음
+R += C124_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
