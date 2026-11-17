@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c131</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c132</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -902,7 +902,7 @@
   let chNoW = false;
   function chCop(p) { const y = Math.random() < 0.1; if (y) chExact = true; const c = chPut(p[0], p[1], chRoamArea(p[0], p[1]), y ? 'guard' : 'police'); if (y) chExact = false; return c; }   // c130: 배회 경찰 열에 하나는 노랑
   function chPut(x, z, area, type, B) {
-    let wOut = false; if (!chExact && !chNoW && !B && (type === 'vig' || type === 'attacker') && Math.random() < 0.1) { type = ''; wOut = true; }   // c129: 길거리 빨강·주황 열에 하나는 하양
+    let wOut = false; if (!chExact && !chNoW && !B && (type === 'vig' || type === 'attacker') && Math.random() < (type === 'vig' ? 0.19 : 0.1)) { type = ''; wOut = true; }   /* c132: 빨강은 10% 한 번 더 */   // c129: 길거리 빨강·주황 열에 하나는 하양
     if (!chExact && Math.random() < 0.1) type = type === 'guard' ? '' : type === 'attacker' ? 'guard' : type === 'vig' ? 'attacker' : type;   // c98: 열에 하나는 한 단계 약한 색으로 (노랑 → 하양 · 주황 → 노랑 · 빨강 → 주황)
     const c = addCitizen(x, z, area, type === 'vig' ? 'attacker' : type); if (wOut) c.wOut = true;
     if (type === 'police') { c.post = area; c.area = area; }     // 배회 경찰 = 자기 자리 둘레를 돈다 (c56: 만들 때 자리가 다른 네모로 바뀌어서 경찰만 안 돌아다녔다 — 같은 자리로 맞춘다)

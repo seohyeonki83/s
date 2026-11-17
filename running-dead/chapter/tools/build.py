@@ -812,6 +812,8 @@ from c130_patch import C130_R   # c130: 배회 경찰 10% 노랑
 R += C130_R
 from c131_patch import C131_R   # c131: 길거리 빨강·경찰 10% 줄임
 R += C131_R
+from c132_patch import C132_R   # c132: 길거리 빨강 10% 더 하양
+R += C132_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
