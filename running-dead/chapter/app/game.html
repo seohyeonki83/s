@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c127</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c128</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2169,6 +2169,7 @@
       if (!freeSpot(x, z, null)) { x = p.x; z = p.z; }
       const c = addCitizen(x, z, square(x, z), type);
       if (CHAPTER) c.met = true;   // c59: 출동한 군인은 멀리 있어도 서 있지 않는다
+      if (CHAPTER && chTkMark) c.tkU = true;   // c128: 보스 뒤에 온 팀 = 잡아야 이긴다
       if (type === 'sniper') sns.push(c); else sol.push(c);
     });
     const per = Math.ceil(sol.length / Math.max(1, sns.length));   // v418: 저격수마다 군인을 같은 수로 나눠 붙인다 (1팀: 둘씩)
@@ -4513,7 +4514,7 @@
     }
     if (CHAPTER) chSfTick(dt);   // c122
     while (teamQueue.length) queueSquads(teamQueue.shift());
-    for (let i = teamWait.length - 1; i >= 0; i--) if (!teamWait[i].hold && (teamWait[i].t -= dt) <= 0) { const w = teamWait.splice(i, 1)[0]; if (w.boss) chBossSpawn(w.seg); else if (w.car) { const p = teamSpot(w.seg); addCar(p.x, p.z, Math.atan2(me.foot.z - p.z, me.foot.x - p.x), null, 0, w.car); if (w.tk) cars[cars.length - 1].tkWave = true; } else spawnTeam(w.comp, w.first, w.seg); }   // v444: 분대 10초 간격   // v410: 군인팀 출동 (이번 걸음 좀비 목록을 만든 뒤)
+    for (let i = teamWait.length - 1; i >= 0; i--) if (!teamWait[i].hold && (teamWait[i].t -= dt) <= 0) { const w = teamWait.splice(i, 1)[0]; if (w.boss) chBossSpawn(w.seg); else if (w.car) { const p = teamSpot(w.seg); addCar(p.x, p.z, Math.atan2(me.foot.z - p.z, me.foot.x - p.x), null, 0, w.car); if (w.tk) cars[cars.length - 1].tkWave = true; } else { chTkMark = !!w.tk; spawnTeam(w.comp, w.first, w.seg); chTkMark = false; } }   // v444: 분대 10초 간격   // v410: 군인팀 출동 (이번 걸음 좀비 목록을 만든 뒤)
     crowd.clear();                            // 시민마다 지금 노리는 좀비 수 (v148) — 타겟을 새로 뽑을 때마다 바로 고쳐서, 같은 순간에 뽑는 좀비끼리도 겹치지 않는다
     for (const z of zombies) if (z.pick && z.pick.kind === 'citizen' && z.pick.hp > 0) crowd.set(z.pick, (crowd.get(z.pick) || 0) + 1);
     objFrame++; objCrowd.clear();             // 경찰차에 붙은 좀비 수 (v243) — 지난 걸음에 때리던 좀비
@@ -6322,7 +6323,7 @@
   //   장갑차: 군인차의 2배 크기 · 사람이 안 내린다 · 체력 = 경찰차의 10배 · 미는 힘 = 보통 차의 4배 · 속도 = 보통 차의 4분의 1.
   //           기관포 = 군인처럼 4발 연사, 사거리는 저격수, 한 발이 군인의 2배 + 둘레 스플래시 + 넉백 2배. 20초마다 좀비가 가장 많은 쪽으로 0.3초 돌진.
   //           건물·사물을 피해 다니지 않는다 — 사물은 깔아뭉개고, 벽은 비비다가 부순다 (벽 조각 단위, 체력 표시 없음). 산·강만 못 넘는다.
-  const CH_SF_GAP = 120, CH_SF_FORCE = 180, CH_SF_WAVE = 40, CH_TK_K = MIL_K * 2, CH_TK_ESC = 2.6, CH_TK_DASH_EVERY = 20, CH_TK_DASH_T = 0.3, CH_TK_SPLASH = 1.2, CH_TK_WALL_T = 2.4, CH_TK_HOLE = 2.3;
+  const CH_SF_GAP = 120, CH_SF_FORCE = 180, CH_SF_WAVE = 15, CH_TK_K = MIL_K * 2, CH_TK_ESC = 2.6, CH_TK_DASH_EVERY = 20, CH_TK_DASH_T = 0.3, CH_TK_SPLASH = 1.2, CH_TK_WALL_T = 2.4, CH_TK_HOLE = 2.3;
   const chSf = { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, shown: '' };
   const chBanner = [], chCuts = [], chTkBuf = [], chTkBuf2 = [];
   let chTank = null;
@@ -6360,7 +6361,7 @@
       }
     } else {
       const T = chTank;
-      if (T && !T.wreck && (chSf.waveT += dt) >= CH_SF_WAVE) { chSf.waveT -= CH_SF_WAVE; teamWait.push({ car: [S_, G_, G_, G_, S_, G_, G_], t: 0, seg: teamSeg(), tk: true }); }
+      if (T && !T.wreck && (chSf.waveT += dt) >= CH_SF_WAVE) { chSf.waveT -= CH_SF_WAVE; teamWait.push({ comp: [S_, G_, G_], t: 0, first: false, seg: teamSeg(), tk: true });   /* c128: 1팀 (가장 약한 팀) */ }
       if (T && T.wreck && !chSf.won && (chSf.chk -= dt) <= 0) {
         chSf.chk = 0.5;
         if (!teamWait.some((w) => w.tk || w.boss) && !cars.some((c) => c.tkWave && !c.wreck && c.state !== 'parked') && !bodies.some((b) => b.kind === 'citizen' && b.tkU)) chSf.won = true;
@@ -6394,12 +6395,12 @@
     car.tracer.renderOrder = -0.5; car.tracer.visible = false; scene.add(car.tracer);
     chTank = car;
     const mk = (type, x, z) => { if (!freeSpot(x, z, null)) { x = p.x; z = p.z; } const c = addCitizen(x, z, square(x, z), type); c.met = true; c.tkU = c.tkE = true; c.tick = 0; return c; };
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 0; i++) {   /* c128: 호위 없음 */
       const a = h + i / 5 * Math.PI * 2, R = GUARD_NEAR * CH_TK_ESC, sx = p.x + Math.cos(a) * R, sz = p.z + Math.sin(a) * R;
       const sn = mk('sniper', sx, sz); sn.master = car; sn.slotA = a; sn.slotK = rand(0.85, 1);
       for (let k = 0; k < 3; k++) { const b = k / 3 * Math.PI * 2, g = mk('soldier', sx + Math.cos(b) * 1.3, sz + Math.sin(b) * 1.3); g.master = sn; g.slotA = Math.random() * Math.PI * 2; g.slotK = rand(0.5, 1); }
     }
-    chSf.waveT = 0;
+    chSf.waveT = CH_SF_WAVE;   // c128: 보스와 동시에 첫 팀
   }
   function chTankFoe(car) {                    // 사거리(저격수와 같다) 안에서 벽에 안 막힌 가장 가까운 좀비
     const R = SIGHT * 1.1; let best = null, bd = R;
@@ -6624,6 +6625,7 @@
     if ((car.shotT += dt) >= SHOT_FLASH) car.shotT = -1;
   }
   window.__sf = { get s() { return chSf; }, get tank() { return chTank; }, cuts: chCuts, queue: (i) => chQueueTeam(i), kill: () => { if (chTank && chTank.obj && !chTank.obj.dead) breakObj(chTank.obj); }, teams: teamWait };
+  let chTkMark = false;
   function chQueueTeam(i) {
     teamsSpawned++; chBanner.push('sf');                            // '특공대 출동' 알림 한 번 — 알림이 사라지고 2초 뒤부터 나온다
     const seg = teamSeg();
@@ -8457,7 +8459,7 @@
   function showSquad() {                      // v420: 군인팀 출동 알림 — 칭호 자리에 빨간 글씨
     squadAnim = true;
     const el = document.createElement('div'); el.className = 'rank squad';
-    el.innerHTML = CHAPTER && chBanner.shift() === 'boss' ? '<div class="rbox"><div class="rt">군부대 출동</div><div class="rd" style="color:#ff4a3a">보스</div></div>' : '<div class="rbox"><div class="rt">특공대 출동</div></div>';
+    el.innerHTML = CHAPTER && chBanner.shift() === 'boss' ? '<div class="rbox"><div class="rt">보스 출동</div></div>' : '<div class="rbox"><div class="rt">특공대 출동</div></div>';
     stage.appendChild(el);
     const fx = curFx = { ev: { t: 'squad' }, els: [el], timers: [] };   // v428
     fxTimer(fx, () => { el.remove(); squadAnim = false; if (curFx === fx) curFx = null; if (CHAPTER) chSfPop(); for (const w of teamWait) if (w.hold) { w.hold = false; w.t += 2; } }, 3050);   // v486: 알림이 사라지면 2초 뒤부터 출동

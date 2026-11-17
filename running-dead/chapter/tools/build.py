@@ -804,6 +804,8 @@ from c126_patch import C126_R   # c126: 특공대 120초부터 5초씩 · 보스
 R += C126_R
 from c127_patch import C127_R   # c127: 카운트다운 검은 판
 R += C127_R
+from c128_patch import C128_R   # c128: 보스 단독 · 15초마다 1팀
+R += C128_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
