@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c125</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c126</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5725,15 +5725,16 @@
         `<div class="vl">${S[0]} ${max ? S[1](n) : S[1](n) + ' → ' + S[1](n + 1)}</div></div>`; }).join('');
     ov.querySelector('.ok').classList.remove('ready');
   }
-  const chSfAt = (n) => { let t = 0; for (let i = 0; i < n; i++) t += 100 - 5 * i; return t; };   // n번째 출동 시각: 100 · 195 · 285 · 370 · 450(보스)
+  const chSfAt = (n) => { let t = 0; for (let i = 0; i < n; i++) t += 120 - 5 * i; return t; };   /* c126: 120초부터 5초씩 → 120 · 235 · 345 · 450 · 550(보스) */
+  { const st = document.createElement('style'); st.textContent = '@keyframes bosscd { 0% { transform: scale(1.22); text-shadow: 0 0 18px #ff2a00, 0 0 40px #ff2a00, 0 2px 4px #000; color: #fff; } 35% { transform: scale(1); color: #ff3a2a; text-shadow: 0 0 8px rgba(255,40,0,0.8), 0 2px 4px #000; } 100% { transform: scale(1); color: #ff3a2a; text-shadow: 0 0 8px rgba(255,40,0,0.8), 0 2px 4px #000; } } .bosscd { display: inline-block; font: 900 19px/1 system-ui, sans-serif; letter-spacing: 0.5px; color: #ff3a2a; animation: bosscd 1s ease-out both; } .bosscd i { font-style: normal; display: inline-block; margin: 0 6px; padding: 1px 7px 2px; border-radius: 5px; background: #ff3a2a; color: #1a0500; text-shadow: none; }'; document.head.appendChild(st); }   // n번째 출동 시각: 100 · 195 · 285 · 370 · 450(보스)
   { const st = document.createElement('style'); st.textContent = '@keyframes sfpop { 0% { transform: translateY(30vh) scale(2.3); opacity: 0; } 10% { transform: translateY(30vh) scale(2.3); opacity: 1; } 60% { transform: translateY(30vh) scale(2.3); opacity: 1; } 100% { transform: none; opacity: 1; } }' +
-      ' @keyframes wpnpop { 0% { transform: scale(3); opacity: 0; } 60% { transform: scale(0.92); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }'; document.head.appendChild(st); }
+      ' @keyframes sfpopb { 0% { transform: translateY(30vh) scale(1.5); opacity: 0; } 10% { transform: translateY(30vh) scale(1.5); opacity: 1; } 60% { transform: translateY(30vh) scale(1.5); opacity: 1; } 100% { transform: none; opacity: 1; } } @keyframes wpnpop { 0% { transform: scale(3); opacity: 0; } 60% { transform: scale(0.92); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }'; document.head.appendChild(st); }
   function chSfPop(force) {                    // 카운트다운이 가운데 크게 떴다가 제자리에 박힌다
     if (!chSf.hide && !force) return;
     chSf.hide = false;
     if (!chSf.on || chSf.boss) return;
     chSfHud();
-    chSfEl.style.animation = 'none'; chSfEl.offsetWidth; chSfEl.style.animation = 'sfpop 1.9s ease-in-out';
+    chSfEl.style.animation = 'none'; chSfEl.offsetWidth; chSfEl.style.animation = (chSf.n >= 4 ? 'sfpopb' : 'sfpop') + ' 1.9s ease-in-out';   /* c126: 보스 글자는 커서 덜 키운다 */
   }
   function chLevelUp() {
     let pool = chUpPool().concat(Array(chWupN()).fill('__w')); const keys = [];   // c125
@@ -6333,7 +6334,7 @@
     let s = '';
     if (chSf.on && !chSf.boss && !chSf.hide) {
       const left = Math.max(0, Math.ceil(chSfAt(chSf.n + 1) - chSf.T));
-      s = chSf.n < 4 ? '특공대 도착까지 ' + left + '초' : '<b style="color:#ff4a3a">보스</b> 군부대 도착까지 ' + left + '초';
+      s = chSf.n < 4 ? '다음 특공대 출동까지 ' + left + '초' : '<span class="bosscd"><i>!</i>보스 출동까지 ' + left + '초<i>!</i></span>';   /* c126 */
     }
     if (s !== chSf.shown) { chSf.shown = s; chSfEl.innerHTML = s; chSfEl.style.display = s ? 'block' : 'none'; }
   }
