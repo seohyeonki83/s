@@ -806,6 +806,8 @@ from c127_patch import C127_R   # c127: 카운트다운 검은 판
 R += C127_R
 from c128_patch import C128_R   # c128: 보스 단독 · 15초마다 1팀
 R += C128_R
+from c129_patch import C129_R   # c129: 길거리 빨강·주황 10% 하양
+R += C129_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

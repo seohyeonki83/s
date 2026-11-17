@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c128</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c129</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -899,9 +899,11 @@
   const chSight0 = (c) => c.soft ? c.sight / CH_SOFT_SIGHT : c.sight;   // 줄이기 전 시야 (돈다발용)
   function chSoftOff(c) { if (c.soft) { c.soft = false; c.sight /= CH_SOFT_SIGHT; } }   // 빨강·분홍이 되면 되돌린다
   let chExact = false;                        // c101: 색을 한 단계 낮추지 않고 말한 그대로 만든다 (현금 수송차에서 내리는 사람)
+  let chNoW = false;
   function chPut(x, z, area, type, B) {
+    let wOut = false; if (!chExact && !chNoW && !B && (type === 'vig' || type === 'attacker') && Math.random() < 0.1) { type = ''; wOut = true; }   // c129: 길거리 빨강·주황 열에 하나는 하양
     if (!chExact && Math.random() < 0.1) type = type === 'guard' ? '' : type === 'attacker' ? 'guard' : type === 'vig' ? 'attacker' : type;   // c98: 열에 하나는 한 단계 약한 색으로 (노랑 → 하양 · 주황 → 노랑 · 빨강 → 주황)
-    const c = addCitizen(x, z, area, type === 'vig' ? 'attacker' : type);
+    const c = addCitizen(x, z, area, type === 'vig' ? 'attacker' : type); if (wOut) c.wOut = true;
     if (type === 'police') { c.post = area; c.area = area; }     // 배회 경찰 = 자기 자리 둘레를 돈다 (c56: 만들 때 자리가 다른 네모로 바뀌어서 경찰만 안 돌아다녔다 — 같은 자리로 맞춘다)
     if (type === 'vig') chVig(c);
     if (B) c.home = B;
@@ -927,7 +929,7 @@
     G.types.forEach((t, i) => {
       let x = p[0], z = p[1];
       for (let tt = 0; tt < 40; tt++) { const a = Math.random() * Math.PI * 2, r = i ? rand(0.9, 1.8) : 0; x = p[0] + Math.cos(a) * r; z = p[1] + Math.sin(a) * r; if (!spaceOf(x, z) && freeSpot(x, z, null) && !(tt < 30 && chOnRoad(x, z, 0.45)) && !bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < 0.9)) break; }
-      G.members.push(chPut(x, z, area, t));
+      { const c = chPut(x, z, area, t); if (c.wOut) c.area = chRoamArea(x, z); else G.members.push(c); }   // c129: 하양이 된 자리는 무리에서 빠진다
     });
   }
   function chHiddenSpot(zi, minOwn) {          // 그 구역 길거리 빈자리 — 내 화면과 좀비 시야 밖 (없으면 아무 빈자리)
@@ -7564,7 +7566,7 @@
         if (freeSpot(x, z, null) && !spaceOf(x, z) && !chOnCar(x, z) && !chNearRiver(x, z, 0.6)) { ok = true; break; }
       }
       if (!ok) { x = car.x; z = car.z; }       // 내릴 자리가 다 막혔으면 차 자리에서 (차가 옆으로 밀어낸다) — 벽 속에 서지 않게
-      chExact = car.loot === 'cash'; const c = chPut(x, z, chSideArea(x, z), w, null); chExact = false; c.sleep = false; c.met = true; c.tick = 0; c.fromCar = true;
+      chExact = car.loot === 'cash'; chNoW = true; const c = chPut(x, z, chSideArea(x, z), w, null); chExact = false; chNoW = false; c.sleep = false; c.met = true; c.tick = 0; c.fromCar = true;
     });
     chTr.gone[T.zone].push(car);
     chTrTrim(T.zone);
