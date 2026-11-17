@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c122</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c123</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5344,6 +5344,7 @@
         n++; const t = tier(c); if (CHAPTER) sc += c.boss ? 40 : CH_BOMB_PT[t];   /* c121: 분홍 = 저격수와 같은 40점 */
         if (t > top) { top = t; d = e; } else if (t === top && e < d) d = e;
       }
+      if (CHAPTER && chTank && !chTank.wreck && !z.space && Math.hypot(chTank.x - z.foot.x, chTank.z - z.foot.z) <= R + 1.4) { sc += 80; if (top < 0) top = 0; }   // c123: 장갑차 = 저격수의 2배 (80점)
       if (top < 0) continue;
       if (CHAPTER) { if (sc > bS) { bS = sc; ties = [z]; } else if (sc === bS) ties.push(z); continue; }   // c86: 점수 합
       if (top > bT || (top === bT && (n > bN || (n === bN && d < bD)))) { best = z; bT = top; bN = n; bD = d; }
@@ -5385,16 +5386,18 @@
   }
   const gooMat = new THREE.SpriteMaterial({ map: flashTex, color: 0x5fcf3a, transparent: true, depthTest: false, depthWrite: false });
   function gooOn(c) {                         // 영구: 좀비가 될 때까지 이동·공격 20% 느리게 + 초당 1 데미지
+    c.gooLeft = 10 + lv('bomb');   // c123: 10초, 강화마다 +1초 (다시 맞으면 시간만 새로)
     if (c.goo) return;
     c.goo = true; c.gooT = 0; c.smokeT = 0;
     const g = new THREE.Group();
     for (const [ox, oy, sc] of [[0.18, 0.12, 0.42], [-0.16, -0.08, 0.32], [0.05, -0.22, 0.26]]) { const s = new THREE.Sprite(gooMat); s.position.set(ox, oy, 0.02); s.scale.setScalar(sc); s.renderOrder = 1; g.add(s); }
     c.mesh.add(g); c.gooS = g;
   }
-  const minusTex = (() => { const cv = document.createElement('canvas'); cv.width = 128; cv.height = 64; const g = cv.getContext('2d'); g.font = '800 52px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,0.75)'; g.strokeText('-1', 64, 34); g.fillStyle = '#ff4a3d'; g.fillText('-1', 64, 34); return new THREE.CanvasTexture(cv); })();   // v294: 빨강 (연두였다), 2배 해상도
+  const minusTex = (() => { const cv = document.createElement('canvas'); cv.width = 128; cv.height = 64; const g = cv.getContext('2d'); g.font = '800 52px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,0.75)'; g.strokeText('-2', 64, 34); g.fillStyle = '#ff4a3d'; g.fillText('-2', 64, 34); return new THREE.CanvasTexture(cv); })();   // v294: 빨강 (연두였다), 2배 해상도
   function gooTick(dt) {
     for (const c of bodies) {
       if (!c.goo || c.kind !== 'citizen') continue;
+      if ((c.gooLeft -= dt) <= 0) { if (c.gooS) { c.mesh.remove(c.gooS); c.gooS = null; } c.goo = false; continue; }   // c123: 시간이 다 되면 사라진다
       if ((c.smokeT -= dt) <= 0 && c.mesh.visible) {   // 묻은 데서 작은 연기
         c.smokeT = rand(0.25, 0.45);
         puff(c.foot.x + rand(-0.25, 0.25), 0.7, c.foot.z + rand(-0.15, 0.15), 0xa9c28a, 0.12, 0.42, 0.9, rand(-0.1, 0.1), 0.7, rand(-0.1, 0.1), 0.55);
@@ -5402,7 +5405,7 @@
       if ((c.gooT += dt) < 0.5) continue;   // v344: 1초 → 0.5초마다 1
       c.gooT -= 0.5;
       if (c.hp <= 0) continue;                // 체력 0에서 멈춘다 (그다음은 감염)
-      c.hp = Math.max(0, c.hp - 1);
+      c.hp = Math.max(0, c.hp - 2);   /* c123: 도트 2 */
       if (c.hp <= 0 && !c.police && c.state !== 'held') enterPanic(c, null, true);
       if (c.mesh.visible) {                   // 아주 작은 -1 이 떠올랐다 사라진다
         const f = puff(c.foot.x + 0.6, 1.3, c.foot.z, 0xffffff, 0.5, 0.5, 0.75, 0, 0.9, 0, 1);   // v294: 커진 만큼 옆으로
@@ -6518,9 +6521,10 @@
     if (o.obj.hp <= 0) { o.obj.hp = 0; breakObj(o.obj); }
   }
   function chTankGoo(car) {                    // 산성 — 이동·공격 20% 느리게 + 초당 2 데미지 (사람과 같다)
+    car.gooLeft = 10 + lv('bomb');   // c123
     if (car.goo) return;
-    car.goo = true; car.gooT = 0;
-    for (const [ox, oz, sc] of [[0.3, 0.1, 0.5], [-0.35, -0.12, 0.4], [0, 0.2, 0.34]]) { const s = new THREE.Sprite(gooMat); s.position.set(ox, 0.3, oz); s.scale.setScalar(sc); s.renderOrder = 1; car.g.add(s); }
+    car.goo = true; car.gooT = 0; car.gooS = [];
+    for (const [ox, oz, sc] of [[0.3, 0.1, 0.5], [-0.35, -0.12, 0.4], [0, 0.2, 0.34]]) { const s = new THREE.Sprite(gooMat); s.position.set(ox, 0.3, oz); s.scale.setScalar(sc); s.renderOrder = 1; car.g.add(s); car.gooS.push(s); }
   }
   function chTankDead(car) {
     if (car.tracer) car.tracer.visible = false;
@@ -6531,7 +6535,8 @@
     const o = car.obj; if (o) o.foot.set(car.x, 0, car.z);
     if (car.wreck) return;
     const spd = CAR_SPEED * CH_TR_SPD.sedan * CH_TR_SLOW / 4 * (car.goo ? 0.8 : 1);   // 보통 차(승용차)의 4분의 1
-    if (car.goo && (car.gooT += dt) >= 0.5) { car.gooT -= 0.5; if (o && o.hp > 1) o.hp -= 1; }
+    if (car.goo && (car.gooLeft -= dt) <= 0) { car.goo = false; for (const s of car.gooS) car.g.remove(s); }   // c123
+    if (car.goo && (car.gooT += dt) >= 0.5) { car.gooT -= 0.5; if (o && o.hp > 2) o.hp -= 2; }
     // 벽
     if (chTankWalls(car, dt)) {
       if (car.tkPX !== undefined) { car.x = car.tkPX; car.z = car.tkPZ; car.h = car.tkPH; car.foot.set(car.x, 0, car.z); if (o) o.foot.set(car.x, 0, car.z); }

@@ -1,0 +1,11 @@
+# c123: 산성(자폭) — 10초 동안만 (강화마다 +1초) · 도트 데미지 1 → 2 · 자폭 점수: 장갑차 80
+C123_R = [
+ ("    if (c.goo) return;\n    c.goo = true; c.gooT = 0; c.smokeT = 0;", "    c.gooLeft = 10 + lv('bomb');   // c123: 10초, 강화마다 +1초 (다시 맞으면 시간만 새로)\n    if (c.goo) return;\n    c.goo = true; c.gooT = 0; c.smokeT = 0;"),
+ ("      if (!c.goo || c.kind !== 'citizen') continue;", "      if (!c.goo || c.kind !== 'citizen') continue;\n      if ((c.gooLeft -= dt) <= 0) { if (c.gooS) { c.mesh.remove(c.gooS); c.gooS = null; } c.goo = false; continue; }   // c123: 시간이 다 되면 사라진다"),
+ ("      c.hp = Math.max(0, c.hp - 1);\n      if (c.hp <= 0 && !c.police && c.state !== 'held') enterPanic(c, null, true);", "      c.hp = Math.max(0, c.hp - 2);   /* c123: 도트 2 */\n      if (c.hp <= 0 && !c.police && c.state !== 'held') enterPanic(c, null, true);"),
+ ("g.strokeText('-1', 64, 34); g.fillStyle = '#ff4a3d'; g.fillText('-1', 64, 34);", "g.strokeText('-2', 64, 34); g.fillStyle = '#ff4a3d'; g.fillText('-2', 64, 34);"),
+ ("    if (car.goo) return;\n    car.goo = true; car.gooT = 0;\n    for (const [ox, oz, sc] of [[0.3, 0.1, 0.5], [-0.35, -0.12, 0.4], [0, 0.2, 0.34]]) { const s = new THREE.Sprite(gooMat); s.position.set(ox, 0.3, oz); s.scale.setScalar(sc); s.renderOrder = 1; car.g.add(s); }",
+  "    car.gooLeft = 10 + lv('bomb');   // c123\n    if (car.goo) return;\n    car.goo = true; car.gooT = 0; car.gooS = [];\n    for (const [ox, oz, sc] of [[0.3, 0.1, 0.5], [-0.35, -0.12, 0.4], [0, 0.2, 0.34]]) { const s = new THREE.Sprite(gooMat); s.position.set(ox, 0.3, oz); s.scale.setScalar(sc); s.renderOrder = 1; car.g.add(s); car.gooS.push(s); }"),
+ ("    if (car.goo && (car.gooT += dt) >= 0.5) { car.gooT -= 0.5; if (o && o.hp > 1) o.hp -= 1; }", "    if (car.goo && (car.gooLeft -= dt) <= 0) { car.goo = false; for (const s of car.gooS) car.g.remove(s); }   // c123\n    if (car.goo && (car.gooT += dt) >= 0.5) { car.gooT -= 0.5; if (o && o.hp > 2) o.hp -= 2; }"),
+ ("      if (top < 0) continue;\n      if (CHAPTER) { if (sc > bS)", "      if (CHAPTER && chTank && !chTank.wreck && !z.space && Math.hypot(chTank.x - z.foot.x, chTank.z - z.foot.z) <= R + 1.4) { sc += 80; if (top < 0) top = 0; }   // c123: 장갑차 = 저격수의 2배 (80점)\n      if (top < 0) continue;\n      if (CHAPTER) { if (sc > bS)"),
+]
