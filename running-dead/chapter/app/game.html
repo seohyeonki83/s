@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c155</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c156</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -8686,8 +8686,36 @@
     }
   }
   let last = 0;
+  const CH_BATCH_MAX = 1024;
+  const chBatch = new THREE.InstancedMesh(circleGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, depthTest: false, depthWrite: false }), CH_BATCH_MAX);
+  chBatch.frustumCulled = false; chBatch.renderOrder = -0.01; chBatch.count = 0; chBatch.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(chBatch);
+  const chBM = new THREE.Matrix4(), chBList = [], chBSpec = [], chBFwd = new THREE.Vector3();
+  function chBatchBodies() {
+    chBList.length = 0; chBSpec.length = 0;
+    const off = !!window.__noBatch;
+    for (const b of bodies) {
+      const m = b.mesh;
+      if (!m.visible) { if (m.layers.mask !== 1) m.layers.set(0); continue; }
+      if (!off && (b.kind === 'ally' || b.kind === 'citizen') && m.geometry === circleGeo && m.children.length === 0 && m.renderOrder === 0 && m.material.opacity === 1 && !m.material.map) chBList.push(b);
+      else { chBSpec.push(b); if (m.layers.mask !== 1) m.layers.set(0); }
+    }
+    camera.getWorldDirection(chBFwd);
+    let n = 0;
+    for (let i = 0; i < chBList.length; i++) {
+      const b = chBList[i], m = b.mesh; let alone = n < CH_BATCH_MAX;
+      if (alone) for (let k = 0; k < chBSpec.length; k++) { const s = chBSpec[k], rd = s.mesh.geometry === circleGeo, lx = rd ? 1.1 * s.mesh.scale.x : 1.0 + (s.r || 0.5), lz = rd ? lx : (s.halfH ? s.halfH * 2 : 1) + 1.0, dx = s.foot.x - b.foot.x, dz = s.foot.z - b.foot.z; if (dx < lx && dx > -lx && dz < lz && dz > -lz) { alone = false; break; } /* 원끼리는 지름만큼, 세워진 사물은 그 키만큼 (화면에서 겹칠 수 있는 거리) */ }
+      if (!alone) { if (m.layers.mask !== 1) m.layers.set(0); continue; }
+      b.bD = m.position.x * chBFwd.x + m.position.y * chBFwd.y + m.position.z * chBFwd.z;
+      chBList[n++] = b;
+    }
+    chBList.length = n;
+    chBList.sort((a, c) => c.bD - a.bD);       // 먼 것부터 (전과 같은 겹침 순서)
+    for (let i = 0; i < n; i++) { const m = chBList[i].mesh; chBM.compose(m.position, m.quaternion, m.scale); chBatch.setMatrixAt(i, chBM); chBatch.setColorAt(i, m.material.color); if (m.layers.mask !== 2) m.layers.set(1); }
+    chBatch.count = n; chBatch.instanceMatrix.needsUpdate = true; if (chBatch.instanceColor) chBatch.instanceColor.needsUpdate = true;
+  }
+  window.__ri = renderer.info;
   const chPf = { on: false, n: 0, w: 0, r: 0, t: 0, base: '' };
-  { const rr = renderer.render.bind(renderer); renderer.render = (sc, cam) => { if (!chPf.on) { rr(sc, cam); return; } const t0 = performance.now(); rr(sc, cam); chPf.r += performance.now() - t0; }; }
+  { const rr = renderer.render.bind(renderer); renderer.render = (sc, cam) => { chBatchBodies(); if (!chPf.on) { rr(sc, cam); return; } const t0 = performance.now(); rr(sc, cam); chPf.r += performance.now() - t0; }; }
   { const v = document.getElementById('ver'); if (v) { v.style.pointerEvents = 'auto'; v.style.padding = '8px 14px'; v.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); if (!chPf.base) chPf.base = v.textContent; chPf.on = !chPf.on; chPf.n = chPf.w = chPf.r = chPf.t = 0; if (!chPf.on) v.textContent = chPf.base; else v.textContent = chPf.base + ' · 재는 중'; }); } }
   function chPerf(now, w) {                    // c154: 0.5초마다 평균을 버전 글자 옆에 쓴다
     if (!chPf.on) return;
