@@ -898,6 +898,8 @@ from c174_patch import C174_R   # c174: 돌진 속도 +30% · 시간 -30%
 R += C174_R
 from c175_patch import C175_R   # c175: 장갑차 돌진 연기
 R += C175_R
+from c176_patch import C176_R   # c176: 보스 뒤 군인만 · 장갑차 호위 거리
+R += C176_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
