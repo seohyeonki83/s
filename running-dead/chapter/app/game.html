@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c168</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c169</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6646,7 +6646,7 @@
     car.rev = false; if (car.rubCool > 0) car.rubCool -= dt;
     let wx = 0, wz = 0;
     const t = isZombie(me) ? me : bodies.find(isZombie);
-    if (t && !(car.foe && isZombie(car.foe))) {   // 쏠 좀비가 없으면 나한테 곧장 온다 (건물을 돌아가지 않는다 — 구역을 건널 때만 다리·산길로)
+    if (t) {   /* c169: 쏘는 중에도 멈추지 않는다 */   // 나한테 곧장 온다 (건물을 돌아가지 않는다 — 구역을 건널 때만 다리·산길로)
       const r = chRoute({ foot: { x: car.x, z: car.z }, laneK: 0 }, t.foot.x, t.foot.z), dx = r[0] - car.x, dz = r[1] - car.z, l = Math.hypot(dx, dz);
       if (l > 1.5) { const v = spd * (car.loadK ?? 1); wx = dx / l * v; wz = dz / l * v; }
     }

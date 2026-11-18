@@ -884,6 +884,8 @@ from c167_patch import C167_R   # c167: 보스 테스트 동료 60
 R += C167_R
 from c168_patch import C168_R   # c168: 장갑차 조정 · 보스 뒤 출동 · 동료 70
 R += C168_R
+from c169_patch import C169_R   # c169: 장갑차 이동 사격
+R += C169_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
