@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c167</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c168</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -445,7 +445,7 @@
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:1000;background:#0e1014;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:system-ui,-apple-system,sans-serif;color:#fff;padding:24px;box-sizing:border-box';
     ov.innerHTML = '<div style="font-size:26px;font-weight:900;letter-spacing:1px">맵 선택</div>';
-    for (const [k, name, sub] of [['b', '큰 맵', '구역 4개 · 다리와 산길 · 랜드마크 9'], ['s', '작은 맵', '구역 1개 · 사방이 산 · 랜드마크 2'], ['k', '보스 테스트', '큰 맵 · 동료 60 · 무적 · 바로 보스 출동']]) {
+    for (const [k, name, sub] of [['b', '큰 맵', '구역 4개 · 다리와 산길 · 랜드마크 9'], ['s', '작은 맵', '구역 1개 · 사방이 산 · 랜드마크 2'], ['k', '보스 테스트', '큰 맵 · 동료 70 · 무적 · 바로 보스 출동']]) {
       const bt = document.createElement('button');
       bt.style.cssText = 'width:min(300px,80vw);padding:18px 16px;border-radius:16px;border:2px solid #3a4250;background:#1b2028;color:#fff;font:inherit;text-align:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent';
       bt.innerHTML = '<div style="font-size:22px;font-weight:900">' + name + '</div><div style="margin-top:6px;font-size:13px;color:#9aa6b8">' + sub + '</div>';
@@ -2186,7 +2186,7 @@
       if (!freeSpot(x, z, null)) { x = p.x; z = p.z; }
       const c = addCitizen(x, z, square(x, z), type);
       if (CHAPTER) c.met = true;   // c59: 출동한 군인은 멀리 있어도 서 있지 않는다
-      if (CHAPTER && chTkMark) c.tkU = true;   // c128: 보스 뒤에 온 팀 = 잡아야 이긴다
+      if (CHAPTER && chTkMark) { c.tkU = true; c.tkE = true; }   // c168: 장갑차 호위 (저격수와 같이 온 군인은 저격수 먼저)   // c128: 보스 뒤에 온 팀 = 잡아야 이긴다
       if (type === 'sniper') sns.push(c); else sol.push(c);
     });
     const per = Math.ceil(sol.length / Math.max(1, sns.length));   // v418: 저격수마다 군인을 같은 수로 나눠 붙인다 (1팀: 둘씩)
@@ -6361,7 +6361,7 @@
   //   장갑차: 군인차의 2배 크기 · 사람이 안 내린다 · 체력 = 경찰차의 10배 · 미는 힘 = 보통 차의 4배 · 속도 = 보통 차의 4분의 1.
   //           기관포 = 군인처럼 4발 연사, 사거리는 저격수, 한 발이 군인의 2배 + 둘레 스플래시 + 넉백 2배. 20초마다 좀비가 가장 많은 쪽으로 0.3초 돌진.
   //           건물·사물을 피해 다니지 않는다 — 사물은 깔아뭉개고, 벽은 비비다가 부순다 (벽 조각 단위, 체력 표시 없음). 산·강만 못 넘는다.
-  const CH_SF_GAP = 120, CH_SF_FORCE = 180, CH_SF_WAVE = 15, CH_TK_K = MIL_K * 2, CH_TK_ESC = 2.6, CH_TK_DASH_EVERY = 20, CH_TK_DASH_T = 0.3, CH_TK_SPLASH = 1.2, CH_TK_WALL_T = 2.4, CH_TK_HOLE = 2.3;
+  const CH_SF_GAP = 120, CH_SF_FORCE = 180, CH_SF_WAVE = 15, CH_TK_K = MIL_K * 2 * 0.8,   /* c168: 20% 작게 */ CH_TK_ESC = 2.6, CH_TK_DASH_EVERY = 20, CH_TK_DASH_T = 0.3, CH_TK_SPLASH = 1.2, CH_TK_WALL_T = 2.4 / 1.3,   /* c168: 벽 부수는 힘 30% 더 */ CH_TK_HOLE = 2.3;
   const chSf = { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, shown: '' };
   const chBanner = [], chCuts = [], chTkBuf = [], chTkBuf2 = [];
   let chTank = null;
@@ -6378,7 +6378,7 @@
     if (s !== chSf.shown) { chSf.shown = s; chSfEl.innerHTML = s; chSfEl.style.display = s ? 'block' : 'none'; }
   }
   function chSfReset() {
-    Object.assign(chSf, { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, hide: false, hideT: 0 }); chBTdone = false;   /* c166 */
+    Object.assign(chSf, { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, hide: false, hideT: 0 }); chBTdone = false; chSf.wn = 0;   /* c166 · c168 */
     chBanner.length = 0;
     if (chTank && chTank.tracer) scene.remove(chTank.tracer);
     chTank = null;
@@ -6399,7 +6399,7 @@
       }
     } else {
       const T = chTank;
-      if (T && !T.wreck && (chSf.waveT += dt) >= CH_SF_WAVE) { chSf.waveT -= CH_SF_WAVE; teamWait.push({ comp: [S_, G_, G_], t: 0, first: false, seg: teamSeg(), tk: true });   /* c128: 1팀 (가장 약한 팀) */ }
+      if (T && !T.wreck && (chSf.waveT += dt) >= CH_SF_WAVE) { chSf.waveT -= CH_SF_WAVE; chSf.wn = (chSf.wn || 0) + 1; teamWait.push({ comp: chSf.wn % 3 === 0 ? [S_, G_] : [G_, G_], t: 0, first: false, seg: teamSeg(), tk: true });   /* c168: 군인 2 · 세 번에 한 번 저격수 1 + 군인 1 */   /* c128: 1팀 (가장 약한 팀) */ }
       if (T && T.wreck && !chSf.won && (chSf.chk -= dt) <= 0) {
         chSf.chk = 0.5;
         if (!teamWait.some((w) => w.tk || w.boss) && !cars.some((c) => c.tkWave && !c.wreck && c.state !== 'parked') && !bodies.some((b) => b.kind === 'citizen' && b.tkU)) chSf.won = true;
@@ -6441,7 +6441,7 @@
     chSf.waveT = CH_SF_WAVE;   // c128: 보스와 동시에 첫 팀
   }
   function chTankFoe(car) {                    // 사거리(저격수와 같다) 안에서 벽에 안 막힌 가장 가까운 좀비
-    const R = SIGHT * 1.1; let best = null, bd = R;
+    const R = SIGHT; let best = null, bd = R;   /* c168: 사거리 = 경찰 */
     for (const z of nearIn(zCells, car.x, car.z, R, chTkBuf)) {
       if (!isZombie(z)) continue;
       const d = Math.hypot(z.foot.x - car.x, z.foot.z - car.z);
@@ -6607,7 +6607,7 @@
     car.foot.set(car.x, 0, car.z);
     const o = car.obj; if (o) o.foot.set(car.x, 0, car.z);
     if (car.wreck) return;
-    const spd = CAR_SPEED * CH_TR_SPD.sedan * CH_TR_SLOW / (car.tkSeen ? 4 : 1) * (car.goo ? 0.8 : 1);   /* c137: 눈에 띄기 전엔 보통 차 속도 */   // 보통 차(승용차)의 4분의 1
+    const spd = CAR_SPEED * CH_TR_SPD.sedan * CH_TR_SLOW / (car.tkSeen ? 2 : 1) * (car.goo ? 0.8 : 1);   /* c168: 보인 뒤 속도 2배 (보통 차의 절반) */   /* c137: 눈에 띄기 전엔 보통 차 속도 */   // 보통 차(승용차)의 4분의 1
     if (car.goo && (car.gooLeft -= dt) <= 0) { car.goo = false; for (const s of car.gooS) car.g.remove(s); }   // c123
     if (car.goo && (car.gooT += dt) >= 0.5) { car.gooT -= 0.5; if (o && o.hp > 2) o.hp -= 2; }
     // 벽
@@ -6675,8 +6675,8 @@
     if (!chBTdone) {
       chBTdone = true;
       for (const c of bodies.slice()) if (c.kind === 'citizen') chBTgone(c);   // 사람 · 처음부터 서 있는 경찰 · 수비대 다 치운다
-      for (let i = 0, t = 0; i < 60 && t < 6000; t++) {   // c167: 동료 60명 — 내 둘레
-        const a = Math.random() * Math.PI * 2, r = 1.2 + Math.random() * 5.0, x = me.foot.x + Math.cos(a) * r, z = me.foot.z + Math.sin(a) * r;
+      for (let i = 0, t = 0; i < 70 && t < 7000; t++) {   // c168: 동료 70명 — 내 둘레
+        const a = Math.random() * Math.PI * 2, r = 1.2 + Math.random() * 5.5, x = me.foot.x + Math.cos(a) * r, z = me.foot.z + Math.sin(a) * r;
         if (spaceOf(x, z) || !freeSpot(x, z, null) || bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < 0.85)) continue;
         const c = addCitizen(x, z, { x0: x - 1, z0: z - 1, x1: x + 1, z1: z + 1 }, ''); c.met = true; makeZombie(c); i++;
       }
