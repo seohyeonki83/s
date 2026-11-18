@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c146</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c147</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3455,7 +3455,7 @@
         else allyIdle(z, dt);
       }
     }
-    if (CHAPTER && z.mode === 'free') chMoveHit(z, dt);   // c86: 가는 길에 몸에 닿은 사물·차·문은 가면서 친다
+    if (CHAPTER && z.mode === 'free' && !(z === me && touching)) chMoveHit(z, dt);   /* c147: 나는 조이스틱을 잡고 있는 동안 사물을 안 친다 */   // c86: 가는 길에 몸에 닿은 사물·차·문은 가면서 친다
     if (!z.engaging) z.attacking = false;     // 이번 걸음에 싸우지 않았다 (습격·감염·복귀·추적·배회) = 공격 중 아님
   }
 

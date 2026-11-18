@@ -840,6 +840,8 @@ from c145_patch import C145_R   # c145: 나의 문 거리·순위 · 큰 사물�
 R += C145_R
 from c146_patch import C146_R   # c146: 적 공격력 20% 더 (장갑차 빼고)
 R += C146_R
+from c147_patch import C147_R   # c147: 조이스틱 이동 중 사물 안 침
+R += C147_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
