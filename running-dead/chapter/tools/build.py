@@ -826,6 +826,8 @@ from c137_patch import C137_R   # c137: 장갑차는 눈에 띄기 전까지 빠
 R += C137_R
 from c138_patch import C138_R   # c138: 현금 알아채는 거리 통일
 R += C138_R
+from c139_patch import C139_R   # c139: 무기 수치표 (0~6단계)
+R += C139_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
