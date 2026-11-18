@@ -844,6 +844,8 @@ from c147_patch import C147_R   # c147: 조이스틱 이동 중 사물 안 침
 R += C147_R
 from c148_patch import C148_R   # c148: 사물 체력바 없음
 R += C148_R
+from c149_patch import C149_R   # c149: 적 공격력 5% 줄임
+R += C149_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
