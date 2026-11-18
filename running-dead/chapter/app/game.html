@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c135</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c136</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -313,7 +313,7 @@
 
   // 싸움 — 수비형·공격형 시민·나·동료 좀비 같음. HP가 남은 시민은 바로 못 덮치고, 때려서 0을 만든 뒤 덮친다
   const HP_MAX = 100;     // 체력 — 동료 좀비 (회복 없음)
-  const MY_HP = HP_MAX * 2 * 1.5 * 1.3 * 0.7 * 0.75 * 0.85 * 1.3 * 0.7 * 1.2 * 1.2 * 1.2;   /* v488: 20% 더 (228 → 273.6) — v446: 190 → 228 */   /* v274: 최대 체력 20% 상승 (약 158 → 190) */   // v75에 25%, v76에 15% 줄이고 v93에 30% 늘림 (약 226), v161에 30% 줄임 (약 158)
+  const MY_HP = HP_MAX * 2 * 1.5 * 1.3 * 0.7 * 0.75 * 0.85 * 1.3 * 0.7 * 1.2 * 1.2 * 1.2 * 0.9;   /* c136: 10% 깎음 (273.6 → 246.2) */   /* v488: 20% 더 (228 → 273.6) — v446: 190 → 228 */   /* v274: 최대 체력 20% 상승 (약 158 → 190) */   // v75에 25%, v76에 15% 줄이고 v93에 30% 늘림 (약 226), v161에 30% 줄임 (약 158)
   const ALLY_HP = HP_MAX * 0.9 * 1.05;   // 동료 좀비 체력 — v77에 10% 줄임 (90) → v310: 기본 5% 올림 (94.5)
   const MY_START_HP = 0.4 * 1.5 * 0.4 / 1.2;   /* v446: 시작 체력 60% 축소 (114 → 45.6, 최대의 20%) */   /* v274: 1.5배 (40% → 60%) */   /* v199에 두 배 더 (20% → 40%) */ //   /* v149에 두 배 (10% → 20%) */ //   // 시작할 때 내 체력 = 최대의 10% (v76)
     // v70에 30% 줄임 (273) —   // 체력 — 조종하는 나 = 동료의 2배에서 v64에 150%, v65에 30% 더 (390, 회복 없음)
@@ -1031,7 +1031,7 @@
     // c58: 처음 만나는 사람을 하양·노랑으로 맞추던 것(c55)을 뺐다 — 시작 자리 둘레도 다른 곳과 똑같이 놓는다
     const ys = [];
     for (let k = 0, nY = Math.round((CH_YELLOW_OUT * CH_ONE_K + Math.round(CH_GANG / 5)) * CH_YELLOW_UP) - Math.round(CH_GANG / 5), nY2 = chRoundP(nY * 0.8); k < nY2; k++)   /* c135: 혼자 다니는 노랑 20% 줄임 */   /* c82: 길거리 노랑(혼자 다니는 노랑 + 무리에 섞인 노랑) 10% 더 — 늘어난 몫은 혼자 다니는 노랑으로 */ { const p = chOutSpot(ys, 1.2, 14); if (!p) continue; ys.push(p); chReg(chPut(p[0], p[1], chRoamArea(p[0], p[1]), 'guard'), 'guard'); }
-    const whiteOut = Math.round((CH_WHITE_OUT + houseOut) * 1.15 * CH_ONE_K * 1.2);   /* c82: 길거리 하양 20% 더 */   // c54: 길거리 하양 15% 더 · c57: 10% 더
+    const whiteOut = chRoundP((CH_WHITE_OUT + houseOut) * 1.15 * CH_ONE_K * 1.2 * 0.775);   /* c136: 길거리 하양 전체가 20% 줄게 (다른 색에서 하양으로 바뀌어 오는 몫은 그대로라 여기서 조금 더 뺀다) */   /* c82: 길거리 하양 20% 더 */   // c54: 길거리 하양 15% 더 · c57: 10% 더
     // c58: 길거리 하양의 절반은 2~3명 무리 — 같은 자리를 쓰며 함께 돌아다닌다 (전체 수는 그대로, 무리끼리는 고르게 떨어뜨린다)
     let w = 0;
     { let left = Math.round(whiteOut * CH_WHITE_GANG); const wc = [];
@@ -4722,7 +4722,7 @@
   const myBiteLen = (n = up.bite) => INFECT / MY_INFECT * biteK(n);
   const zDamage = (z) => (z === me ? MY_DAMAGE : ALLY_DAMAGE) * (1 + 0.07 * up.arm) * (z.mut === 'armor' && z !== me ? 1.3 * 1.3 * 2 : 1) * (CHAPTER && z.mut && owned.catalyst ? 1 + 0.05 * (1 + lv('catalyst')) : 1);   /* c19: 촉매제 */   /* v558: 각성한 나는 내 공격력 그대로 */   /* v551: 덩치 기본 데미지 2배 */   // v275: 갑옷좀비 공격력 1.3배
   const zHeal = (z) => (z === me ? MY_BITE_HEAL : BITE_HEAL) + 0.04 * up.meat;   // 감염 시간 1배 기준 초당 회복 (최대 체력 대비)
-  const allyMaxHp = () => ALLY_HP * (1 + 0.07 * up.skin);   // v267: 단단한 피부 3% → 5%
+  const allyMaxHp = () => ALLY_HP * 0.9 * (1 + 0.07 * up.skin);   /* c136: 동료 10% 깎음 (94.5 → 85.05) — 체력바 한 겹 기준(ALLY_HP)은 그대로 */   // v267: 단단한 피부 3% → 5%
   const allyAttack = () => ALLY_ATTACK;       // v256: 빠른 다리는 이제 습격 거리가 아니라 이동 속도
   const legK = () => 1 + 0.07 * up.leg;      // 빠른 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
   const meSpeed = () => MY_SPEED * (legK() + (owned.shoes ? 0.05 * (1 + lv('shoes')) : 0)   /* v568: 운동화 처음 +15%, 강화마다 +10% */) * (me && me.mut ? MUT_SPEED : 1);   // v558: 각성 중엔 변이 속도   // v275: 운동화 +10% (도구 다루기마다 +3%) — 빠른 다리와 더한다
@@ -6115,7 +6115,7 @@
     // c104: 다이아몬드 표시는 떼지 않는다 (얻은 변이 좀비 표시)
     b.r = BODY; delete b.halfH; b.mesh.scale.setScalar(1);
     mutate(b, t);   // c56: 검은 테두리는 뺐다 (테두리는 변이한 나만)
-    if (t === 'armor') b.maxHp = 380; else b.maxHp *= 1.0;   /* c115: 3분의 2로 (570 → 380 · 히드라 142 → 95) */   /* c106: 얻은 덩치 체력 570 */ b.hp = b.maxHp;   // c100 · c104: 얻은 덩치는 체력 2.4배 · 얻은 히드라는 1.5배
+    if (t === 'armor') b.maxHp = 380 * 0.9; else b.maxHp *= 1.0;   /* c136: 얻은 덩치 342 (히드라는 동료 체력에서 따라 내려간다) */   /* c115: 3분의 2로 (570 → 380 · 히드라 142 → 95) */   /* c106: 얻은 덩치 체력 570 */ b.hp = b.maxHp;   // c100 · c104: 얻은 덩치는 체력 2.4배 · 얻은 히드라는 1.5배
   }
   function chSafeInRoom(s, R) {                // c54: 금고를 방 안에 — 방문에서 가장 먼 자리. 작은 방이면 그 방 사람은 복도로 옮긴다
     const D = R.locks.find((L) => L.out) || R.locks[0], m = s.r + 0.3;
@@ -8001,10 +8001,10 @@
     const N = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
     const free = (x, z) => !spaceOf(x, z) && freeSpot(x, z, null) && !chOnRoad(x, z, 0.3) && !bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < (o.r || BODY) + BODY + 0.22);
     const SP = (CH_MAP.spots || []).filter((S) => S.k !== 'busker'), ex = SP.map(() => []), sw = SP.map(() => Math.random() ** 2 + 0.05), ws = sw.reduce((a, b) => a + b, 0);   // c86
-    for (let n = CH_SMALL ? 4 : 24; n > 0; n--) { let r = Math.random() * ws, i = 0; while (i < sw.length - 1 && (r -= sw[i]) > 0) i++; { const q = Math.random() < 0.68 ? '' : 'guard'; if (!(q === 'guard' && Math.random() < 0.2)) ex[i].push(q); } }   /* c135: 포인트에 덧붙는 노랑도 20% 줄임 */
+    for (let n = CH_SMALL ? 4 : 24; n > 0; n--) { let r = Math.random() * ws, i = 0; while (i < sw.length - 1 && (r -= sw[i]) > 0) i++; { const q = Math.random() < 0.68 ? '' : 'guard'; if (Math.random() >= 0.2) ex[i].push(q); } }   /* c135: 포인트에 덧붙는 노랑도 20% 줄임 */
     SP.forEach((S, i) => { if (Math.random() < 0.35) ex[i].push('attacker'); });
     for (const S of CH_MAP.spots || []) {
-      const list = []; for (const [type, a, b] of S.mix) { if (type === 'vig') continue; for (let k = N(a, b); k > 0; k--) if (!((type === 'guard' || type === 'attacker') && Math.random() < 0.2)) list.push(type); }   /* c135: 포인트의 노랑 · 주황도 20% 줄임 */
+      const list = []; for (const [type, a, b] of S.mix) { if (type === 'vig') continue; for (let k = N(a, b); k > 0; k--) if (!((type === 'guard' || type === 'attacker' || type === '') && Math.random() < 0.2)) list.push(type); }   /* c135: 포인트의 노랑 · 주황도 20% 줄임 */
       if (SP.includes(S)) list.push(...ex[SP.indexOf(S)]);
       for (const type of list) for (let t = 0; t < 60; t++) {
         let x, z;
