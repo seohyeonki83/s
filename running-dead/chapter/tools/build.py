@@ -830,6 +830,8 @@ from c139_patch import C139_R   # c139: 무기 수치표 (0~6단계)
 R += C139_R
 from c140_patch import C140_R   # c140: 현금 거리 +1칸씩 · 각성 충전 35초
 R += C140_R
+from c141_patch import C141_R   # c141: 집 금고 확률 3배
+R += C141_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
