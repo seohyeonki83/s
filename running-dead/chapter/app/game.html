@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c180</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c181</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6474,10 +6474,11 @@
     const first = car.burstN === 3, base = POLICE_DAMAGE * 1.2 / 4 * 0.9 * 0.9;   /* c150: 군인 한 발과 같다 */
     const dx = z.foot.x - car.x, dz = z.foot.z - car.z, d = Math.hypot(dx, dz) || 1, ux = dx / d, uz = dz / d;
     car.shotT = 0; car.shotX = z.foot.x; car.shotZ = z.foot.z;
-    const tip = 0.74 * CH_TK_K, mx = car.x + ux * tip, mz = car.z + uz * tip;   // c178: 총구 끝
+    const ta = car.tkTur ? car.h - car.tkAim : Math.atan2(uz, ux), tip = 0.73 * CH_TK_K, mx = car.x + Math.cos(ta) * tip, mz = car.z + Math.sin(ta) * tip;   // c181: 기관총 끝 (포탑이 보는 쪽)
+    car.tipX = mx; car.tipZ = mz;
     const f1 = puff(mx, 0, mz, car.burstN % 2 ? 0xffe14d : 0xfff7c0, 0.75, rand(0.85, 1.05), 0.045, 0, 0, 0, 0.9);
-    for (let k = 0; k < 3; k++) { const a = Math.atan2(uz, ux) + rand(-0.45, 0.45), sp = rand(5, 9); const s = puff(mx, 0.1, mz, 0xffc23a, 0.14, 0.1, rand(0.08, 0.14), Math.cos(a) * sp, 0, Math.sin(a) * sp, 0.95); s.s.material.map = flashTex; s.s.renderOrder = UI - 0.5; s.peak = true; }   // 불티
-    f1.s.material.map = flashTex; f1.s.position.addScaledVector(UP, RADIUS); f1.s.renderOrder = UI - 0.5; f1.peak = true; f1.blink = true;
+    for (let k = 0; k < 3; k++) { const a = ta + rand(-0.45, 0.45), sp = rand(5, 9); const s = puff(mx, 0.1, mz, 0xffc23a, 0.14, 0.1, rand(0.08, 0.14), Math.cos(a) * sp, 0, Math.sin(a) * sp, 0.95); s.s.material.map = flashTex; s.s.renderOrder = UI - 0.5; s.peak = true; }   // 불티
+    f1.s.material.map = flashTex; f1.s.renderOrder = UI - 0.5; f1.peak = true; f1.blink = true;   /* c181: 바닥 높이 그대로 (장갑차는 납작하다) */
     const f2 = puff(z.foot.x, 0.4, z.foot.z, 0xffa53a, 0.9, CH_TK_SPLASH * 2, 0.12, 0, 0, 0, 0.55);
     f2.s.material.map = flashTex; f2.s.renderOrder = UI - 0.5; f2.peak = true;
     const hit = [z];
@@ -6685,6 +6686,7 @@
     const sp = Math.hypot(car.vx, car.vz);
     carSteer(car, wx, wz, (sp > spd * 1.5 ? 40 : CAR_ACCEL) * dt);
   }
+  const chTkS = new THREE.Vector3(), chTkE = new THREE.Vector3(), chTkX = new THREE.Vector3(1, 0, 0);
   function chTankDraw(dt) {                    // 기관포 총알 선
     const car = chTank; if (!car || !car.tracer) return;
     if (car.tkTur && !car.wreck) {               // c170: 포탑을 노린 좀비 쪽으로 (초당 약 340도)
@@ -6696,10 +6698,11 @@
     }
     const tr = car.tracer;
     if (car.shotT < 0 || car.wreck) { tr.visible = false; return; }
-    const dx = car.shotX - car.x, dz = car.shotZ - car.z, L = Math.hypot(dx, dz) || 1e-3;
+    const sx = car.tipX ?? car.x, sz = car.tipZ ?? car.z;   // c181: 기관총 끝 → 맞은 몸 가운데
+    chTkS.set(sx, 0.02, sz); chTkE.set(car.shotX, 0, car.shotZ).addScaledVector(UP, RADIUS); chTkE.sub(chTkS); const L = chTkE.length() || 1e-3;
     tr.visible = true;
-    tr.position.set(car.x + dx / 2, 0, car.z + dz / 2).addScaledVector(UP, RADIUS);
-    tr.rotation.y = -Math.atan2(dz, dx);
+    tr.position.copy(chTkS).addScaledVector(chTkE, 0.5);
+    tr.quaternion.setFromUnitVectors(chTkX, chTkE.normalize());
     tr.scale.set(L, 1, 1.8);
     tr.material.opacity = 1 - car.shotT / SHOT_FLASH;
     if ((car.shotT += dt) >= SHOT_FLASH) car.shotT = -1;
