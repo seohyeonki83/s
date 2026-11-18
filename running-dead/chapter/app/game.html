@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c169</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c170</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6423,9 +6423,9 @@
     car.g.scale.set(CH_TK_K, 1, CH_TK_K);
     K[0].material.color.setHex(0x3c4a2a); K[1].visible = K[2].visible = K[3].visible = false;
     const tur = new THREE.Mesh(new THREE.CircleGeometry(0.27, 20).rotateX(-Math.PI / 2), carMat(0x222b16)); tur.position.y = 0.002; tur.renderOrder = -0.44;
-    const brl = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.09).rotateX(-Math.PI / 2), carMat(0x161c0e)); brl.position.set(0.5, 0.003, 0); brl.renderOrder = -0.435;
+    const brl = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.13).rotateX(-Math.PI / 2), carMat(0x0e1208)); brl.position.set(0.6, 0.003, 0); brl.renderOrder = -0.435;   /* c170: 길고 굵게 */
     for (const sd of [-1, 1]) { const tr = new THREE.Mesh(new THREE.PlaneGeometry(CAR_L * 0.96, 0.13).rotateX(-Math.PI / 2), carMat(0x1a2010)); tr.position.set(0, 0.001, sd * (CAR_W / 2 - 0.065)); tr.renderOrder = -0.445; car.g.add(tr); }
-    car.g.add(tur, brl);
+    const tg = new THREE.Group(); tg.add(tur, brl); car.g.add(tg); car.tkTur = tg; car.tkAim = 0;   // c170: 포탑 — 돌아간다
     chCarObj(car, false); car.obj.oneBar = true;
     Object.assign(car, { tkV: 1, atkT: 1, burstN: 0, burstT: 0, burstZ: null, dashAt: CH_TK_DASH_EVERY, dashT: 0, tkSegs: [], scanT: 0, foe: null, shotT: -1, shotX: 0, shotZ: 0, rubBack: 0, rubCool: 0, crT: 0, goo: false, gooT: 0 });
     car.gun = { kind: 'tank', foot: car.foot };
@@ -6655,6 +6655,13 @@
   }
   function chTankDraw(dt) {                    // 기관포 총알 선
     const car = chTank; if (!car || !car.tracer) return;
+    if (car.tkTur && !car.wreck) {               // c170: 포탑을 노린 좀비 쪽으로 (초당 약 340도)
+      const z = car.burstN > 0 && car.burstZ && isZombie(car.burstZ) ? car.burstZ : car.foe && isZombie(car.foe) ? car.foe : null;
+      const want = z ? -(Math.atan2(z.foot.z - car.z, z.foot.x - car.x) - car.h) : 0;
+      let d = want - car.tkAim; d = Math.atan2(Math.sin(d), Math.cos(d));
+      const st = 6 * dt; car.tkAim += Math.abs(d) <= st ? d : Math.sign(d) * st;
+      car.tkTur.rotation.y = car.tkAim;
+    }
     const tr = car.tracer;
     if (car.shotT < 0 || car.wreck) { tr.visible = false; return; }
     const dx = car.shotX - car.x, dz = car.shotZ - car.z, L = Math.hypot(dx, dz) || 1e-3;

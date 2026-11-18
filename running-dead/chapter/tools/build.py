@@ -886,6 +886,8 @@ from c168_patch import C168_R   # c168: 장갑차 조정 · 보스 뒤 출동 ·
 R += C168_R
 from c169_patch import C169_R   # c169: 장갑차 이동 사격
 R += C169_R
+from c170_patch import C170_R   # c170: 장갑차 포탑 회전
+R += C170_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
