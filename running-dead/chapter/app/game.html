@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c143</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c144</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5850,11 +5850,11 @@
     if (!stars || !isZombie(me)) return;      // ② 경보 출동
     if (stars !== chDispStage) { if (!chDispStage) chDispT = 0; chDispStage = stars; }
     if (chDispT > 0) { chDispT -= dt; return; }
-    chDispT = (32 - 3 * (stars - 1)) * 0.8 / 0.85 / (1 + 0.15 * (5 - stars) / 4);   /* c143: 수상함 15% 빠르게 · 난리남 11.25% · 개판 7.5% · 계엄 3.75% · 데프콘 그대로 → 26.2 · 24.5 · 22.8 · 20.9 · 18.8초 */   /* c103: 출동 빈도 15% 줄임 */   // c64: 20% 더 짧게 (25.6 · 23.2 · 20.8 · 18.4 · 16초)   // c56: 기본 간격 20% 줄임 (40 → 32초). 단계마다 3초씩 짧아지는 건 그대로
+    const chCarK = 1 + 0.15 * (5 - stars) / 4; chDispT = (32 - 3 * (stars - 1)) * 0.8 / 0.85 * 2 / (1 + chCarK);   /* c143: 경찰차 출동만 빠르게 (수상함 15% · 난리남 11.25% · 개판 7.5% · 계엄 3.75% · 데프콘 그대로) — 걸어오는 출동 빈도는 그대로라, 전체 간격을 조금 줄이고 차가 뽑힐 확률을 그만큼 올린다 */   /* c103: 출동 빈도 15% 줄임 */   // c64: 20% 더 짧게 (25.6 · 23.2 · 20.8 · 18.4 · 16초)   // c56: 기본 간격 20% 줄임 (40 → 32초). 단계마다 3초씩 짧아지는 건 그대로
     const site = lastIncident ? lastIncident.clone() : new THREE.Vector2(me.foot.x, me.foot.z);
     const [lo, hi] = CH_DISP_N[Math.min(CH_DISP_N.length, stars) - 1], n = lo + Math.floor(Math.random() * (hi - lo + 1));
     const p = chEdgeSpot(chZoneAt(me.foot.x, me.foot.z));
-    if (Math.random() < 0.5) addCar(p.x, p.z, Math.atan2(site.y - p.z, site.x - p.x), site, n);
+    if (Math.random() < chCarK / (1 + chCarK)) addCar(p.x, p.z, Math.atan2(site.y - p.z, site.x - p.x), site, n);
     else for (let i = 0; i < n; i++) {
       let x = p.x + (i - (n - 1) / 2) * 0.9, z = p.z; if (!freeSpot(x, z, null) || spaceOf(x, z)) { x = p.x; z = p.z; }
       const c = addCitizen(x, z, null, 'police'); c.calls.push(site.clone()); c.met = true;   // c52: 출동한 경찰은 처음부터 깨어 있다 (전엔 좀비가 14칸 안에 올 때까지 가장자리에 잠든 채 서 있었다)
