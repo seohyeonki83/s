@@ -894,6 +894,8 @@ from c172_patch import C172_R   # c172: 장갑차 돌진 기세
 R += C172_R
 from c173_patch import C173_R   # c173: 돌진 중 기관포 멈춤
 R += C173_R
+from c174_patch import C174_R   # c174: 돌진 속도 +30% · 시간 -30%
+R += C174_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

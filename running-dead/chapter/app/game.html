@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c173</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c174</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6636,18 +6636,18 @@
     car.dashAt -= dt;
     if (car.tkPh === 'back') {                 // c171 ① 후진 (방향 고정)
       const v = MELEE * 3 / 2; car.tkPhT -= dt; car.rev = true; car.h = car.tkDh; car.vx = -car.tkDx * v; car.vz = -car.tkDz * v; car.tkV = v;
-      if (car.tkPhT <= 0) { car.tkPh = 'dash'; car.tkPhT = 1.5; }
+      if (car.tkPhT <= 0) { car.tkPh = 'dash'; car.tkPhT = 1.05;   /* c174 */ }
       return;
     }
     if (car.tkPh === 'dash') {                 // c171 ② 돌진 (방향 고정 · 무리에 안 느려진다 — 걸음마다 속도를 다시 준다)
       car.tkM -= dt * (car.load || 0) / (CH_PUSH * chCarM(car)) * 0.5;   // c172: 앞을 막은 몸 무게만큼 기세가 깎인다
-      const V = CAR_SPEED * 1.2 * Math.max(0, car.tkM); car.tkPhT -= dt; if (car.tkLX !== undefined) car.tkLeft -= Math.hypot(car.x - car.tkLX, car.z - car.tkLZ); car.tkLX = car.x; car.tkLZ = car.z; car.rev = false; car.h = car.tkDh; car.vx = car.tkDx * V; car.vz = car.tkDz * V; car.tkV = V; car.dashT = Math.max(0, car.tkPhT);
-      if (car.tkLeft <= 0 || car.tkPhT <= -1.5 || car.tkM < 0.08) {   /* c172: 정한 거리(11.3칸)를 다 가거나 기세가 다하면 끝 (막혀 있던 시간은 안 센다 · 최대 3초) */ car.tkPh = null; car.dashT = 0; car.dashAt = rand(10, 15); }
+      const V = CAR_SPEED * 1.56 * Math.max(0, car.tkM);   /* c174: 30% 빠르게 */ car.tkPhT -= dt; if (car.tkLX !== undefined) car.tkLeft -= Math.hypot(car.x - car.tkLX, car.z - car.tkLZ); car.tkLX = car.x; car.tkLZ = car.z; car.rev = false; car.h = car.tkDh; car.vx = car.tkDx * V; car.vz = car.tkDz * V; car.tkV = V; car.dashT = Math.max(0, car.tkPhT);
+      if (car.tkLeft <= 0 || car.tkPhT <= -1.05 || car.tkM < 0.08) {   /* c172: 정한 거리(11.3칸)를 다 가거나 기세가 다하면 끝 (막혀 있던 시간은 안 센다 · 최대 3초) */ car.tkPh = null; car.dashT = 0; car.dashAt = rand(10, 15); }
       return;
     }
     if (car.dashAt <= 0 && car.rubBack <= 0) {
       const d = chTankDense(car);
-      if (d) { car.tkM = 1; car.tkLeft = CAR_SPEED * 1.2 * 1.5; car.tkLX = undefined; car.tkPh = 'back'; car.tkPhT = 2; car.tkDx = d[0]; car.tkDz = d[1]; car.tkDh = Math.atan2(d[1], d[0]); car.rubBack = 0; return; }
+      if (d) { car.tkM = 1; car.tkLeft = CAR_SPEED * 1.56 * 1.05;   /* c174 */ car.tkLX = undefined; car.tkPh = 'back'; car.tkPhT = 2; car.tkDx = d[0]; car.tkDz = d[1]; car.tkDh = Math.atan2(d[1], d[0]); car.rubBack = 0; return; }
     }
     car.tkV = spd;
     // 벽에 걸렸다 → 물러났다가 다시 민다
