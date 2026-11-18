@@ -906,6 +906,8 @@ from c178_patch import C178_R   # c178: 장갑차 기관총
 R += C178_R
 from c179_patch import C179_R   # c179: 장갑차 팔각형 · 길이 · 출동 속도
 R += C179_R
+from c180_patch import C180_R   # c180: 궤도 연기 2배
+R += C180_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

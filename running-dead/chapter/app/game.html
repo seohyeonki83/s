@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c179</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c180</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6613,7 +6613,7 @@
   }
   function chTankSmoke(car, dt) {             // c175: 궤도 네 귀퉁이에서 연기 — 가는 반대쪽으로 흩어진다
     const dash = car.tkPh === 'dash';
-    if ((car.smT = (car.smT || 0) - dt) > 0) return; car.smT = dash ? 0.035 : 0.06;
+    if ((car.smT = (car.smT || 0) - dt) > 0) return; car.smT = dash ? 0.0175 : 0.03;   /* c180: 2배 */
     const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx, hl = CAR_L * CH_TK_KL / 2, hw = CAR_W * CH_TK_K / 2 * 0.85;
     const mv = dash ? 1 : -1;                  // 차가 가는 쪽 (후진이면 뒤)
     for (const sd of [-1, 1]) for (const e of [-1, 1]) {
