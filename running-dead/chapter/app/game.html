@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c152</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c153</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1654,6 +1654,7 @@
     if (type) {
       c.mesh.material.color.setHex(COLOR[type]);
       c.hp = c.maxHp = c.sniper ? POLICE_HP * 2 * 1.1 / 2 :   /* v540: 저격수 체력 = 군인의 절반 (184.8) */ c.police ? POLICE_HP * (c.soldier ? 2 * 1.1 : 0.95) :   /* v517: 군인 체력 10% 상승 (336 → 369.6) */   /* v497: 경찰 체력 5%만 줄임 (168 → 159.6) */ GUARD_HP * (c.guard ? 0.95 : 1) * (CHAPTER ? 0.9 : 1);   /* c97: 노랑·주황·빨강 체력 10% 줄임 */   /* v497: 주황(수비형) 체력 5%만 줄임 (200 → 190) */   /* v494: 경찰만 체력 10% 줄임 (168 → 151.2) */   /* v459: 군인 체력 1/3 줄임 (504 → 336) */   /* v441: 군인 체력 2배 (252 → 504), 저격수는 17.6 그대로 */   // v439: 저격수 체력 = 군인의 7% (약 17.6) — v397~v438은 0 (바로 덮치기)
+      if (CHAPTER) c.hp = c.maxHp = c.maxHp * 0.95;   // c153: 적 체력 5% 줄임
       addHpBar(c, hpFoeMat);
     }
     if (c.police) {                      // 쏠 때 번쩍이는 노란 선 (원 밑에 깔린다)
@@ -6105,7 +6106,7 @@
     const c = chPut(x, z, B, 'attacker', B);
     c.boss = type; c.mesh.material.color.setHex(CH_PINK); chSoftOff(c);   /* c84 */   // c55: 변이 좀비가 될 사람은 분홍
     if (type === 'armor') { c.r = BODY * 1.5; c.halfH = RADIUS * 1.5; c.mesh.scale.setScalar(1.5); }   // c55: 덩치가 될 사람만 크다 — 히드라가 될 사람은 보통 크기 (다이아몬드로 알아본다)
-    c.hp = c.maxHp = GUARD_HP * (type === 'armor' ? 4 : 2); c.hpDisp = c.hp; c.dmgK = type === 'armor' ? 2 : 4;
+    c.hp = c.maxHp = GUARD_HP * (type === 'armor' ? 4 : 2) * 0.95; c.hpDisp = c.hp;   /* c153 */ c.dmgK = type === 'armor' ? 2 : 4;
     const g = new THREE.Group();
     const mk = (sz, col, zz) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(sz, sz), new THREE.MeshBasicMaterial({ color: col, transparent: true, depthTest: false, depthWrite: false })); m.rotation.z = Math.PI / 4; m.position.z = zz; m.renderOrder = 1; return m; };
     g.add(mk(0.38, 0x1c1c1e, 0), mk(0.27, 0xb05cff, 0.002)); g.position.set(0, 0.5, 0.02);
@@ -6391,7 +6392,7 @@
     const p = teamSpot(seg), h = Math.atan2(me.foot.z - p.z, me.foot.x - p.x);
     addCar(p.x, p.z, h, null, 0, ['tank']);
     const car = cars[cars.length - 1], K = car.g.children;
-    car.squad = null; car.tank = true; car.state = 'tank'; car.kl = car.kw = CH_TK_K; car.massK = 4; car.hpK = 10;
+    car.squad = null; car.tank = true; car.state = 'tank'; car.kl = car.kw = CH_TK_K; car.massK = 4; car.hpK = 10 * 0.95;   /* c153 */
     car.g.scale.set(CH_TK_K, 1, CH_TK_K);
     K[0].material.color.setHex(0x3c4a2a); K[1].visible = K[2].visible = K[3].visible = false;
     const tur = new THREE.Mesh(new THREE.CircleGeometry(0.27, 20).rotateX(-Math.PI / 2), carMat(0x222b16)); tur.position.y = 0.002; tur.renderOrder = -0.44;
