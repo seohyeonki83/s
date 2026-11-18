@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c171</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c172</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6504,7 +6504,7 @@
     for (let i = car.tkSegs.length - 1; i >= 0; i--) {
       const sg = car.tkSegs[i];
       if (clock - sg.tkAt > 1.2 || clock < sg.tkAt) { car.tkSegs.splice(i, 1); continue; }
-      if ((sg.tkT = (sg.tkT || 0) + dt * (car.tkPh === 'dash' ? 3 : 1)) >= CH_TK_WALL_T) { car.tkSegs.splice(i, 1); chWallBreak(sg.tkB, sg, car); }
+      if ((sg.tkT = (sg.tkT || 0) + dt * (car.tkPh === 'dash' ? Math.max(1, 6 * car.tkM) : 1)) >= CH_TK_WALL_T) { car.tkSegs.splice(i, 1); chWallBreak(sg.tkB, sg, car); }
     }
     return hit;
   }
@@ -6539,6 +6539,7 @@
       B.doors.push(L);
     }
     B.tkCut = true;
+    if (car && car.tkPh === 'dash') car.tkM -= 0.15;   // c172: 벽 하나 뚫을 때마다
     chCuts.push({ B, sg, pieces, L });
     rebuildSight(B);
     B.navDirty = true; if (P) P.navDirty = true; if (B.rooms) for (const Q of B.rooms) Q.navDirty = true;
@@ -6587,7 +6588,9 @@
   }
   function chTankCar(o) {                      // 장갑차에 닿은 차 — 1.5초면 부서진다
     if (!o.obj || o.obj.dead || o.wreck) return;
-    o.obj.hp -= MY_DAMAGE * 9.5 / 1.5 * chDt;
+    const T = chTank, ds = T && T.tkPh === 'dash';
+    o.obj.hp -= MY_DAMAGE * 9.5 / 1.5 * chDt * (ds ? 1 + 2 * T.tkM : 1);   // c172: 돌진 중엔 기세만큼 더 세게
+    if (ds) T.tkM -= 0.6 * chDt;   // c172: 차에 막히면 기세가 깎인다
     if (o.obj.hp <= 0) { o.obj.hp = 0; breakObj(o.obj); }
   }
   function chTankGoo(car) {                    // 산성 — 이동·공격 20% 느리게 + 초당 2 데미지 (사람과 같다)
@@ -6613,6 +6616,7 @@
     // 벽
     if (chTankWalls(car, dt)) {
       if (car.tkPX !== undefined) { car.x = car.tkPX; car.z = car.tkPZ; car.h = car.tkPH; car.foot.set(car.x, 0, car.z); if (o) o.foot.set(car.x, 0, car.z); }
+      if (car.tkPh === 'dash') car.tkM -= 0.3 * dt;   // c172: 벽을 미는 동안 기세가 깎인다
       if (!car.tkPh && car.rubBack <= 0 && car.rubCool <= 0) { car.rubBack = 0.3;   /* c171: 돌진·후진 중엔 비비지 않는다 */ dust(car.x + Math.cos(car.h) * CAR_L * CH_TK_K / 2, car.z + Math.sin(car.h) * CAR_L * CH_TK_K / 2, 8, 1.2); }
     } else { car.tkPX = car.x; car.tkPZ = car.z; car.tkPH = car.h; }
     // 건물 안 네모 사물 (책상 …)
@@ -6635,13 +6639,14 @@
       return;
     }
     if (car.tkPh === 'dash') {                 // c171 ② 돌진 (방향 고정 · 무리에 안 느려진다 — 걸음마다 속도를 다시 준다)
-      const V = CAR_SPEED * 1.2; car.tkPhT -= dt; car.rev = false; car.h = car.tkDh; car.vx = car.tkDx * V; car.vz = car.tkDz * V; car.tkV = V; car.dashT = Math.max(0, car.tkPhT);
-      if (car.tkPhT <= 0) { car.tkPh = null; car.dashT = 0; car.dashAt = rand(10, 15); }
+      car.tkM -= dt * (car.load || 0) / (CH_PUSH * chCarM(car)) * 0.5;   // c172: 앞을 막은 몸 무게만큼 기세가 깎인다
+      const V = CAR_SPEED * 1.2 * Math.max(0, car.tkM); car.tkPhT -= dt; if (car.tkLX !== undefined) car.tkLeft -= Math.hypot(car.x - car.tkLX, car.z - car.tkLZ); car.tkLX = car.x; car.tkLZ = car.z; car.rev = false; car.h = car.tkDh; car.vx = car.tkDx * V; car.vz = car.tkDz * V; car.tkV = V; car.dashT = Math.max(0, car.tkPhT);
+      if (car.tkLeft <= 0 || car.tkPhT <= -1.5 || car.tkM < 0.08) {   /* c172: 정한 거리(11.3칸)를 다 가거나 기세가 다하면 끝 (막혀 있던 시간은 안 센다 · 최대 3초) */ car.tkPh = null; car.dashT = 0; car.dashAt = rand(10, 15); }
       return;
     }
     if (car.dashAt <= 0 && car.rubBack <= 0) {
       const d = chTankDense(car);
-      if (d) { car.tkPh = 'back'; car.tkPhT = 2; car.tkDx = d[0]; car.tkDz = d[1]; car.tkDh = Math.atan2(d[1], d[0]); car.rubBack = 0; return; }
+      if (d) { car.tkM = 1; car.tkLeft = CAR_SPEED * 1.2 * 1.5; car.tkLX = undefined; car.tkPh = 'back'; car.tkPhT = 2; car.tkDx = d[0]; car.tkDz = d[1]; car.tkDh = Math.atan2(d[1], d[0]); car.rubBack = 0; return; }
     }
     car.tkV = spd;
     // 벽에 걸렸다 → 물러났다가 다시 민다
@@ -7869,7 +7874,9 @@
     const m = chCarW(b), M = CAR_MASS * chCarM(car), k2 = M / (M + m);
     const kx = nX * vn * KNOCK * k2 + tX * 0.6 * k2, kz = nZ * vn * KNOCK * k2 + tZ * 0.6 * k2;   // 법선 쪽으로 튕기고, 스친 쪽으로는 조금 쓸려 간다
     b.hitT = clock + 1; if (car.tr) { b.trHit = car; b.trHitT = clock + 3; }
-    const dmg = CAR_HIT_DMG * ve / CAR_SPEED;
+    const tkD = car.tank && car.tkPh === 'dash';
+    const dmg = CAR_HIT_DMG * ve / CAR_SPEED * (tkD ? 0.5 + Math.max(0, car.tkM) : 1);   // c172: 장갑차 돌진 = 기세만큼
+    if (tkD) car.tkM -= m / (CAR_MASS * chCarM(car)) * 0.25;
     if (isZombie(b)) { b.hp = Math.max(0, b.hp - dmg); if (b.hp <= 0) b.knockDie = true; }   // 좀비는 죽으면 밀려가서 멈춘 뒤에 사라진다
     else if (b.hp > 0) b.hp = Math.max(0, b.hp - dmg);             // 시민·경찰은 체력이 깎인다 (0이 되면 덮칠 수 있게 된다)
     if (giveKnock(b, kx, kz, Math.hypot(kx, kz), KNOCK_T)) b.knockCar = true;
