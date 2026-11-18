@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c172</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c173</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6629,7 +6629,8 @@
     // 기관포
     car.atkT -= dt * (car.goo ? 0.56 : 1);
     if ((car.scanT -= dt) <= 0) { car.scanT = 0.2; car.foe = chTankFoe(car); if (!car.tkSeen) chTankSeen(car); }
-    if (car.burstN > 0) { if ((car.burstT -= dt) <= 0) chTankBullet(car); }
+    if (car.tkPh === 'dash') car.burstN = 0;   // c173: 돌진 중엔 안 쏜다
+    else if (car.burstN > 0) { if ((car.burstT -= dt) <= 0) chTankBullet(car); }
     else if (car.atkT <= 0 && car.foe && isZombie(car.foe)) { car.burstN = 4; car.burstT = 0; car.burstZ = car.foe; car.atkT = HIT_EVERY; }
     // 돌진
     car.dashAt -= dt;
