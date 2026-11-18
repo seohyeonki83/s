@@ -914,6 +914,8 @@ from c182_patch import C182_R   # c182: 보스 뒤 군인 주인 없음 · 장�
 R += C182_R
 from c183_patch import C183_R   # c183: 장갑차 체력·돌진 주기·속도
 R += C183_R
+from c184_patch import C184_R   # c184: 장갑차 20% 크게
+R += C184_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

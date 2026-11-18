@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c183</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c184</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6361,7 +6361,7 @@
   //   장갑차: 군인차의 2배 크기 · 사람이 안 내린다 · 체력 = 경찰차의 10배 · 미는 힘 = 보통 차의 4배 · 속도 = 보통 차의 4분의 1.
   //           기관포 = 군인처럼 4발 연사, 사거리는 저격수, 한 발이 군인의 2배 + 둘레 스플래시 + 넉백 2배. 20초마다 좀비가 가장 많은 쪽으로 0.3초 돌진.
   //           건물·사물을 피해 다니지 않는다 — 사물은 깔아뭉개고, 벽은 비비다가 부순다 (벽 조각 단위, 체력 표시 없음). 산·강만 못 넘는다.
-  const CH_SF_GAP = 120, CH_SF_FORCE = 180, CH_SF_WAVE = 15, CH_TK_K = MIL_K * 2 * 0.8, CH_TK_KL = MIL_K * 2 * 0.8 * 0.78 * 0.85,   /* c182: 15% 더 */   /* c179: 78% */   /* c177: 길이만 15% 짧게 */   /* c168: 20% 작게 */ CH_TK_ESC = 2.6, CH_TK_DASH_EVERY = 20, CH_TK_DASH_T = 0.3, CH_TK_SPLASH = 1.2, CH_TK_WALL_T = 2.4 / 1.3,   /* c168: 벽 부수는 힘 30% 더 */ CH_TK_HOLE = 2.3;
+  const CH_SF_GAP = 120, CH_SF_FORCE = 180, CH_SF_WAVE = 15, CH_TK_K = MIL_K * 2 * 0.8 * 1.2,   /* c184: 20% 크게 */ CH_TK_KL = MIL_K * 2 * 0.8 * 0.78 * 0.85 * 1.2,   /* c182: 15% 더 */   /* c179: 78% */   /* c177: 길이만 15% 짧게 */   /* c168: 20% 작게 */ CH_TK_ESC = 2.6, CH_TK_DASH_EVERY = 20, CH_TK_DASH_T = 0.3, CH_TK_SPLASH = 1.2, CH_TK_WALL_T = 2.4 / 1.3,   /* c168: 벽 부수는 힘 30% 더 */ CH_TK_HOLE = 2.3;
   const chSf = { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, shown: '' };
   const chBanner = [], chCuts = [], chTkBuf = [], chTkBuf2 = [];
   let chTank = null;
