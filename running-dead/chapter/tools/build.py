@@ -910,6 +910,8 @@ from c180_patch import C180_R   # c180: 궤도 연기 2배
 R += C180_R
 from c181_patch import C181_R   # c181: 총구 불꽃 위치
 R += C181_R
+from c182_patch import C182_R   # c182: 보스 뒤 군인 주인 없음 · 장갑차 길이 · 총열
+R += C182_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
