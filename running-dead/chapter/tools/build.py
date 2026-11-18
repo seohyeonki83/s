@@ -916,6 +916,8 @@ from c183_patch import C183_R   # c183: 장갑차 체력·돌진 주기·속도
 R += C183_R
 from c184_patch import C184_R   # c184: 장갑차 20% 크게
 R += C184_R
+from c185_patch import C185_R   # c185: 첫 카운트다운 글자 · 보스 체력 · 보스 체력바
+R += C185_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

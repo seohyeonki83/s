@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c184</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c185</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6373,7 +6373,7 @@
     let s = '';
     if (chSf.on && !chSf.boss && !chSf.hide) {
       const left = Math.max(0, Math.ceil(chSfAt(chSf.n + 1) - chSf.T));
-      s = chSf.n < 4 ? '다음 특공대 출동까지 ' + left + '초' : '<span class="bosscd"><i>!</i>보스 출동까지 ' + left + '초<i>!</i></span>';   /* c126 */
+      s = chSf.n < 4 ? (chSf.n === 0 ? '특공대 도착까지 ' : '다음 특공대 출동까지 ') + left + '초' : '<span class="bosscd"><i>!</i>보스 출동까지 ' + left + '초<i>!</i></span>';   /* c126 */
     }
     if (s !== chSf.shown) { chSf.shown = s; chSfEl.innerHTML = s; chSfEl.style.display = s ? 'block' : 'none'; }
   }
@@ -6419,7 +6419,7 @@
     const p = teamSpot(seg), h = Math.atan2(me.foot.z - p.z, me.foot.x - p.x);
     addCar(p.x, p.z, h, null, 0, ['tank']);
     const car = cars[cars.length - 1], K = car.g.children;
-    car.squad = null; car.tank = true; car.state = 'tank'; car.kw = CH_TK_K; car.kl = CH_TK_KL; car.massK = 4; car.hpK = 10 * 0.95 * 3;   /* c183: 3배 */   /* c153 */
+    car.squad = null; car.tank = true; car.state = 'tank'; car.kw = CH_TK_K; car.kl = CH_TK_KL; car.massK = 4; car.hpK = 10 * 0.95 * 3 * 0.9;   /* c185: 10% 줄임 */   /* c183: 3배 */   /* c153 */
     car.g.scale.set(CH_TK_K, 1, CH_TK_K);
     K[0].material.color.setHex(0x3c4a2a); K[0].geometry = (() => { const L = CAR_L * 0.78 * 0.85, W = CAR_W, c = 0.16, s = new THREE.Shape(); s.moveTo(-L / 2 + c, -W / 2); s.lineTo(L / 2 - c, -W / 2); s.lineTo(L / 2, -W / 2 + c); s.lineTo(L / 2, W / 2 - c); s.lineTo(L / 2 - c, W / 2); s.lineTo(-L / 2 + c, W / 2); s.lineTo(-L / 2, W / 2 - c); s.lineTo(-L / 2, -W / 2 + c); s.closePath(); return new THREE.ShapeGeometry(s).rotateX(-Math.PI / 2); })();   /* c179: 모서리를 깎은 팔각형 */ K[1].visible = K[2].visible = K[3].visible = false;
     const tur = new THREE.Mesh(new THREE.CircleGeometry(0.27, 20).rotateX(-Math.PI / 2), carMat(0x222b16)); tur.position.y = 0.002; tur.renderOrder = -0.44;
@@ -6429,7 +6429,7 @@
     const mg = (w, h, x, z, col, o) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h).rotateX(-Math.PI / 2), carMat(col)); m.position.set(x, 0.004 + o * 0.0005, z); m.renderOrder = -0.435 + o * 0.001; return m; };
     const mgs = [mg(0.2, 0.17, 0.33, 0, 0x2a3218, 0), mg(0.2, 0.035, 0.5, -0.035, 0x0b0d07, 1), mg(0.2, 0.035, 0.5, 0.035, 0x0b0d07, 1), mg(0.06, 0.13, 0.6, 0, 0x050604, 2)   /* c182: 총열 3분의 1 짧게 */];   // 냉각 덮개 · 총열 둘 · 소염기
     const tg = new THREE.Group(); tg.add(tur, brl, ...mgs); car.g.add(tg); car.tkTur = tg; car.tkAim = 0;   // c170: 포탑 — 돌아간다
-    chCarObj(car, false); car.obj.oneBar = true;
+    chCarObj(car, false); car.obj.oneBar = true; car.obj.hpBar.scale.y = 3 * 0.7; for (const m of car.obj.hpBar.children) m.renderOrder += UI_ME + 60 - UI;   // c185: 내 체력바만큼 굵게 · 내 것보다 위
     Object.assign(car, { tkV: 1, atkT: 1, burstN: 0, burstT: 0, burstZ: null, dashAt: rand(10 * 2 / 3, 15 * 2 / 3), dashT: 0, tkPh: null, tkPhT: 0, tkSegs: [], scanT: 0, foe: null, shotT: -1, shotX: 0, shotZ: 0, rubBack: 0, rubCool: 0, crT: 0, goo: false, gooT: 0 });
     car.gun = { kind: 'tank', foot: car.foot };
     car.tracer = new THREE.Mesh(tracerGeo, new THREE.MeshBasicMaterial({ color: 0xffb84d, transparent: true, depthTest: false, depthWrite: false }));
