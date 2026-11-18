@@ -850,6 +850,8 @@ from c150_patch import C150_R   # c150: 장갑차 데미지 = 군인
 R += C150_R
 from c151_patch import C151_R   # c151: 경찰 출동 빈도 15% 줄임
 R += C151_R
+from c152_patch import C152_R   # c152: 내 최대 체력 15% 올림
+R += C152_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
