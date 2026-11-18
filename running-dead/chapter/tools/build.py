@@ -818,6 +818,8 @@ from c133_patch import C133_R   # c133: 안 보이는 사물 고침 · 빨강·�
 R += C133_R
 from c134_patch import C134_R   # c134: 장갑차 돌진 멈춤 고침
 R += C134_R
+from c135_patch import C135_R   # c135: 길거리 노랑·주황 20% 줄임 · 공격력 15%
+R += C135_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

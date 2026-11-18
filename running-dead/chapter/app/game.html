@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c134</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c135</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -929,6 +929,7 @@
   function chGang(G, p) {                       // 무리 하나를 그 자리에 놓는다 — 자리(area)를 같이 쓴다 (함께 옮겨 다닌다)
     const area = chRoamArea(p[0], p[1]); area.roam.members = G.members = [];
     G.types.forEach((t, i) => {
+      if ((t === 'guard' || t === 'attacker') && Math.random() < 0.2) return;   // c135: 무리 속 노랑 · 주황 다섯에 하나는 안 나온다
       if (t === 'vig' && Math.random() < 0.19) return;   /* c133: 10% 더 (합쳐서 19%) */   // c131: 길거리 빨강 열에 하나는 안 나온다
       let x = p[0], z = p[1];
       for (let tt = 0; tt < 40; tt++) { const a = Math.random() * Math.PI * 2, r = i ? rand(0.9, 1.8) : 0; x = p[0] + Math.cos(a) * r; z = p[1] + Math.sin(a) * r; if (!spaceOf(x, z) && freeSpot(x, z, null) && !(tt < 30 && chOnRoad(x, z, 0.45)) && !bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < 0.9)) break; }
@@ -1029,7 +1030,7 @@
     }
     // c58: 처음 만나는 사람을 하양·노랑으로 맞추던 것(c55)을 뺐다 — 시작 자리 둘레도 다른 곳과 똑같이 놓는다
     const ys = [];
-    for (let k = 0, nY = Math.round((CH_YELLOW_OUT * CH_ONE_K + Math.round(CH_GANG / 5)) * CH_YELLOW_UP) - Math.round(CH_GANG / 5); k < nY; k++)   /* c82: 길거리 노랑(혼자 다니는 노랑 + 무리에 섞인 노랑) 10% 더 — 늘어난 몫은 혼자 다니는 노랑으로 */ { const p = chOutSpot(ys, 1.2, 14); if (!p) continue; ys.push(p); chReg(chPut(p[0], p[1], chRoamArea(p[0], p[1]), 'guard'), 'guard'); }
+    for (let k = 0, nY = Math.round((CH_YELLOW_OUT * CH_ONE_K + Math.round(CH_GANG / 5)) * CH_YELLOW_UP) - Math.round(CH_GANG / 5), nY2 = chRoundP(nY * 0.8); k < nY2; k++)   /* c135: 혼자 다니는 노랑 20% 줄임 */   /* c82: 길거리 노랑(혼자 다니는 노랑 + 무리에 섞인 노랑) 10% 더 — 늘어난 몫은 혼자 다니는 노랑으로 */ { const p = chOutSpot(ys, 1.2, 14); if (!p) continue; ys.push(p); chReg(chPut(p[0], p[1], chRoamArea(p[0], p[1]), 'guard'), 'guard'); }
     const whiteOut = Math.round((CH_WHITE_OUT + houseOut) * 1.15 * CH_ONE_K * 1.2);   /* c82: 길거리 하양 20% 더 */   // c54: 길거리 하양 15% 더 · c57: 10% 더
     // c58: 길거리 하양의 절반은 2~3명 무리 — 같은 자리를 쓰며 함께 돌아다닌다 (전체 수는 그대로, 무리끼리는 고르게 떨어뜨린다)
     let w = 0;
@@ -2899,6 +2900,7 @@
   const ARMOR_KB = 2.3, ARMOR_KT = 0.4;       // v295: 덩치에 맞으면 처음 이 속도(칸/초)로 밀려나 이 시간 동안 점점 느려진다 — v300: 거리 2배, v301: 0.32 → 0.46칸 (1.5배, 2 → 2.3칸/초 · 0.25 → 0.4초)
   function landHit(a, v, dmg = DAMAGE) {
     if (CHAPTER && a && a.kind === 'citizen' && (v.kind === 'ally' || v === me) && !v.dead) v.objOff = clock + 2;   /* c64: 나도 */   // c58: 맞은 동료는 2초 동안 사물을 안 노린다
+    if (CHAPTER && a && (a === me || a.kind === 'ally') && (!a.splashing || a === me)) dmg *= 1.15;   // c135: 나와 동료 공격력 15% 올림 (덩치의 범위 공격은 본 공격에서 이미 올랐다)
     if (TEST_MAP && !CHAPTER && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적 (c42: 챕터는 빼고)
     if (CHAPTER && a && a.vig && isZombie(v) && v.mode !== 'bite' && v.mut !== 'armor' && !(v === me && absorbAmt() >= SNIPER_KD * 2 / 12 - 0.001)) {   // c39: 자경단 몽둥이 — 밀림 1
       const T = ARMOR_KT * 2 / 12, D = SNIPER_KD * 2 / 12, V = D * 4 / (1 - Math.exp(-4 * T));   // c45: 1 → 2
@@ -7999,10 +8001,10 @@
     const N = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
     const free = (x, z) => !spaceOf(x, z) && freeSpot(x, z, null) && !chOnRoad(x, z, 0.3) && !bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < (o.r || BODY) + BODY + 0.22);
     const SP = (CH_MAP.spots || []).filter((S) => S.k !== 'busker'), ex = SP.map(() => []), sw = SP.map(() => Math.random() ** 2 + 0.05), ws = sw.reduce((a, b) => a + b, 0);   // c86
-    for (let n = CH_SMALL ? 4 : 24; n > 0; n--) { let r = Math.random() * ws, i = 0; while (i < sw.length - 1 && (r -= sw[i]) > 0) i++; ex[i].push(Math.random() < 0.68 ? '' : 'guard'); }
+    for (let n = CH_SMALL ? 4 : 24; n > 0; n--) { let r = Math.random() * ws, i = 0; while (i < sw.length - 1 && (r -= sw[i]) > 0) i++; { const q = Math.random() < 0.68 ? '' : 'guard'; if (!(q === 'guard' && Math.random() < 0.2)) ex[i].push(q); } }   /* c135: 포인트에 덧붙는 노랑도 20% 줄임 */
     SP.forEach((S, i) => { if (Math.random() < 0.35) ex[i].push('attacker'); });
     for (const S of CH_MAP.spots || []) {
-      const list = []; for (const [type, a, b] of S.mix) { if (type === 'vig') continue; for (let k = N(a, b); k > 0; k--) list.push(type); }
+      const list = []; for (const [type, a, b] of S.mix) { if (type === 'vig') continue; for (let k = N(a, b); k > 0; k--) if (!((type === 'guard' || type === 'attacker') && Math.random() < 0.2)) list.push(type); }   /* c135: 포인트의 노랑 · 주황도 20% 줄임 */
       if (SP.includes(S)) list.push(...ex[SP.indexOf(S)]);
       for (const type of list) for (let t = 0; t < 60; t++) {
         let x, z;
