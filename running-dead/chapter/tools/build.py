@@ -862,6 +862,8 @@ from c156_patch import C156_R   # c156: 몸 묶어 그리기
 R += C156_R
 from c157_patch import C157_R   # c157: 집 금고 50%
 R += C157_R
+from c158_patch import C158_R   # c158: 레벨업 처음 5명
+R += C158_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
