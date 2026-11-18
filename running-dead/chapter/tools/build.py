@@ -874,6 +874,8 @@ from c162_patch import C162_R   # c162: 동료 공격력 7% 올림
 R += C162_R
 from c163_patch import C163_R   # c163: 동료 체력 · 빠루 · 흡수복
 R += C163_R
+from c164_patch import C164_R   # c164: 동료 체력 되돌림 · 적 공격력 7% 줄임
+R += C164_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
