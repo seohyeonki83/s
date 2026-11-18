@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c185</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c186</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3455,7 +3455,7 @@
           if (cb && (!go || cd < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z) - RADIUS)) { z.carT = z.carHold === cb ? (z.carT || 0) + dt : dt; z.carHold = cb; } else { z.carT = 0; z.carHold = null; }
           if (z.carT >= 1.25) forced = z.carHold; if (noObj || CHAPTER) forced = null; }   // v501: 2.5 → 1.25초
         let ob = forced || (!t && !noObj && !(CHAPTER && go) ? nearObj(z) : null);
-        if (CHAPTER && z === me && !ob && !t && go && go.kind === 'citizen' && chTier(go) === 0 && !(z.objOff > clock)) { const d = nearObj(z); if (d && d.type === 'door') ob = d; }   // c145: 나 — 문은 하양과 같은 순위 (노릴 사람이 하양이면 더 가까운 쪽을 친다)
+        if (CHAPTER && z === me && !t && go && go.kind === 'citizen' && !go.sniper) { if (!ob) { const d = nearObj(z); if (d && d.type === 'door') ob = d; } if (!sf) sf = nearSafe(z); }   // c186: 나 — 문·금고 = 사람과 같은 순위 (저격수만 먼저)   // c145: 나 — 문은 하양과 같은 순위 (노릴 사람이 하양이면 더 가까운 쪽을 친다)
         if (CHAPTER && z !== me && z.phase === 'track') { if (ob && objGap(ob, z) <= chReach(z)) ob = null; if (sf && Math.hypot(sf.foot.x - z.foot.x, sf.foot.z - z.foot.z) - sf.r <= MELEE) sf = null; }   // c86: 자리로 가는 중인 동료는 서서 치지 않는다 (가면서 친다)       // v240: 문·경찰차도 다른 타겟과 같은 우선순위 — 더 가까우면 그걸 (대신 아주 가까이 있어야 알아챈다)
         if (!CHAPTER && !noObj && !t && !ob && !go && !sf) ob = nearObj.any;   // v245: 주변에 다음 타겟이 없으면 3명이 찬 문·경찰차에도 제한 없이 붙는다
         if (ob && (forced || !go || objGap(ob, z) < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z) - RADIUS) && (!sf || objGap(ob, z) < Math.hypot(sf.foot.x - z.foot.x, sf.foot.z - z.foot.z) - sf.r)) fightObj(z, ob, dt);
