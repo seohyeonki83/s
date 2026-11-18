@@ -838,6 +838,8 @@ from c143_patch import C143_R   # c143·c144: 빨강 20% 늘림 · 적 공격력
 R += C143_R
 from c145_patch import C145_R   # c145: 나의 문 거리·순위 · 큰 사물도 부서진다
 R += C145_R
+from c146_patch import C146_R   # c146: 적 공격력 20% 더 (장갑차 빼고)
+R += C146_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
