@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c176</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c177</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2568,7 +2568,7 @@
         const l = car.x - (B.x0 - m), r = B.x1 + m - car.x, u = car.z - (B.z0 - m), w = B.z1 + m - car.z, k = Math.min(l, r, u, w);
         if (k === l) car.x = B.x0 - m; else if (k === r) car.x = B.x1 + m; else if (k === u) car.z = B.z0 - m; else car.z = B.z1 + m;
       }
-      if (!car.rev && Math.hypot(car.vx, car.vz) > 0.3) car.h = Math.atan2(car.vz, car.vx);   /* c80: 후진 중엔 머리를 안 돌린다 */   // 앞 = 가는 쪽
+      if (!car.rev && Math.hypot(car.vx, car.vz) > 0.3) { const hw = Math.atan2(car.vz, car.vx); if (car.tank && !car.tkPh) { let d = hw - car.h; d = Math.atan2(Math.sin(d), Math.cos(d)); const st = 2.2 * dt; car.h += Math.abs(d) <= st ? d : Math.sign(d) * st; } else car.h = hw; }   /* c177: 장갑차는 천천히 돈다 */   /* c80: 후진 중엔 머리를 안 돌린다 */   // 앞 = 가는 쪽
     }
   }
   function carSteer(car, wx, wz, step) {
@@ -6361,7 +6361,7 @@
   //   장갑차: 군인차의 2배 크기 · 사람이 안 내린다 · 체력 = 경찰차의 10배 · 미는 힘 = 보통 차의 4배 · 속도 = 보통 차의 4분의 1.
   //           기관포 = 군인처럼 4발 연사, 사거리는 저격수, 한 발이 군인의 2배 + 둘레 스플래시 + 넉백 2배. 20초마다 좀비가 가장 많은 쪽으로 0.3초 돌진.
   //           건물·사물을 피해 다니지 않는다 — 사물은 깔아뭉개고, 벽은 비비다가 부순다 (벽 조각 단위, 체력 표시 없음). 산·강만 못 넘는다.
-  const CH_SF_GAP = 120, CH_SF_FORCE = 180, CH_SF_WAVE = 15, CH_TK_K = MIL_K * 2 * 0.8,   /* c168: 20% 작게 */ CH_TK_ESC = 2.6, CH_TK_DASH_EVERY = 20, CH_TK_DASH_T = 0.3, CH_TK_SPLASH = 1.2, CH_TK_WALL_T = 2.4 / 1.3,   /* c168: 벽 부수는 힘 30% 더 */ CH_TK_HOLE = 2.3;
+  const CH_SF_GAP = 120, CH_SF_FORCE = 180, CH_SF_WAVE = 15, CH_TK_K = MIL_K * 2 * 0.8, CH_TK_KL = MIL_K * 2 * 0.8 * 0.85,   /* c177: 길이만 15% 짧게 */   /* c168: 20% 작게 */ CH_TK_ESC = 2.6, CH_TK_DASH_EVERY = 20, CH_TK_DASH_T = 0.3, CH_TK_SPLASH = 1.2, CH_TK_WALL_T = 2.4 / 1.3,   /* c168: 벽 부수는 힘 30% 더 */ CH_TK_HOLE = 2.3;
   const chSf = { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, shown: '' };
   const chBanner = [], chCuts = [], chTkBuf = [], chTkBuf2 = [];
   let chTank = null;
@@ -6419,12 +6419,12 @@
     const p = teamSpot(seg), h = Math.atan2(me.foot.z - p.z, me.foot.x - p.x);
     addCar(p.x, p.z, h, null, 0, ['tank']);
     const car = cars[cars.length - 1], K = car.g.children;
-    car.squad = null; car.tank = true; car.state = 'tank'; car.kl = car.kw = CH_TK_K; car.massK = 4; car.hpK = 10 * 0.95;   /* c153 */
+    car.squad = null; car.tank = true; car.state = 'tank'; car.kw = CH_TK_K; car.kl = CH_TK_KL; car.massK = 4; car.hpK = 10 * 0.95;   /* c153 */
     car.g.scale.set(CH_TK_K, 1, CH_TK_K);
-    K[0].material.color.setHex(0x3c4a2a); K[1].visible = K[2].visible = K[3].visible = false;
+    K[0].material.color.setHex(0x3c4a2a); K[0].scale.x = 0.85;   /* c177 */ K[1].visible = K[2].visible = K[3].visible = false;
     const tur = new THREE.Mesh(new THREE.CircleGeometry(0.27, 20).rotateX(-Math.PI / 2), carMat(0x222b16)); tur.position.y = 0.002; tur.renderOrder = -0.44;
     const brl = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.13).rotateX(-Math.PI / 2), carMat(0x0e1208)); brl.position.set(0.6, 0.003, 0); brl.renderOrder = -0.435;   /* c170: 길고 굵게 */
-    for (const sd of [-1, 1]) { const tr = new THREE.Mesh(new THREE.PlaneGeometry(CAR_L * 0.96, 0.13).rotateX(-Math.PI / 2), carMat(0x1a2010)); tr.position.set(0, 0.001, sd * (CAR_W / 2 - 0.065)); tr.renderOrder = -0.445; car.g.add(tr); }
+    for (const sd of [-1, 1]) { const tr = new THREE.Mesh(new THREE.PlaneGeometry(CAR_L * 0.96 * 0.85, 0.13).rotateX(-Math.PI / 2), carMat(0x1a2010)); tr.position.set(0, 0.001, sd * (CAR_W / 2 - 0.065)); tr.renderOrder = -0.445; car.g.add(tr); }
     const tg = new THREE.Group(); tg.add(tur, brl); car.g.add(tg); car.tkTur = tg; car.tkAim = 0;   // c170: 포탑 — 돌아간다
     chCarObj(car, false); car.obj.oneBar = true;
     Object.assign(car, { tkV: 1, atkT: 1, burstN: 0, burstT: 0, burstZ: null, dashAt: rand(10, 15), dashT: 0, tkPh: null, tkPhT: 0, tkSegs: [], scanT: 0, foe: null, shotT: -1, shotX: 0, shotZ: 0, rubBack: 0, rubCool: 0, crT: 0, goo: false, gooT: 0 });
@@ -6491,7 +6491,7 @@
     return true;
   }
   function chTankWalls(car, dt) {              // 닿은 벽은 데미지가 쌓인다 (닿은 뒤 1.2초까지는 계속 쌓인다 — 비비는 동안) → 다 쌓이면 그 자리가 뚫린다
-    const fx = Math.cos(car.h), fz = Math.sin(car.h), hu = CAR_L * CH_TK_K / 2 * 0.92, hv = CAR_W * CH_TK_K / 2 * 0.92, R = hu + hv;
+    const fx = Math.cos(car.h), fz = Math.sin(car.h), hu = CAR_L * CH_TK_KL / 2 * 0.92, hv = CAR_W * CH_TK_K / 2 * 0.92, R = hu + hv;
     let hit = false;
     for (const B of buildings) {
       if (B.type === 'hill' || car.x < B.x0 - R || car.x > B.x1 + R || car.z < B.z0 - R || car.z > B.z1 + R) continue;
@@ -6579,7 +6579,7 @@
   }
   function chTankCrush(car, b, fx, fz, rx, rz) {   // 장갑차에 깔린 사물 — 밀리면서 계속 깎이다가 부서진다 (박힌 것은 그 자리에서 깎인다). 분수도 부서진다
     if (b.dead || car.wreck) return;
-    const dx = b.foot.x - car.x, dz = b.foot.z - car.z, hl = CAR_L * CH_TK_K / 2 + b.r, hw = CAR_W * CH_TK_K / 2 + b.r, u = dx * fx + dz * fz, v = dx * rx + dz * rz;
+    const dx = b.foot.x - car.x, dz = b.foot.z - car.z, hl = CAR_L * CH_TK_KL / 2 + b.r, hw = CAR_W * CH_TK_K / 2 + b.r, u = dx * fx + dz * fz, v = dx * rx + dz * rz;
     if (Math.abs(u) >= hl || Math.abs(v) >= hw) return;
     if (!(b.hp > 0) || !isFinite(b.hp) || b.inv) { b.tkHp = (b.tkHp === undefined ? 600 : b.tkHp) - 400 * chDt; if (b.tkHp <= 0) breakSafe(b); return; }   // 못 부수던 것(분수·동상 …)도 1.5초면 부서진다
     b.hp -= Math.max(300, (b.maxHp || 100) / 1.2) * chDt;
@@ -6604,12 +6604,12 @@
     for (let i = 0; i < 3; i++) boom(car.x + rand(-1.6, 1.6), car.z + rand(-1, 1));
   }
   function chTankSeen(car) {                   // c137: 나나 동료가 봤나 (인지거리 안 · 벽에 안 가림) — 한 번 보이면 끝까지 느리다
-    for (const z of nearIn(zCells, car.x, car.z, 16, chTkBuf2)) if (isZombie(z) && Math.hypot(z.foot.x - car.x, z.foot.z - car.z) <= z.sense + CAR_L * CH_TK_K / 2 && !blocked(z.foot.x, z.foot.z, car.x, car.z)) { car.tkSeen = true; return; }
+    for (const z of nearIn(zCells, car.x, car.z, 16, chTkBuf2)) if (isZombie(z) && Math.hypot(z.foot.x - car.x, z.foot.z - car.z) <= z.sense + CAR_L * CH_TK_KL / 2 && !blocked(z.foot.x, z.foot.z, car.x, car.z)) { car.tkSeen = true; return; }
   }
   function chTankSmoke(car, dt) {             // c175: 궤도 네 귀퉁이에서 연기 — 가는 반대쪽으로 흩어진다
     const dash = car.tkPh === 'dash';
     if ((car.smT = (car.smT || 0) - dt) > 0) return; car.smT = dash ? 0.035 : 0.06;
-    const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx, hl = CAR_L * CH_TK_K / 2, hw = CAR_W * CH_TK_K / 2 * 0.85;
+    const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx, hl = CAR_L * CH_TK_KL / 2, hw = CAR_W * CH_TK_K / 2 * 0.85;
     const mv = dash ? 1 : -1;                  // 차가 가는 쪽 (후진이면 뒤)
     for (const sd of [-1, 1]) for (const e of [-1, 1]) {
       if (Math.random() < (dash ? 0.25 : 0.45)) continue;
@@ -6629,12 +6629,12 @@
     if (chTankWalls(car, dt)) {
       if (car.tkPX !== undefined) { car.x = car.tkPX; car.z = car.tkPZ; car.h = car.tkPH; car.foot.set(car.x, 0, car.z); if (o) o.foot.set(car.x, 0, car.z); }
       if (car.tkPh === 'dash') car.tkM -= 0.3 * dt;   // c172: 벽을 미는 동안 기세가 깎인다
-      if (!car.tkPh && car.rubBack <= 0 && car.rubCool <= 0) { car.rubBack = 0.3;   /* c171: 돌진·후진 중엔 비비지 않는다 */ dust(car.x + Math.cos(car.h) * CAR_L * CH_TK_K / 2, car.z + Math.sin(car.h) * CAR_L * CH_TK_K / 2, 8, 1.2); }
+      if (!car.tkPh && car.rubBack <= 0 && car.rubCool <= 0) { car.rubBack = 0.3;   /* c171: 돌진·후진 중엔 비비지 않는다 */ dust(car.x + Math.cos(car.h) * CAR_L * CH_TK_KL / 2, car.z + Math.sin(car.h) * CAR_L * CH_TK_KL / 2, 8, 1.2); }
     } else { car.tkPX = car.x; car.tkPZ = car.z; car.tkPH = car.h; }
     // 건물 안 네모 사물 (책상 …)
     if ((car.crT -= dt) <= 0) {
       car.crT = 0.1;
-      const fx = Math.cos(car.h), fz = Math.sin(car.h), hl = CAR_L * CH_TK_K / 2 + 0.5, hw = CAR_W * CH_TK_K / 2 + 0.5, L = [];
+      const fx = Math.cos(car.h), fz = Math.sin(car.h), hl = CAR_L * CH_TK_KL / 2 + 0.5, hw = CAR_W * CH_TK_K / 2 + 0.5, L = [];
       for (const q of objs) if (q.type === 'table' && !q.dead && q.t) { const dx = q.t.x - car.x, dz = q.t.z - car.z; if (Math.abs(dx * fx + dz * fz) < hl && Math.abs(-dx * fz + dz * fx) < hw) L.push(q); }
       for (const q of L) breakObj(q);
     }
@@ -6701,7 +6701,7 @@
   }
   window.__sf = { get s() { return chSf; }, get tank() { return chTank; }, cuts: chCuts, queue: (i) => chQueueTeam(i), kill: () => { if (chTank && chTank.obj && !chTank.obj.dead) breakObj(chTank.obj); }, teams: teamWait };
   let chTkMark = false;
-  const chTkR = () => CAR_L * CH_TK_K / 2;   // c176: 장갑차 몸통 반 길이 (호위 거리에 더한다)
+  const chTkR = () => CAR_L * CH_TK_KL / 2;   // c176: 장갑차 몸통 반 길이 (호위 거리에 더한다)
   let chBTdone = false, chBTt = 0;
   function chBTgone(c) { for (const o of [c.mesh, c.icon, c.gauge, c.hpBar, c.tracer, c.tracer2, c.mark]) if (o) scene.remove(o); const i = bodies.indexOf(c); if (i >= 0) bodies.splice(i, 1); c.kind = 'gone'; }
   function chBossTest(dt) {                    // c166: 보스 테스트 맵
