@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c182</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c183</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6419,7 +6419,7 @@
     const p = teamSpot(seg), h = Math.atan2(me.foot.z - p.z, me.foot.x - p.x);
     addCar(p.x, p.z, h, null, 0, ['tank']);
     const car = cars[cars.length - 1], K = car.g.children;
-    car.squad = null; car.tank = true; car.state = 'tank'; car.kw = CH_TK_K; car.kl = CH_TK_KL; car.massK = 4; car.hpK = 10 * 0.95;   /* c153 */
+    car.squad = null; car.tank = true; car.state = 'tank'; car.kw = CH_TK_K; car.kl = CH_TK_KL; car.massK = 4; car.hpK = 10 * 0.95 * 3;   /* c183: 3배 */   /* c153 */
     car.g.scale.set(CH_TK_K, 1, CH_TK_K);
     K[0].material.color.setHex(0x3c4a2a); K[0].geometry = (() => { const L = CAR_L * 0.78 * 0.85, W = CAR_W, c = 0.16, s = new THREE.Shape(); s.moveTo(-L / 2 + c, -W / 2); s.lineTo(L / 2 - c, -W / 2); s.lineTo(L / 2, -W / 2 + c); s.lineTo(L / 2, W / 2 - c); s.lineTo(L / 2 - c, W / 2); s.lineTo(-L / 2 + c, W / 2); s.lineTo(-L / 2, W / 2 - c); s.lineTo(-L / 2, -W / 2 + c); s.closePath(); return new THREE.ShapeGeometry(s).rotateX(-Math.PI / 2); })();   /* c179: 모서리를 깎은 팔각형 */ K[1].visible = K[2].visible = K[3].visible = false;
     const tur = new THREE.Mesh(new THREE.CircleGeometry(0.27, 20).rotateX(-Math.PI / 2), carMat(0x222b16)); tur.position.y = 0.002; tur.renderOrder = -0.44;
@@ -6430,7 +6430,7 @@
     const mgs = [mg(0.2, 0.17, 0.33, 0, 0x2a3218, 0), mg(0.2, 0.035, 0.5, -0.035, 0x0b0d07, 1), mg(0.2, 0.035, 0.5, 0.035, 0x0b0d07, 1), mg(0.06, 0.13, 0.6, 0, 0x050604, 2)   /* c182: 총열 3분의 1 짧게 */];   // 냉각 덮개 · 총열 둘 · 소염기
     const tg = new THREE.Group(); tg.add(tur, brl, ...mgs); car.g.add(tg); car.tkTur = tg; car.tkAim = 0;   // c170: 포탑 — 돌아간다
     chCarObj(car, false); car.obj.oneBar = true;
-    Object.assign(car, { tkV: 1, atkT: 1, burstN: 0, burstT: 0, burstZ: null, dashAt: rand(10, 15), dashT: 0, tkPh: null, tkPhT: 0, tkSegs: [], scanT: 0, foe: null, shotT: -1, shotX: 0, shotZ: 0, rubBack: 0, rubCool: 0, crT: 0, goo: false, gooT: 0 });
+    Object.assign(car, { tkV: 1, atkT: 1, burstN: 0, burstT: 0, burstZ: null, dashAt: rand(10 * 2 / 3, 15 * 2 / 3), dashT: 0, tkPh: null, tkPhT: 0, tkSegs: [], scanT: 0, foe: null, shotT: -1, shotX: 0, shotZ: 0, rubBack: 0, rubCool: 0, crT: 0, goo: false, gooT: 0 });
     car.gun = { kind: 'tank', foot: car.foot };
     car.tracer = new THREE.Mesh(tracerGeo, new THREE.MeshBasicMaterial({ color: 0xffb84d, transparent: true, depthTest: false, depthWrite: false }));
     car.tracer.renderOrder = -0.5; car.tracer.visible = false; scene.add(car.tracer);
@@ -6628,7 +6628,7 @@
     car.foot.set(car.x, 0, car.z);
     const o = car.obj; if (o) o.foot.set(car.x, 0, car.z);
     if (car.wreck) return;
-    const spd = (car.tkSeen ? CAR_SPEED * CH_TR_SPD.sedan * CH_TR_SLOW / 2 : CAR_SPEED * 0.9) * (car.goo ? 0.8 : 1);   /* c179: 눈에 띄기 전 = 경찰차의 90% */   /* c168: 보인 뒤 속도 2배 (보통 차의 절반) */   /* c137: 눈에 띄기 전엔 보통 차 속도 */   // 보통 차(승용차)의 4분의 1
+    const spd = (car.tkSeen ? CAR_SPEED * CH_TR_SPD.sedan * CH_TR_SLOW / 2 * 1.2 :   /* c183: 20% 빠르게 */ CAR_SPEED * 0.9) * (car.goo ? 0.8 : 1);   /* c179: 눈에 띄기 전 = 경찰차의 90% */   /* c168: 보인 뒤 속도 2배 (보통 차의 절반) */   /* c137: 눈에 띄기 전엔 보통 차 속도 */   // 보통 차(승용차)의 4분의 1
     if (car.goo && (car.gooLeft -= dt) <= 0) { car.goo = false; for (const s of car.gooS) car.g.remove(s); }   // c123
     if (car.goo && (car.gooT += dt) >= 0.5) { car.gooT -= 0.5; if (o && o.hp > 2) o.hp -= 2; }
     // 벽
@@ -6661,7 +6661,7 @@
     if (car.tkPh === 'dash') {                 // c171 ② 돌진 (방향 고정 · 무리에 안 느려진다 — 걸음마다 속도를 다시 준다)
       car.tkM -= dt * (car.load || 0) / (CH_PUSH * chCarM(car)) * 0.5;   // c172: 앞을 막은 몸 무게만큼 기세가 깎인다
       const V = CAR_SPEED * 1.56 * Math.max(0, car.tkM);   /* c174: 30% 빠르게 */ car.tkPhT -= dt; if (car.tkLX !== undefined) car.tkLeft -= Math.hypot(car.x - car.tkLX, car.z - car.tkLZ); car.tkLX = car.x; car.tkLZ = car.z; car.rev = false; car.h = car.tkDh; car.vx = car.tkDx * V; car.vz = car.tkDz * V; car.tkV = V; car.dashT = Math.max(0, car.tkPhT);
-      if (car.tkLeft <= 0 || car.tkPhT <= -1.05 || car.tkM < 0.08) {   /* c172: 정한 거리(11.3칸)를 다 가거나 기세가 다하면 끝 (막혀 있던 시간은 안 센다 · 최대 3초) */ car.tkPh = null; car.dashT = 0; car.dashAt = rand(10, 15); }
+      if (car.tkLeft <= 0 || car.tkPhT <= -1.05 || car.tkM < 0.08) {   /* c172: 정한 거리(11.3칸)를 다 가거나 기세가 다하면 끝 (막혀 있던 시간은 안 센다 · 최대 3초) */ car.tkPh = null; car.dashT = 0; car.dashAt = rand(10 * 2 / 3, 15 * 2 / 3); }
       return;
     }
     if (car.dashAt <= 0 && car.rubBack <= 0) {
