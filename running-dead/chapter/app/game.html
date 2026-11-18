@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c137</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c138</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1961,7 +1961,7 @@
     if (c.state === 'lured') { luredStep(c, dt); return; }
     if (c.lureAlert) {                        // 돈다발 쪽을 보며 경계 — 끝나면 유혹 (그 사이 맞으면 풀린다)
       steer(c.vel, wantV.set(0, 0), ACCEL * dt);
-      if ((c.timer -= dt) <= 0) { c.lureAlert = false; if (seeCash(c, chSight0(c) * cashK())) enterLured(c); else enterNormal(c); }
+      if ((c.timer -= dt) <= 0) { c.lureAlert = false; if (seeCash(c, SIGHT * cashK())) enterLured(c); else enterNormal(c); }
       return;
     }
     if (c.state === 'evade') { sniperEvade(c, dt); return; }   // v396: 저격수 회피
@@ -4901,11 +4901,11 @@
         for (const k of fresh) {
           if (k.space !== c.space && !(CHAPTER && linked(k.space, c.space))) continue;   /* c58 */
           const d = Math.hypot(k.x - c.foot.x, k.z - c.foot.z);
-          if (d > chSight0(c) * cashK() || blocked(c.foot.x, c.foot.z, k.x, k.z)) continue;
+          if (d > SIGHT * cashK() || blocked(c.foot.x, c.foot.z, k.x, k.z)) continue;
           k.who.add(c); bd = Math.min(bd, d);
         }
         if (bd === Infinity) continue;
-        if (bd <= c.sense * cashK()) enterLured(c); else { enterAlert(c); c.lureAlert = true; c.timer *= 0.5 / (c.soft ? CH_SOFT_ALERT : 1); }   /* c84: 돈을 보고 서 있는 시간은 그대로 */   // v275: 돈 보고 경계하는 시간 절반
+        if (bd <= SENSE * cashK()) enterLured(c);   /* c138: 바로 홀리는 거리도 기준 인지거리(3.6칸)로 통일 */ else { enterAlert(c); c.lureAlert = true; c.timer *= 0.5 / (c.soft ? CH_SOFT_ALERT : 1); }   /* c84: 돈을 보고 서 있는 시간은 그대로 */   // v275: 돈 보고 경계하는 시간 절반
       }
     }
     refreshItems();
@@ -4924,7 +4924,7 @@
   function enterLured(c) { c.state = 'lured'; c.lureAlert = false; c.foe = null; c.locked = false; c.lureHit = 0; c.pickT = 0; c.lureT = 0; }
   function luredStep(c, dt) {                 // 유혹: 좀비는 안 보고 가장 가까운 돈다발로 달려간다. 닿으면 돈다발이 사라진다
     if (c.police && (c.lureT = (c.lureT || 0) + dt) >= (c.military ? 0.7 : 1.5)) {   /* v516: 군인·저격수 0.7초, 경찰 1.5초 */ c.state = 'normal'; c.ignoreCash = new Set(cashes); enterNormal(c); return; }   // v456: 군인·저격수는 최대 1.5초만 홀린다
-    const s = seeCash(c, chSight0(c) * cashK());
+    const s = seeCash(c, SIGHT * cashK());
     if (!s) { enterNormal(c); return; }      // 볼 수 있는 돈다발이 없으면 유혹 끝
     if (s.d < CASH_GET) {                    // v237: 돈다발에 닿으면 1.5초 동안 가만히 서서 줍고, 그다음 돈다발이 사라진다
       c.vel.set(0, 0);
