@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c139</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c140</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4727,7 +4727,7 @@
   const allyAttack = () => ALLY_ATTACK;       // v256: 빠른 다리는 이제 습격 거리가 아니라 이동 속도
   const legK = () => 1 + 0.07 * up.leg;      // 빠른 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
   const meSpeed = () => MY_SPEED * (legK() + (owned.shoes ? 0.05 * (1 + lv('shoes')) : 0)   /* v568: 운동화 처음 +15%, 강화마다 +10% */) * (me && me.mut ? MUT_SPEED : 1);   // v558: 각성 중엔 변이 속도   // v275: 운동화 +10% (도구 다루기마다 +3%) — 빠른 다리와 더한다
-  const cashK = () => 1.2 + 0.2 * lv('cash');   /* v339: 1.2 · 1.4 · 1.6 · 1.8배 */   /* v338: 20% 더 줄임 */   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
+  const cashK = () => 1.2 + lv('cash') / 7.2;   /* c140: 알아채는 거리 8.64칸 + 강화마다 1칸 (기준 시야 7.2칸에 곱하는 값) */   /* v339: 1.2 · 1.4 · 1.6 · 1.8배 */   /* v338: 20% 더 줄임 */   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
   const lureHits = () => 1 + lv('cash');   /* v339: 2 · 4 · 6 · 8대 */   /* v333: 처음 4 → 3대 */    // v269: 유혹 중 4대째 맞으면 정신 차린다, 두뇌마다 +2 (4, 6, 8 …)
   function gainXp() {
     xp++;
@@ -4842,7 +4842,7 @@
       if (it.off) continue;                   // c21: 꺼진 도구는 멈춰 있다
       if (it.kind === 'awaken') {
         if (it.drain) { if (me.mut) { it.acc = Math.max(0, me.mutT); continue; } it.drain = false; it.acc = 0; }   // c29: 변이하는 동안은 남은 시간만큼 게이지가 줄어든다 (모이지 않는다). 변이가 끝나면 0에서 다시 모인다
-        const m = chAccMax(); it.acc = Math.min(m, (it.acc || 0) + dt * m / (25 * (1 - bookCut()))); continue;   // c21: 가득 차는 데 늘 40초 (백과사전이 줄여 준다)
+        const m = chAccMax(); it.acc = Math.min(m, (it.acc || 0) + dt * m / (35 * (1 - bookCut()))); continue;   // c21: 가득 차는 데 늘 40초 (백과사전이 줄여 준다)
       }
       if (it.ammo >= itemMax(it.kind)) { it.t = 0; continue; }
       if ((it.t += dt) >= itemReload(it.kind)) { it.t = 0; it.ammo++; }
@@ -5629,8 +5629,8 @@
     bomb: (n) => `터지는 범위 ${1.5 + n}칸 · 산성 ${4 + 2 * n}초`,
     mutate: (n) => `주사 ${CH_WV('mutN', n)}개 · 변이 ${6 + 3 * n}초`,
     taser: (n) => `한 번에 ${CH_WV('taserN', n)}명 · ${CH_WV('taserT', n)}초 감전`,
-    awaken: (n) => `최대 사용 시간 ${5 + 3 * n}초 · 가득 차는 데 25초`,
-    cash: (n) => `유혹 ${CH_WV('cashT', n)}초 · ${1 + n}대 버팀 · 알아채는 거리 ${(7.2 * (1.2 + 0.2 * n)).toFixed(1)}칸`,
+    awaken: (n) => `최대 사용 시간 ${5 + 3 * n}초 · 가득 차는 데 35초`,
+    cash: (n) => `유혹 ${CH_WV('cashT', n)}초 · ${1 + n}대 버팀 · 알아채는 거리 ${(8.64 + n).toFixed(1)}칸`,
     book: (n) => `무기 쿨타임 -${5 * (1 + n)}%`,
     bag: (n) => `무기 ${Math.min(5, 2 + n)}칸`,
     rage: (n) => `30초마다 동료 1명 · 공격 속도·이동 속도 +${5 + 2 * n}%`,

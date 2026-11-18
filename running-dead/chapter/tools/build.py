@@ -828,6 +828,8 @@ from c138_patch import C138_R   # c138: 현금 알아채는 거리 통일
 R += C138_R
 from c139_patch import C139_R   # c139: 무기 수치표 (0~6단계)
 R += C139_R
+from c140_patch import C140_R   # c140: 현금 거리 +1칸씩 · 각성 충전 35초
+R += C140_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
