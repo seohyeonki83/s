@@ -878,6 +878,8 @@ from c164_patch import C164_R   # c164: 동료 체력 되돌림 · 적 공격력
 R += C164_R
 from c165_patch import C165_R   # c165: 내 최대 체력 10% 올림
 R += C165_R
+from c166_patch import C166_R   # c166: 보스 테스트 맵
+R += C166_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
