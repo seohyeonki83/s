@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c170</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c171</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6378,7 +6378,7 @@
     if (s !== chSf.shown) { chSf.shown = s; chSfEl.innerHTML = s; chSfEl.style.display = s ? 'block' : 'none'; }
   }
   function chSfReset() {
-    Object.assign(chSf, { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, hide: false, hideT: 0 }); chBTdone = false; chSf.wn = 0;   /* c166 · c168 */
+    if (chTank) chTank.tkPh = null; Object.assign(chSf, { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, hide: false, hideT: 0 }); chBTdone = false; chSf.wn = 0;   /* c166 · c168 */
     chBanner.length = 0;
     if (chTank && chTank.tracer) scene.remove(chTank.tracer);
     chTank = null;
@@ -6427,7 +6427,7 @@
     for (const sd of [-1, 1]) { const tr = new THREE.Mesh(new THREE.PlaneGeometry(CAR_L * 0.96, 0.13).rotateX(-Math.PI / 2), carMat(0x1a2010)); tr.position.set(0, 0.001, sd * (CAR_W / 2 - 0.065)); tr.renderOrder = -0.445; car.g.add(tr); }
     const tg = new THREE.Group(); tg.add(tur, brl); car.g.add(tg); car.tkTur = tg; car.tkAim = 0;   // c170: 포탑 — 돌아간다
     chCarObj(car, false); car.obj.oneBar = true;
-    Object.assign(car, { tkV: 1, atkT: 1, burstN: 0, burstT: 0, burstZ: null, dashAt: CH_TK_DASH_EVERY, dashT: 0, tkSegs: [], scanT: 0, foe: null, shotT: -1, shotX: 0, shotZ: 0, rubBack: 0, rubCool: 0, crT: 0, goo: false, gooT: 0 });
+    Object.assign(car, { tkV: 1, atkT: 1, burstN: 0, burstT: 0, burstZ: null, dashAt: rand(10, 15), dashT: 0, tkPh: null, tkPhT: 0, tkSegs: [], scanT: 0, foe: null, shotT: -1, shotX: 0, shotZ: 0, rubBack: 0, rubCool: 0, crT: 0, goo: false, gooT: 0 });
     car.gun = { kind: 'tank', foot: car.foot };
     car.tracer = new THREE.Mesh(tracerGeo, new THREE.MeshBasicMaterial({ color: 0xffb84d, transparent: true, depthTest: false, depthWrite: false }));
     car.tracer.renderOrder = -0.5; car.tracer.visible = false; scene.add(car.tracer);
@@ -6504,7 +6504,7 @@
     for (let i = car.tkSegs.length - 1; i >= 0; i--) {
       const sg = car.tkSegs[i];
       if (clock - sg.tkAt > 1.2 || clock < sg.tkAt) { car.tkSegs.splice(i, 1); continue; }
-      if ((sg.tkT = (sg.tkT || 0) + dt) >= CH_TK_WALL_T) { car.tkSegs.splice(i, 1); chWallBreak(sg.tkB, sg, car); }
+      if ((sg.tkT = (sg.tkT || 0) + dt * (car.tkPh === 'dash' ? 3 : 1)) >= CH_TK_WALL_T) { car.tkSegs.splice(i, 1); chWallBreak(sg.tkB, sg, car); }
     }
     return hit;
   }
@@ -6613,8 +6613,7 @@
     // 벽
     if (chTankWalls(car, dt)) {
       if (car.tkPX !== undefined) { car.x = car.tkPX; car.z = car.tkPZ; car.h = car.tkPH; car.foot.set(car.x, 0, car.z); if (o) o.foot.set(car.x, 0, car.z); }
-      car.dashT = 0;
-      if (car.rubBack <= 0 && car.rubCool <= 0) { car.rubBack = 0.3; dust(car.x + Math.cos(car.h) * CAR_L * CH_TK_K / 2, car.z + Math.sin(car.h) * CAR_L * CH_TK_K / 2, 8, 1.2); }
+      if (!car.tkPh && car.rubBack <= 0 && car.rubCool <= 0) { car.rubBack = 0.3;   /* c171: 돌진·후진 중엔 비비지 않는다 */ dust(car.x + Math.cos(car.h) * CAR_L * CH_TK_K / 2, car.z + Math.sin(car.h) * CAR_L * CH_TK_K / 2, 8, 1.2); }
     } else { car.tkPX = car.x; car.tkPZ = car.z; car.tkPH = car.h; }
     // 건물 안 네모 사물 (책상 …)
     if ((car.crT -= dt) <= 0) {
@@ -6630,10 +6629,19 @@
     else if (car.atkT <= 0 && car.foe && isZombie(car.foe)) { car.burstN = 4; car.burstT = 0; car.burstZ = car.foe; car.atkT = HIT_EVERY; }
     // 돌진
     car.dashAt -= dt;
-    if (car.dashT > 0) { car.dashT -= dt; car.tkV = CAR_SPEED * 1.6; return; }
+    if (car.tkPh === 'back') {                 // c171 ① 후진 (방향 고정)
+      const v = MELEE * 3 / 2; car.tkPhT -= dt; car.rev = true; car.h = car.tkDh; car.vx = -car.tkDx * v; car.vz = -car.tkDz * v; car.tkV = v;
+      if (car.tkPhT <= 0) { car.tkPh = 'dash'; car.tkPhT = 1.5; }
+      return;
+    }
+    if (car.tkPh === 'dash') {                 // c171 ② 돌진 (방향 고정 · 무리에 안 느려진다 — 걸음마다 속도를 다시 준다)
+      const V = CAR_SPEED * 1.2; car.tkPhT -= dt; car.rev = false; car.h = car.tkDh; car.vx = car.tkDx * V; car.vz = car.tkDz * V; car.tkV = V; car.dashT = Math.max(0, car.tkPhT);
+      if (car.tkPhT <= 0) { car.tkPh = null; car.dashT = 0; car.dashAt = rand(10, 15); }
+      return;
+    }
     if (car.dashAt <= 0 && car.rubBack <= 0) {
       const d = chTankDense(car);
-      if (d) { const V = CAR_SPEED * 1.6; car.dashAt = CH_TK_DASH_EVERY; car.dashT = CH_TK_DASH_T; car.rev = false; car.vx = d[0] * V; car.vz = d[1] * V; car.h = Math.atan2(d[1], d[0]); car.tkV = V; return; }
+      if (d) { car.tkPh = 'back'; car.tkPhT = 2; car.tkDx = d[0]; car.tkDz = d[1]; car.tkDh = Math.atan2(d[1], d[0]); car.rubBack = 0; return; }
     }
     car.tkV = spd;
     // 벽에 걸렸다 → 물러났다가 다시 민다
@@ -7890,7 +7898,7 @@
     }
     car.load = load; car.loadK = load > 0 ? Math.max(0, 1 - load / chCarCap(car)) : 1;
     if (load > 0) {                            // 미는 힘보다 무거우면 그만큼 느려진다 (운전자가 밟아도 못 넘는다)
-      const sp = Math.hypot(car.vx, car.vz), base = car.tr ? car.tr.spd * (car.tr.spdK || 1) : car.tank ? car.tkV : CAR_SPEED * (car.mil ? 2 / 3 : 1), vmax = base * car.loadK;
+      const sp = Math.hypot(car.vx, car.vz), base = car.tr ? car.tr.spd * (car.tr.spdK || 1) : car.tank ? car.tkV : CAR_SPEED * (car.mil ? 2 / 3 : 1), vmax = base * (car.tank && car.tkPh ? 1 : car.loadK);   /* c171: 돌진·후진 중엔 무리에 안 느려진다 */
       if (!car.rev && sp > vmax + 0.02) { const ns = Math.max(vmax, sp - CH_DRAG * chDt); car.vx *= ns / sp; car.vz *= ns / sp; }
     }
   }
