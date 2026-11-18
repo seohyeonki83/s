@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c177</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c178</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6425,7 +6425,10 @@
     const tur = new THREE.Mesh(new THREE.CircleGeometry(0.27, 20).rotateX(-Math.PI / 2), carMat(0x222b16)); tur.position.y = 0.002; tur.renderOrder = -0.44;
     const brl = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.13).rotateX(-Math.PI / 2), carMat(0x0e1208)); brl.position.set(0.6, 0.003, 0); brl.renderOrder = -0.435;   /* c170: 길고 굵게 */
     for (const sd of [-1, 1]) { const tr = new THREE.Mesh(new THREE.PlaneGeometry(CAR_L * 0.96 * 0.85, 0.13).rotateX(-Math.PI / 2), carMat(0x1a2010)); tr.position.set(0, 0.001, sd * (CAR_W / 2 - 0.065)); tr.renderOrder = -0.445; car.g.add(tr); }
-    const tg = new THREE.Group(); tg.add(tur, brl); car.g.add(tg); car.tkTur = tg; car.tkAim = 0;   // c170: 포탑 — 돌아간다
+    brl.visible = false;   // c178: 긴 총신 대신 기관총
+    const mg = (w, h, x, z, col, o) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h).rotateX(-Math.PI / 2), carMat(col)); m.position.set(x, 0.004 + o * 0.0005, z); m.renderOrder = -0.435 + o * 0.001; return m; };
+    const mgs = [mg(0.2, 0.17, 0.33, 0, 0x2a3218, 0), mg(0.3, 0.035, 0.55, -0.035, 0x0b0d07, 1), mg(0.3, 0.035, 0.55, 0.035, 0x0b0d07, 1), mg(0.06, 0.13, 0.7, 0, 0x050604, 2)];   // 냉각 덮개 · 총열 둘 · 소염기
+    const tg = new THREE.Group(); tg.add(tur, brl, ...mgs); car.g.add(tg); car.tkTur = tg; car.tkAim = 0;   // c170: 포탑 — 돌아간다
     chCarObj(car, false); car.obj.oneBar = true;
     Object.assign(car, { tkV: 1, atkT: 1, burstN: 0, burstT: 0, burstZ: null, dashAt: rand(10, 15), dashT: 0, tkPh: null, tkPhT: 0, tkSegs: [], scanT: 0, foe: null, shotT: -1, shotX: 0, shotZ: 0, rubBack: 0, rubCool: 0, crT: 0, goo: false, gooT: 0 });
     car.gun = { kind: 'tank', foot: car.foot };
@@ -6471,7 +6474,9 @@
     const first = car.burstN === 3, base = POLICE_DAMAGE * 1.2 / 4 * 0.9 * 0.9;   /* c150: 군인 한 발과 같다 */
     const dx = z.foot.x - car.x, dz = z.foot.z - car.z, d = Math.hypot(dx, dz) || 1, ux = dx / d, uz = dz / d;
     car.shotT = 0; car.shotX = z.foot.x; car.shotZ = z.foot.z;
-    const f1 = puff(car.x + ux * 1.6, 0, car.z + uz * 1.6, 0xfff23a, 1.5, 1.5, 0.07, 0, 0, 0, 0.8);
+    const tip = 0.74 * CH_TK_K, mx = car.x + ux * tip, mz = car.z + uz * tip;   // c178: 총구 끝
+    const f1 = puff(mx, 0, mz, car.burstN % 2 ? 0xffe14d : 0xfff7c0, 0.75, rand(0.85, 1.05), 0.045, 0, 0, 0, 0.9);
+    for (let k = 0; k < 3; k++) { const a = Math.atan2(uz, ux) + rand(-0.45, 0.45), sp = rand(5, 9); const s = puff(mx, 0.1, mz, 0xffc23a, 0.14, 0.1, rand(0.08, 0.14), Math.cos(a) * sp, 0, Math.sin(a) * sp, 0.95); s.s.material.map = flashTex; s.s.renderOrder = UI - 0.5; s.peak = true; }   // 불티
     f1.s.material.map = flashTex; f1.s.position.addScaledVector(UP, RADIUS); f1.s.renderOrder = UI - 0.5; f1.peak = true; f1.blink = true;
     const f2 = puff(z.foot.x, 0.4, z.foot.z, 0xffa53a, 0.9, CH_TK_SPLASH * 2, 0.12, 0, 0, 0, 0.55);
     f2.s.material.map = flashTex; f2.s.renderOrder = UI - 0.5; f2.peak = true;

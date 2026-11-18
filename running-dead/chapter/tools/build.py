@@ -902,6 +902,8 @@ from c176_patch import C176_R   # c176: 보스 뒤 군인만 · 장갑차 호위
 R += C176_R
 from c177_patch import C177_R   # c177: 장갑차 길이 · 회전 부드럽게
 R += C177_R
+from c178_patch import C178_R   # c178: 장갑차 기관총
+R += C178_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
