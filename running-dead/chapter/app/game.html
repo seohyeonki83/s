@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c160</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c161</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5772,7 +5772,7 @@
     chSfEl.style.animation = 'none'; chSfEl.offsetWidth; chSfEl.style.animation = (chSf.n >= 4 ? 'sfpopb' : 'sfpop') + ' 1.9s ease-in-out, sfplate 1.9s ease-in-out';   /* c126: 보스 글자는 커서 덜 키운다 */
   }
   function chLevelUp() {
-    let pool = chUpPool().concat(Array(chWupN()).fill('__w')); const keys = [];   // c125
+    let pool = chUpPool().concat(Array(chWupN() * 2).fill('__w'));   /* c161: 2배 */ const keys = [];   // c125
     while (keys.length < 3 && pool.length) { const k = pool.splice(Math.floor(Math.random() * pool.length), 1)[0]; keys.push(k); if (k === '__w') pool = pool.filter((q) => q !== '__w'); }   // 랜덤 3장 — 무기 강화 카드는 한 장만
     if (!keys.length) { lvQueued = Math.max(0, lvQueued - 1); return; }   // 전부 끝까지 올렸으면 뜰 게 없다
     lvOpen = true; paused = true; stopInput();
