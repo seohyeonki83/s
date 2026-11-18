@@ -822,6 +822,8 @@ from c135_patch import C135_R   # c135: 길거리 노랑·주황 20% 줄임 · �
 R += C135_R
 from c136_patch import C136_R   # c136: 좀비 최대 체력 10% 깎음 · 길거리 하양 20% 줄임
 R += C136_R
+from c137_patch import C137_R   # c137: 장갑차는 눈에 띄기 전까지 빠르다
+R += C137_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
