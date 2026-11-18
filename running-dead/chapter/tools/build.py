@@ -866,6 +866,8 @@ from c158_patch import C158_R   # c158: 레벨업 처음 5명
 R += C158_R
 from c159_patch import C159_R   # c159: 적 공격력 7% 줄임
 R += C159_R
+from c160_patch import C160_R   # c160: 동료 공격력 10% 올림
+R += C160_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
