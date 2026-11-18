@@ -872,6 +872,8 @@ from c161_patch import C161_R   # c161: 무기 강화 카드 2배
 R += C161_R
 from c162_patch import C162_R   # c162: 동료 공격력 7% 올림
 R += C162_R
+from c163_patch import C163_R   # c163: 동료 체력 · 빠루 · 흡수복
+R += C163_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
