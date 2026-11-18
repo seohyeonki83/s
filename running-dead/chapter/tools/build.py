@@ -834,6 +834,8 @@ from c141_patch import C141_R   # c141: 집 금고 확률 3배
 R += C141_R
 from c142_patch import C142_R   # c142: 금고 꽝 없음
 R += C142_R
+from c143_patch import C143_R   # c143: 빨강 20% 늘림 · 적 공격력 15% · 출동 빈도
+R += C143_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

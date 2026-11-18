@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c142</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c143</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -930,7 +930,7 @@
     const area = chRoamArea(p[0], p[1]); area.roam.members = G.members = [];
     G.types.forEach((t, i) => {
       if ((t === 'guard' || t === 'attacker') && Math.random() < 0.2) return;   // c135: 무리 속 노랑 · 주황 다섯에 하나는 안 나온다
-      if (t === 'vig' && Math.random() < 0.19) return;   /* c133: 10% 더 (합쳐서 19%) */   // c131: 길거리 빨강 열에 하나는 안 나온다
+      if (t === 'vig' && Math.random() < 0.028) return;   /* c143: 길거리 빨강 20% 늘림 (안 나오던 19%를 2.8%로 — 남는 비율 0.81 → 0.972 = 1.2배) */   /* c133: 10% 더 (합쳐서 19%) */   // c131: 길거리 빨강 열에 하나는 안 나온다
       let x = p[0], z = p[1];
       for (let tt = 0; tt < 40; tt++) { const a = Math.random() * Math.PI * 2, r = i ? rand(0.9, 1.8) : 0; x = p[0] + Math.cos(a) * r; z = p[1] + Math.sin(a) * r; if (!spaceOf(x, z) && freeSpot(x, z, null) && !(tt < 30 && chOnRoad(x, z, 0.45)) && !bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < 0.9)) break; }
       { const c = chPut(x, z, area, t); if (c.wOut) c.area = chRoamArea(x, z); else G.members.push(c); }   // c129: 하양이 된 자리는 무리에서 빠진다
@@ -2901,6 +2901,7 @@
   function landHit(a, v, dmg = DAMAGE) {
     if (CHAPTER && a && a.kind === 'citizen' && (v.kind === 'ally' || v === me) && !v.dead) v.objOff = clock + 2;   /* c64: 나도 */   // c58: 맞은 동료는 2초 동안 사물을 안 노린다
     if (CHAPTER && a && (a === me || a.kind === 'ally') && (!a.splashing || a === me)) dmg *= 1.15;   // c135: 나와 동료 공격력 15% 올림 (덩치의 범위 공격은 본 공격에서 이미 올랐다)
+    if (CHAPTER && a && (a.kind === 'citizen' || a.kind === 'tank')) dmg *= 1.15;   // c143: 적(사람·경찰·군인·저격수·장갑차)의 공격력 15% 올림
     if (TEST_MAP && !CHAPTER && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적 (c42: 챕터는 빼고)
     if (CHAPTER && a && a.vig && isZombie(v) && v.mode !== 'bite' && v.mut !== 'armor' && !(v === me && absorbAmt() >= SNIPER_KD * 2 / 12 - 0.001)) {   // c39: 자경단 몽둥이 — 밀림 1
       const T = ARMOR_KT * 2 / 12, D = SNIPER_KD * 2 / 12, V = D * 4 / (1 - Math.exp(-4 * T));   // c45: 1 → 2
@@ -5849,7 +5850,7 @@
     if (!stars || !isZombie(me)) return;      // ② 경보 출동
     if (stars !== chDispStage) { if (!chDispStage) chDispT = 0; chDispStage = stars; }
     if (chDispT > 0) { chDispT -= dt; return; }
-    chDispT = (32 - 3 * (stars - 1)) * 0.8 / 0.85;   /* c103: 출동 빈도 15% 줄임 */   // c64: 20% 더 짧게 (25.6 · 23.2 · 20.8 · 18.4 · 16초)   // c56: 기본 간격 20% 줄임 (40 → 32초). 단계마다 3초씩 짧아지는 건 그대로
+    chDispT = (32 - 3 * (stars - 1)) * 0.8 / 0.85 / (1 + 0.15 * (5 - stars) / 4);   /* c143: 수상함 15% 빠르게 · 난리남 11.25% · 개판 7.5% · 계엄 3.75% · 데프콘 그대로 → 26.2 · 24.5 · 22.8 · 20.9 · 18.8초 */   /* c103: 출동 빈도 15% 줄임 */   // c64: 20% 더 짧게 (25.6 · 23.2 · 20.8 · 18.4 · 16초)   // c56: 기본 간격 20% 줄임 (40 → 32초). 단계마다 3초씩 짧아지는 건 그대로
     const site = lastIncident ? lastIncident.clone() : new THREE.Vector2(me.foot.x, me.foot.z);
     const [lo, hi] = CH_DISP_N[Math.min(CH_DISP_N.length, stars) - 1], n = lo + Math.floor(Math.random() * (hi - lo + 1));
     const p = chEdgeSpot(chZoneAt(me.foot.x, me.foot.z));
