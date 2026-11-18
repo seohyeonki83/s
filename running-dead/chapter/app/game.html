@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c147</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c148</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3763,7 +3763,7 @@
       let barUp = false;                      // 체력바가 떠 있으면 ? ! !!!를 그 위로
       if (b.hpBar) {
         b.hpDisp += (b.hp - b.hpDisp) * Math.min(1, dt * 12);   // 깎이는 게 보이게 빠르게 따라 줄어든다
-        barUp = b === me || b.hp < b.maxHp;   // 내 바는 늘 떠 있다               // 깎여 있으면 뜬다 (회복이 없어서 한 번 뜨면 계속) — HP 0이면 빈 바, 꽉 차 있으면 안 보인다
+        barUp = b === me || (b.hp < b.maxHp && !(CHAPTER && b.prop));   /* c148: 사물은 체력바 없음 */   // 내 바는 늘 떠 있다               // 깎여 있으면 뜬다 (회복이 없어서 한 번 뜨면 계속) — HP 0이면 빈 바, 꽉 차 있으면 안 보인다
         b.hpBar.visible = barUp && !hide;
         if (barUp) {
           b.hpBar.position.copy(b.foot).addScaledVector(UP, (b.halfH || RADIUS) * 2 + 0.22 + (b === me ? GAUGE_H : 0));   // 내 바는 두 배 두꺼워서 아래 끝이 같게 조금 올린다
