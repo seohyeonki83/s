@@ -854,6 +854,8 @@ from c152_patch import C152_R   # c152: 내 최대 체력 15% 올림
 R += C152_R
 from c153_patch import C153_R   # c153: 적 체력 5% 줄임
 R += C153_R
+from c154_patch import C154_R   # c154: 성능 (결과 그대로)
+R += C154_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

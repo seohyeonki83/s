@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c153</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c154</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1418,12 +1418,20 @@
     const ex = bx - ax, ez = bz - az, t = Math.max(0, Math.min(1, ((x - ax) * ex + (z - az) * ez) / (ex * ex + ez * ez)));
     return wallPt.set(ax + ex * t, az + ez * t);
   }
+  let chWcGrid = null, chWcN = 0; const chWcBuf = [];
+  function chWcNear(x0, z0, x1, z1) {          // c154: 그 네모 둘레의 건물만 (8칸 격자) — 건물 목록 순서 그대로 돌려준다
+    if (!chWcGrid) { chWcGrid = new Map(); buildings.forEach((B, i) => { B.wcI = i; for (let cx = Math.floor((B.x0 - 1) / 8); cx <= Math.floor((B.x1 + 1) / 8); cx++) for (let cz = Math.floor((B.z0 - 1) / 8); cz <= Math.floor((B.z1 + 1) / 8); cz++) { const k = cx * 4096 + cz; let L = chWcGrid.get(k); if (!L) chWcGrid.set(k, L = []); L.push(B); } }); }
+    chWcBuf.length = 0; chWcN++;
+    for (let cx = Math.floor(x0 / 8), cxe = Math.floor(x1 / 8); cx <= cxe; cx++) for (let cz = Math.floor(z0 / 8), cze = Math.floor(z1 / 8); cz <= cze; cz++) { const L = chWcGrid.get(cx * 4096 + cz); if (L) for (let i = 0; i < L.length; i++) { const B = L[i]; if (B.wcF !== chWcN) { B.wcF = chWcN; chWcBuf.push(B); } } }
+    if (chWcBuf.length > 1) chWcBuf.sort((a, c) => a.wcI - c.wcI);
+    return chWcBuf;
+  }
   const nearW = [];
   function wallCollide(b) {
     const m = b.r + 0.5;                      // 걸음 전·후 자리를 감싼 네모에 걸치는 건물 벽만 본다 (지도가 커져서, v121)
     const x0 = Math.min(b.px, b.foot.x) - m, x1 = Math.max(b.px, b.foot.x) + m, z0 = Math.min(b.pz, b.foot.z) - m, z1 = Math.max(b.pz, b.foot.z) + m;
     nearW.length = 0;
-    for (const B of buildings) if (x1 >= B.x0 && x0 <= B.x1 && z1 >= B.z0 && z0 <= B.z1) for (const w of B.walls) nearW.push(w);
+    for (const B of (CHAPTER && isFinite(x0 + z0 + x1 + z1) ? chWcNear(x0, z0, x1, z1) : buildings)) if (x1 >= B.x0 && x0 <= B.x1 && z1 >= B.z0 && z0 <= B.z1) for (const w of B.walls) nearW.push(w);   /* c154 */
     if (!nearW.length) return;
     if (nearW.some((w) => crosses(b.px, b.pz, b.foot.x, b.foot.z, w))) { b.foot.x = b.px; b.foot.z = b.pz; }
     for (const w of nearW) {
@@ -3702,18 +3710,27 @@
     return false;
   }
 
+  let chDrawN = 0;
   function draw(dt) {
     const eyes = bodies.filter((b) => isZombie(b) || b === me);   // 시야 = 나 + 동료 좀비 전부 (내가 죽어도 마지막 자리 시야는 남는다)
     eyeMaxR = 0; for (const z of eyes) if (z.sense > eyeMaxR) eyeMaxR = z.sense;
+    let eX0 = Infinity, eZ0 = Infinity, eX1 = -Infinity, eZ1 = -Infinity; const eyeSp = new Set(); chDrawN++;   // c154
+    for (const z of eyes) { const s = z.sense; if (z.foot.x - s < eX0) eX0 = z.foot.x - s; if (z.foot.x + s > eX1) eX1 = z.foot.x + s; if (z.foot.z - s < eZ0) eZ0 = z.foot.z - s; if (z.foot.z + s > eZ1) eZ1 = z.foot.z + s; if (z.space) { eyeSp.add(z.space); if (z.space.parent) eyeSp.add(z.space.parent); } }
+    const doorSeen = (D) => {                 // 이 문 앞을 보는 좀비가 있나 (전과 같은 판정 — 무리 밖의 문은 바로 넘기고, 한 프레임에 한 번만 잰다)
+      if (D.seenF === chDrawN) return D.seenV; D.seenF = chDrawN;
+      const ox = D.cx + D.nx * 0.4, oz = D.cz + D.nz * 0.4;
+      if (ox < eX0 || ox > eX1 || oz < eZ0 || oz > eZ1) return D.seenV = false;
+      return D.seenV = eyes.some((z) => (D.out ? z.space === D.out : !z.space) && Math.hypot(z.foot.x - ox, z.foot.z - oz) <= z.sense && !blocked(z.foot.x, z.foot.z, ox, oz));
+    };
     for (const B of buildings) {              // 좀비가 하나라도 들어간 건물만 지붕이 열린다
-      B.open = B.tkCut || eyes.some((z) => z.space === B || (B.rooms && z.space && z.space.parent === B)) || B.doors.some((D) => { const ox = D.cx + D.nx * 0.4, oz = D.cz + D.nz * 0.4; return eyes.some((z) => (D.out ? z.space === D.out : !z.space) && Math.hypot(z.foot.x - ox, z.foot.z - oz) <= z.sense && !blocked(z.foot.x, z.foot.z, ox, oz)); }); if (B.type === 'jail') B.open = B.parent.open;   /* c53: 방 안에 있어도 건물 지붕은 열린다 · 방문은 복도에서 본다 · 철창은 건물과 같이 열린다 */   // v357: 밖에서 열린 문을 보고 있으면 지붕도 열린다
+      B.open = B.tkCut || eyeSp.has(B) || B.doors.some(doorSeen);   /* c154 */ if (B.type === 'jail') B.open = B.parent.open;   /* c53: 방 안에 있어도 건물 지붕은 열린다 · 방문은 복도에서 본다 · 철창은 건물과 같이 열린다 */   // v357: 밖에서 열린 문을 보고 있으면 지붕도 열린다
       B.roof.visible = !B.open && B.type !== 'jail';
       if (B.bang) B.bang.visible = !B.open && !B.down;
       if (B.sign) { B.sign.visible = !B.open; const tx = CH_TEX[B.done ? 'x' : B.type]; if (B.sign.material.map !== tx) { B.sign.material.map = tx; B.sign.material.needsUpdate = true; } }   // c1: 지붕 아이콘 — 들어가면 사라지고, 잠식하면 X
       if (B.qm) B.qm.visible = !B.open && !!B.safe && !B.safe.dead && !B.safe.hidden;   /* v506: 숨은 금고는 물음표 없음 */   // v288: 금고 지붕 물음표 — 좀비가 들어가거나 금고가 깨지면 사라진다
       for (const D of B.doors) if (D.see) {   // v251: 밖에서 이 문을 보는 좀비가 있으면 문틈도 시야
         const ox = D.cx + D.nx * 0.4, oz = D.cz + D.nz * 0.4;
-        D.see.visible = eyes.some((z) => (D.out ? z.space === D.out : !z.space) && Math.hypot(z.foot.x - ox, z.foot.z - oz) <= z.sense && !blocked(z.foot.x, z.foot.z, ox, oz));
+        D.see.visible = doorSeen(D);   /* c154 */
       }   // 안 부서진 경찰서 지붕 느낌표 — 지붕이 열리면(좀비가 들어가면) 같이 사라진다
     }
     if (CHAPTER) { chRoomDraw(); chCanopyDraw(eyes); }   // c53 · c85
@@ -8663,10 +8680,21 @@
     }
   }
   let last = 0;
+  const chPf = { on: false, n: 0, w: 0, r: 0, t: 0, base: '' };
+  { const rr = renderer.render.bind(renderer); renderer.render = (sc, cam) => { if (!chPf.on) { rr(sc, cam); return; } const t0 = performance.now(); rr(sc, cam); chPf.r += performance.now() - t0; }; }
+  { const v = document.getElementById('ver'); if (v) { v.style.pointerEvents = 'auto'; v.style.padding = '8px 14px'; v.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); if (!chPf.base) chPf.base = v.textContent; chPf.on = !chPf.on; chPf.n = chPf.w = chPf.r = chPf.t = 0; if (!chPf.on) v.textContent = chPf.base; else v.textContent = chPf.base + ' · 재는 중'; }); } }
+  function chPerf(now, w) {                    // c154: 0.5초마다 평균을 버전 글자 옆에 쓴다
+    if (!chPf.on) return;
+    chPf.n++; chPf.w += w; if (!chPf.t) { chPf.t = now; chPf.n = 0; chPf.w = 0; chPf.r = 0; return; }
+    if (now - chPf.t < 500 || !chPf.n) return;
+    const v = document.getElementById('ver'), n = chPf.n;
+    v.textContent = chPf.base + ' · ' + Math.round(n * 1000 / (now - chPf.t)) + 'fps · 계산 ' + ((chPf.w - chPf.r) / n).toFixed(1) + ' · 그리기 ' + (chPf.r / n).toFixed(1) + 'ms · 동료 ' + Math.max(0, zombies.length - 1);
+    chPf.t = now; chPf.n = 0; chPf.w = 0; chPf.r = 0;
+  }
   function frame(now) {
     const dt = last ? Math.min((now - last) / 1000, 0.05) : 0;
     last = now;
-    if (!paused) stepWorld(dt);
+    if (!paused) { const t0 = performance.now(); stepWorld(dt); chPerf(now, performance.now() - t0); }
     else if (camAnim) stepCamAnim(now);       // 멈춘 채 카메라만 움직이는 연출 (v216)
     else if (hiAnim) hiStep(now);             // 발견 강조 어둠이 짙어지는 중 (v221)
     uiTick();
