@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c174</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c175</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6606,6 +6606,18 @@
   function chTankSeen(car) {                   // c137: 나나 동료가 봤나 (인지거리 안 · 벽에 안 가림) — 한 번 보이면 끝까지 느리다
     for (const z of nearIn(zCells, car.x, car.z, 16, chTkBuf2)) if (isZombie(z) && Math.hypot(z.foot.x - car.x, z.foot.z - car.z) <= z.sense + CAR_L * CH_TK_K / 2 && !blocked(z.foot.x, z.foot.z, car.x, car.z)) { car.tkSeen = true; return; }
   }
+  function chTankSmoke(car, dt) {             // c175: 궤도 네 귀퉁이에서 연기 — 가는 반대쪽으로 흩어진다
+    const dash = car.tkPh === 'dash';
+    if ((car.smT = (car.smT || 0) - dt) > 0) return; car.smT = dash ? 0.035 : 0.06;
+    const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx, hl = CAR_L * CH_TK_K / 2, hw = CAR_W * CH_TK_K / 2 * 0.85;
+    const mv = dash ? 1 : -1;                  // 차가 가는 쪽 (후진이면 뒤)
+    for (const sd of [-1, 1]) for (const e of [-1, 1]) {
+      if (Math.random() < (dash ? 0.25 : 0.45)) continue;
+      const x = car.x + fx * hl * e * 0.9 + rx * hw * sd, z = car.z + fz * hl * e * 0.9 + rz * hw * sd, sp = rand(0.8, 1.8) * (dash ? 1.6 : 1);
+      const f = puff(x + rand(-0.15, 0.15), 0.25, z + rand(-0.15, 0.15), dash ? (Math.random() < 0.5 ? 0x4a4a4a : 0x6a6a6a) : (Math.random() < 0.5 ? 0x8a8a84 : 0xa8a8a0), rand(0.35, 0.55), rand(1.3, 2.0) * (dash ? 1.3 : 1), rand(0.55, 0.9), -fx * mv * sp + rx * sd * rand(0.3, 0.9), rand(0.3, 0.7), -fz * mv * sp + rz * sd * rand(0.3, 0.9), dash ? 0.75 : 0.6);
+      f.s.renderOrder = -0.4;
+    }
+  }
   function chTankDrive(car, dt) {
     car.foot.set(car.x, 0, car.z);
     const o = car.obj; if (o) o.foot.set(car.x, 0, car.z);
@@ -6634,6 +6646,7 @@
     else if (car.atkT <= 0 && car.foe && isZombie(car.foe)) { car.burstN = 4; car.burstT = 0; car.burstZ = car.foe; car.atkT = HIT_EVERY; }
     // 돌진
     car.dashAt -= dt;
+    if (car.tkPh) chTankSmoke(car, dt);   // c175
     if (car.tkPh === 'back') {                 // c171 ① 후진 (방향 고정)
       const v = MELEE * 3 / 2; car.tkPhT -= dt; car.rev = true; car.h = car.tkDh; car.vx = -car.tkDx * v; car.vz = -car.tkDz * v; car.tkV = v;
       if (car.tkPhT <= 0) { car.tkPh = 'dash'; car.tkPhT = 1.05;   /* c174 */ }
