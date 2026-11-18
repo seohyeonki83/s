@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c154</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c155</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3284,6 +3284,7 @@
     return slotV.set(areaX() + Math.cos(a) * r, areaZ() + Math.sin(a) * r);
   }
   function slotOf(z) {
+    if (CHAPTER && z.slSp === me.space && (z.slF === objFrame || (z.slF === objFrame - 1 && (((objFrame + (z.slK === undefined ? (z.slK = Math.random() < 0.5 ? 0 : 1) : z.slK)) & 1) === 1)))) return slotV.set(areaX() + z.slDX, areaZ() + z.slDY);   // c155 ②
     const r = z.slotK * NEAR * armyK;          // 자리 거리 — 부대가 커지면 같이 넓어진다 (v122)
     let x = areaX() + Math.cos(z.slotA + z.slotOff) * r, y = areaZ() + Math.sin(z.slotA + z.slotOff) * r;   // 영역 중심 둘레 (v110)
     if (z.mut === 'armor') { const f = armorFront(z); x = f.x; y = f.y; }   // v305: 덩치는 앞쪽 (다른 동료와 섞여서)
@@ -3314,6 +3315,7 @@
       if (d >= R) continue;
       if (d > 1e-6) { x = O.x + dx / d * R; y = O.z + dz / d * R; } else x = O.x + R;
     }
+    if (CHAPTER) { z.slF = objFrame; z.slSp = me.space; z.slDX = x - areaX(); z.slDY = y - areaZ(); }   // c155 ②
     return slotV.set(x, y);
   }
 
@@ -3646,7 +3648,7 @@
       const x = z.foot.x, y = z.foot.z, R = z.sense;
       if (!onView(x, y, R)) continue;          // 시야가 화면에 안 걸치면 안 그린다
       if (z !== me && kept.some((k) => k.space === z.space && k.sense >= R - 0.3 && Math.hypot(k.foot.x - x, k.foot.z - y) < eyeMerge)) continue;   // 바로 옆 눈이 이미 그렸다
-      const RAYS = z === me ? VIEW_RAYS : ALLY_RAYS;
+      const RAYS = z === me ? VIEW_RAYS : CHAPTER && eyes.length > 60 ? 60 : ALLY_RAYS;   /* c155 ③ */
       const nb = bldgsNear(x - R - 0.5, y - R - 0.5, x + R + 0.5, y + R + 0.5);   // 시야 둘레에 걸치는 건물만 (v177)
       nearBuf.length = 0;
       for (const B of nb) for (const w of B.sightW) nearBuf.push(w);
@@ -3665,19 +3667,23 @@
         }
         continue;
       }
+      const reuse = CHAPTER && z !== me && z.vF === chDrawN - 1 && z.vR === R && (((chDrawN + (z.vK === undefined ? (z.vK = Math.random() < 0.5 ? 0 : 1) : z.vK)) & 1) === 1);   // c155 ①
       rayAngles.length = 0;
-      for (let k = 0; k < RAYS; k++) rayAngles.push(k / RAYS * Math.PI * 2);
-      for (const B of nb) for (const [ex, ez] of B.sightC) {   // 벽 끝을 스치는 방향 — 가장자리가 반듯하게 (둘레 건물 모서리만, v177)
+      if (reuse) for (let k = 0; k < z.vN; k++) rayAngles.push(z.vA[k]);
+      else for (let k = 0; k < RAYS; k++) rayAngles.push(k / RAYS * Math.PI * 2);
+      if (!reuse) for (const B of nb) for (const [ex, ez] of B.sightC) {   // 벽 끝을 스치는 방향 — 가장자리가 반듯하게 (둘레 건물 모서리만, v177)
         if (Math.hypot(ex - x, ez - y) > R + 0.5) continue;
         const a = (Math.atan2(ez - y, ex - x) + Math.PI * 2) % (Math.PI * 2);   // 0~2π로 맞춰야 순서대로 이어진다
         rayAngles.push(a - 1e-4, a + 1e-4);
       }
-      rayAngles.sort((a, b) => a - b);
+      if (!reuse) rayAngles.sort((a, b) => a - b);
+      const keepV = CHAPTER && z !== me && !reuse;
+      if (keepV) { const L = rayAngles.length; if (!z.vA || z.vA.length < L) { z.vA = new Float64Array(L + 32); z.vD = new Float64Array(L + 32); } for (let k = 0; k < L; k++) z.vA[k] = rayAngles[k]; z.vN = L; z.vF = chDrawN; z.vR = R; }
       let px = 0, pz = 0, fx = 0, fz = 0;
       for (let i = 0; i <= rayAngles.length; i++) {
         let qx, qz;
         if (i < rayAngles.length) {
-          const a = rayAngles[i], dx = Math.cos(a), dz = Math.sin(a), hit = wallRay(x, y, dx, dz, R, near);
+          const a = rayAngles[i], dx = Math.cos(a), dz = Math.sin(a), hit = reuse ? z.vD[i] : keepV ? (z.vD[i] = wallRay(x, y, dx, dz, R, near)) : wallRay(x, y, dx, dz, R, near);
           const d = hit;
           qx = x + dx * d; qz = y + dz * d;
         } else { qx = fx; qz = fz; }
