@@ -966,6 +966,8 @@ from c208_patch import C208_R   # c208: 창고 벽
 R += C208_R
 from c209_patch import C209_R   # c209: 나 — 벽도 금고처럼
 R += C209_R
+from c210_patch import C210_R   # c210: 다른 면은 절반
+R += C210_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
