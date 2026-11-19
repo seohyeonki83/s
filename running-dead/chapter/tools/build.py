@@ -946,6 +946,8 @@ from c198_patch import C198_R   # c198: 장비 수치
 R += C198_R
 from c199_patch import C199_R   # c199: 흡수 2.5씩 · 촉매 7%씩
 R += C199_R
+from c200_patch import C200_R   # c200: 벽 부수기 · 보스 인지거리 · 보스 사망 군인
+R += C200_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
