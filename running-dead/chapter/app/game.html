@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c190</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c191</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4917,9 +4917,10 @@
         if (d > me.sense || fireBlocked(me.foot.x, me.foot.z, c.foot.x, c.foot.z)) continue;   // v297: 공격선이 벽에 막히면 안 쏜다 (열린 문 틈으로는 OK)
         cand.push({ c, k: CHAPTER && c.boss ? 99 : DANGER(c), d });   /* c120: 변이 좀비가 될 사람(분홍)이 맨 먼저 — 저격수보다 위 */
       }
+      if (CHAPTER && chTank && !chTank.wreck && !(chTank.stunT > 0) && !me.space) { const T = chTank, d = Math.max(0, Math.hypot(T.x - me.foot.x, T.z - me.foot.z) - CAR_W * CH_TK_K / 2); if (d <= me.sense && !fireBlocked(me.foot.x, me.foot.z, T.x, T.z)) cand.push({ c: T, k: 98, d }); }   // c191: 보스도 감전
       cand.sort((a, b) => b.k - a.k || a.d - b.d);
       const hit = cand.slice(0, CH_WV('taserN', lv('taser')));   /* c21: 대상만 늘어난다 (1 → 6명) */  // 한 번에 맞히는 수 = 1 + 똑똑한 두뇌 (v201)
-      for (const { c } of hit) { c.stunT = CH_WV('taserT', lv('taser'));   /* c139 */ c.vel.set(0, 0); zaps.push({ to: c, t: 0.45 }); }
+      for (const { c } of hit) { if (c.tank) { c.stunT = CH_WV('taserT', lv('taser')) / 3; c.vx = c.vz = 0; zaps.push({ to: c, t: 0.45 }); continue; }   /* c191: 보스 = 3분의 1 */ c.stunT = CH_WV('taserT', lv('taser'));   /* c139 */ c.vel.set(0, 0); zaps.push({ to: c, t: 0.45 }); }
       if (!hit.length) zaps.push({ to: null, t: 0.2 });
     } else {                                  // 돈다발 3개를 내 둘레 2~4칸에 뿌린다 (나와 같은 공간)
       const fresh = [];
@@ -6642,6 +6643,11 @@
     car.foot.set(car.x, 0, car.z);
     const o = car.obj; if (o) o.foot.set(car.x, 0, car.z);
     if (car.wreck) return;
+    if (car.stunT > 0) {                       // c191: 감전 — 서고 · 안 쏘고 · 돌진 순서도 멈춘다 · 몸이 번쩍인다
+      car.stunT -= dt; car.vx = car.vz = 0; car.burstN = 0; const K0 = car.g.children[0];
+      K0.material.color.setHex(car.stunT > 0 && Math.floor(clock * 14) % 2 ? 0xc8f0ff : 0x3c4a2a);
+      return;
+    }
     const spd = (car.tkSeen ? CAR_SPEED * CH_TR_SPD.sedan * CH_TR_SLOW / 2 * 1.2 :   /* c183: 20% 빠르게 */ CAR_SPEED * 0.9) * (car.goo ? 0.8 : 1);   /* c179: 눈에 띄기 전 = 경찰차의 90% */   /* c168: 보인 뒤 속도 2배 (보통 차의 절반) */   /* c137: 눈에 띄기 전엔 보통 차 속도 */   // 보통 차(승용차)의 4분의 1
     if (car.goo && (car.gooLeft -= dt) <= 0) { car.goo = false; for (const s of car.gooS) car.g.remove(s); }   // c123
     if (car.goo && (car.gooT += dt) >= 0.5) { car.gooT -= 0.5; if (o && o.hp > 2) o.hp -= 2; }
@@ -6739,6 +6745,7 @@
       }
       deaths = Math.max(deaths, STAR_AT[1]); stars = Math.max(stars, 2);   // 난리남
       chSf.on = true; chSf.n = 4; chSf.T = chSfAt(5) - 0.05;   // 다음 걸음에 보스 출동
+      while (rankNext < RANKS.length && 70 >= RANKS[rankNext].n) rankNext++;   // c191: 보스 테스트 — 동료 수 칭호 알림은 건너뛴다 (보스 알림이 늦게 뜨던 것)
     }
     if ((chBTt -= dt) <= 0) { chBTt = 0.5; for (const c of bodies.slice()) if (c.kind === 'citizen' && !c.police && !c.military) chBTgone(c); }   // 새로 생기는 사람(시작 하양 등)도 치운다
   }
