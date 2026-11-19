@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c189</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c190</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -939,8 +939,8 @@
   }
   function chCopTick() {                       // c189: 경보 단계에 맞춰 길거리 배회 경찰을 늘린다
     if (!chPop || CH_BT) return;
-    const base = CH_COPS * CH_ONE_K * 0.8 * 0.9 * 0.9, mid = Math.round((STAR_AT[1] + STAR_AT[2]) / 2);
-    const k = deaths >= mid ? 1.5 : stars >= 2 ? 1 : stars >= 1 ? 0.5 : 0;
+    const base = CH_COPS * CH_ONE_K * 0.8 * 0.9 * 0.9, mid = Math.round((STAR_AT[0] + STAR_AT[1]) / 2);   /* c190 */
+    const k = stars >= 2 ? 1.5 : deaths >= mid ? 1 : stars >= 1 ? 0.5 : 0;
     if (chPop.copK === k) return;
     if (chPop.copK !== undefined && k < chPop.copK) return;   // 줄지는 않는다
     chPop.copK = k; const goal = chRoundP(base * k), add = goal - (chPop.copN || 0); if (add <= 0) return;
