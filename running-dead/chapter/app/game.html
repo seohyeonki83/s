@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c210</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c211</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6784,6 +6784,7 @@
   }
   function chTankDead(car) {
     if (car.tracer) car.tracer.visible = false;
+    car.vx = car.vz = 0; car.tkV = 0; car.tkPh = null; car.dashT = 0; car.spOn = false;   // c211
     for (let i = 0; i < 3; i++) boom(car.x + rand(-1.6, 1.6), car.z + rand(-1, 1));
     if (!CHAPTER || car !== chTank) return;
     for (let i = 0; i < 5; i++) {               // c200: 타고 있던 군인 5
@@ -6812,7 +6813,7 @@
   function chTankDrive(car, dt) {
     car.foot.set(car.x, 0, car.z);
     const o = car.obj; if (o) o.foot.set(car.x, 0, car.z);
-    if (car.wreck) return;
+    if (car.wreck) { car.vx = car.vz = 0; car.tkV = 0; car.tkPh = null; car.dashT = 0; car.spOn = false; return; }   // c211: 잔해는 멈춘다
     if (car.stunT > 0) {                       // c191: 감전 — 서고 · 안 쏘고 · 돌진 순서도 멈춘다 · 몸이 번쩍인다
       car.stunT -= dt; car.vx = car.vz = 0; car.burstN = 0; const K0 = car.g.children[0];
       K0.material.color.setHex(car.stunT > 0 && Math.floor(clock * 14) % 2 ? 0xc8f0ff : 0x3c4a2a);
