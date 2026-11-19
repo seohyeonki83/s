@@ -920,6 +920,8 @@ from c185_patch import C185_R   # c185: 첫 카운트다운 글자 · 보스 체
 R += C185_R
 from c186_patch import C186_R   # c186: 문·금고 우선순위 = 사람
 R += C186_R
+from c187_patch import C187_R   # c187: 금고·문 붙잡기
+R += C187_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
