@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c192</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c193</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3744,7 +3744,7 @@
       return D.seenV = eyes.some((z) => (D.out ? z.space === D.out : !z.space) && Math.hypot(z.foot.x - ox, z.foot.z - oz) <= z.sense && !blocked(z.foot.x, z.foot.z, ox, oz));
     };
     for (const B of buildings) {              // 좀비가 하나라도 들어간 건물만 지붕이 열린다
-      B.open = B.tkCut || eyeSp.has(B) || B.doors.some(doorSeen);   /* c154 */ if (B.type === 'jail') B.open = B.parent.open;   /* c53: 방 안에 있어도 건물 지붕은 열린다 · 방문은 복도에서 본다 · 철창은 건물과 같이 열린다 */   // v357: 밖에서 열린 문을 보고 있으면 지붕도 열린다
+      B.open = B.everOpen || B.tkCut || eyeSp.has(B) || B.doors.some(doorSeen);   /* c154 */ if (CHAPTER && B.open) B.everOpen = true;   /* c193: 한 번 열리면 계속 */ if (B.type === 'jail') B.open = B.parent.open;   /* c53: 방 안에 있어도 건물 지붕은 열린다 · 방문은 복도에서 본다 · 철창은 건물과 같이 열린다 */   // v357: 밖에서 열린 문을 보고 있으면 지붕도 열린다
       B.roof.visible = !B.open && B.type !== 'jail';
       if (B.bang) B.bang.visible = !B.open && !B.down;
       if (B.sign) { B.sign.visible = !B.open; const tx = CH_TEX[B.done ? 'x' : B.type]; if (B.sign.material.map !== tx) { B.sign.material.map = tx; B.sign.material.needsUpdate = true; } }   // c1: 지붕 아이콘 — 들어가면 사라지고, 잠식하면 X
@@ -6393,7 +6393,7 @@
     if (s !== chSf.shown) { chSf.shown = s; chSfEl.innerHTML = s; chSfEl.style.display = s ? 'block' : 'none'; }
   }
   function chSfReset() {
-    if (chTank) chTank.tkPh = null; Object.assign(chSf, { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, hide: false, hideT: 0 }); chBTdone = false; chSf.wn = 0;   /* c166 · c168 */
+    if (chTank) chTank.tkPh = null; Object.assign(chSf, { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, hide: false, hideT: 0 }); chBTdone = false; chSf.wn = 0; for (const B of buildings) B.everOpen = false;   /* c166 · c168 · c193 */
     chBanner.length = 0;
     if (chTank && chTank.tracer) scene.remove(chTank.tracer);
     chTank = null;

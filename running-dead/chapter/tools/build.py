@@ -932,6 +932,8 @@ from c191_patch import C191_R   # c191: 보스 감전
 R += C191_R
 from c192_patch import C192_R   # c192: 길거리 경찰 두 번
 R += C192_R
+from c193_patch import C193_R   # c193: 지붕 한 번 열리면 계속
+R += C193_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
