@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c196</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c197</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2932,7 +2932,7 @@
     }
     if (a && a.stim) dmg *= a.stimK || 1.5;   // v369 · v370: 스팀팩 (강화마다 +10%p)
     if ((v.kind === 'obj' || v.kind === 'safe') && a.mut === 'armor') dmg *= 3;   // v550: 덩치만 사물(문·차·금고)에 3배   // v378: 금고도   // v344: 2 → 4배   // v295: 덩치 — 문·경찰차 피해 2배
-    if ((v.kind === 'obj' || v.kind === 'safe') && a === me && owned.crowbar) dmg *= 1 + 0.15 * (1 + lv('crowbar'));   /* c163: 빠루 +15%, 강화마다 +15%p */   /* c21: 빠루 +10%, 강화마다 +10%p (60%까지) */   /* v563: 빠루 처음 +40%, 강화마다 +10% */
+    if ((v.kind === 'obj' || v.kind === 'safe') && a === me && owned.crowbar) dmg *= 1 + 0.2 * (1 + lv('crowbar'));   /* c197: 20%씩 */   /* c163: 빠루 +15%, 강화마다 +15%p */   /* c21: 빠루 +10%, 강화마다 +10%p (60%까지) */   /* v563: 빠루 처음 +40%, 강화마다 +10% */
     // v549: 금고도 나·동료 배율 없음 — 공격력 그대로   // v391: 금고 — 나한테는 3배, 동료(덩치·히드라 포함)한테는 2/3   // v275: 빠루 — 내가 건물·사물에 입히는 피해
     if (isZombie(v) && v.mut) dmg *= v.mut === 'armor' ? (v === me ? 0.5 /* v581: 덩치로 각성한 나 받는 피해 −50% */ : TEST_ARMOR ? 0 : 0.2) : 0.9;   /* v558: 각성한 나는 덩치여도 −80% 없음 */   // v275: 갑옷좀비 받는 피해 80% 줄임, 히드라 10% 줄임
     if (a.mut === 'armor' && v.kind === 'citizen' && !a.splashing) {   // v275: 갑옷좀비 — 앞쪽 80° 부채꼴, 근접 거리 1.2배 안 다른 적도 30%
@@ -5648,7 +5648,7 @@
       }
     }
   }
-  const chLvMax = (k) => k === 'bag' ? 3 : ITEM[k] && !ITEM[k].passive ? 6 : 5;   /* c139: 무기는 6번까지 강화 */   // c21: 가방은 4개가 끝 (도구 칸 5개가 다 열린다)
+  const chLvMax = (k) => k === 'bag' ? 3 : k === 'crowbar' ? 4 :   /* c197: 빠루는 +100%가 끝 */ ITEM[k] && !ITEM[k].passive ? 6 : 5;   /* c139: 무기는 6번까지 강화 */   // c21: 가방은 4개가 끝 (도구 칸 5개가 다 열린다)
   const chHas = (k) => ITEM[k].passive ? !!owned[k] : items.some((x) => x.kind === k);
   const chToolCap = () => Math.min(SLOT_A.length, 1 + (owned.bag ? 1 + lv('bag') : 0));   // c21: 쓸 수 있는 도구는 처음 1개 — 가방 하나마다 +1, 최대 5
   const chAccMax = () => 5 + 3 * lv('awaken');   // c21: 각성 주사 — 모을 수 있는 시간(초). 가득 차는 데는 늘 40초
@@ -5677,7 +5677,7 @@
     book: (n) => `무기 쿨타임 -${5 * (1 + n)}%`,
     bag: (n) => `무기 ${Math.min(5, 2 + n)}칸`,
     rage: (n) => `30초마다 동료 1명 · 공격 속도·이동 속도 +${5 + 10 * n}%`,
-    crowbar: (n) => `사물 피해 +${15 * (1 + n)}%`,
+    crowbar: (n) => `사물 피해 +${20 * (1 + n)}%`,
     absorb: (n) => `충격 흡수 ${2 + n} (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12)`,
     vest: (n) => `총격 피해 -${10 * (1 + n)}%`,
     shoes: (n) => `이동 속도 +${5 * (1 + n)}%`,
@@ -5685,7 +5685,7 @@
     catalyst: (n) => `변이 좀비 공격력 +${5 * (1 + n)}%`,
     blood: (n) => `내 최대 체력 +${10 * (1 + n)}%`,
   };
-  const CH_BADGE = { rage: () => '+' + (5 + 10 * lv('rage')) + '%', absorb: () => '흡수 ' + (2 + lv('absorb')), crowbar: () => '+' + 15 * (1 + lv('crowbar')) + '%', shoes: () => '+' + 5 * (1 + lv('shoes')) + '%' };   // 배지 아래 짧은 수치
+  const CH_BADGE = { rage: () => '+' + (5 + 10 * lv('rage')) + '%', absorb: () => '흡수 ' + (2 + lv('absorb')), crowbar: () => '+' + 20 * (1 + lv('crowbar')) + '%', shoes: () => '+' + 5 * (1 + lv('shoes')) + '%' };   // 배지 아래 짧은 수치
   Object.assign(ITEM_TEXT, {                  // c21: 바뀐 규칙에 맞춘 설명
     taser: ['대상을 감전시켜 멈춥니다.', '강화 시 감전 대상과 시간이 늘어납니다.'],
     awaken: ['충전한 시간만큼 변이하고, 게이지가 찬 만큼 체력을 회복합니다 (가득이면 20%).', '강화 시 최대 사용 시간이 늘어납니다.'],
@@ -5736,7 +5736,7 @@
   // ── c25 · c27: 레벨업 = 도구·장비 14종 가운데 랜덤 3장 중 하나를 고른다 — 없는 것이면 새로 얻고, 가진 것이면 강화 +1 ──
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
     bomb: ['', (n) => `${1.5 + n}칸·${4 + 2 * n}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['', (n) => `${CH_WV('cashT', n)}초·${1 + n}대`],
-    book: ['쿨타임', (n) => `-${5 * (1 + n)}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${5 + 10 * n}%`], crowbar: ['사물', (n) => `+${15 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
+    book: ['쿨타임', (n) => `-${5 * (1 + n)}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${5 + 10 * n}%`], crowbar: ['사물', (n) => `+${20 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
     shoes: ['이동', (n) => `+${5 * (1 + n)}%`], catalyst: ['변이', (n) => `+${5 * (1 + n)}%`], blood: ['체력', (n) => `+${10 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
   const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
