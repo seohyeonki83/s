@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c204</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c206</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -964,7 +964,7 @@
     });
   }
   function chCopTick() {                       // c189: 경보 단계에 맞춰 길거리 배회 경찰을 늘린다
-    if (!chPop || CH_BT) return;
+    if (!chPop || CH_BT || chPop.copK === 1.5) return;   // c205: 최대에 닿으면 끝
     const base = CH_COPS * CH_ONE_K * 0.8 * 0.9 * 0.9, mid = Math.round((STAR_AT[0] + STAR_AT[1]) / 2);   /* c190 */
     const k = deaths >= mid ? 1.5 : stars >= 1 ? 1 : 0;   /* c192 */
     if (chPop.copK === k) return;
@@ -1138,13 +1138,14 @@
   function chSlotFix(x, y) {
     if (!chBlocks) chBlocks = CH_MAP.rivers.map(([x0, z0, x1, z1]) => ({ x0, z0, x1, z1 })).concat(buildings.filter((B) => B.type === 'hill'));
     const mx = me.foot.x, mz = me.foot.z, m = 0.7;
-    for (let k = 0; k < 2; k++) for (const R of chBlocks) {
-      const t = segRect(mx, mz, x, y, R, 0);  // 나 → 자리 선이 강·산에 처음 닿는 곳
-      if (t < Infinity) { x = mx + (x - mx) * t; y = mz + (y - mz) * t; }
+    for (let k = 0, ch = true; k < 2 && ch; k++) { ch = false; for (const R of chBlocks) {   // c205: 첫 바퀴에 안 바뀌면 두 번째는 같은 결과라 생략
+      const t = Math.min(mx, x) > R.x1 || Math.max(mx, x) < R.x0 || Math.min(mz, y) > R.z1 || Math.max(mz, y) < R.z0 ? Infinity : segRect(mx, mz, x, y, R, 0);  // 나 → 자리 선이 강·산에 처음 닿는 곳
+      if (t < Infinity) { const nx = mx + (x - mx) * t, ny = mz + (y - mz) * t; if (nx !== x || ny !== y) ch = true; x = nx; y = ny; }
       if (x <= R.x0 - m || x >= R.x1 + m || y <= R.z0 - m || y >= R.z1 + m) continue;
+      ch = true;
       const l = x - (R.x0 - m), r = R.x1 + m - x, u = y - (R.z0 - m), w = R.z1 + m - y, q = Math.min(l, r, u, w);   // 가장 가까운 가장자리 밖으로 (0.7칸)
       if (q === l) x = R.x0 - m; else if (q === r) x = R.x1 + m; else if (q === u) y = R.z0 - m; else y = R.z1 + m;
-    }
+    } }
     chSlotOut[0] = x; chSlotOut[1] = y; return chSlotOut;
   }
   // ── c13: 나에게 가는 흐름 — 멀리 있는 동료는 멀리 있는 자기 자리까지 길을 따로 찾지 않고, 내 자리에서 맵 전체로 퍼뜨린 '걸어서 가는 거리'를 따라 내려온다 ──
@@ -1254,6 +1255,7 @@
   function chLos(px, pz, tx, tz) {            // 두 자리가 곧게 이어지나 — around()와 같은 기준 (0.2칸 넓혀서 보고, 내가 그 둘레 안이면 그 건물은 뺀다)
     for (const R of chBlk) {
       if (px > R.x0 - GAP && px < R.x1 + GAP && pz > R.z0 - GAP && pz < R.z1 + GAP) continue;
+      if (Math.min(px, tx) > R.x1 + GAP || Math.max(px, tx) < R.x0 - GAP || Math.min(pz, tz) > R.z1 + GAP || Math.max(pz, tz) < R.z0 - GAP) continue;   // c205
       if (segRect(px, pz, tx, tz, R, GAP) < Infinity) return false;
     }
     return true;
@@ -1564,16 +1566,15 @@
     return wp.set(S.foot.x + uz * s * (R + 0.3), S.foot.z - ux * s * (R + 0.3));
   }
   function segRect(px, pz, qx, qz, B, pad) { // 선분 p→q가 건물(사방 pad만큼 넓혀서)에 처음 닿는 비율 0~1 (안 닿으면 Infinity)
-    let t0 = 0, t1 = 1;
+    let t0 = 0, t1 = 1, k, q, r;   // c205: clip 함수를 풀어 씀 (같은 식)
     const dx = qx - px, dz = qz - pz;
-    const clip = (k, q) => {
-      if (Math.abs(k) < 1e-9) return q >= 0;
-      const r = q / k;
-      if (k < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
-      return true;
-    };
-    return clip(-dx, px - (B.x0 - pad)) && clip(dx, B.x1 + pad - px) && clip(-dz, pz - (B.z0 - pad)) && clip(dz, B.z1 + pad - pz) ? t0 : Infinity;
+    k = -dx; q = px - (B.x0 - pad); if (Math.abs(k) < 1e-9) { if (q < 0) return Infinity; } else { r = q / k; if (k < 0) { if (r > t1) return Infinity; if (r > t0) t0 = r; } else { if (r < t0) return Infinity; if (r < t1) t1 = r; } }
+    k = dx; q = B.x1 + pad - px; if (Math.abs(k) < 1e-9) { if (q < 0) return Infinity; } else { r = q / k; if (k < 0) { if (r > t1) return Infinity; if (r > t0) t0 = r; } else { if (r < t0) return Infinity; if (r < t1) t1 = r; } }
+    k = -dz; q = pz - (B.z0 - pad); if (Math.abs(k) < 1e-9) { if (q < 0) return Infinity; } else { r = q / k; if (k < 0) { if (r > t1) return Infinity; if (r > t0) t0 = r; } else { if (r < t0) return Infinity; if (r < t1) t1 = r; } }
+    k = dz; q = B.z1 + pad - pz; if (Math.abs(k) < 1e-9) { if (q < 0) return Infinity; } else { r = q / k; if (k < 0) { if (r > t1) return Infinity; if (r > t0) t0 = r; } else { if (r < t0) return Infinity; if (r < t1) t1 = r; } }
+    return t0;
   }
+  const chNoObs = [];
   let aroundCars = true;                      // v513: around()가 서 있는 차를 피하나
   function around(px, pz, tx, tz, pad = GAP, m = BODY + 0.3) {   // pad = 건물을 이만큼 넓혀서 막힘을 본다, m = 모서리에서 띄우는 거리 (경찰차는 크게)
     let hit = null, first = Infinity;
@@ -1590,6 +1591,7 @@
         continue;
       }
       if (B.parent) continue;   // c53: 방은 건물 안이라 밖 길 찾기에서 뺀다
+      if (Math.min(px, tx) > B.x1 + pad || Math.max(px, tx) < B.x0 - pad || Math.min(pz, tz) > B.z1 + pad || Math.max(pz, tz) < B.z0 - pad) continue;   // c205
       const t = segRect(px, pz, tx, tz, B, pad);
       if (t < first) { first = t; hit = B; }
     }
@@ -1606,7 +1608,7 @@
     // 서 있는 경찰차 (v139) — 차(붙어 선 차들은 한 덩어리)를 원으로 보고 옆으로 돌아간다. 이미 원 안(차에 붙어 있음)이면 원을 따라 목적지 쪽으로 돈다
     const L = Math.hypot(tx - px, tz - pz) || 1e-6, ux = (tx - px) / L, uz = (tz - pz) / L;
     let cHit = null, cT = Infinity;
-    for (const O of aroundCars && !CHAPTER ? carObs : []) {   /* c69: 챕터는 위의 네모로 */
+    for (const O of aroundCars && !CHAPTER ? carObs : chNoObs) {   /* c205: 빈 배열을 매번 안 만든다 */   /* c69: 챕터는 위의 네모로 */
       const R = O.r + Math.max(pad, BODY) + 0.45;   // 돌아갈 원 = 차 원 + 몸 반지름 + 여유 — 모서리를 긁지 않게
       const cx = O.x - px, cz = O.z - pz, dc = Math.hypot(cx, cz);
       const along = cx * ux + cz * uz, perp = -cx * uz + cz * ux;   // 차 가운데의 앞쪽 거리, 옆으로 떨어진 거리(부호)
@@ -2333,9 +2335,9 @@
     let best = null, bd = range;
     for (const z of nearIn(zCells, c.foot.x, c.foot.z, range, nzBuf)) {   // 둘레 칸의 좀비만 (v177)
       if (!sees(c, z)) continue;
-      if (clear && fireBlocked(c.foot.x, c.foot.z, z.foot.x, z.foot.z)) continue;
       const d = Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
-      if (d <= bd) { bd = d; best = z; }
+      if (d > bd || (clear && fireBlocked(c.foot.x, c.foot.z, z.foot.x, z.foot.z))) continue;   // c205: 거리 먼저
+      bd = d; best = z;
     }
     return best;
   }
@@ -2972,7 +2974,7 @@
       }
       a.splashing = false;
     }
-    if (v.kind === 'obj' && v.type === 'wall' && !v.dead) { if (a) { v.F.wHit.set(a, clock); if (a === me) v.F.meT = clock; } if (!v.hpBar) { addHpBar(v, hpFoeMat); v.hpDisp = v.hp; } }   // c200
+    if (v.kind === 'obj' && v.type === 'wall' && !v.dead) { if (a === me) v.F.meT = clock;   /* c206: 나만 센다 */ if (!v.hpBar) { addHpBar(v, hpFoeMat); v.hpDisp = v.hp; } }   // c200
     if (v.kind === 'obj') { if (!v.dead) { v.hp = Math.max(0, v.hp - dmg); if (v.hp <= 0) breakObj(v); } return; }   // 잠긴 문·경찰차 (v239)
     if (v.dead || !(v.kind === 'citizen' || v.kind === 'safe' || isZombie(v)) || v.hp <= 0) return;
     v.hp = Math.max(0, v.hp - dmg);
@@ -3479,7 +3481,7 @@
       } else {
         const t = aimed && aimed.kind === 'citizen' && !aimed.marked && aimed.space === z.space && !(CHAPTER && z === me && me.mut && aimed.hp <= 0 && chMeYield(aimed)) ? aimed : ready;   /* c57 */   // 테두리가 떠 있던 시민은 무조건 노린다 (문 밖으로 나가 버렸으면 빼고)
         const prey = huntable(z, p) ? p : null;
-        const adj = CHAPTER ? chAdjFoe(z) : null, go = t || prey || adj;   /* c64: 3명 제한에 걸렸어도 근접 거리 안의 적은 친다 */
+        const adj = CHAPTER && !t && !prey ? chAdjFoe(z) : null, go = t || prey || adj;   /* c205: t·prey가 있으면 안 쓰인다 */   /* c64: 3명 제한에 걸렸어도 근접 거리 안의 적은 친다 */
         if (z !== me) {
           if (go) z.phase = 'track';               // 동료 좀비: 사냥이 끝나면 자기 자리로 간 다음 배회
           if (prey && !t && prey.hp <= 0) claimPrey(z, prey); else unclaim(z);   // HP 0 시민을 쫓는 동안 찜 (덮치면 marked가 대신한다)
@@ -3487,7 +3489,7 @@
         const noObj = CHAPTER && ((z.objOff > clock && go && !chWallCut(z.foot.x, z.foot.z, go.foot.x, go.foot.z)) || !!adj);   /* c58 · c64: 맞은 지 2초 안(나도)이고 쫓을 사람이 있으면 · 근접 거리 안에 적이 있으면 사물·금고는 안 노린다 (사람이 바리케이트 너머뿐이면 바리케이트를 친다) */
         let sf = !t && !noObj && !(CHAPTER && go) ? nearSafe(z) : null;   /* v353: 동료도 금고를 때린다 */   // 나만: 금고가 가장 가까우면 가서 때린다 (v190)
         let forced = null;                     // v492: 공격 거리 안에서 차가 가장 가까운 상태로 2.5초 넘게 → 3명 제한·덮치기보다 먼저 그 차를 때린다
-        { let cb = null, cd = Infinity; const reach = MELEE - RADIUS + Math.max(0, (z.r || BODY) - BODY);
+        if (!CHAPTER) { let cb = null, cd = Infinity; const reach = MELEE - RADIUS + Math.max(0, (z.r || BODY) - BODY);   /* c205: 챕터에선 결과가 늘 null */
           if (!z.space && !CHAPTER) for (const OL of (CHAPTER ? chObjLists2 : chObjLists1)   /* c85: 동료도 — 서 있는 민간 차에 1.25초 막히면 그 차를 때린다 */) for (const o of OL) if (o.type === 'car' && !o.dead && !o.off && Math.abs(o.car.x - z.foot.x) < 4 && Math.abs(o.car.z - z.foot.z) < 4) { const g = objGap(o, z); if (g <= reach && g < cd) { cd = g; cb = o; } }
           /* c114: 챕터에선 안 쓴다 (가면서 치기로 바뀌었다) */   // c70: 네모 사물이 가로막고 있으면
           if (cb && (!go || cd < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z) - RADIUS)) { z.carT = z.carHold === cb ? (z.carT || 0) + dt : dt; z.carHold = cb; } else { z.carT = 0; z.carHold = null; }
@@ -3748,7 +3750,7 @@
   function seen(b, eyes) {                    // 좀비 하나라도 인지거리 안에서 벽에 안 가리고 보고 있나 (지붕 덮인 건물 안이면 안 보인다)
     if (b.space && !b.space.open) return false;
     if (CHAPTER && !b.space && chUnderRoof(b.foot.x, b.foot.z)) return false;   // c85: 닫힌 주유소 지붕 밑
-    if (eyes.includes(me) && !isZombie(me)) { const z = me; if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) <= z.sense && !blocked(z.foot.x, z.foot.z, b.foot.x, b.foot.z)) return true; }   // 죽은 나의 마지막 시야
+    if (!isZombie(me) && eyes.includes(me)) {   /* c205: 순서만 */ const z = me; if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) <= z.sense && !blocked(z.foot.x, z.foot.z, b.foot.x, b.foot.z)) return true; }   // 죽은 나의 마지막 시야
     for (const z of nearIn(zCells, b.foot.x, b.foot.z, eyeMaxR + RADIUS, viBuf)) {   // 둘레 칸의 좀비만 (v177)
       if (!isZombie(z)) continue;
       if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) > z.sense) continue;   // 몸 가운데가(몸 반 이상이) 인지거리 안에 들어와야 보인다 (v183)
@@ -5031,8 +5033,8 @@
   function nearSafe(z) {                      // 나랑 같은 공간, 인지거리 안의 안 부서진 금고
     for (const S of buildings) {
       const b = S.safe;
-      if (!b || b.dead || (b.space !== z.space && !chSafeReach(z, b))) continue;   /* c54: 방 안 금고는 열린 문 너머로도 */
-      if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) - (CHAPTER || z !== me ? b.r : 0) <= (CHAPTER ? (z !== me && !b.dud && hotObj(b) ? 4 * MELEE : MELEE) : z === me || hotObj(b) ? z.sense : OBJ_SEE)) return b;   /* c86: 붙어야 친다 · 내가 치는 (아이템 든) 금고만 공격 거리 4배 안 동료를 부른다 */   // v360: 동료는 경찰차처럼 붙어야 알아챈다 (내가 때리는 중이면 인지거리)
+      if (!b || b.dead) continue;
+      if (Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) - (CHAPTER || z !== me ? b.r : 0) <= (CHAPTER ? (z !== me && !b.dud && hotObj(b) ? 4 * MELEE : MELEE) : z === me || hotObj(b) ? z.sense : OBJ_SEE) && (b.space === z.space || chSafeReach(z, b))) return b;   /* c54: 방 안 금고는 열린 문 너머로도 · c205: 거리 먼저 */   /* c86: 붙어야 친다 · 내가 치는 (아이템 든) 금고만 공격 거리 4배 안 동료를 부른다 */   // v360: 동료는 경찰차처럼 붙어야 알아챈다 (내가 때리는 중이면 인지거리)
     }
     return null;
   }
@@ -5077,14 +5079,13 @@
       const [px, pz] = objPoint(o, z);
       if (blocked(z.foot.x, z.foot.z, px, pz)) continue;
       if (g < ad) { ad = g; any = o; }
-      const n = (objCrowd.get(o) || 0) - (z.objC === o ? 1 : 0);
-      if (g < bd && (CHAPTER || z === me || n < CROWD_MAX)) { bd = g; best = o; }   // v243·v244: 경찰차·문에 다른 좀비 3명이 붙어 있으면 다음 걸로 (나는 제한 없음)
+      if (g < bd && (CHAPTER || z === me || (objCrowd.get(o) || 0) - (z.objC === o ? 1 : 0) < CROWD_MAX)) { bd = g; best = o; }   /* c205: 챕터는 3명 제한을 안 센다 */   // v243·v244: 경찰차·문에 다른 좀비 3명이 붙어 있으면 다음 걸로 (나는 제한 없음)
     }
     if (CHAPTER && !z.space) {               // c69: 꾸밈 차 — 나는 손 닿는 차(와 이미 때리던 차)만, 동료는 내가 때리는 차만
       for (const o of chDecoObjs) {   // c85: 서 있는 민간 차도 경찰차와 똑같은 규칙 — 나는 인지거리, 동료는 근접 거리의 1.5배 안 (내가 때리는 차는 인지거리) · 한 대에 동료 3명까지
         if (o.dead) continue; const lim = chObjLim(z, o);   /* c86 · c87 */ if (Math.abs(o.car.x - z.foot.x) > lim + 3 || Math.abs(o.car.z - z.foot.z) > lim + 3) continue;
         const g = objGap(o, z); if (g > lim || (g >= bd && g >= ad)) continue; const [px, pz] = objPoint(o, z); if (blocked(z.foot.x, z.foot.z, px, pz)) continue;
-        if (g < ad) { ad = g; any = o; } const n = (objCrowd.get(o) || 0) - (z.objC === o ? 1 : 0); if (g < bd && (CHAPTER || z === me || n < CROWD_MAX)) { bd = g; best = o; } }
+        if (g < ad) { ad = g; any = o; } if (g < bd) { bd = g; best = o; } }   /* c205 */
     }
     if (CHAPTER) for (const B of chWallBs) {   // c200: 집·랜드마크 벽 (밖에서, 또는 그 건물 안에서)
       if (z.space && z.space !== B) continue;
@@ -6729,10 +6730,20 @@
     for (const B of done) { rebuildSight(B); B.navDirty = true; if (B.parent) B.parent.navDirty = true; }
     for (const B of buildings) for (const sg of B.walls) if (sg.tkT) sg.tkT = 0;
   }
+  function chMergeSegs(L) {                   // c205: 같은 줄 위에서 끝이 닿는 토막은 하나로 (모양은 그대로)
+    const G = new Map(), out = [];
+    for (const s of L) { const hz = s[1] === s[3], vt = s[0] === s[2]; if (!hz && !vt) { out.push(s); continue; } const key = (hz ? 'h' : 'v') + (hz ? s[1] : s[0]); let g = G.get(key); if (!g) G.set(key, g = []); g.push(hz ? [Math.min(s[0], s[2]), Math.max(s[0], s[2])] : [Math.min(s[1], s[3]), Math.max(s[1], s[3])]); }
+    for (const [key, g] of G) {
+      const hz = key[0] === 'h', c = +key.slice(1); g.sort((a, b) => a[0] - b[0]);
+      let [a, b] = g[0];
+      for (let i = 1; i <= g.length; i++) { if (i < g.length && g[i][0] <= b + 1e-6) { b = Math.max(b, g[i][1]); continue; } out.push(hz ? [a, c, b, c] : [c, a, c, b]); if (i < g.length) [a, b] = g[i]; }
+    }
+    return out;
+  }
   function chSightCut(B) {                     // 벽이 뚫린 건물의 시야 벽 = 남아 있는 벽 토막 그대로 (두께만큼 네모로)
     if (B.type === 'jail') return;
     const W = [], C = [], k = WALL / 2;
-    for (const sg of B.walls) {
+    for (const sg of chMergeSegs(B.walls)) {
       const x0 = Math.min(sg[0], sg[2]) - k, x1 = Math.max(sg[0], sg[2]) + k, z0 = Math.min(sg[1], sg[3]) - k, z1 = Math.max(sg[1], sg[3]) + k;
       W.push([x0, z0, x1, z0], [x1, z0, x1, z1], [x0, z1, x1, z1], [x0, z0, x0, z1]);
       C.push([x0, z0], [x1, z0], [x1, z1], [x0, z1]);
@@ -6932,9 +6943,9 @@
   function chAdjFoe(z) {                        // 근접 거리 안에서 가장 가까운, 아직 체력이 남은 사람 (같은 공간). 3명 제한과 상관없이
     let best = null, bd = Infinity;
     for (const c of nearIn(cCells, z.foot.x, z.foot.z, MELEE + 1.2, chAdjBuf)) {
-      if (c.kind !== 'citizen' || !(c.hp > 0) || c.space !== z.space || c.marked || chWallCut(z.foot.x, z.foot.z, c.foot.x, c.foot.z)) continue;   // 바리케이트 너머는 빼고
+      if (c.kind !== 'citizen' || !(c.hp > 0) || c.space !== z.space || c.marked) continue;
       const d = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z);
-      if (d <= MELEE + Math.max(0, (z.r || BODY) - BODY) + Math.max(0, (c.r || BODY) - BODY) && d < bd) { bd = d; best = c; }
+      if (d <= MELEE + Math.max(0, (z.r || BODY) - BODY) + Math.max(0, (c.r || BODY) - BODY) && d < bd && !chWallCut(z.foot.x, z.foot.z, c.foot.x, c.foot.z)) { bd = d; best = c; }   // 바리케이트 너머는 빼고 (c205: 거리 먼저)
     }
     return best;
   }
@@ -7332,11 +7343,11 @@
           g.fillStyle = '#8f2a22'; g.fillRect(0.6 * K, 0.6 * K, w - 1.2 * K, h - 1.2 * K); g.strokeStyle = 'rgba(0, 0, 0, 0.18)'; g.lineWidth = 2; for (let x = 0.6 * K + 1.3 * K; x < w - 0.7 * K; x += 1.3 * K) { g.beginPath(); g.moveTo(x, 0.6 * K); g.lineTo(x, h - 0.6 * K); g.stroke(); }
           g.fillStyle = '#e9e6dc'; g.fillRect(w / 2 - 1.5 * K, h / 2 - 0.2 * K, 3 * K, 0.4 * K); });
         const m = new THREE.Mesh(new THREE.PlaneGeometry(W, D).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false })); m.position.set((c0 + c2) / 2, 0.03, (c1 + c3) / 2); m.renderOrder = -0.51; scene.add(m);
-        chCanopies.push({ x0: c0, z0: c1, x1: c2, z1: c3, m, open: false });
+        chCanopies.push({ x0: c0, z0: c1, x1: c2, z1: c3, m, open: CHAPTER });   /* c205: 챕터는 처음부터 열림 */
       }
     }
   }
-  const chUnderRoof = (x, z) => { for (const C of chCanopies) if (!C.open && x > C.x0 && x < C.x1 && z > C.z0 && z < C.z1) return true; return false; };   // 닫힌 주유소 지붕 밑인가 (밑에 있는 것은 안 보인다)
+  const chUnderRoof = (x, z) => { if (CHAPTER) return false; for (const C of chCanopies) if (!C.open && x > C.x0 && x < C.x1 && z > C.z0 && z < C.z1) return true; return false; };   // 닫힌 주유소 지붕 밑인가 (밑에 있는 것은 안 보인다)
   for (const P of Object.values(CH_PROP)) { P.geo = new THREE.PlaneGeometry(P.w, P.h); P.tex = chTexOf(P.px[0], P.px[1], P.draw); }
   // 네모 — L·W = 크기(칸), hp·mass = 큰 탁자(경찰차의 1/3)의 몇 배. 위에서 본 그림
   const CH_SLAB = {
@@ -8290,7 +8301,7 @@
   function chReach(z) { return MELEE - RADIUS + Math.max(0, (z.r || BODY) - BODY); }   // 사물 겉면까지 공격 거리
   function chWallN(F) { if (F.wNF !== objFrame) { F.wNF = objFrame; let n = 0; for (const [z, t] of F.wHit) { if (clock - t > 1.5 || clock < t) F.wHit.delete(z); else if (z !== me) n++; } F.wN = n; } return F.wN; }   // c204: 이 면을 지금 때리는 동료 수
   const CH_WALL_AG = [1, 3, 4.5, 5.25, 5.625, 5.8125];
-  function chWallLim(z, o) { if (z === me) return chReach(z) * 0.7; const F = o.F, b = chReach(z) * 0.7 * CH_WALL_AG[Math.min(5, chWallN(F))];   /* c204: 1마리 3배 · 2마리 4.5배 · 3마리 5.25배 · 4마리 5.625배 · 5마리부터 5.8125배 (늘어나는 양이 반씩) */ return z !== me && clock - F.meT < 1.5 && clock >= F.meT ? Math.max(b, 4 * MELEE) : b; }   // c204: 내가 이 면을 때리는 중이면 문처럼 · 나는 늘 기본 거리 (동료가 넓힌 건 안 받는다)   /* c203: 동료만 센다 (나는 문처럼 따로) */   // c200: 이 건물 벽을 지금 때리는 좀비 수
+  function chWallLim(z, o) { if (z === me) return chReach(z) * 0.7; const F = o.F; return clock - F.meT < 1.5 && clock >= F.meT ? 4 * MELEE : -1; }   // c206: 동료 = 내가 치는 면만, 문과 같은 범위 (먼저 치지 않는다)   // c204: 내가 이 면을 때리는 중이면 문처럼 · 나는 늘 기본 거리 (동료가 넓힌 건 안 받는다)   /* c203: 동료만 센다 (나는 문처럼 따로) */   // c200: 이 건물 벽을 지금 때리는 좀비 수
   function chObjLim(z, o) { if (o.type === 'wall') return chWallLim(z, o);   /* c203: 내가 때리는 벽 토막 = 문처럼 공격 거리 4배 안 동료를 부른다 */ return (o.type === 'door' || o.type === 'car') && z !== me && hotObj(o) ? 4 * MELEE : z === me && o.type === 'door' ? chReach(z) * 1.5 : chReach(z); }   /* c145: 나는 문을 1.5배 거리에서 친다 */   /* c87: 차도 */   // 내가 치는 문만 공격 거리 4배 안 동료를 부른다
   function chTouch(z) {                        // 지금 손 닿는 것 하나 (차·문·바리케이트 → 금고 → 둥근·네모 사물)
     const o = nearObj(z); if (o && objGap(o, z) <= (z === me ? chObjLim(z, o) : chReach(z))) return o;
@@ -8530,7 +8541,7 @@
     return Math.hypot(px - mx, pz - mz) <= me.sense && !blocked(mx, mz, px, pz);
   }
   function checkTut() {                       // 처음으로 내 시야에 들어온 종류 → 소개 줄 세우기
-    for (const b of bodies) {
+    if (!TEST_MAP) for (const b of bodies) {   /* c205: 챕터는 판 시작에 전부 본 것 */
       if (b.kind !== 'citizen') continue;
       const k = b.sniper ? 'sniper' : b.soldier ? 'soldier' : b.police ? 'police' : b.attacker ? 'attacker' : b.guard ? 'guard' : 'citizen';
       if (tutSeen[k] || !(iSee(b) || zSeen(b))) continue;   // v484: 나 + 좀비 편 시야 (카메라는 그 자리로)

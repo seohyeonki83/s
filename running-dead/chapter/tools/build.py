@@ -956,6 +956,10 @@ from c203_patch import C203_R   # c203: 집 면마다 2토막 · 어그로 20%·
 R += C203_R
 from c204_patch import C204_R   # c204: 벽 어그로 면 단위
 R += C204_R
+from c205_patch import C205_R   # c205: 계산 정리
+R += C205_R
+from c206_patch import C206_R   # c206: 벽은 내가 칠 때만 동료 대상
+R += C206_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
