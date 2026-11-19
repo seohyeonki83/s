@@ -938,6 +938,8 @@ from c194_patch import C194_R   # c194: 보스 감전 건물 안에서도
 R += C194_R
 from c195_patch import C195_R   # c195: 장갑차 거리 몸 둘레부터 · 시작 체력 80%
 R += C195_R
+from c196_patch import C196_R   # c196: 분노 바이러스 강화마다 +10%
+R += C196_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

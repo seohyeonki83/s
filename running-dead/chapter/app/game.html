@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c195</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c196</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5676,7 +5676,7 @@
     cash: (n) => `유혹 ${CH_WV('cashT', n)}초 · ${1 + n}대 버팀 · 알아채는 거리 ${(8.64 + n).toFixed(1)}칸`,
     book: (n) => `무기 쿨타임 -${5 * (1 + n)}%`,
     bag: (n) => `무기 ${Math.min(5, 2 + n)}칸`,
-    rage: (n) => `30초마다 동료 1명 · 공격 속도·이동 속도 +${5 + 2 * n}%`,
+    rage: (n) => `30초마다 동료 1명 · 공격 속도·이동 속도 +${5 + 10 * n}%`,
     crowbar: (n) => `사물 피해 +${15 * (1 + n)}%`,
     absorb: (n) => `충격 흡수 ${2 + n} (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12)`,
     vest: (n) => `총격 피해 -${10 * (1 + n)}%`,
@@ -5685,7 +5685,7 @@
     catalyst: (n) => `변이 좀비 공격력 +${5 * (1 + n)}%`,
     blood: (n) => `내 최대 체력 +${10 * (1 + n)}%`,
   };
-  const CH_BADGE = { rage: () => '+' + (5 + 2 * lv('rage')) + '%', absorb: () => '흡수 ' + (2 + lv('absorb')), crowbar: () => '+' + 15 * (1 + lv('crowbar')) + '%', shoes: () => '+' + 5 * (1 + lv('shoes')) + '%' };   // 배지 아래 짧은 수치
+  const CH_BADGE = { rage: () => '+' + (5 + 10 * lv('rage')) + '%', absorb: () => '흡수 ' + (2 + lv('absorb')), crowbar: () => '+' + 15 * (1 + lv('crowbar')) + '%', shoes: () => '+' + 5 * (1 + lv('shoes')) + '%' };   // 배지 아래 짧은 수치
   Object.assign(ITEM_TEXT, {                  // c21: 바뀐 규칙에 맞춘 설명
     taser: ['대상을 감전시켜 멈춥니다.', '강화 시 감전 대상과 시간이 늘어납니다.'],
     awaken: ['충전한 시간만큼 변이하고, 게이지가 찬 만큼 체력을 회복합니다 (가득이면 20%).', '강화 시 최대 사용 시간이 늘어납니다.'],
@@ -5736,7 +5736,7 @@
   // ── c25 · c27: 레벨업 = 도구·장비 14종 가운데 랜덤 3장 중 하나를 고른다 — 없는 것이면 새로 얻고, 가진 것이면 강화 +1 ──
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
     bomb: ['', (n) => `${1.5 + n}칸·${4 + 2 * n}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['', (n) => `${CH_WV('cashT', n)}초·${1 + n}대`],
-    book: ['쿨타임', (n) => `-${5 * (1 + n)}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${5 + 2 * n}%`], crowbar: ['사물', (n) => `+${15 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
+    book: ['쿨타임', (n) => `-${5 * (1 + n)}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${5 + 10 * n}%`], crowbar: ['사물', (n) => `+${15 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
     shoes: ['이동', (n) => `+${5 * (1 + n)}%`], catalyst: ['변이', (n) => `+${5 * (1 + n)}%`], blood: ['체력', (n) => `+${10 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
   const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
@@ -5823,7 +5823,7 @@
     });
   }
   let rageT = 0;
-  const RAGE_CD = 30, rageK = () => 0.05 + 0.02 * lv('rage');   // c22: 30초 고정 · 효과 5%에서 강화마다 +2%p (15%까지) — 걸린 동료 전원에게 지금 단계가 적용된다
+  const RAGE_CD = 30, rageK = () => 0.05 + 0.1 * lv('rage');   /* c196: 강화마다 +10%p (5 · 15 · 25 · 35 · 45 · 55%) */   // c22: 30초 고정 · 효과 5%에서 강화마다 +2%p (15%까지) — 걸린 동료 전원에게 지금 단계가 적용된다
   function rageTick(dt) {                     // 분노 바이러스: 30초마다 아직 안 걸린 동료 한 명 — 공격 속도·이동 속도가 오른다 (그 동료가 살아 있는 동안 계속)
     if (!owned.rage || !isZombie(me)) return;
     rageT = Math.min(RAGE_CD, rageT + dt);    // c22: 30초 고정 — 시간은 늘 흐른다 (백과사전의 영향은 안 받는다 — 장비라서). 다 찼는데 걸 동료가 없으면 생길 때까지 기다렸다가 바로 건다
