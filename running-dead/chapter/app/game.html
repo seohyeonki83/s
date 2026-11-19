@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c197</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c198</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2212,7 +2212,7 @@
   // v505: 충격 흡수복 — 넉백 거리에서 고정량을 깎는다 (단계마다 저격수 넉백의 1/4). 다 깎이면 아예 안 밀리고 멈칫도 없다
   const knockDist = (v, T) => v * (1 - Math.exp(-4 * T)) / 4;   // knockStep 감속(e^-4t)으로 밀리는 거리
   const SNIPER_KD = knockDist(2.3 * 2 * 1.3, 0.4);   /* v547: 저격 넉백 1.3배에 맞춰 — 흡수복 4단계에 완전 무효 그대로 */   /* = ARMOR_KB × 2, ARMOR_KT (아래에서 선언) */            // 저격수 넉백 거리 (약 0.92칸)
-  const absorbAmt = () => owned.absorb ? SNIPER_KD / 12 * (2 + lv('absorb')) : 0;   /* c163: 처음부터 흡수 2 */   /* c21: 충격 흡수 1 = 저격수 넉백의 12분의 1 (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12). 강화마다 +1, 6까지 */
+  const absorbAmt = () => owned.absorb ? SNIPER_KD / 12 * (2 + 2 * lv('absorb'))   /* c198: 2씩 */ : 0;   /* c163: 처음부터 흡수 2 */   /* c21: 충격 흡수 1 = 저격수 넉백의 12분의 1 (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12). 강화마다 +1, 6까지 */
   function giveKnock(z, kx, kz, v, T) {       // 방향(kx, kz), 처음 속도 v, 시간 T — 내가 흡수복을 입었으면 깎는다. 밀렸으면 true
     const kl = Math.hypot(kx, kz) || 1;
     if (z === me && owned.absorb) {
@@ -4768,7 +4768,7 @@
   const allyMaxHp = () => ALLY_HP * 0.9 * (1 + 0.07 * up.skin);   /* c164: c163의 7%를 되돌림 (85.05) */   /* c163: 동료 7% 올림 (85.05 → 91.0) */   /* c136: 동료 10% 깎음 (94.5 → 85.05) — 체력바 한 겹 기준(ALLY_HP)은 그대로 */   // v267: 단단한 피부 3% → 5%
   const allyAttack = () => ALLY_ATTACK;       // v256: 빠른 다리는 이제 습격 거리가 아니라 이동 속도
   const legK = () => 1 + 0.07 * up.leg;      // 빠른 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
-  const meSpeed = () => MY_SPEED * (legK() + (owned.shoes ? 0.05 * (1 + lv('shoes')) : 0)   /* v568: 운동화 처음 +15%, 강화마다 +10% */) * (me && me.mut ? MUT_SPEED : 1);   // v558: 각성 중엔 변이 속도   // v275: 운동화 +10% (도구 다루기마다 +3%) — 빠른 다리와 더한다
+  const meSpeed = () => MY_SPEED * (legK() + (owned.shoes ? 0.07 * (1 + lv('shoes')) : 0)   /* c198: 7%씩 */   /* v568: 운동화 처음 +15%, 강화마다 +10% */) * (me && me.mut ? MUT_SPEED : 1);   // v558: 각성 중엔 변이 속도   // v275: 운동화 +10% (도구 다루기마다 +3%) — 빠른 다리와 더한다
   const cashK = () => 1.2 + lv('cash') / 7.2;   /* c140: 알아채는 거리 8.64칸 + 강화마다 1칸 (기준 시야 7.2칸에 곱하는 값) */   /* v339: 1.2 · 1.4 · 1.6 · 1.8배 */   /* v338: 20% 더 줄임 */   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
   const lureHits = () => 1 + lv('cash');   /* v339: 2 · 4 · 6 · 8대 */   /* v333: 처음 4 → 3대 */    // v269: 유혹 중 4대째 맞으면 정신 차린다, 두뇌마다 +2 (4, 6, 8 …)
   function gainXp() {
@@ -5245,7 +5245,7 @@
   const MUT_SPEED = 1.25 * 1.15;   /* v347: 15% 더 */                     // v304: 변이 좀비 이동 속도 배율
   const MUT_T = () => 6 + 3 * lv('mutate');   /* c21: 변이 10초, 강화마다 +3초 (주사 개수 +1은 테스트맵 그대로) */                            // 변이 유지 시간 — v299: 기본 20 → 23초, 도구 다루기마다 +2 → +4초
   const itemMax = (k) => k === 'mutate' ? CH_WV('mutN', lv('mutate')) : ITEM[k].max;   // 변이 주사 장탄 +1씩
-  const bookCut = () => owned.book ? 0.05 * (1 + lv('book')) : 0;   /* c21: 백과사전 5%, 강화마다 +5%p (30%까지) */   /* v582: 7%, 강화마다 남은 쿨타임에서 7%씩 */   // v286: 백과사전 — 사용 도구 쿨타임 7% 줄임, 도구 다루기마다 3%p씩 더
+  const bookCut = () => owned.book ? 0.07 * (1 + lv('book')) : 0;   /* c198: 7%씩 */   /* c21: 백과사전 5%, 강화마다 +5%p (30%까지) */   /* v582: 7%, 강화마다 남은 쿨타임에서 7%씩 */   // v286: 백과사전 — 사용 도구 쿨타임 7% 줄임, 도구 다루기마다 3%p씩 더
   const itemReload = (k) => (k === 'bomb' ? 40 * 1.15 * 1.1   /* c21: 자폭 쿨타임은 고정 — 강화는 범위로 간다 */ /* v559: +10% 더 */ : ITEM[k].reload * (k === 'taser' ? 1.1 : 1))   /* v556: 자폭 +15% · 테이저 +10% */ * (1 - bookCut());   // 자폭 쿨타임 −3초씩 → 그 위에 백과사전
   function refreshBadges() {                  // 패시브 배지 아래 숫자
     const t = {
@@ -5648,7 +5648,7 @@
       }
     }
   }
-  const chLvMax = (k) => k === 'bag' ? 3 : k === 'crowbar' ? 4 :   /* c197: 빠루는 +100%가 끝 */ ITEM[k] && !ITEM[k].passive ? 6 : 5;   /* c139: 무기는 6번까지 강화 */   // c21: 가방은 4개가 끝 (도구 칸 5개가 다 열린다)
+  const chLvMax = (k) => k === 'bag' ? 3 : /* c198: 빠루도 5번 (+120%) */ ITEM[k] && !ITEM[k].passive ? 6 : 5;   /* c139: 무기는 6번까지 강화 */   // c21: 가방은 4개가 끝 (도구 칸 5개가 다 열린다)
   const chHas = (k) => ITEM[k].passive ? !!owned[k] : items.some((x) => x.kind === k);
   const chToolCap = () => Math.min(SLOT_A.length, 1 + (owned.bag ? 1 + lv('bag') : 0));   // c21: 쓸 수 있는 도구는 처음 1개 — 가방 하나마다 +1, 최대 5
   const chAccMax = () => 5 + 3 * lv('awaken');   // c21: 각성 주사 — 모을 수 있는 시간(초). 가득 차는 데는 늘 40초
@@ -5674,18 +5674,18 @@
     taser: (n) => `한 번에 ${CH_WV('taserN', n)}명 · ${CH_WV('taserT', n)}초 감전`,
     awaken: (n) => `최대 사용 시간 ${5 + 3 * n}초 · 가득 차는 데 35초`,
     cash: (n) => `유혹 ${CH_WV('cashT', n)}초 · ${1 + n}대 버팀 · 알아채는 거리 ${(8.64 + n).toFixed(1)}칸`,
-    book: (n) => `무기 쿨타임 -${5 * (1 + n)}%`,
+    book: (n) => `무기 쿨타임 -${7 * (1 + n)}%`,
     bag: (n) => `무기 ${Math.min(5, 2 + n)}칸`,
-    rage: (n) => `30초마다 동료 1명 · 공격 속도·이동 속도 +${5 + 10 * n}%`,
+    rage: (n) => `30초마다 동료 1명 · 공격 속도·이동 속도 +${10 + 10 * n}%`,
     crowbar: (n) => `사물 피해 +${20 * (1 + n)}%`,
-    absorb: (n) => `충격 흡수 ${2 + n} (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12)`,
+    absorb: (n) => `충격 흡수 ${2 + 2 * n} (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12)`,
     vest: (n) => `총격 피해 -${10 * (1 + n)}%`,
-    shoes: (n) => `이동 속도 +${5 * (1 + n)}%`,
+    shoes: (n) => `이동 속도 +${7 * (1 + n)}%`,
     revive: (n) => `체력 가득으로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,
     catalyst: (n) => `변이 좀비 공격력 +${5 * (1 + n)}%`,
-    blood: (n) => `내 최대 체력 +${10 * (1 + n)}%`,
+    blood: (n) => `내 최대 체력 +${12 * (1 + n)}%`,
   };
-  const CH_BADGE = { rage: () => '+' + (5 + 10 * lv('rage')) + '%', absorb: () => '흡수 ' + (2 + lv('absorb')), crowbar: () => '+' + 20 * (1 + lv('crowbar')) + '%', shoes: () => '+' + 5 * (1 + lv('shoes')) + '%' };   // 배지 아래 짧은 수치
+  const CH_BADGE = { rage: () => '+' + (10 + 10 * lv('rage')) + '%', absorb: () => '흡수 ' + (2 + 2 * lv('absorb')), crowbar: () => '+' + 20 * (1 + lv('crowbar')) + '%', shoes: () => '+' + 7 * (1 + lv('shoes')) + '%' };   // 배지 아래 짧은 수치
   Object.assign(ITEM_TEXT, {                  // c21: 바뀐 규칙에 맞춘 설명
     taser: ['대상을 감전시켜 멈춥니다.', '강화 시 감전 대상과 시간이 늘어납니다.'],
     awaken: ['충전한 시간만큼 변이하고, 게이지가 찬 만큼 체력을 회복합니다 (가득이면 20%).', '강화 시 최대 사용 시간이 늘어납니다.'],
@@ -5698,7 +5698,7 @@
   });
   function chItemChanged(kind) {              // 얻었거나 강화한 바로 그때 적용할 것
     if (kind === 'blood' && isZombie(me)) {   // 혈액팩: 나만 최대 체력 +10% (기본 체력 기준 — 얻을 때, 그리고 강화할 때마다)
-      const d = MY_HP * 0.10;
+      const d = MY_HP * (CHAPTER ? 0.12 : 0.10);   /* c198: 12%씩 */
       if (me.baseMaxHp) { me.baseMaxHp += d; me.maxHp += d * 3; me.hp = Math.min(me.maxHp, me.hp + d * 3); } else { me.maxHp += d; me.hp = Math.min(me.maxHp, me.hp + d); }
     }
     if (kind === 'shoes' && isZombie(me)) me.speed = meSpeed();
@@ -5736,8 +5736,8 @@
   // ── c25 · c27: 레벨업 = 도구·장비 14종 가운데 랜덤 3장 중 하나를 고른다 — 없는 것이면 새로 얻고, 가진 것이면 강화 +1 ──
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
     bomb: ['', (n) => `${1.5 + n}칸·${4 + 2 * n}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['', (n) => `${CH_WV('cashT', n)}초·${1 + n}대`],
-    book: ['쿨타임', (n) => `-${5 * (1 + n)}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${5 + 10 * n}%`], crowbar: ['사물', (n) => `+${20 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
-    shoes: ['이동', (n) => `+${5 * (1 + n)}%`], catalyst: ['변이', (n) => `+${5 * (1 + n)}%`], blood: ['체력', (n) => `+${10 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
+    book: ['쿨타임', (n) => `-${7 * (1 + n)}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${10 + 10 * n}%`], crowbar: ['사물', (n) => `+${20 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
+    shoes: ['이동', (n) => `+${7 * (1 + n)}%`], catalyst: ['변이', (n) => `+${5 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
   const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
     bomb: '동료 하나가 자폭', mutate: '동료 하나를 변이', taser: '적을 감전', awaken: '내가 변이', cash: '적을 유혹',
@@ -5823,7 +5823,7 @@
     });
   }
   let rageT = 0;
-  const RAGE_CD = 30, rageK = () => 0.05 + 0.1 * lv('rage');   /* c196: 강화마다 +10%p (5 · 15 · 25 · 35 · 45 · 55%) */   // c22: 30초 고정 · 효과 5%에서 강화마다 +2%p (15%까지) — 걸린 동료 전원에게 지금 단계가 적용된다
+  const RAGE_CD = 30, rageK = () => 0.1 + 0.1 * lv('rage');   /* c198: 10%에서 10%씩 */   /* c196: 강화마다 +10%p (5 · 15 · 25 · 35 · 45 · 55%) */   // c22: 30초 고정 · 효과 5%에서 강화마다 +2%p (15%까지) — 걸린 동료 전원에게 지금 단계가 적용된다
   function rageTick(dt) {                     // 분노 바이러스: 30초마다 아직 안 걸린 동료 한 명 — 공격 속도·이동 속도가 오른다 (그 동료가 살아 있는 동안 계속)
     if (!owned.rage || !isZombie(me)) return;
     rageT = Math.min(RAGE_CD, rageT + dt);    // c22: 30초 고정 — 시간은 늘 흐른다 (백과사전의 영향은 안 받는다 — 장비라서). 다 찼는데 걸 동료가 없으면 생길 때까지 기다렸다가 바로 건다

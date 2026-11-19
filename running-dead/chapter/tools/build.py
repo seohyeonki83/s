@@ -942,6 +942,8 @@ from c196_patch import C196_R   # c196: 분노 바이러스 강화마다 +10%
 R += C196_R
 from c197_patch import C197_R   # c197: 빠루 20%씩
 R += C197_R
+from c198_patch import C198_R   # c198: 장비 수치
+R += C198_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
