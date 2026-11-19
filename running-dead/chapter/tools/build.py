@@ -948,6 +948,10 @@ from c199_patch import C199_R   # c199: 흡수 2.5씩 · 촉매 7%씩
 R += C199_R
 from c200_patch import C200_R   # c200: 벽 부수기 · 보스 인지거리 · 보스 사망 군인
 R += C200_R
+from c201_patch import C201_R   # c201: 보스 난사
+R += C201_R
+from c202_patch import C202_R   # c202: 난사 튀는 이펙트
+R += C202_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
