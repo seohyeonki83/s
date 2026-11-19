@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c202</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c204</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -778,13 +778,25 @@
   const CH_WALL_T = { house: 3, bank: 6, fire: 6, mart: 6, hospital: 6, library: 6, conv: 6, gym: 6, police: 9, army: 12 };   // c200: 벽 체력 = 집 문의 몇 배
   const chWallBs = [], chWallObjs = [];
   { const hs = buildings.filter((B) => B.type === 'house' && !B.parent), sl = (w) => Math.hypot(w[2] - w[0], w[3] - w[1]);
-    const LP = hs.length ? hs.reduce((s, B) => s + B.walls.reduce((t, w) => t + sl(w), 0), 0) / hs.length / 8 : 4, old = new Set(), add = [];
+    const LP = hs.length ? hs.reduce((s, B) => s + (B.x1 - B.x0 + B.z1 - B.z0) / 2, 0) / hs.length / 2 : 2.2, old = new Set(), add = [];   // c203: 집 한 변의 절반
     for (const B of buildings) {
       if (B.parent || !CH_WALL_T[B.type]) continue;
-      const out = [];
-      for (const w of B.walls) { old.add(w); const [ax, az, bx, bz] = w, n = Math.max(1, Math.round(sl(w) / LP)); for (let i = 0; i < n; i++) out.push([ax + (bx - ax) * i / n, az + (bz - az) * i / n, ax + (bx - ax) * (i + 1) / n, az + (bz - az) * (i + 1) / n]); }
-      B.walls = out; B.wos = []; B.wHit = new Map(); B.wN = 0; B.wNF = -1; add.push(...out); chWallBs.push(B);
-      for (const q of out) { const o = { kind: 'obj', type: 'wall', B, seg: q, foot: new THREE.Vector3((q[0] + q[2]) / 2, 0, (q[1] + q[3]) / 2), hp: 1, maxHp: 1, dead: false, off: false, k: CH_WALL_T[B.type] }; q.wo = o; B.wos.push(o); chWallObjs.push(o); }
+      const out = []; let segs = B.walls;
+      if (B.side && B.sideK !== undefined) {   // c203: 쓰는 쪽문(판마다 같은 자리)·정문·열린 자리만 비우고 나머지 면은 통째로
+        const cand = B.locks.filter((L) => !L.front), on = (B.block === START_BLOCK && B.local === 0 && cand.find((L) => L.side === 'n')) || cand[B.sideK % cand.length];
+        for (const L of cand) if (L !== on) L.merged = true;
+        const gapsOf = (sd) => [...B.doors, ...B.locks.filter((L) => !L.merged)].filter((D) => D.side === sd).map((D) => { const h = (D.w || DOOR) / 2, c = sd === 'n' || sd === 's' ? D.cx : D.cz; return [c - h, c + h]; }).sort((a, b) => a[0] - b[0]);
+        segs = [];
+        for (const [sd, hz, k, lo, hi] of [['n', 1, B.z0, B.x0, B.x1], ['s', 1, B.z1, B.x0, B.x1], ['w', 0, B.x0, B.z0, B.z1], ['e', 0, B.x1, B.z0, B.z1]]) {
+          let cur = lo; const mk = (a, b) => { if (b - a > 1e-6) segs.push(hz ? [a, k, b, k] : [k, a, k, b]); };
+          for (const [g0, g1] of gapsOf(sd)) { mk(cur, g0); cur = Math.max(cur, g1); }
+          mk(cur, hi);
+        }
+        for (const w of B.walls) old.add(w);
+      }
+      for (const w of segs) { old.add(w); const [ax, az, bx, bz] = w, n = Math.max(1, Math.round(sl(w) / LP)); for (let i = 0; i < n; i++) out.push([ax + (bx - ax) * i / n, az + (bz - az) * i / n, ax + (bx - ax) * (i + 1) / n, az + (bz - az) * (i + 1) / n]); }
+      B.walls = out; B.wos = []; B.faces = {}; add.push(...out); chWallBs.push(B);
+      for (const q of out) { const sd = q[1] === q[3] ? (Math.abs(q[1] - B.z0) < 1e-6 ? 'n' : 's') : (Math.abs(q[0] - B.x0) < 1e-6 ? 'w' : 'e'), F = B.faces[sd] || (B.faces[sd] = { wHit: new Map(), wN: 0, wNF: -1, meT: -9 }); const o = { F, kind: 'obj', type: 'wall', B, seg: q, foot: new THREE.Vector3((q[0] + q[2]) / 2, 0, (q[1] + q[3]) / 2), hp: 1, maxHp: 1, dead: false, off: false, k: CH_WALL_T[B.type] }; q.wo = o; B.wos.push(o); chWallObjs.push(o); }
     }
     const keep = walls.filter((w) => !old.has(w)); walls.length = 0; walls.push(...keep, ...add);
     window.__walls = { bs: chWallBs, objs: chWallObjs, LP, brk: (o) => breakObj(o) };
@@ -2960,7 +2972,7 @@
       }
       a.splashing = false;
     }
-    if (v.kind === 'obj' && v.type === 'wall' && !v.dead) { if (a) v.B.wHit.set(a, clock); if (!v.hpBar) { addHpBar(v, hpFoeMat); v.hpDisp = v.hp; } }   // c200
+    if (v.kind === 'obj' && v.type === 'wall' && !v.dead) { if (a) { v.F.wHit.set(a, clock); if (a === me) v.F.meT = clock; } if (!v.hpBar) { addHpBar(v, hpFoeMat); v.hpDisp = v.hp; } }   // c200
     if (v.kind === 'obj') { if (!v.dead) { v.hp = Math.max(0, v.hp - dmg); if (v.hp <= 0) breakObj(v); } return; }   // 잠긴 문·경찰차 (v239)
     if (v.dead || !(v.kind === 'citizen' || v.kind === 'safe' || isZombie(v)) || v.hp <= 0) return;
     v.hp = Math.max(0, v.hp - dmg);
@@ -5076,10 +5088,10 @@
     }
     if (CHAPTER) for (const B of chWallBs) {   // c200: 집·랜드마크 벽 (밖에서, 또는 그 건물 안에서)
       if (z.space && z.space !== B) continue;
-      const lim = chReach(z) * 0.7 * (1 + 0.1 * chWallN(B)), m = lim + 0.5;
+      const m = 4 * MELEE + 0.5;
       if (z.foot.x < B.x0 - m || z.foot.x > B.x1 + m || z.foot.z < B.z0 - m || z.foot.z > B.z1 + m) continue;
       for (const o of B.wos) {
-        if (o.dead) continue; const g = objGap(o, z); if (g > lim || (g >= bd && g >= ad)) continue;
+        if (o.dead) continue; const lim = chWallLim(z, o), g = objGap(o, z); if (g > lim || (g >= bd && g >= ad)) continue;
         const [px, pz] = objPoint(o, z); if (blocked(z.foot.x, z.foot.z, px, pz)) continue;
         if (g < ad) { ad = g; any = o; } if (g < bd) { bd = g; best = o; }
       }
@@ -6655,7 +6667,7 @@
     const hd = objs.find((o) => o.type === 'door' && o.B.type === 'house'), u = hd ? hd.maxHp : MY_DAMAGE * 3.5;
     for (const o of chWallObjs) if (o.seg.orig) { for (let i = 0; i < 4; i++) o.seg[i] = o.seg.orig[i]; o.seg.orig = null; chWallRedraw(o); }
     for (const o of chWallObjs) { o.dead = false; o.hp = o.maxHp = u * o.k; o.hpDisp = o.hp; o.hotF = undefined; if (o.hpBar) o.hpBar.visible = false; }
-    for (const B of chWallBs) { B.wHit.clear(); B.wN = 0; }
+    for (const B of chWallBs) { for (const F of Object.values(B.faces)) { F.wHit.clear(); F.wN = 0; F.meT = -9; } for (const L of B.locks) if (L.merged && L.obj) { const o = L.obj, i = walls.indexOf(o.seg), j = B.walls.indexOf(o.seg); if (i >= 0) walls.splice(i, 1); if (j >= 0) B.walls.splice(j, 1); o.off = true; o.mesh.visible = false; if (o.fill) o.fill.visible = false; } }   // c203
   }
   function chWallBreak(B, sg, car) {
     if (sg.wo && !sg.wo.dead) { breakObj(sg.wo); if (car && car.tkPh === 'dash') car.tkM -= 0.15; return; }   // c200: 벽 토막이면 통째로           // 벽 토막에서 장갑차가 닿은 자리(폭 4.6칸)를 뚫는다 — 남는 양옆은 새 토막으로
@@ -8276,8 +8288,10 @@
   const CH_BOMB_PT = [0, 1, 3, 4, 6, 8, 40];   // 자폭 점수 (chTier 순서): 하양 0 · 노랑 1 · 주황 3 · 빨강 4 · 경찰 6 · 군인 8 · 저격수 40
   const CH_HIT_STOP = 0.05;                    // 가면서 칠 때 휘두르는 순간 서는 시간 (초)
   function chReach(z) { return MELEE - RADIUS + Math.max(0, (z.r || BODY) - BODY); }   // 사물 겉면까지 공격 거리
-  function chWallN(B) { if (B.wNF !== objFrame) { B.wNF = objFrame; let n = 0; for (const [z, t] of B.wHit) { if (clock - t > 1.5 || clock < t) B.wHit.delete(z); else n++; } B.wN = n; } return B.wN; }   // c200: 이 건물 벽을 지금 때리는 좀비 수
-  function chObjLim(z, o) { if (o.type === 'wall') return chReach(z) * 0.7 * (1 + 0.1 * chWallN(o.B)); return (o.type === 'door' || o.type === 'car') && z !== me && hotObj(o) ? 4 * MELEE : z === me && o.type === 'door' ? chReach(z) * 1.5 : chReach(z); }   /* c145: 나는 문을 1.5배 거리에서 친다 */   /* c87: 차도 */   // 내가 치는 문만 공격 거리 4배 안 동료를 부른다
+  function chWallN(F) { if (F.wNF !== objFrame) { F.wNF = objFrame; let n = 0; for (const [z, t] of F.wHit) { if (clock - t > 1.5 || clock < t) F.wHit.delete(z); else if (z !== me) n++; } F.wN = n; } return F.wN; }   // c204: 이 면을 지금 때리는 동료 수
+  const CH_WALL_AG = [1, 3, 4.5, 5.25, 5.625, 5.8125];
+  function chWallLim(z, o) { if (z === me) return chReach(z) * 0.7; const F = o.F, b = chReach(z) * 0.7 * CH_WALL_AG[Math.min(5, chWallN(F))];   /* c204: 1마리 3배 · 2마리 4.5배 · 3마리 5.25배 · 4마리 5.625배 · 5마리부터 5.8125배 (늘어나는 양이 반씩) */ return z !== me && clock - F.meT < 1.5 && clock >= F.meT ? Math.max(b, 4 * MELEE) : b; }   // c204: 내가 이 면을 때리는 중이면 문처럼 · 나는 늘 기본 거리 (동료가 넓힌 건 안 받는다)   /* c203: 동료만 센다 (나는 문처럼 따로) */   // c200: 이 건물 벽을 지금 때리는 좀비 수
+  function chObjLim(z, o) { if (o.type === 'wall') return chWallLim(z, o);   /* c203: 내가 때리는 벽 토막 = 문처럼 공격 거리 4배 안 동료를 부른다 */ return (o.type === 'door' || o.type === 'car') && z !== me && hotObj(o) ? 4 * MELEE : z === me && o.type === 'door' ? chReach(z) * 1.5 : chReach(z); }   /* c145: 나는 문을 1.5배 거리에서 친다 */   /* c87: 차도 */   // 내가 치는 문만 공격 거리 4배 안 동료를 부른다
   function chTouch(z) {                        // 지금 손 닿는 것 하나 (차·문·바리케이트 → 금고 → 둥근·네모 사물)
     const o = nearObj(z); if (o && objGap(o, z) <= (z === me ? chObjLim(z, o) : chReach(z))) return o;
     const s = nearSafe(z); if (s && Math.hypot(s.foot.x - z.foot.x, s.foot.z - z.foot.z) - s.r <= MELEE) return s;

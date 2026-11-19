@@ -952,6 +952,10 @@ from c201_patch import C201_R   # c201: 보스 난사
 R += C201_R
 from c202_patch import C202_R   # c202: 난사 튀는 이펙트
 R += C202_R
+from c203_patch import C203_R   # c203: 집 면마다 2토막 · 어그로 20%·나 100%
+R += C203_R
+from c204_patch import C204_R   # c204: 벽 어그로 면 단위
+R += C204_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
