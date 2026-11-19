@@ -944,6 +944,8 @@ from c197_patch import C197_R   # c197: 빠루 20%씩
 R += C197_R
 from c198_patch import C198_R   # c198: 장비 수치
 R += C198_R
+from c199_patch import C199_R   # c199: 흡수 2.5씩 · 촉매 7%씩
+R += C199_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
