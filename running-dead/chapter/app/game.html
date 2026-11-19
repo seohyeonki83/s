@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c206</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c207</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2974,8 +2974,8 @@
       }
       a.splashing = false;
     }
-    if (v.kind === 'obj' && v.type === 'wall' && !v.dead) { if (a === me) v.F.meT = clock;   /* c206: 나만 센다 */ if (!v.hpBar) { addHpBar(v, hpFoeMat); v.hpDisp = v.hp; } }   // c200
-    if (v.kind === 'obj') { if (!v.dead) { v.hp = Math.max(0, v.hp - dmg); if (v.hp <= 0) breakObj(v); } return; }   // 잠긴 문·경찰차 (v239)
+    if (v.kind === 'obj' && v.type === 'wall' && !v.dead) { if (a === me) v.F.meT = clock;   /* c206: 나만 센다 */ }   // c200 · c207: 벽은 체력바 없음
+    if (v.kind === 'obj') { if (!v.dead) { v.hp = Math.max(0, v.hp - dmg); if (v.type === 'wall') chWallWarp(v); if (v.hp <= 0) breakObj(v); } return; }   // 잠긴 문·경찰차 (v239)
     if (v.dead || !(v.kind === 'citizen' || v.kind === 'safe' || isZombie(v)) || v.hp <= 0) return;
     v.hp = Math.max(0, v.hp - dmg);
     if (v.kind === 'safe') { if (v.hp <= 0) breakSafe(v); return; }   // 금고 (v190)
@@ -6658,16 +6658,26 @@
       chWallBreak(R, rs, c);
     }
   }
+  function chWallWarp(o, force) {              // c207: 데미지 30% 이상 = 살짝 뒤틀림 · 60% 이상 = 조금 더 (그림만)
+    const st = o.hp <= o.maxHp * 0.4 ? 2 : o.hp <= o.maxHp * 0.7 ? 1 : 0;
+    if (st === (o.warp || 0) && !force) return;
+    o.warp = st; const m = o.seg.m; if (!m) return;
+    if (o.wS === undefined) { o.wS = Math.random() < 0.5 ? -1 : 1; o.wP = Math.random() < 0.5 ? -1 : 1; }
+    const s = o.seg, hz = s[1] === s[3], px = (s[0] + s[2]) / 2, pz = (s[1] + s[3]) / 2, off = [0, 0.03, 0.07][st] * o.wP;
+    m.rotation.y = [0, 0.045, 0.11][st] * o.wS;
+    m.position.x = px + (hz ? 0 : off); m.position.z = pz + (hz ? off : 0);
+  }
   function chWallRedraw(o) {                   // c200: 깎인 벽 토막 그림을 다시
     const s = o.seg; if (s.m) scene.remove(s.m);
     s.m = flat(Math.abs(s[2] - s[0]) + WALL, Math.abs(s[3] - s[1]) + WALL, (s[0] + s[2]) / 2, (s[1] + s[3]) / 2, wallMat, -0.505);
     o.foot.set((s[0] + s[2]) / 2, 0, (s[1] + s[3]) / 2);
+    if (o.warp) chWallWarp(o, true);
   }
   function chWallObjReset() {                  // c200: 새 판 — 벽 체력 = 집 문 체력 × (집 3 · 랜드마크 6 · 경찰서 9 · 군부대 12)
     if (!chObjLists2.includes(chWallObjs)) chObjLists2.push(chWallObjs);
     const hd = objs.find((o) => o.type === 'door' && o.B.type === 'house'), u = hd ? hd.maxHp : MY_DAMAGE * 3.5;
     for (const o of chWallObjs) if (o.seg.orig) { for (let i = 0; i < 4; i++) o.seg[i] = o.seg.orig[i]; o.seg.orig = null; chWallRedraw(o); }
-    for (const o of chWallObjs) { o.dead = false; o.hp = o.maxHp = u * o.k; o.hpDisp = o.hp; o.hotF = undefined; if (o.hpBar) o.hpBar.visible = false; }
+    for (const o of chWallObjs) { o.dead = false; o.hp = o.maxHp = u * o.k; o.hpDisp = o.hp; o.hotF = undefined; if (o.hpBar) o.hpBar.visible = false; chWallWarp(o, true); }   /* c207 */
     for (const B of chWallBs) { for (const F of Object.values(B.faces)) { F.wHit.clear(); F.wN = 0; F.meT = -9; } for (const L of B.locks) if (L.merged && L.obj) { const o = L.obj, i = walls.indexOf(o.seg), j = B.walls.indexOf(o.seg); if (i >= 0) walls.splice(i, 1); if (j >= 0) B.walls.splice(j, 1); o.off = true; o.mesh.visible = false; if (o.fill) o.fill.visible = false; } }   // c203
   }
   function chWallBreak(B, sg, car) {
