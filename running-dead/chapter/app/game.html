@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c188</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c189</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -937,6 +937,17 @@
       { const c = chPut(x, z, area, t); if (c.wOut) c.area = chRoamArea(x, z); else G.members.push(c); }   // c129: 하양이 된 자리는 무리에서 빠진다
     });
   }
+  function chCopTick() {                       // c189: 경보 단계에 맞춰 길거리 배회 경찰을 늘린다
+    if (!chPop || CH_BT) return;
+    const base = CH_COPS * CH_ONE_K * 0.8 * 0.9 * 0.9, mid = Math.round((STAR_AT[1] + STAR_AT[2]) / 2);
+    const k = deaths >= mid ? 1.5 : stars >= 2 ? 1 : stars >= 1 ? 0.5 : 0;
+    if (chPop.copK === k) return;
+    if (chPop.copK !== undefined && k < chPop.copK) return;   // 줄지는 않는다
+    chPop.copK = k; const goal = chRoundP(base * k), add = goal - (chPop.copN || 0); if (add <= 0) return;
+    const Z = CH_MAP.zones, area = Z.map(([a, b, c, d]) => (c - a) * (d - b)), tot = area.reduce((s, v) => s + v, 0);
+    for (let n = 0; n < add; n++) { let r = Math.random() * tot, zi = 0; while (zi < Z.length - 1 && (r -= area[zi]) > 0) zi++;
+      const p = chHiddenSpot(zi, 1.2); if (!p) continue; chReg(chCop(p), 'police'); chPop.copN = (chPop.copN || 0) + 1; }
+  }
   function chHiddenSpot(zi, minOwn) {          // 그 구역 길거리 빈자리 — 내 화면과 좀비 시야 밖 (없으면 아무 빈자리)
     const [x0, z0, x1, z1] = CH_MAP.zones[zi];
     const ok = (x, z, strict) => !spaceOf(x, z) && !chNearRiver(x, z, AREA / 2 + 1) && freeSpot(x, z, null) && !chOnRoad(x, z, 1.2) && !bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < minOwn) && (!strict || (!onView(x, z, 3) && !zombies.some((zb) => Math.hypot(zb.foot.x - x, zb.foot.z - z) < zb.sense + 2)));
@@ -975,7 +986,7 @@
   function chPopulate() {
     chPopReset();
     const placed = [];
-    for (let k = 0, nCop = chRoundP(CH_COPS * CH_ONE_K * 0.8 * 0.9 * 0.9); k < nCop; k++)   /* c133: 10% 더 — 소수점은 확률로 (14.26명 = 14명 또는 15명) */   /* c131: 10% 더 줄임 */   /* c98: 길거리 경찰 5분의 1 줄임 */ { const p = chOutSpot(placed, 1.2, 18); if (!p) continue; placed.push(p); chReg(chCop(p), 'police'); }
+    for (let k = 0, nCop = 0; k < nCop; k++)   /* c189: 처음엔 없다 (chCopTick이 경보에 맞춰 뿌린다) */   /* c133: 10% 더 — 소수점은 확률로 (14.26명 = 14명 또는 15명) */   /* c131: 10% 더 줄임 */   /* c98: 길거리 경찰 5분의 1 줄임 */ { const p = chOutSpot(placed, 1.2, 18); if (!p) continue; placed.push(p); chReg(chCop(p), 'police'); }
     // 무리: 주황·빨강 각 48 — 2~4명 무리로 쪼갠다. 섞인 5명 무리 2개 (주황 2 + 빨강 3, 주황 3 + 빨강 2)
     // c44: 무리 세 가지 — 주황만 (2~4) · 빨강만 (2~4) · 섞인 무리 (4~6, 둘 다 2명 이상). 섞인 무리에 주황·빨강 각 3분의 1쯤
     const groups = [];
@@ -5777,7 +5788,7 @@
     chSfEl.style.animation = 'none'; chSfEl.offsetWidth; chSfEl.style.animation = (chSf.n >= 4 ? 'sfpopb' : 'sfpop') + ' 1.9s ease-in-out, sfplate 1.9s ease-in-out';   /* c126: 보스 글자는 커서 덜 키운다 */
   }
   function chLevelUp() {
-    let pool = chUpPool().concat(Array(chWupN() * 2).fill('__w'));   /* c161: 2배 */ const keys = [];   // c125
+    let pool = chUpPool().concat(Array(chWupN() * 1.5 | 0).fill('__w').concat(chWupN() % 2 && Math.random() < 0.5 ? ['__w'] : [])   /* c189: 25% 줄임 (몫 2배 → 1.5배) */);   /* c161: 2배 */ const keys = [];   // c125
     while (keys.length < 3 && pool.length) { const k = pool.splice(Math.floor(Math.random() * pool.length), 1)[0]; keys.push(k); if (k === '__w') pool = pool.filter((q) => q !== '__w'); }   // 랜덤 3장 — 무기 강화 카드는 한 장만
     if (!keys.length) { lvQueued = Math.max(0, lvQueued - 1); return; }   // 전부 끝까지 올렸으면 뜰 게 없다
     lvOpen = true; paused = true; stopInput();
@@ -5870,6 +5881,7 @@
     const [x, z] = edge(); return { x, z };
   }
   function chDispatchTick(dt) {
+    chCopTick();   // c189
     for (const o of objs) {                   // ① 랜드마크 사수 — c54: 바깥문(정문·쪽문·방 쪽문)이 부서지면 한 번. 방문(안쪽 문)은 아니다
       if (o.type !== 'door' || !o.dead || (o.B.parent && !o.L.ext)) continue;
       const B = o.B.parent || o.B;

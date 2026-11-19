@@ -924,6 +924,8 @@ from c187_patch import C187_R   # c187: 금고·문 붙잡기
 R += C187_R
 from c188_patch import C188_R   # c188: 사람 수 · 처음부터 열린 문
 R += C188_R
+from c189_patch import C189_R   # c189: 길거리 경찰 경보 따라 · 무기 강화 카드
+R += C189_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
