@@ -922,6 +922,8 @@ from c186_patch import C186_R   # c186: 문·금고 우선순위 = 사람
 R += C186_R
 from c187_patch import C187_R   # c187: 금고·문 붙잡기
 R += C187_R
+from c188_patch import C188_R   # c188: 사람 수 · 처음부터 열린 문
+R += C188_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
