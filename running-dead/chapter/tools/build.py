@@ -962,6 +962,8 @@ from c206_patch import C206_R   # c206: 벽은 내가 칠 때만 동료 대상
 R += C206_R
 from c207_patch import C207_R   # c207: 벽 체력바 없음 · 뒤틀림
 R += C207_R
+from c208_patch import C208_R   # c208: 창고 벽
+R += C208_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

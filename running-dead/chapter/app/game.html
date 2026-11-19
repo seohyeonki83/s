@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c207</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c208</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -775,7 +775,7 @@
       for (let i = 0; i <= n; i++) R.inner.push(flat(0.24, 0.24, ax + (bx - ax) * i / n, az + (bz - az) * i / n, chBarMat, -0.5045));
     }
   }
-  const CH_WALL_T = { house: 3, bank: 6, fire: 6, mart: 6, hospital: 6, library: 6, conv: 6, gym: 6, police: 9, army: 12 };   // c200: 벽 체력 = 집 문의 몇 배
+  const CH_WALL_T = { store: 9,   /* c208 */ house: 3, bank: 6, fire: 6, mart: 6, hospital: 6, library: 6, conv: 6, gym: 6, police: 9, army: 12 };   // c200: 벽 체력 = 집 문의 몇 배
   const chWallBs = [], chWallObjs = [];
   { const hs = buildings.filter((B) => B.type === 'house' && !B.parent), sl = (w) => Math.hypot(w[2] - w[0], w[3] - w[1]);
     const LP = hs.length ? hs.reduce((s, B) => s + (B.x1 - B.x0 + B.z1 - B.z0) / 2, 0) / hs.length / 2 : 2.2, old = new Set(), add = [];   // c203: 집 한 변의 절반
