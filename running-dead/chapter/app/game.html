@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c260</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c261</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5506,7 +5506,7 @@
   const chAcidL = [], chAcBuf = [], chAcidMat = new THREE.SpriteMaterial({ map: flashTex, color: 0x9cff3a, transparent: true, depthTest: false, depthWrite: false });
   const chAcidB = () => owned.acidp ? 1 + lv('acidp') : 0;   // c259: 산성 강도 — 도트에 더하는 값
   function chAcidOn(e, T) {                    // c224: 산성 한 겹 (겹마다 따로 시간이 간다)
-    (e.acid || (e.acid = [])).push(T); if (e.acidT === undefined) e.acidT = 0;
+    if (!e.acid) e.acid = []; if (e.acid.length) e.acid[0] = Math.max(e.acid[0], T); else e.acid.push(T);   /* c261: 겹치지 않음 */ if (e.acidT === undefined) e.acidT = 0;
     if (!chAcidL.includes(e)) chAcidL.push(e);
     if (!e.acidS && e.mesh) { const s = new THREE.Sprite(chAcidMat); s.position.set(-0.15, 0.18, 0.025); s.scale.setScalar(0.34); s.renderOrder = 1; e.mesh.add(s); e.acidS = s; }
   }
@@ -5529,7 +5529,7 @@
       for (let k = e.acid.length - 1; k >= 0; k--) if ((e.acid[k] -= dt) <= 0) e.acid.splice(k, 1);
       if (gone || !e.acid.length) { if (e.acidS) { e.mesh.remove(e.acidS); e.acidS = null; } e.acid.length = 0; e.acidT = 0; chAcidL.splice(i, 1); continue; }
       if ((e.acidT += dt) < 0.5) continue;
-      e.acidT -= 0.5; const d = e.acid.length * (1 + chAcidB());   // c259: 겹마다 1 + 산성 강도
+      e.acidT -= 0.5; const d = 1 + chAcidB();   // c259 · c261: 한 겹만 — 1 + 산성 강도
       if (car) { const o = e.obj; if (o && o.hp > d) o.hp -= d; continue; }
       if (e.hp <= 0) continue;
       e.hp = Math.max(0, e.hp - d);
@@ -5824,7 +5824,7 @@
     shoes: (n) => `나·동료 이동 속도 +${5 * (1 + n)}%`,
     teeth: (n) => `감염 시간 -${10 * (1 + n)}%`,   /* c224 */
     acidp: (n) => `산성 도트 +${1 + n} (0.5초마다)`,   /* c259 */
-    acid: (n) => `범위 = 근접 거리 x${(1.2 * (1 + 0.15 * n)).toFixed(2)} · ${3 + n}초 · 0.5초마다 1 (겹치면 쌓임)`,
+    acid: (n) => `범위 = 근접 거리 x${(1.2 * (1 + 0.15 * n)).toFixed(2)} · ${3 + n}초 · 0.5초마다 1`,   /* c261: 겹치지 않음 */
     revive: (n) => `체력 가득으로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,
     catalyst: (n) => `변이 좀비 공격력 +${7 * (1 + n)}%`,
     blood: (n) => `내 최대 체력 +${12 * (1 + n)}%`,
