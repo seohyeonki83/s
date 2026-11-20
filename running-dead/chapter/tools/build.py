@@ -1012,6 +1012,8 @@ from c231_patch import C231_R   # c231: 내 공격력 10% 줄임
 R += C231_R
 from c232_patch import C232_R   # c232: 적 체력 10% 올림
 R += C232_R
+from c233_patch import C233_R   # c233: 내 공격력 20% 더 줄임
+R += C233_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
