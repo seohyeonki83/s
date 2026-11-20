@@ -990,6 +990,8 @@ from c220_patch import C220_R   # c220: 처음 발견 빨강·경찰 약화
 R += C220_R
 from c221_patch import C221_R   # c221: 보스 피해 · 첫 발견 확률
 R += C221_R
+from c222_patch import C222_R   # c222: 보스 돌진·기관포·체력
+R += C222_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
