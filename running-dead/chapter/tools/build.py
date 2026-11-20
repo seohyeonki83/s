@@ -1038,6 +1038,8 @@ from c244_patch import C244_R   # c244: 10% → 3%
 R += C244_R
 from c245_patch import C245_R   # c245: 적 체력·공격력 5% 줄임
 R += C245_R
+from c246_patch import C246_R   # c246: 첫 발견 60% · 합 7명
+R += C246_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
