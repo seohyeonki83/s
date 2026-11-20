@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c258</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c259</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4707,6 +4707,7 @@
     flag: svgI('<rect x="5" y="2" width="2" height="20" rx="1" fill="#9aa4b5"/><path d="M7 3h12l-3 4 3 4H7z" fill="#e8455a"/>'),
     shoes: svgI('<path d="M2 17v-4c2 0 4-1 5-3l1.5-2 3 2.5c1.5 1 3 1.5 5 1.5h2.5a3 3 0 0 1 3 3V17z" fill="#4fa3f0"/><rect x="2" y="17" width="20" height="3" rx="1" fill="#e9edf5"/>'),
     teeth: svgI('<path d="M3 8c0-2.5 4-4 9-4s9 1.5 9 4v3H3z" fill="#e8768a"/><path d="M3 13h18v3c0 2.5-4 4-9 4s-9-1.5-9-4z" fill="#e8768a"/><path d="M5 10.5h2.4v3H5zM8.2 10.5h2.4v3H8.2zM11.4 10.5h2.4v3h-2.4zM14.6 10.5H17v3h-2.4zM17.8 10.5h1.6v3h-1.6z" fill="#fffdf2"/>'),   /* c224 */
+    acidp: svgI('<path d="M10 3C7.5 7.2 4.5 10 4.5 13.5a5.5 5.5 0 0 0 11 0C15.5 10 12.5 7.2 10 3z" fill="#7ed321"/><rect x="17" y="5" width="2.6" height="9" rx="1" fill="#ff5a3c"/><rect x="13.8" y="8.2" width="9" height="2.6" rx="1" fill="#ff5a3c"/>'),   /* c259 */
     acid: svgI('<path d="M12 2C9 7 5 10.5 5 14.5a7 7 0 0 0 14 0C19 10.5 15 7 12 2z" fill="#7ed321"/><circle cx="9.5" cy="14" r="1.6" fill="#d8ff9a"/><circle cx="13.5" cy="17" r="1.1" fill="#d8ff9a"/><circle cx="20" cy="6" r="1.4" fill="#7ed321"/><circle cx="4" cy="7" r="1" fill="#7ed321"/>'),   /* c224 */
     brain: svgI('<path d="M12 4c-1.4-1.6-4.6-1.2-5.2 1.1C4.4 5.4 3.2 7.8 4.2 9.8 2.8 11.2 3 14 5 15c0 2.4 2.6 4 4.6 3 .6 1 1.6 1.4 2.4 1.4V4z" fill="#f29ab8"/><path d="M12 4c1.4-1.6 4.6-1.2 5.2 1.1 2.4.3 3.6 2.7 2.6 4.7 1.4 1.4 1.2 4.2-.8 5.2 0 2.4-2.6 4-4.6 3-.6 1-1.6 1.4-2.4 1.4V4z" fill="#e57fa3"/>'),
     meat: svgI('<circle cx="10" cy="11" r="7" fill="#c8673b"/><circle cx="9" cy="10" r="3" fill="#e08a5c"/><rect x="14.5" y="14.5" width="6" height="3" rx="1.5" transform="rotate(45 17.5 16)" fill="#f2ead8"/><circle cx="20.5" cy="18.5" r="1.8" fill="#f2ead8"/><circle cx="18.5" cy="20.5" r="1.8" fill="#f2ead8"/>'),
@@ -4734,7 +4735,7 @@
     revive: { icon: IC.revive, name: '변이 줄기세포', passive: true },   // v375: 죽으면 체력 가득으로 되살아난다 (1번, 쿨타임 60초)   // v369: 깃발 대신 — 근접 거리 안 동료 하나에 자동 주사 (흰색 · 피해 1.5배 · 체력 1.5배 가득)           // v275: 복귀하는 동료 속도 +20%
     bag: { icon: IC.bag, name: '가방', passive: true }, rage: { icon: IC.rage, name: '분노 바이러스', passive: true }, catalyst: { icon: IC.catalyst, name: '촉매제', passive: true }, blood: { icon: IC.blood, name: '혈액팩', passive: true },   // c19: 챕터 장비 4종
     shoes: { icon: IC.shoes, name: '운동화', passive: true },
-    teeth: { icon: IC.teeth, name: '틀니', passive: true }, acid: { icon: IC.acid, name: '산성 폭발', passive: true },   // c224       // v275: 내 이동 속도 +10%                         // 패시브 (v201) — 총알 피해 30% 감소, 똑똑한 두뇌마다 10% 더
+    teeth: { icon: IC.teeth, name: '틀니', passive: true }, acidp: { icon: IC.acidp, name: '산성 강도', passive: true },   /* c259 */ acid: { icon: IC.acid, name: '산성 폭발', passive: true },   // c224       // v275: 내 이동 속도 +10%                         // 패시브 (v201) — 총알 피해 30% 감소, 똑똑한 두뇌마다 10% 더
   };
   const CH_W = { taserN: [1, 2, 2, 3, 3, 4, 5], taserT: [2, 2, 3, 3, 4, 4, 5], mutN: [1, 1, 2, 2, 3, 3, 4], cashT: [2, 3.3, 4.7, 6, 7.3, 8.7, 10], cashH: [1, 2, 4, 5, 6, 8, 9] }   /* c258 */, CH_WV = (k, n) => CH_W[k][Math.max(0, Math.min(CH_W[k].length - 1, n))];   // c139: 무기 수치표
   const taserN = (n) => 1 + Math.floor(n / 2), taserT = (n) => STUN_T + Math.ceil(n / 2);   // 테이저건 강화 n단계: 감전 대상 수 · 감전 시간(초) — 홀수 번째 강화는 시간 +1초, 짝수 번째는 대상 +1명
@@ -4753,6 +4754,7 @@
     revive: ['죽으면 되살아납니다. 다시 쓰려면 2분이 지나야 합니다.', '강화 시 기다리는 시간이 10%씩 줄어듭니다.'],
     shoes: ['나와 동료들의 이동 속도 증가', '강화 시 더 빨라집니다.'],   /* c225: 사용자 문구 */
     teeth: ['나와 동료들이 인간을 더 빠르게 좀비로 만듭니다', '강화 시 더 빨라집니다.'],   /* c226 */
+    acidp: ['산성 피해를 입은 적의 도트 데미지가 늘어납니다', '강화 시 더 늘어납니다.'],   /* c259 */
     acid: ['동료들이 산성피를 뿌리며 전사합니다', '강화 시 범위가 넓어지고 더 오래 갑니다.'],
     bag: ['들 수 있는 무기가 하나 늘어납니다.', '강화 시 하나 더 늘어납니다.'],
     rage: ['일정 시간마다 동료 한 명의 공격 속도와 이동 속도가 오릅니다.', '강화 시 더 자주 퍼집니다.'],
@@ -5502,6 +5504,7 @@
   }
   const minusTex = (() => { const cv = document.createElement('canvas'); cv.width = 128; cv.height = 64; const g = cv.getContext('2d'); g.font = '800 52px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,0.75)'; g.strokeText('-2', 64, 34); g.fillStyle = '#ff4a3d'; g.fillText('-2', 64, 34); return new THREE.CanvasTexture(cv); })();   // v294: 빨강 (연두였다), 2배 해상도
   const chAcidL = [], chAcBuf = [], chAcidMat = new THREE.SpriteMaterial({ map: flashTex, color: 0x9cff3a, transparent: true, depthTest: false, depthWrite: false });
+  const chAcidB = () => owned.acidp ? 1 + lv('acidp') : 0;   // c259: 산성 강도 — 도트에 더하는 값
   function chAcidOn(e, T) {                    // c224: 산성 한 겹 (겹마다 따로 시간이 간다)
     (e.acid || (e.acid = [])).push(T); if (e.acidT === undefined) e.acidT = 0;
     if (!chAcidL.includes(e)) chAcidL.push(e);
@@ -5526,7 +5529,7 @@
       for (let k = e.acid.length - 1; k >= 0; k--) if ((e.acid[k] -= dt) <= 0) e.acid.splice(k, 1);
       if (gone || !e.acid.length) { if (e.acidS) { e.mesh.remove(e.acidS); e.acidS = null; } e.acid.length = 0; e.acidT = 0; chAcidL.splice(i, 1); continue; }
       if ((e.acidT += dt) < 0.5) continue;
-      e.acidT -= 0.5; const d = e.acid.length;
+      e.acidT -= 0.5; const d = e.acid.length * (1 + chAcidB());   // c259: 겹마다 1 + 산성 강도
       if (car) { const o = e.obj; if (o && o.hp > d) o.hp -= d; continue; }
       if (e.hp <= 0) continue;
       e.hp = Math.max(0, e.hp - d);
@@ -5544,7 +5547,7 @@
       if ((c.gooT += dt) < 0.5) continue;   // v344: 1초 → 0.5초마다 1
       c.gooT -= 0.5;
       if (c.hp <= 0) continue;                // 체력 0에서 멈춘다 (그다음은 감염)
-      c.hp = Math.max(0, c.hp - 2);   /* c123: 도트 2 */
+      c.hp = Math.max(0, c.hp - 2 - chAcidB());   /* c123: 도트 2 · c259: + 산성 강도 */
       if (c.hp <= 0 && !c.police && c.state !== 'held') enterPanic(c, null, true);
       if (c.mesh.visible) {                   // 아주 작은 -1 이 떠올랐다 사라진다
         const f = puff(c.foot.x + 0.6, 1.3, c.foot.z, 0xffffff, 0.5, 0.5, 0.75, 0, 0.9, 0, 1);   // v294: 커진 만큼 옆으로
@@ -5746,7 +5749,7 @@
   //   금고를 깨면 건물 종류에 따라 아이템 하나 또는 꽝. 아이템은 그 자리에 떨어지고 내가 가서 닿아야 얻는다 (테스트맵과 같다)
   //   아이템 14종 = 도구 5 (자폭 스위치 · 변이 주사 · 테이저건 · 각성 주사 · 현금) + 장비 9 (백과사전 · 가방 · 분노 바이러스 · 빠루 · 충격 흡수복 · 방탄복 · 운동화 · 촉매제 · 혈액팩)
   //   같은 아이템을 또 얻으면 그 아이템만 강화 +1 (최대 5단계). 가방은 4개까지 (도구 칸 1 → 5). 끝까지 올린 아이템은 더 안 나온다 (c21)
-  const CH_ITEMS = ['bomb', 'mutate', 'taser', 'awaken', 'cash', 'book', 'bag', 'rage', 'crowbar', 'absorb', 'vest', 'shoes', 'catalyst', 'blood', 'revive', 'teeth', 'acid'];   /* c100: 변이 줄기세포 · c224: 틀니 · 산성 폭발 */
+  const CH_ITEMS = ['bomb', 'mutate', 'taser', 'awaken', 'cash', 'book', 'bag', 'rage', 'crowbar', 'absorb', 'vest', 'shoes', 'catalyst', 'blood', 'revive', 'teeth', 'acid', 'acidp'];   /* c259: 산성 강도 */   /* c100: 변이 줄기세포 · c224: 틀니 · 산성 폭발 */
   const CH_RARE = ['cash', 'book', 'bomb'];   // '나머지' 안에서 다른 아이템의 10분의 1 확률 (집·창고는 균등)
   const CH_SPEC_1 = 46.1893, CH_SPEC_2 = 19.8265;   // 지정 아이템 하나의 확률(%) — 랜드마크를 하나씩 다 털면 14종이 똑같이 나오게 맞춘 값 (표의 46.2 · 19.8)
   const CH_DROP = {                           // spec = 지정 아이템, p = 지정 하나의 확률(%), rest = 나머지 전체(%), 남는 것 = 꽝
@@ -5820,6 +5823,7 @@
     vest: (n) => `총격 피해 -${10 * (1 + n)}%`,
     shoes: (n) => `나·동료 이동 속도 +${5 * (1 + n)}%`,
     teeth: (n) => `감염 시간 -${10 * (1 + n)}%`,   /* c224 */
+    acidp: (n) => `산성 도트 +${1 + n} (0.5초마다)`,   /* c259 */
     acid: (n) => `범위 = 근접 거리 x${(1.2 * (1 + 0.15 * n)).toFixed(2)} · ${3 + n}초 · 0.5초마다 1 (겹치면 쌓임)`,
     revive: (n) => `체력 가득으로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,
     catalyst: (n) => `변이 좀비 공격력 +${7 * (1 + n)}%`,
@@ -5877,11 +5881,11 @@
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
     bomb: ['', (n) => `${1.5 + n}칸·${4 + 2 * n}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['강도', (n) => `${n ? '+' : ''}${CH_WV('cashH', n)}`]   /* c226 */,
     book: ['쿨타임', (n) => `-${7 * (1 + n)}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${10 + 10 * n}%`], crowbar: ['사물', (n) => `+${20 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
-    shoes: ['이동', (n) => `+${5 * (1 + n)}%`], teeth: ['감염', (n) => `-${10 * (1 + n)}%`], acid: ['산성', (n) => `${3 + n}초`],   /* c224 */ catalyst: ['변이', (n) => `+${7 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
+    shoes: ['이동', (n) => `+${5 * (1 + n)}%`], teeth: ['감염', (n) => `-${10 * (1 + n)}%`], acid: ['산성', (n) => `${3 + n}초`], acidp: ['도트', (n) => `+${1 + n}`],   /* c224 */ catalyst: ['변이', (n) => `+${7 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
   const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
     bomb: '동료 하나가 자폭', mutate: '동료 하나를 변이', taser: '적을 감전', awaken: '내가 변이', cash: '적을 유혹',
-    book: '무기 쿨타임 단축', bag: '쓸 수 있는 무기 +1', rage: '이동 속도, 공격 속도 증가', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해 감소', shoes: '나와 동료들의 이동 속도 증가', teeth: '나와 동료들이 인간을 더 빠르게 좀비로 만듭니다', acid: '동료들이 산성피를 뿌리며 전사합니다', catalyst: '변이 좀비 공격력 증가', blood: '내 최대 체력 증가', revive: '죽으면 되살아남',
+    book: '무기 쿨타임 단축', bag: '쓸 수 있는 무기 +1', rage: '이동 속도, 공격 속도 증가', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해 감소', shoes: '나와 동료들의 이동 속도 증가', teeth: '나와 동료들이 인간을 더 빠르게 좀비로 만듭니다', acid: '동료들이 산성피를 뿌리며 전사합니다', acidp: '산성 피해를 입은 적의 도트 데미지 증가', catalyst: '변이 좀비 공격력 증가', blood: '내 최대 체력 증가', revive: '죽으면 되살아남',
   };
   function chUpPool() {                       // 레벨업에 나올 수 있는 것 — 14종 전부, 끝까지 올린 것만 뺀다
     return CH_ITEMS.filter((k) => ITEM[k].passive && !(chHas(k) && lv(k) >= chLvMax(k)));   /* c125: 레벨업에는 장비만 (무기는 '무기 강화' 카드로) */
@@ -6957,7 +6961,7 @@
     }
     const spd = (car.tkSeen ? CAR_SPEED * CH_TR_SPD.sedan * CH_TR_SLOW / 2 * 1.2 :   /* c183: 20% 빠르게 */ CAR_SPEED * 0.9) * (car.goo ? 0.8 : 1);   /* c179: 눈에 띄기 전 = 경찰차의 90% */   /* c168: 보인 뒤 속도 2배 (보통 차의 절반) */   /* c137: 눈에 띄기 전엔 보통 차 속도 */   // 보통 차(승용차)의 4분의 1
     if (car.goo && (car.gooLeft -= dt) <= 0) { car.goo = false; for (const s of car.gooS) car.g.remove(s); }   // c123
-    if (car.goo && (car.gooT += dt) >= 0.5) { car.gooT -= 0.5; if (o && o.hp > 2) o.hp -= 2; }
+    if (car.goo && (car.gooT += dt) >= 0.5) { car.gooT -= 0.5; const gd = 2 + chAcidB(); if (o && o.hp > gd) o.hp -= gd; }   // c259
     // 벽
     if (chTankWalls(car, dt)) {
       if (car.tkPX !== undefined) { car.x = car.tkPX; car.z = car.tkPZ; car.h = car.tkPH; car.foot.set(car.x, 0, car.z); if (o) o.foot.set(car.x, 0, car.z); }
@@ -8266,7 +8270,7 @@
   //   운전자: 조심형(지금까지의 운전 — 가운데 좀비 앞에 서고, 맞으면 얼어붙었다가 내린다) · 가속형(서 있다가 냅다 밟는다 — 좀비도 사람도 안 가린다) ·
   //           비비기형(물러났다가 옆으로 다시 들이민다) · 돌진형(좀비를 아예 신경 안 쓴다 — 현금 수송차는 늘 이쪽). 패닉 중엔 더 밟는다 (1.3~1.6배).
   const CH_LOOT_P = 1 / 15;   // c90: 2배
-  const CH_LOOT_CAR = { cash: ['cash'], ambul: ['mutate', 'awaken', 'catalyst', 'rage', 'blood', 'revive', 'teeth', 'acid'],   /* c224 */ parcel: ['bomb', 'taser', 'book', 'bag', 'crowbar', 'absorb', 'vest', 'shoes'] };
+  const CH_LOOT_CAR = { cash: ['cash'], ambul: ['mutate', 'awaken', 'catalyst', 'rage', 'blood', 'revive', 'teeth', 'acid'],   /* c224 */ parcel: ['bomb', 'taser', 'book', 'bag', 'crowbar', 'absorb', 'vest', 'shoes', 'acidp'] };
   const CH_LOOT_N = Object.values(CH_LOOT_CAR).reduce((a, l) => a + l.length, 0);
   const chLootType = () => { let r = Math.random() * CH_LOOT_N; for (const k in CH_LOOT_CAR) if ((r -= CH_LOOT_CAR[k].length) < 0) return k; return 'parcel'; };
   const chLootBag = [];                        // c100: 다음에 나올 수송차 종류들 (실은 가짓수만큼 들어 있고 섞여 있다)
