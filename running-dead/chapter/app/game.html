@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c239</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c240</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2956,7 +2956,7 @@
   const ARMOR_KB = 2.3, ARMOR_KT = 0.4;       // v295: 덩치에 맞으면 처음 이 속도(칸/초)로 밀려나 이 시간 동안 점점 느려진다 — v300: 거리 2배, v301: 0.32 → 0.46칸 (1.5배, 2 → 2.3칸/초 · 0.25 → 0.4초)
   function landHit(a, v, dmg = DAMAGE) {
     if (CHAPTER && a && a.kind === 'citizen' && (v.kind === 'ally' || v === me) && !v.dead) v.objOff = clock + 2;   /* c64: 나도 */   // c58: 맞은 동료는 2초 동안 사물을 안 노린다
-    if (CHAPTER && a && (a === me || a.kind === 'ally') && (!a.splashing || a === me)) dmg *= a === me ? 1.15 * 0.9 * 0.8 : 1.15 * 1.1 * 1.07;   /* c231: 나 10% 줄임 · c233: 20% 더 */   /* c162: 동료 7% 더 */   /* c160: 동료만 10% 더 */   // c135: 나와 동료 공격력 15% 올림 (덩치의 범위 공격은 본 공격에서 이미 올랐다)
+    if (CHAPTER && a && (a === me || a.kind === 'ally') && (!a.splashing || a === me)) dmg *= a === me ? 1.15 * 0.9 * 0.8 * 1.1 : 1.15 * 1.1 * 1.07 * 1.1;   /* c231: 나 10% 줄임 · c233: 20% 더 · c240: 나·동료 10% 올림 */   /* c162: 동료 7% 더 */   /* c160: 동료만 10% 더 */   // c135: 나와 동료 공격력 15% 올림 (덩치의 범위 공격은 본 공격에서 이미 올랐다)
     if (CHAPTER && a && (a.kind === 'citizen' || a.kind === 'tank')) dmg *= 1.15 * 1.2 * 0.95 * 0.93 * 0.93;   /* c164: 7% 더 줄임 → 원래의 1.134배 */   /* c159: 7% 줄임 → 원래의 1.219배 */   /* c150: 장갑차도 군인과 같은 배율 */   /* c149: 전부 5% 줄임 → 사람·경찰·군인·저격수 1.311배 · 장갑차 1.0925배 */   /* c146: 사람·경찰·군인·저격수 20% 더 (합쳐서 1.38배) — 장갑차는 1.15배 그대로 */   // c143: 적(사람·경찰·군인·저격수·장갑차)의 공격력 15% 올림
     if (TEST_MAP && !CHAPTER && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적 (c42: 챕터는 빼고)
     if (CHAPTER && a && a.vig && isZombie(v) && v.mode !== 'bite' && v.mut !== 'armor' && !(v === me && absorbAmt() >= SNIPER_KD * 2 / 12 - 0.001)) {   // c39: 자경단 몽둥이 — 밀림 1
