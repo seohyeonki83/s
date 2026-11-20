@@ -1044,6 +1044,8 @@ from c247_patch import C247_R   # c247: 사수 경찰차 = 들어오는 순간
 R += C247_R
 from c248_patch import C248_R   # c248: 경보 출동 인원·간격·섞기
 R += C248_R
+from c249_patch import C249_R   # c249: 특공대 4분의 1 줄임
+R += C249_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
