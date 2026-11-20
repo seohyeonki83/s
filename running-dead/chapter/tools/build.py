@@ -1072,6 +1072,8 @@ from c261_patch import C261_R   # c261: 산성 겹침 없음
 R += C261_R
 from c262_patch import C262_R   # c262: 주황 4 · 노랑 3 바뀜
 R += C262_R
+from c263_patch import C263_R   # c263: 수상함 전 경계 5배
+R += C263_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
