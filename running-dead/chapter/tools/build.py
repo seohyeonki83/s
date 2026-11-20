@@ -1000,6 +1000,8 @@ from c225_patch import C225_R   # c225: 설명 문구
 R += C225_R
 from c226_patch import C226_R   # c226: 틀니 문구 · 현금 강도
 R += C226_R
+from c227_patch import C227_R   # c227: 돋보기 가로 정렬
+R += C227_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
