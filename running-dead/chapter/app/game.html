@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c250</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c251</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5298,9 +5298,9 @@
   }
   const MUT_SPEED = 1.25 * 1.15;   /* v347: 15% 더 */                     // v304: 변이 좀비 이동 속도 배율
   const MUT_T = () => 6 + 3 * lv('mutate');   /* c21: 변이 10초, 강화마다 +3초 (주사 개수 +1은 테스트맵 그대로) */                            // 변이 유지 시간 — v299: 기본 20 → 23초, 도구 다루기마다 +2 → +4초
-  const itemMax = (k) => k === 'mutate' ? CH_WV('mutN', lv('mutate')) : ITEM[k].max;   // 변이 주사 장탄 +1씩
+  const itemMax = (k) => k === 'mutate' ? CH_WV('mutN', lv('mutate')) : CHAPTER && k === 'taser' ? Math.min(3, 1 + lv('taser'))   /* c251: 1 · 2 · 3 */ : ITEM[k].max;   // 변이 주사 장탄 +1씩
   const bookCut = () => owned.book ? 0.07 * (1 + lv('book')) : 0;   /* c198: 7%씩 */   /* c21: 백과사전 5%, 강화마다 +5%p (30%까지) */   /* v582: 7%, 강화마다 남은 쿨타임에서 7%씩 */   // v286: 백과사전 — 사용 도구 쿨타임 7% 줄임, 도구 다루기마다 3%p씩 더
-  const itemReload = (k) => (k === 'bomb' ? 40 * 1.15 * 1.1   /* c21: 자폭 쿨타임은 고정 — 강화는 범위로 간다 */ /* v559: +10% 더 */ : ITEM[k].reload * (k === 'taser' ? 1.1 : 1))   /* v556: 자폭 +15% · 테이저 +10% */ * (1 - bookCut());   // 자폭 쿨타임 −3초씩 → 그 위에 백과사전
+  const itemReload = (k) => (k === 'bomb' ? 40 * 1.15 * 1.1   /* c21: 자폭 쿨타임은 고정 — 강화는 범위로 간다 */ /* v559: +10% 더 */ : ITEM[k].reload * (k === 'taser' ? 1.1 * (CHAPTER ? 1.3 : 1) : 1))   /* c251: 테이저 쿨타임 30% 늘림 */   /* v556: 자폭 +15% · 테이저 +10% */ * (1 - bookCut());   // 자폭 쿨타임 −3초씩 → 그 위에 백과사전
   function refreshBadges() {                  // 패시브 배지 아래 숫자
     const t = {
       vest: () => '-' + vestPct(lv('vest')) + '%',
@@ -5809,7 +5809,7 @@
   const CH_STAT = {                           // c21: 획득창·설명창에 나오는 수치 (n = 강화 단계)
     bomb: (n) => `터지는 범위 ${1.5 + n}칸 · 산성 ${4 + 2 * n}초`,
     mutate: (n) => `주사 ${CH_WV('mutN', n)}개 · 변이 ${6 + 3 * n}초`,
-    taser: (n) => `한 번에 ${CH_WV('taserN', n)}명 · ${CH_WV('taserT', n)}초 감전`,
+    taser: (n) => `한 번에 ${CH_WV('taserN', n)}명 · ${CH_WV('taserT', n)}초 감전 · 장탄 ${Math.min(3, 1 + n)}`,   /* c251 */
     awaken: (n) => `최대 사용 시간 ${5 + 3 * n}초 · 가득 차는 데 35초`,
     cash: (n) => `유혹 강도 ${n ? '+' : ''}${1 + n} · 알아채는 거리 ${(8.64 + n).toFixed(1)}칸`,   /* c226 */
     book: (n) => `무기 쿨타임 -${7 * (1 + n)}%`,
