@@ -1078,6 +1078,8 @@ from c264_patch import C264_R   # c264: 주황·빨강 경계 = 경찰
 R += C264_R
 from c265_patch import C265_R   # c265: 도트 숫자
 R += C265_R
+from c266_patch import C266_R   # c266: 도트 숫자 맨 위
+R += C266_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
