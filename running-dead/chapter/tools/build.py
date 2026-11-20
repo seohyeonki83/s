@@ -994,6 +994,8 @@ from c222_patch import C222_R   # c222: 보스 돌진·기관포·체력
 R += C222_R
 from c223_patch import C223_R   # c223: 특공대 구성
 R += C223_R
+from c224_patch import C224_R   # c224: 운동화·틀니·산성 폭발·무기 분해
+R += C224_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c223</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c224</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3014,6 +3014,7 @@
     }
     if (z.dead) return;
     z.dead = true;
+    if (CHAPTER && owned.acid && z !== me) chAcidBurst(z);   // c224
     const t = z.target;
     if (t) {                                  // 덮치거나 무는 중이었으면 그 시민을 풀어 준다
       t.marked = false;
@@ -4703,6 +4704,8 @@
     stim: svgI('<rect x="3" y="10" width="13" height="5" rx="1.2" fill="#eef3fb"/><rect x="5" y="11" width="8" height="3" fill="#e8455a"/><rect x="16" y="11.5" width="5" height="2" fill="#9aa4b5"/><rect x="1" y="9" width="2" height="7" rx="0.6" fill="#9aa4b5"/>'),   // v369: 스팀팩
     flag: svgI('<rect x="5" y="2" width="2" height="20" rx="1" fill="#9aa4b5"/><path d="M7 3h12l-3 4 3 4H7z" fill="#e8455a"/>'),
     shoes: svgI('<path d="M2 17v-4c2 0 4-1 5-3l1.5-2 3 2.5c1.5 1 3 1.5 5 1.5h2.5a3 3 0 0 1 3 3V17z" fill="#4fa3f0"/><rect x="2" y="17" width="20" height="3" rx="1" fill="#e9edf5"/>'),
+    teeth: svgI('<path d="M3 8c0-2.5 4-4 9-4s9 1.5 9 4v3H3z" fill="#e8768a"/><path d="M3 13h18v3c0 2.5-4 4-9 4s-9-1.5-9-4z" fill="#e8768a"/><path d="M5 10.5h2.4v3H5zM8.2 10.5h2.4v3H8.2zM11.4 10.5h2.4v3h-2.4zM14.6 10.5H17v3h-2.4zM17.8 10.5h1.6v3h-1.6z" fill="#fffdf2"/>'),   /* c224 */
+    acid: svgI('<path d="M12 2C9 7 5 10.5 5 14.5a7 7 0 0 0 14 0C19 10.5 15 7 12 2z" fill="#7ed321"/><circle cx="9.5" cy="14" r="1.6" fill="#d8ff9a"/><circle cx="13.5" cy="17" r="1.1" fill="#d8ff9a"/><circle cx="20" cy="6" r="1.4" fill="#7ed321"/><circle cx="4" cy="7" r="1" fill="#7ed321"/>'),   /* c224 */
     brain: svgI('<path d="M12 4c-1.4-1.6-4.6-1.2-5.2 1.1C4.4 5.4 3.2 7.8 4.2 9.8 2.8 11.2 3 14 5 15c0 2.4 2.6 4 4.6 3 .6 1 1.6 1.4 2.4 1.4V4z" fill="#f29ab8"/><path d="M12 4c1.4-1.6 4.6-1.2 5.2 1.1 2.4.3 3.6 2.7 2.6 4.7 1.4 1.4 1.2 4.2-.8 5.2 0 2.4-2.6 4-4.6 3-.6 1-1.6 1.4-2.4 1.4V4z" fill="#e57fa3"/>'),
     meat: svgI('<circle cx="10" cy="11" r="7" fill="#c8673b"/><circle cx="9" cy="10" r="3" fill="#e08a5c"/><rect x="14.5" y="14.5" width="6" height="3" rx="1.5" transform="rotate(45 17.5 16)" fill="#f2ead8"/><circle cx="20.5" cy="18.5" r="1.8" fill="#f2ead8"/><circle cx="18.5" cy="20.5" r="1.8" fill="#f2ead8"/>'),
     arm: svgI('<path d="M4 20c0-4 1-7 3-9l3-5c1-1.5 3-1.2 3.3.4l.3 2.6c2.5-.7 5.4.7 6.2 3.4.9 3.2-1.5 6.6-5.8 7.6z" fill="#f0a35e"/><circle cx="12.5" cy="6.3" r="2.4" fill="#d9884a"/>'),
@@ -4728,7 +4731,8 @@
     stim: { icon: IC.stim, name: '스팀팩', passive: true },
     revive: { icon: IC.revive, name: '변이 줄기세포', passive: true },   // v375: 죽으면 체력 가득으로 되살아난다 (1번, 쿨타임 60초)   // v369: 깃발 대신 — 근접 거리 안 동료 하나에 자동 주사 (흰색 · 피해 1.5배 · 체력 1.5배 가득)           // v275: 복귀하는 동료 속도 +20%
     bag: { icon: IC.bag, name: '가방', passive: true }, rage: { icon: IC.rage, name: '분노 바이러스', passive: true }, catalyst: { icon: IC.catalyst, name: '촉매제', passive: true }, blood: { icon: IC.blood, name: '혈액팩', passive: true },   // c19: 챕터 장비 4종
-    shoes: { icon: IC.shoes, name: '운동화', passive: true },       // v275: 내 이동 속도 +10%                         // 패시브 (v201) — 총알 피해 30% 감소, 똑똑한 두뇌마다 10% 더
+    shoes: { icon: IC.shoes, name: '운동화', passive: true },
+    teeth: { icon: IC.teeth, name: '틀니', passive: true }, acid: { icon: IC.acid, name: '산성 폭발', passive: true },   // c224       // v275: 내 이동 속도 +10%                         // 패시브 (v201) — 총알 피해 30% 감소, 똑똑한 두뇌마다 10% 더
   };
   const CH_W = { taserN: [1, 2, 2, 3, 3, 4, 5], taserT: [2, 2, 3, 3, 4, 4, 5], mutN: [1, 1, 2, 2, 3, 3, 4], cashT: [2, 3, 4, 5, 6, 6.5, 7] }, CH_WV = (k, n) => CH_W[k][Math.max(0, Math.min(CH_W[k].length - 1, n))];   // c139: 무기 수치표
   const taserN = (n) => 1 + Math.floor(n / 2), taserT = (n) => STUN_T + Math.ceil(n / 2);   // 테이저건 강화 n단계: 감전 대상 수 · 감전 시간(초) — 홀수 번째 강화는 시간 +1초, 짝수 번째는 대상 +1명
@@ -4745,7 +4749,9 @@
     book: ['당신이 가진 모든 무기의 쿨타임이 감소합니다.', '강화 시 쿨타임이 더 줄어듭니다.'],
     stim: ['일정 시간마다 동료 한 마리를 강화시키는 주사를 주입합니다.', '강화 시 주사 효과가 더 강해집니다.'],
     revive: ['죽으면 되살아납니다. 다시 쓰려면 2분이 지나야 합니다.', '강화 시 기다리는 시간이 10%씩 줄어듭니다.'],
-    shoes: ['나의 이동 속도가 빨라집니다.', '강화 시 더 빨라집니다.'],
+    shoes: ['나와 동료들의 이동 속도가 빨라집니다.', '강화 시 더 빨라집니다.'],   /* c224 */
+    teeth: ['인간을 더 빠르게 좀비로 만듭니다.', '강화 시 더 빨라집니다.', '한 명을 감염시킬 때 회복하는 체력은 같습니다.'],
+    acid: ['동료들이 산성피를 뿌리며 전사합니다.', '강화 시 산성이 더 넓게 퍼지고 더 오래 갑니다.', '겹쳐 맞으면 피해가 쌓입니다.'],
     bag: ['들 수 있는 무기가 하나 늘어납니다.', '강화 시 하나 더 늘어납니다.'],
     rage: ['일정 시간마다 동료 한 명의 공격 속도와 이동 속도가 오릅니다.', '강화 시 더 자주 퍼집니다.'],
     catalyst: ['변이한 좀비의 공격력이 오릅니다.', '강화 시 더 오릅니다.'],
@@ -4794,14 +4800,14 @@
   const vestK = (n) => CHAPTER ? 1 - 0.1 * (n + 1) : Math.pow(0.8, n + 1);   /* c21: 방탄복 10%, 강화마다 +10%p (60%까지) */   // v582: 원거리 20% 감쇄, 강화마다 남은 데미지에서 20%씩 더
   const vestPct = (n) => Math.round((1 - vestK(n)) * 100);   // v580: 다시 강화마다 +10%
   const bitePct = (n = up.bite) => 12 * Math.max(0, n);
-  const biteK = (n = up.bite) => Math.max(0, 1 - bitePct(n) / 100);   // 감염 시간 배율 — 0이면 즉시 감염
+  const biteK = (n = up.bite) => Math.max(0, 1 - bitePct(n) / 100) * (CHAPTER && owned.teeth ? 1 - 0.1 * (1 + lv('teeth')) : 1);   /* c224: 틀니 */   // 감염 시간 배율 — 0이면 즉시 감염
   const myBiteLen = (n = up.bite) => INFECT / MY_INFECT * biteK(n);
   const zDamage = (z) => (z === me ? MY_DAMAGE : ALLY_DAMAGE) * (1 + 0.07 * up.arm) * (z.mut === 'armor' && z !== me ? 1.3 * 1.3 * 2 : 1) * (CHAPTER && z.mut && owned.catalyst ? 1 + 0.07 * (1 + lv('catalyst')) : 1);   /* c19: 촉매제 */   /* v558: 각성한 나는 내 공격력 그대로 */   /* v551: 덩치 기본 데미지 2배 */   // v275: 갑옷좀비 공격력 1.3배
   const zHeal = (z) => (z === me ? MY_BITE_HEAL : BITE_HEAL) + 0.04 * up.meat;   // 감염 시간 1배 기준 초당 회복 (최대 체력 대비)
   const allyMaxHp = () => ALLY_HP * 0.9 * (1 + 0.07 * up.skin);   /* c164: c163의 7%를 되돌림 (85.05) */   /* c163: 동료 7% 올림 (85.05 → 91.0) */   /* c136: 동료 10% 깎음 (94.5 → 85.05) — 체력바 한 겹 기준(ALLY_HP)은 그대로 */   // v267: 단단한 피부 3% → 5%
   const allyAttack = () => ALLY_ATTACK;       // v256: 빠른 다리는 이제 습격 거리가 아니라 이동 속도
-  const legK = () => 1 + 0.07 * up.leg;      // 빠른 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
-  const meSpeed = () => MY_SPEED * (legK() + (owned.shoes ? 0.07 * (1 + lv('shoes')) : 0)   /* c198: 7%씩 */   /* v568: 운동화 처음 +15%, 강화마다 +10% */) * (me && me.mut ? MUT_SPEED : 1);   // v558: 각성 중엔 변이 속도   // v275: 운동화 +10% (도구 다루기마다 +3%) — 빠른 다리와 더한다
+  const legK = () => 1 + 0.07 * up.leg + (CHAPTER && owned.shoes ? 0.07 * (1 + lv('shoes')) : 0);   /* c224: 운동화 = 나·동료·변이 */      // 빠른 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
+  const meSpeed = () => MY_SPEED * (legK() + (!CHAPTER && owned.shoes ? 0.07 * (1 + lv('shoes')) : 0)   /* c198: 7%씩 */   /* v568: 운동화 처음 +15%, 강화마다 +10% */) * (me && me.mut ? MUT_SPEED : 1);   // v558: 각성 중엔 변이 속도   // v275: 운동화 +10% (도구 다루기마다 +3%) — 빠른 다리와 더한다
   const cashK = () => 1.2 + lv('cash') / 7.2;   /* c140: 알아채는 거리 8.64칸 + 강화마다 1칸 (기준 시야 7.2칸에 곱하는 값) */   /* v339: 1.2 · 1.4 · 1.6 · 1.8배 */   /* v338: 20% 더 줄임 */   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
   const lureHits = () => 1 + lv('cash');   /* v339: 2 · 4 · 6 · 8대 */   /* v333: 처음 4 → 3대 */    // v269: 유혹 중 4대째 맞으면 정신 차린다, 두뇌마다 +2 (4, 6, 8 …)
   function gainXp() {
@@ -5493,6 +5499,38 @@
     c.mesh.add(g); c.gooS = g;
   }
   const minusTex = (() => { const cv = document.createElement('canvas'); cv.width = 128; cv.height = 64; const g = cv.getContext('2d'); g.font = '800 52px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,0.75)'; g.strokeText('-2', 64, 34); g.fillStyle = '#ff4a3d'; g.fillText('-2', 64, 34); return new THREE.CanvasTexture(cv); })();   // v294: 빨강 (연두였다), 2배 해상도
+  const chAcidL = [], chAcBuf = [], chAcidMat = new THREE.SpriteMaterial({ map: flashTex, color: 0x9cff3a, transparent: true, depthTest: false, depthWrite: false });
+  function chAcidOn(e, T) {                    // c224: 산성 한 겹 (겹마다 따로 시간이 간다)
+    (e.acid || (e.acid = [])).push(T); if (e.acidT === undefined) e.acidT = 0;
+    if (!chAcidL.includes(e)) chAcidL.push(e);
+    if (!e.acidS && e.mesh) { const s = new THREE.Sprite(chAcidMat); s.position.set(-0.15, 0.18, 0.025); s.scale.setScalar(0.34); s.renderOrder = 1; e.mesh.add(s); e.acidS = s; }
+  }
+  function chAcidBurst(z) {                    // c224: 동료·변이가 죽으며 산성피 — 범위 = 그 몸의 근접 거리 × 1.2 (강화마다 +15%) · 3초 (강화마다 +1초)
+    const n = lv('acid'), R = chReach(z) * 1.2 * (1 + 0.15 * n), T = 3 + n, x = z.foot.x, zz = z.foot.z;
+    const f = puff(x, 0.5, zz, 0xd8ff9a, R * 0.8, R * 2.4, 0.22, 0, 0, 0, 0.9); f.s.renderOrder = UI - 0.6; f.peak = true;
+    for (let i = 0; i < 12; i++) { const a = Math.random() * Math.PI * 2, sp = rand(1.5, 3.5) * R; const g = puff(x, 0.3, zz, i % 2 ? 0x3f8f2a : 0x7ed321, rand(0.25, 0.4), rand(0.3, 0.5), rand(0.35, 0.6), Math.cos(a) * sp, 0, Math.sin(a) * sp, 0.95); g.s.material.map = flashTex; }
+    for (const c of nearIn(cCells, x, zz, R + 1, chAcBuf)) {
+      if (c.kind !== 'citizen' || c.space !== z.space) continue;
+      if (Math.hypot(c.foot.x - x, c.foot.z - zz) > R + (c.r || BODY) || blocked(x, zz, c.foot.x, c.foot.z)) continue;
+      chAcidOn(c, T);
+    }
+    const tk = chTank; if (tk && !tk.wreck && !z.space && Math.hypot(tk.x - x, tk.z - zz) - CAR_L * CH_TK_KL / 2 <= R) chAcidOn(tk, T);   // 보스도
+  }
+  window.__kz = (z) => killZombie(z);   // 테스트용
+  function chAcidTick(dt) {                    // c224: 겹마다 시간이 줄고, 0.5초마다 겹 수만큼 피해 (느려짐 없음)
+    for (let i = chAcidL.length - 1; i >= 0; i--) {
+      const e = chAcidL[i], car = e.tank;
+      const gone = car ? e.wreck : (e.kind !== 'citizen' || !bodies.includes(e));
+      for (let k = e.acid.length - 1; k >= 0; k--) if ((e.acid[k] -= dt) <= 0) e.acid.splice(k, 1);
+      if (gone || !e.acid.length) { if (e.acidS) { e.mesh.remove(e.acidS); e.acidS = null; } e.acid.length = 0; e.acidT = 0; chAcidL.splice(i, 1); continue; }
+      if ((e.acidT += dt) < 0.5) continue;
+      e.acidT -= 0.5; const d = e.acid.length;
+      if (car) { const o = e.obj; if (o && o.hp > d) o.hp -= d; continue; }
+      if (e.hp <= 0) continue;
+      e.hp = Math.max(0, e.hp - d);
+      if (e.hp <= 0 && !e.police && e.state !== 'held') enterPanic(e, null, true);
+    }
+  }
   function gooTick(dt) {
     for (const c of bodies) {
       if (!c.goo || c.kind !== 'citizen') continue;
@@ -5553,7 +5591,7 @@
     if (CHAPTER) rageTick(dt);
     for (const z of zombies) if (z.mut && !(TEST_ARMOR && z.mut === 'armor') && (z.mutT -= dt) <= 0) unmutate(z);   // 변이 끝
     stepSpits(dt);
-    gooTick(dt);
+    gooTick(dt); if (CHAPTER) chAcidTick(dt);   // c224
   }
   const pickups = [];                         // v415: 바닥에 떨어진 아이템 {kind, x, z, space, s, img, t}
   const PICK_R = (RADIUS + 0.55) * 1.5;   /* v520: 1.5배 (1.05 → 1.58칸) */               // 내 몸이 이만큼 안에 들어오면 획득
@@ -5616,6 +5654,58 @@
   function stopInput() { pid = null; joy.classList.remove('on'); knob.style.transform = 'translate(0px, 0px)'; move.set(0, 0); }
   // 꾹 눌러 닫기 (v212): 누르면 그 자리에 원 게이지가 뜨고 1초 동안 차오르면 done. 중간에 떼면 취소
   const HOLD_T = 1.0;
+  const chCanDis = (kind) => chWeapons().some((k) => k !== kind && lv(k) < chLvMax(k));   // c224: 분해해서 강화할 무기가 있나
+  function chTwoOk(ov, label, done) {          // c224: [획득] [분해] 두 갈래 — 각자 한 줄 설명
+    const blockA = (e) => { e.stopPropagation(); e.preventDefault(); };
+    for (const ev of ['pointerdown', 'pointermove', 'pointerup']) ov.addEventListener(ev, blockA);
+    const kind = ov.dataset.kind, row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:14px;margin-top:22px;justify-content:center';
+    const mk = (lb, ds, bg, fn) => { const left = !row.children.length, col = document.createElement('div'); col.style.cssText = 'display:flex;flex-direction:column;align-items:center;width:146px';
+      const b = document.createElement('button'); b.className = 'ok okBtn'; b.style.setProperty('margin', `0 0 0 ${left ? -140 : 16}px`, 'important'); b.style.background = bg; b.textContent = lb;   // 조이스틱 자리 양옆으로 동그라미 두 개
+      const t = document.createElement('div'); t.style.cssText = 'margin-top:0;font:700 13px/1.35 var(--font);color:rgba(255,255,255,0.8);text-align:center;word-break:keep-all'; t.textContent = ds;
+      b.addEventListener('pointerdown', (e) => { blockA(e); if (ov.dataset.done) return; row.style.visibility = 'hidden'; fn(); });
+      col.append(b, t); row.appendChild(col); };
+    mk(label, '무기를 사용할 수 있습니다', 'rgba(255,255,255,0.92)', done);
+    mk('분해', '분해해서 다른 무기를 강화합니다', '#ffb26b', () => { ov.dataset.done = '1'; chDisasm(ov, kind); });
+    ov.appendChild(row);
+  }
+  function chDisasm(ov, kind) {                // c224: 분해 — 짧게 부서지는 연출 → 강화할 무기를 고르는 창
+    const big = ov.querySelector('.big'), sr = stage.getBoundingClientRect();
+    if (big) {
+      const br = big.getBoundingClientRect(), cx = br.left + br.width / 2 - sr.left, cy = br.top + br.height / 2 - sr.top;
+      big.style.transition = 'transform 0.12s'; let k = 0; const sh = setInterval(() => { big.style.transform = `translate(${(k % 2 ? -1 : 1) * 7}px, ${(k % 3 - 1) * 4}px) rotate(${(k % 2 ? -1 : 1) * 6}deg)`; if (++k > 4) clearInterval(sh); }, 45);
+      setTimeout(() => { big.style.visibility = 'hidden';
+        for (let i = 0; i < 14; i++) { const p = document.createElement('div'), a = Math.random() * Math.PI * 2, d = 60 + Math.random() * 90;
+          p.style.cssText = `position:absolute;left:${cx}px;top:${cy}px;width:${8 + Math.random() * 10}px;height:${6 + Math.random() * 8}px;background:${i % 3 ? '#9aa4b5' : '#ffb26b'};border-radius:2px;z-index:23;pointer-events:none;transition:transform 0.38s ease-out, opacity 0.38s ease-out;transform:translate(-50%,-50%)`;
+          stage.appendChild(p); p.getBoundingClientRect(); p.style.transform = `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d}px)) rotate(${Math.random() * 360}deg)`; p.style.opacity = '0'; setTimeout(() => p.remove(), 420); }
+      }, 240);
+    }
+    setTimeout(() => { ov.remove(); chDisPick(); }, 620);
+  }
+  function chDisPick() {                       // c224: 분해한 부품으로 강화할 무기를 고른다 (끝까지 올린 것은 못 고른다)
+    const ov = document.createElement('div'); ov.id = 'pick';
+    ov.innerHTML = `<div class="hd">무기 강화</div><div class="sub">강화할 무기를 선택하세요</div><div class="cards" style="flex-wrap:wrap;justify-content:center">` +
+      chWeapons().map((k) => { const n = lv(k), S = CH_SHORT[k], max = n >= chLvMax(k);
+        return `<div class="card" data-k="${k}" style="min-height:158px;padding-top:8px${max ? ';opacity:0.4;pointer-events:none' : ''}"><div style="height:14px;font:900 12px/14px var(--font);letter-spacing:-0.5px;color:#ffd34d">${max ? 'MAX' : chStars(n + 1)}</div>` +
+          `<div class="ic" style="margin-top:4px">${ITEM[k].icon}</div><div class="nm" style="margin-top:8px">${ITEM[k].name}</div><div class="ds" style="margin-top:8px">${max ? '최대 강화' : '강화'}</div>` +
+          `<div class="vl">${S[0]} ${max ? S[1](n) : S[1](n) + ' → ' + S[1](n + 1)}</div></div>`; }).join('') + `</div><button class="ok okBtn">확인</button>`;
+    stage.appendChild(ov);
+    let chosen = null; const block = (e) => { e.stopPropagation(); e.preventDefault(); };
+    ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
+    ov.addEventListener('pointerdown', (e) => {
+      block(e); if (ov.dataset.done) return;
+      const card = e.target.closest('.card'), ok = e.target.closest('.ok');
+      if (card) { chosen = card.dataset.k; for (const c of ov.querySelectorAll('.card')) c.classList.toggle('on', c === card); ov.querySelector('.ok').classList.add('ready'); return; }
+      if (!ok || !chosen) return;
+      ov.dataset.done = '1';
+      for (const c of ov.querySelectorAll('.card')) { c.classList.remove('on'); c.classList.add(c.dataset.k === chosen ? 'win' : 'gone'); }
+      ov.querySelector('.ok').style.opacity = '0';
+      ilv[chosen] = lv(chosen) + 1; chItemChanged(chosen);
+      const el = (items.find((x) => x.kind === chosen) || {}).el; if (el) { el.classList.remove('pop'); el.getBoundingClientRect(); el.classList.add('pop'); }
+      setTimeout(() => { ov.style.opacity = '0'; }, 550);
+      setTimeout(() => { ov.remove(); acqOpen = false; paused = false; last = 0; }, 850);
+    });
+  }
   function tapOk(ov, label, done) {          // v265: 확인 버튼과 같은 동그란 버튼 (조이스틱 자리) — 한 번 누르면 done
     const blockA = (e) => { e.stopPropagation(); e.preventDefault(); };
     for (const ev of ['pointerdown', 'pointermove', 'pointerup']) ov.addEventListener(ev, blockA);
@@ -5654,7 +5744,7 @@
   //   금고를 깨면 건물 종류에 따라 아이템 하나 또는 꽝. 아이템은 그 자리에 떨어지고 내가 가서 닿아야 얻는다 (테스트맵과 같다)
   //   아이템 14종 = 도구 5 (자폭 스위치 · 변이 주사 · 테이저건 · 각성 주사 · 현금) + 장비 9 (백과사전 · 가방 · 분노 바이러스 · 빠루 · 충격 흡수복 · 방탄복 · 운동화 · 촉매제 · 혈액팩)
   //   같은 아이템을 또 얻으면 그 아이템만 강화 +1 (최대 5단계). 가방은 4개까지 (도구 칸 1 → 5). 끝까지 올린 아이템은 더 안 나온다 (c21)
-  const CH_ITEMS = ['bomb', 'mutate', 'taser', 'awaken', 'cash', 'book', 'bag', 'rage', 'crowbar', 'absorb', 'vest', 'shoes', 'catalyst', 'blood', 'revive'];   /* c100: 변이 줄기세포 */
+  const CH_ITEMS = ['bomb', 'mutate', 'taser', 'awaken', 'cash', 'book', 'bag', 'rage', 'crowbar', 'absorb', 'vest', 'shoes', 'catalyst', 'blood', 'revive', 'teeth', 'acid'];   /* c100: 변이 줄기세포 · c224: 틀니 · 산성 폭발 */
   const CH_RARE = ['cash', 'book', 'bomb'];   // '나머지' 안에서 다른 아이템의 10분의 1 확률 (집·창고는 균등)
   const CH_SPEC_1 = 46.1893, CH_SPEC_2 = 19.8265;   // 지정 아이템 하나의 확률(%) — 랜드마크를 하나씩 다 털면 14종이 똑같이 나오게 맞춘 값 (표의 46.2 · 19.8)
   const CH_DROP = {                           // spec = 지정 아이템, p = 지정 하나의 확률(%), rest = 나머지 전체(%), 남는 것 = 꽝
@@ -5726,7 +5816,9 @@
     crowbar: (n) => `사물 피해 +${20 * (1 + n)}%`,
     absorb: (n) => `충격 흡수 ${2 + 2.5 * n} (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12)`,
     vest: (n) => `총격 피해 -${10 * (1 + n)}%`,
-    shoes: (n) => `이동 속도 +${7 * (1 + n)}%`,
+    shoes: (n) => `나·동료 이동 속도 +${7 * (1 + n)}%`,
+    teeth: (n) => `감염 시간 -${10 * (1 + n)}%`,   /* c224 */
+    acid: (n) => `범위 = 근접 거리 x${(1.2 * (1 + 0.15 * n)).toFixed(2)} · ${3 + n}초 · 0.5초마다 1 (겹치면 쌓임)`,
     revive: (n) => `체력 가득으로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,
     catalyst: (n) => `변이 좀비 공격력 +${7 * (1 + n)}%`,
     blood: (n) => `내 최대 체력 +${12 * (1 + n)}%`,
@@ -5747,7 +5839,7 @@
       const d = MY_HP * (CHAPTER ? 0.12 : 0.10);   /* c198: 12%씩 */
       if (me.baseMaxHp) { me.baseMaxHp += d; me.maxHp += d * 3; me.hp = Math.min(me.maxHp, me.hp + d * 3); } else { me.maxHp += d; me.hp = Math.min(me.maxHp, me.hp + d); }
     }
-    if (kind === 'shoes' && isZombie(me)) me.speed = meSpeed();
+    if (kind === 'shoes') for (const b of bodies) if (isZombie(b)) b.speed = b === me ? meSpeed() : SPEED * legK() * (b.mut ? MUT_SPEED : 1);   // c224: 나·동료·변이 다
     chSlots(); refreshBadges(); refreshItems();
   }
   function chUpgrade(kind) {                  // 가진 아이템을 또 얻었다 → 그 아이템만 강화 +1 (획득창과 같은 모양)
@@ -5783,11 +5875,11 @@
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
     bomb: ['', (n) => `${1.5 + n}칸·${4 + 2 * n}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['', (n) => `${CH_WV('cashT', n)}초·${1 + n}대`],
     book: ['쿨타임', (n) => `-${7 * (1 + n)}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${10 + 10 * n}%`], crowbar: ['사물', (n) => `+${20 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
-    shoes: ['이동', (n) => `+${7 * (1 + n)}%`], catalyst: ['변이', (n) => `+${7 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
+    shoes: ['이동', (n) => `+${7 * (1 + n)}%`], teeth: ['감염', (n) => `-${10 * (1 + n)}%`], acid: ['산성', (n) => `${3 + n}초`],   /* c224 */ catalyst: ['변이', (n) => `+${7 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
   const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
     bomb: '동료 하나가 자폭', mutate: '동료 하나를 변이', taser: '적을 감전', awaken: '내가 변이', cash: '적을 유혹',
-    book: '무기 쿨타임 단축', bag: '쓸 수 있는 무기 +1', rage: '동료 속도 강화', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해 감소', shoes: '내 이동 속도 증가', catalyst: '변이 좀비 공격력 증가', blood: '내 최대 체력 증가', revive: '죽으면 되살아남',
+    book: '무기 쿨타임 단축', bag: '쓸 수 있는 무기 +1', rage: '동료 속도 강화', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해 감소', shoes: '나·동료 이동 속도 증가', teeth: '감염 속도 증가', acid: '동료가 죽으며 산성', catalyst: '변이 좀비 공격력 증가', blood: '내 최대 체력 증가', revive: '죽으면 되살아남',
   };
   function chUpPool() {                       // 레벨업에 나올 수 있는 것 — 14종 전부, 끝까지 올린 것만 뺀다
     return CH_ITEMS.filter((k) => ITEM[k].passive && !(chHas(k) && lv(k) >= chLvMax(k)));   /* c125: 레벨업에는 장비만 (무기는 '무기 강화' 카드로) */
@@ -5809,6 +5901,8 @@
   // ── c125: 무기 강화 카드 · 특공대 시간표 · 카운트다운 연출 ──
   const chWeapons = () => items.map((x) => x.kind);                     // 가진 무기 (쓰는 것)
   const chWupN = () => chWeapons().filter((k) => lv(k) < chLvMax(k)).length;   // 강화할 수 있는 무기 수
+  const chWupW = () => { const w = chWupN() * 1.5 * 0.75; return Math.floor(w) + (Math.random() < w - Math.floor(w) ? 1 : 0); };   // c224: 무기 강화 카드 몫 (소수는 확률로)
+  window.__lvup = () => { pendingLv++; };   // 테스트용
   function chWupCard() {
     return `<div class="card" data-k="__w" style="min-height:158px;padding-top:8px;border-color:#ff7a4a"><div style="height:14px;font:900 12px/14px var(--font);letter-spacing:-0.5px;color:#ff7a4a">무기</div>` +
       `<div class="ic" style="margin-top:4px">${IC.tool}</div><div class="nm" style="margin-top:8px">무기 강화</div><div class="ds" style="margin-top:8px">가진 무기 하나를 골라 강화</div><div class="vl"></div></div>`;
@@ -5835,7 +5929,7 @@
     chSfEl.style.animation = 'none'; chSfEl.offsetWidth; chSfEl.style.animation = (chSf.n >= 4 ? 'sfpopb' : 'sfpop') + ' 1.9s ease-in-out, sfplate 1.9s ease-in-out';   /* c126: 보스 글자는 커서 덜 키운다 */
   }
   function chLevelUp() {
-    let pool = chUpPool().concat(Array(chWupN() * 1.5 | 0).fill('__w').concat(chWupN() % 2 && Math.random() < 0.5 ? ['__w'] : [])   /* c189: 25% 줄임 (몫 2배 → 1.5배) */);   /* c161: 2배 */ const keys = [];   // c125
+    let pool = chUpPool().concat(Array(chWupW()).fill('__w')   /* c224: 25% 더 줄임 */   /* c189: 25% 줄임 (몫 2배 → 1.5배) */);   /* c161: 2배 */ const keys = [];   // c125
     while (keys.length < 3 && pool.length) { const k = pool.splice(Math.floor(Math.random() * pool.length), 1)[0]; keys.push(k); if (k === '__w') pool = pool.filter((q) => q !== '__w'); }   // 랜덤 3장 — 무기 강화 카드는 한 장만
     if (!keys.length) { lvQueued = Math.max(0, lvQueued - 1); return; }   // 전부 끝까지 올렸으면 뜰 게 없다
     lvOpen = true; paused = true; stopInput();
@@ -8161,7 +8255,7 @@
   //   운전자: 조심형(지금까지의 운전 — 가운데 좀비 앞에 서고, 맞으면 얼어붙었다가 내린다) · 가속형(서 있다가 냅다 밟는다 — 좀비도 사람도 안 가린다) ·
   //           비비기형(물러났다가 옆으로 다시 들이민다) · 돌진형(좀비를 아예 신경 안 쓴다 — 현금 수송차는 늘 이쪽). 패닉 중엔 더 밟는다 (1.3~1.6배).
   const CH_LOOT_P = 1 / 15;   // c90: 2배
-  const CH_LOOT_CAR = { cash: ['cash'], ambul: ['mutate', 'awaken', 'catalyst', 'rage', 'blood', 'revive'], parcel: ['bomb', 'taser', 'book', 'bag', 'crowbar', 'absorb', 'vest', 'shoes'] };
+  const CH_LOOT_CAR = { cash: ['cash'], ambul: ['mutate', 'awaken', 'catalyst', 'rage', 'blood', 'revive', 'teeth', 'acid'],   /* c224 */ parcel: ['bomb', 'taser', 'book', 'bag', 'crowbar', 'absorb', 'vest', 'shoes'] };
   const CH_LOOT_N = Object.values(CH_LOOT_CAR).reduce((a, l) => a + l.length, 0);
   const chLootType = () => { let r = Math.random() * CH_LOOT_N; for (const k in CH_LOOT_CAR) if ((r -= CH_LOOT_CAR[k].length) < 0) return k; return 'parcel'; };
   const chLootBag = [];                        // c100: 다음에 나올 수송차 종류들 (실은 가짓수만큼 들어 있고 섞여 있다)
@@ -8428,10 +8522,10 @@
   function showAward(kind) {
     acqOpen = true; paused = true; stopInput();
     const d = ITEM[kind], ov = document.createElement('div');
-    ov.id = 'acq';
+    ov.id = 'acq'; ov.dataset.kind = kind;   // c224
     ov.innerHTML = (CHAPTER && !d.passive ? `<div style="font:900 54px/1 var(--font);letter-spacing:3px;color:#ff4a3a;text-shadow:0 0 16px rgba(255,60,0,0.95),0 0 44px #ff2a00,0 4px 10px rgba(0,0,0,0.85);animation:wpnpop 0.45s ease-out both;margin-bottom:14px">무기 획득</div><div class="big">${d.icon}</div><div class="t" style="font-size:30px;color:#ffd34d">${d.name}</div>` : `<div class="big">${d.icon}</div><div class="t">${d.name} 획득</div>`) + `<div class="ds">${itemDesc(kind)}<div class="up">${lvText(kind)}</div></div>`;   /* c125 */   // 자세한 설명 (v226) — v265: 꾹 누르기 대신 [획득] 버튼
     stage.appendChild(ov);
-    tapOk(ov, '획득', () => {                 // v265: 조이스틱 자리 [획득] 버튼을 한 번 누르면
+    (CHAPTER && !d.passive && chCanDis(kind) ? chTwoOk : tapOk)(ov, '획득', () => {                 // v265 · c224: 다른 무기가 있으면 획득/분해: 조이스틱 자리 [획득] 버튼을 한 번 누르면
       if (ov.dataset.done) return;
       ov.dataset.done = '1';
       let it = null;
