@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c246</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c247</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6025,11 +6025,13 @@
   }
   function chDispatchTick(dt) {
     chCopTick();   // c189
-    for (const o of objs) {                   // ① 랜드마크 사수 — c54: 바깥문(정문·쪽문·방 쪽문)이 부서지면 한 번. 방문(안쪽 문)은 아니다
-      if (o.type !== 'door' || !o.dead || (o.B.parent && !o.L.ext)) continue;
-      const B = o.B.parent || o.B;
-      if (!CH_LM.has(B.type) || B.called) continue;
-      B.called = 1; B.gate = o.L; chGuardCar(B);
+    for (const z of zombies) {                // ① 랜드마크 사수 — c247: 좀비가 그 건물(방 포함) 안에 들어오는 순간 한 번
+      const S = z.space; if (!S) continue;
+      const B = S.parent || S;
+      if (B.called || !CH_LM.has(B.type)) continue;
+      let g = null, gd = Infinity;               // 차가 갈 자리 = 그 좀비와 가장 가까운 출입구 (뚫린 벽·열린 문·잠긴 문)
+      for (const D of B.doors.concat(B.locks)) { const d = Math.hypot(D.cx - z.foot.x, D.cz - z.foot.z); if (d < gd) { gd = d; g = D; } }
+      B.called = 1; B.gate = g || B.front; if (B.gate) chGuardCar(B);
     }
     for (const B of buildings) if (B.called === 1 && B.lost && CH_TWICE.has(B.type)) { B.called = 2; chGuardCar(B); }   // 두 번 출동하는 건물: 문이 부서진 뒤 안에 있던 사람이 한 명이라도 감염되면 한 번 더
     if (!stars || !isZombie(me)) return;      // ② 경보 출동
