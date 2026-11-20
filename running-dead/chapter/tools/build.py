@@ -1070,6 +1070,8 @@ from c260_patch import C260_R   # c260: 산성 자폭 스위치
 R += C260_R
 from c261_patch import C261_R   # c261: 산성 겹침 없음
 R += C261_R
+from c262_patch import C262_R   # c262: 주황 4 · 노랑 3 바뀜
+R += C262_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
