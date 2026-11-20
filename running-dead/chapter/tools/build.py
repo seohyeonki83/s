@@ -1058,6 +1058,8 @@ from c254_patch import C254_R   # c254: 레벨업 1.13배
 R += C254_R
 from c255_patch import C255_R   # c255: 보스 체력 1/4 줄임
 R += C255_R
+from c256_patch import C256_R   # c256: 분노 문구
+R += C256_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
