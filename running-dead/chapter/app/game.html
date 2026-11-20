@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c225</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c226</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4750,7 +4750,7 @@
     stim: ['일정 시간마다 동료 한 마리를 강화시키는 주사를 주입합니다.', '강화 시 주사 효과가 더 강해집니다.'],
     revive: ['죽으면 되살아납니다. 다시 쓰려면 2분이 지나야 합니다.', '강화 시 기다리는 시간이 10%씩 줄어듭니다.'],
     shoes: ['나와 동료들의 이동 속도 증가', '강화 시 더 빨라집니다.'],   /* c225: 사용자 문구 */
-    teeth: ['인간을 더 빠르게 좀비로 만듭니다', '강화 시 더 빨라집니다.'],
+    teeth: ['나와 동료들이 인간을 더 빠르게 좀비로 만듭니다', '강화 시 더 빨라집니다.'],   /* c226 */
     acid: ['동료들이 산성피를 뿌리며 전사합니다', '강화 시 범위가 넓어지고 더 오래 갑니다.'],
     bag: ['들 수 있는 무기가 하나 늘어납니다.', '강화 시 하나 더 늘어납니다.'],
     rage: ['일정 시간마다 동료 한 명의 공격 속도와 이동 속도가 오릅니다.', '강화 시 더 자주 퍼집니다.'],
@@ -5809,7 +5809,7 @@
     mutate: (n) => `주사 ${CH_WV('mutN', n)}개 · 변이 ${6 + 3 * n}초`,
     taser: (n) => `한 번에 ${CH_WV('taserN', n)}명 · ${CH_WV('taserT', n)}초 감전`,
     awaken: (n) => `최대 사용 시간 ${5 + 3 * n}초 · 가득 차는 데 35초`,
-    cash: (n) => `유혹 ${CH_WV('cashT', n)}초 · ${1 + n}대 버팀 · 알아채는 거리 ${(8.64 + n).toFixed(1)}칸`,
+    cash: (n) => `유혹 강도 ${n ? '+' : ''}${1 + n} · 알아채는 거리 ${(8.64 + n).toFixed(1)}칸`,   /* c226 */
     book: (n) => `무기 쿨타임 -${7 * (1 + n)}%`,
     bag: (n) => `무기 ${Math.min(5, 2 + n)}칸`,
     rage: (n) => `30초마다 동료 1명 · 공격 속도·이동 속도 +${10 + 10 * n}%`,
@@ -5873,13 +5873,13 @@
   }
   // ── c25 · c27: 레벨업 = 도구·장비 14종 가운데 랜덤 3장 중 하나를 고른다 — 없는 것이면 새로 얻고, 가진 것이면 강화 +1 ──
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
-    bomb: ['', (n) => `${1.5 + n}칸·${4 + 2 * n}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['', (n) => `${CH_WV('cashT', n)}초·${1 + n}대`],
+    bomb: ['', (n) => `${1.5 + n}칸·${4 + 2 * n}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['강도', (n) => `${n ? '+' : ''}${1 + n}`]   /* c226 */,
     book: ['쿨타임', (n) => `-${7 * (1 + n)}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${10 + 10 * n}%`], crowbar: ['사물', (n) => `+${20 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
     shoes: ['이동', (n) => `+${7 * (1 + n)}%`], teeth: ['감염', (n) => `-${10 * (1 + n)}%`], acid: ['산성', (n) => `${3 + n}초`],   /* c224 */ catalyst: ['변이', (n) => `+${7 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
   const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
     bomb: '동료 하나가 자폭', mutate: '동료 하나를 변이', taser: '적을 감전', awaken: '내가 변이', cash: '적을 유혹',
-    book: '무기 쿨타임 단축', bag: '쓸 수 있는 무기 +1', rage: '동료 속도 강화', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해 감소', shoes: '나와 동료들의 이동 속도 증가', teeth: '인간을 더 빠르게 좀비로 만듭니다', acid: '동료들이 산성피를 뿌리며 전사합니다', catalyst: '변이 좀비 공격력 증가', blood: '내 최대 체력 증가', revive: '죽으면 되살아남',
+    book: '무기 쿨타임 단축', bag: '쓸 수 있는 무기 +1', rage: '동료 속도 강화', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해 감소', shoes: '나와 동료들의 이동 속도 증가', teeth: '나와 동료들이 인간을 더 빠르게 좀비로 만듭니다', acid: '동료들이 산성피를 뿌리며 전사합니다', catalyst: '변이 좀비 공격력 증가', blood: '내 최대 체력 증가', revive: '죽으면 되살아남',
   };
   function chUpPool() {                       // 레벨업에 나올 수 있는 것 — 14종 전부, 끝까지 올린 것만 뺀다
     return CH_ITEMS.filter((k) => ITEM[k].passive && !(chHas(k) && lv(k) >= chLvMax(k)));   /* c125: 레벨업에는 장비만 (무기는 '무기 강화' 카드로) */

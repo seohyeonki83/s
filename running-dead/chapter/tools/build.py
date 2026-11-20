@@ -998,6 +998,8 @@ from c224_patch import C224_R   # c224: 운동화·틀니·산성 폭발·무기
 R += C224_R
 from c225_patch import C225_R   # c225: 설명 문구
 R += C225_R
+from c226_patch import C226_R   # c226: 틀니 문구 · 현금 강도
+R += C226_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
