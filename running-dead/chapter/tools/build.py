@@ -1014,6 +1014,8 @@ from c232_patch import C232_R   # c232: 적 체력 10% 올림
 R += C232_R
 from c233_patch import C233_R   # c233: 내 공격력 20% 더 줄임
 R += C233_R
+from c234_patch import C234_R   # c234: 첫 발견 빨강 4 · 경찰 1
+R += C234_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

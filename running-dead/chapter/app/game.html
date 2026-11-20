@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c233</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c234</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6541,6 +6541,7 @@
     chSfHud();
   }
   let chDiscR = 0, chDiscP = 0, chDiscT = 0;
+  const CH_DISC_R = 4, CH_DISC_P = 1;   // c234: 빨강 4명 · 경찰 1명
   function chDemote(c, to) {                   // c220: 그 자리에서 노랑('guard') 또는 하양('')으로
     if (c.police) { c.police = false; c.military = false; if (c.tracer) { scene.remove(c.tracer); c.tracer = null; } c.calls = []; c.heading = null; c.onDuty = false; }
     c.attacker = false; c.vig = false; c.guard = to === 'guard';
@@ -6552,16 +6553,16 @@
     c.hpDisp = c.hp; enterNormal(c);
   }
   function chDiscTick(dt) {                    // c220: 처음 발견 — 나·동료 시야에 처음 들어온 빨강 5명 · 경찰 2명까지
-    if (chDiscR >= 5 && chDiscP >= 2) return;
+    if (chDiscR >= CH_DISC_R && chDiscP >= CH_DISC_P) return;
     if ((chDiscT -= dt) > 0) return; chDiscT = 0.1;
     for (const c of bodies) {
       if (c.kind !== 'citizen' || c.disc || c.boss || !(c.hp > 0)) continue;
       const red = c.attacker && c.vig, cop = c.police && !c.military;
-      if (!(red && chDiscR < 5) && !(cop && chDiscP < 2)) continue;
+      if (!(red && chDiscR < CH_DISC_R) && !(cop && chDiscP < CH_DISC_P)) continue;
       if (!(iSee(c) || zSeen(c))) continue;
       c.disc = true; if (red) chDiscR++; else chDiscP++;
       const r = Math.random(); if (r < 0.2) chDemote(c, 'guard'); else if (r < 0.4) chDemote(c, '');   /* c221: 20% · 20% */
-      if (chDiscR >= 5 && chDiscP >= 2) return;
+      if (chDiscR >= CH_DISC_R && chDiscP >= CH_DISC_P) return;
     }
   }
   function chSfTick(dt) {
