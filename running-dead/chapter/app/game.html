@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c259</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c260</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4728,7 +4728,7 @@
     absorb: { icon: IC.absorb, name: '충격 흡수복', passive: true },   // v505
     awaken: { max: 1, reload: 37.5 * 1.3 + 5,   /* 쿨타임 +5초 (48.75 → 53.75) */ icon: IC.awaken, name: '각성 주사', col: '#ff5a3c' },   // v558: 나 자신이 8초 동안 덩치·히드라로 변이 (쿨타임 = 현금)
     mutate: { max: 1, reload: 35, icon: IC.mutate, name: '변이 주사', col: '#b05cff' },   // v275: 가장 가까운 동료 하나가 체력 가득 + 변이 (갑옷 · 히드라 랜덤) — v299: 23초 + 장비 강화마다 4초
-    bomb: { max: 1, reload: 40, icon: IC.bomb, name: '자폭 스위치', col: '#5fcf3a' },     // v275: 적에게 가장 많이 둘러싸인 동료가 터지며 산성 덩어리
+    bomb: { max: 1, reload: 40, icon: IC.bomb, name: '산성 자폭 스위치',   /* c260 */ col: '#5fcf3a' },     // v275: 적에게 가장 많이 둘러싸인 동료가 터지며 산성 덩어리
     crowbar: { icon: IC.crowbar, name: '빠루', passive: true },     // v275: 내가 건물·사물에 입히는 피해 +25%
     book: { icon: IC.book, name: '백과사전', passive: true },      // v286: 권총 대신 — 사용 도구 쿨타임 7% 줄임 (장비 강화마다 3%씩 더)
     stim: { icon: IC.stim, name: '스팀팩', passive: true },

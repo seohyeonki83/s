@@ -1066,6 +1066,8 @@ from c258_patch import C258_R   # c258: 현금 최대 10초·9대·18칸
 R += C258_R
 from c259_patch import C259_R   # c259: 산성 강도
 R += C259_R
+from c260_patch import C260_R   # c260: 산성 자폭 스위치
+R += C260_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
