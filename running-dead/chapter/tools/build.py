@@ -976,6 +976,8 @@ from c213_patch import C213_R   # c213: 벽 체력
 R += C213_R
 from c214_patch import C214_R   # c214: 벽 체력 25% 줄임
 R += C214_R
+from c215_patch import C215_R   # c215: 벽 토막 30% 줄임
+R += C215_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
