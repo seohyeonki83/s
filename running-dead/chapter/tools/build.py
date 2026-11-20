@@ -1042,6 +1042,8 @@ from c246_patch import C246_R   # c246: 첫 발견 60% · 합 7명
 R += C246_R
 from c247_patch import C247_R   # c247: 사수 경찰차 = 들어오는 순간
 R += C247_R
+from c248_patch import C248_R   # c248: 경보 출동 인원·간격·섞기
+R += C248_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

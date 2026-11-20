@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c247</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c248</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6002,7 +6002,7 @@
   //   ② 경보 출동: 경보 1단계가 되는 순간 한 번, 그 뒤 40초마다 (단계마다 3초씩 짧아진다). 걸어서 / 경찰차 50:50.
   //      내가 있는 구역의 바깥 라인 중 안 보이는 곳에서 나와 마지막 사건 자리를 쫓는다 (테스트맵과 같다)
   const CH_LM = new Set(['bank', 'police', 'fire', 'mart', 'hospital', 'army', 'library', 'conv', 'gym']);
-  const CH_DISP_N = [[1, 1], [1, 2], [2, 3], [3, 3], [3, 4], [4, 4], [4, 5], [5, 5]];   // 경보 단계별 출동 인원 (최소, 최대)
+  const CH_DISP_N = [[2, 2], [2, 3], [3, 4], [4, 4], [5, 6]], CH_DISP_T = [28, 26.5, 25, 23.5, 22];   // c248: 경보 단계별 출동 인원 (최소, 최대) · 간격(초)   // 경보 단계별 출동 인원 (최소, 최대)
   let chDispT = -1, chDispStage = 0;
   const CH_TWICE = new Set(['mart', 'hospital', 'bank', 'library']);   // c48: 두 번 출동 — c54: 문이 부서졌을 때 · 그 뒤 안에 있던 사람이 한 명이라도 감염됐을 때
   function chDispReset() { chDispT = -1; chDispStage = 0; for (const B of buildings) { B.called = 0; B.firstSpot = null; B.lost = false; B.gate = null; } }
@@ -6037,14 +6037,18 @@
     if (!stars || !isZombie(me)) return;      // ② 경보 출동
     if (stars !== chDispStage) { if (!chDispStage) chDispT = 0; chDispStage = stars; }
     if (chDispT > 0) { chDispT -= dt; return; }
-    const chCarK = 1 + 0.15 * (5 - stars) / 4; chDispT = (32 - 3 * (stars - 1)) * 0.8 / 0.85 * 2 / (1 + chCarK) / 0.85;   /* c151: 전체 빈도 15% 줄임 */   /* c143: 경찰차 출동만 빠르게 (수상함 15% · 난리남 11.25% · 개판 7.5% · 계엄 3.75% · 데프콘 그대로) — 걸어오는 출동 빈도는 그대로라, 전체 간격을 조금 줄이고 차가 뽑힐 확률을 그만큼 올린다 */   /* c103: 출동 빈도 15% 줄임 */   // c64: 20% 더 짧게 (25.6 · 23.2 · 20.8 · 18.4 · 16초)   // c56: 기본 간격 20% 줄임 (40 → 32초). 단계마다 3초씩 짧아지는 건 그대로
+    const chCarK = 1 + 0.15 * (5 - stars) / 4; chDispT = CH_DISP_T[Math.min(CH_DISP_T.length, stars) - 1];   /* c248: 수상함 28초 → 데프콘 22초 (사이는 1.5초씩) */
     const site = lastIncident ? lastIncident.clone() : new THREE.Vector2(me.foot.x, me.foot.z);
     const [lo, hi] = CH_DISP_N[Math.min(CH_DISP_N.length, stars) - 1], n = lo + Math.floor(Math.random() * (hi - lo + 1));
-    const p = chEdgeSpot(chZoneAt(me.foot.x, me.foot.z));
-    if (Math.random() < chCarK / (1 + chCarK)) addCar(p.x, p.z, Math.atan2(site.y - p.z, site.x - p.x), site, n);
-    else for (let i = 0; i < n; i++) {
-      let x = p.x + (i - (n - 1) / 2) * 0.9, z = p.z; if (!freeSpot(x, z, null) || spaceOf(x, z)) { x = p.x; z = p.z; }
-      const c = addCitizen(x, z, null, 'police'); c.calls.push(site.clone()); c.met = true;   // c52: 출동한 경찰은 처음부터 깨어 있다 (전엔 좀비가 14칸 안에 올 때까지 가장자리에 잠든 채 서 있었다)
+    const pCar = chCarK / (1 + chCarK), zi = chZoneAt(me.foot.x, me.foot.z);   // c248: 인원을 무리로 나눠 — 무리마다 경찰차(2~3명) 또는 걸어서(1~2명)
+    for (let left = n; left > 0;) {
+      if (Math.random() < pCar) { const k = Math.min(left, 2 + (Math.random() < 0.5 ? 1 : 0)), q = chEdgeSpot(zi); addCar(q.x, q.z, Math.atan2(site.y - q.z, site.x - q.x), site, k); left -= k; continue; }
+      const k = Math.min(left, 1 + (Math.random() < 0.5 ? 1 : 0)), q = chEdgeSpot(zi);
+      for (let i = 0; i < k; i++) {
+        let x = q.x + (i - (k - 1) / 2) * 0.9, z = q.z; if (!freeSpot(x, z, null) || spaceOf(x, z)) { x = q.x; z = q.z; }
+        const c = addCitizen(x, z, null, 'police'); c.calls.push(site.clone()); c.met = true;   // c52: 출동한 경찰은 처음부터 깨어 있다
+      }
+      left -= k;
     }
   }
   // ── c47: 차 다시 타기 · 끼임 풀기 ──
