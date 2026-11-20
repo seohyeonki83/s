@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c227</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c228</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -953,7 +953,7 @@
   }
   // c56: 다시 채우기 — 구역마다 따로. 길거리 한 명짜리(하양·노랑·배회 경찰)는 색마다 40초에 한 명씩 (줄어든 만큼만), 전멸한 무리는 60초에 한 무리 (어느 무리일지는 랜덤, 무리 전체가 한꺼번에 · 한 명이라도 남은 무리는 안 채운다)
   //   내 화면과 좀비 시야 밖 빈자리에 나온다 (그런 자리가 없으면 아무 빈자리). 건물 안 사람과 경찰서 둘레 경찰은 안 채운다
-  const CH_RE_ONE = 40, CH_RE_GANG = 60;
+  const CH_RE_ONE = 40 * 2, CH_RE_GANG = 60 * 2;   /* c228: 절반 속도 */
   let chPop = null;
   function chPopReset() { chPop = { one: CH_MAP.zones.map(() => ({ '': { want: 0, list: [], t: CH_RE_ONE }, guard: { want: 0, list: [], t: CH_RE_ONE }, police: { want: 0, list: [], t: CH_RE_ONE } })), gangs: [], wg: [], gt: CH_MAP.zones.map(() => CH_RE_GANG), acc: 0 }; for (const B of buildings) if (B.type === 'house') { B.res = []; B.taken = false; B.seen = false; } }
   function chReg(c, type) { const P = chPop.one[chZoneOf(c.foot.x, c.foot.z)][type]; P.list.push(c); P.want++; return c; }
