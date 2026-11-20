@@ -1060,6 +1060,8 @@ from c255_patch import C255_R   # c255: 보스 체력 1/4 줄임
 R += C255_R
 from c256_patch import C256_R   # c256: 분노 문구
 R += C256_R
+from c257_patch import C257_R   # c257: 운동화 5%
+R += C257_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

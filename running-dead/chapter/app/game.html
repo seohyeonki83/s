@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c256</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c257</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4808,7 +4808,7 @@
   const zHeal = (z) => (z === me ? MY_BITE_HEAL : BITE_HEAL) + 0.04 * up.meat;   // 감염 시간 1배 기준 초당 회복 (최대 체력 대비)
   const allyMaxHp = () => ALLY_HP * 0.9 * 0.9 * (1 + 0.07 * up.skin);   /* c230: 10% 줄임 */   /* c164: c163의 7%를 되돌림 (85.05) */   /* c163: 동료 7% 올림 (85.05 → 91.0) */   /* c136: 동료 10% 깎음 (94.5 → 85.05) — 체력바 한 겹 기준(ALLY_HP)은 그대로 */   // v267: 단단한 피부 3% → 5%
   const allyAttack = () => ALLY_ATTACK;       // v256: 빠른 다리는 이제 습격 거리가 아니라 이동 속도
-  const legK = () => 1 + 0.07 * up.leg + (CHAPTER && owned.shoes ? 0.07 * (1 + lv('shoes')) : 0);   /* c224: 운동화 = 나·동료·변이 */      // 빠른 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
+  const legK = () => 1 + 0.07 * up.leg + (CHAPTER && owned.shoes ? 0.05 * (1 + lv('shoes')) : 0);   /* c224: 운동화 = 나·동료·변이 · c257: 5%씩 */      // 빠른 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
   const meSpeed = () => MY_SPEED * (legK() + (!CHAPTER && owned.shoes ? 0.07 * (1 + lv('shoes')) : 0)   /* c198: 7%씩 */   /* v568: 운동화 처음 +15%, 강화마다 +10% */) * (me && me.mut ? MUT_SPEED : 1);   // v558: 각성 중엔 변이 속도   // v275: 운동화 +10% (도구 다루기마다 +3%) — 빠른 다리와 더한다
   const cashK = () => 1.2 + lv('cash') / 7.2;   /* c140: 알아채는 거리 8.64칸 + 강화마다 1칸 (기준 시야 7.2칸에 곱하는 값) */   /* v339: 1.2 · 1.4 · 1.6 · 1.8배 */   /* v338: 20% 더 줄임 */   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
   const lureHits = () => 1 + lv('cash');   /* v339: 2 · 4 · 6 · 8대 */   /* v333: 처음 4 → 3대 */    // v269: 유혹 중 4대째 맞으면 정신 차린다, 두뇌마다 +2 (4, 6, 8 …)
@@ -5818,14 +5818,14 @@
     crowbar: (n) => `사물 피해 +${20 * (1 + n)}%`,
     absorb: (n) => `충격 흡수 ${2 + 2.5 * n} (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12)`,
     vest: (n) => `총격 피해 -${10 * (1 + n)}%`,
-    shoes: (n) => `나·동료 이동 속도 +${7 * (1 + n)}%`,
+    shoes: (n) => `나·동료 이동 속도 +${5 * (1 + n)}%`,
     teeth: (n) => `감염 시간 -${10 * (1 + n)}%`,   /* c224 */
     acid: (n) => `범위 = 근접 거리 x${(1.2 * (1 + 0.15 * n)).toFixed(2)} · ${3 + n}초 · 0.5초마다 1 (겹치면 쌓임)`,
     revive: (n) => `체력 가득으로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,
     catalyst: (n) => `변이 좀비 공격력 +${7 * (1 + n)}%`,
     blood: (n) => `내 최대 체력 +${12 * (1 + n)}%`,
   };
-  const CH_BADGE = { rage: () => '+' + (10 + 10 * lv('rage')) + '%', absorb: () => '흡수 ' + (2 + 2.5 * lv('absorb')), crowbar: () => '+' + 20 * (1 + lv('crowbar')) + '%', shoes: () => '+' + 7 * (1 + lv('shoes')) + '%' };   // 배지 아래 짧은 수치
+  const CH_BADGE = { rage: () => '+' + (10 + 10 * lv('rage')) + '%', absorb: () => '흡수 ' + (2 + 2.5 * lv('absorb')), crowbar: () => '+' + 20 * (1 + lv('crowbar')) + '%', shoes: () => '+' + 5 * (1 + lv('shoes')) + '%' };   // 배지 아래 짧은 수치
   Object.assign(ITEM_TEXT, {                  // c21: 바뀐 규칙에 맞춘 설명
     taser: ['대상을 감전시켜 멈춥니다.', '강화 시 감전 대상과 시간이 늘어납니다.'],
     awaken: ['충전한 시간만큼 변이하고, 게이지가 찬 만큼 체력을 회복합니다 (가득이면 20%).', '강화 시 최대 사용 시간이 늘어납니다.'],
@@ -5877,7 +5877,7 @@
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
     bomb: ['', (n) => `${1.5 + n}칸·${4 + 2 * n}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['강도', (n) => `${n ? '+' : ''}${1 + n}`]   /* c226 */,
     book: ['쿨타임', (n) => `-${7 * (1 + n)}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${10 + 10 * n}%`], crowbar: ['사물', (n) => `+${20 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
-    shoes: ['이동', (n) => `+${7 * (1 + n)}%`], teeth: ['감염', (n) => `-${10 * (1 + n)}%`], acid: ['산성', (n) => `${3 + n}초`],   /* c224 */ catalyst: ['변이', (n) => `+${7 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
+    shoes: ['이동', (n) => `+${5 * (1 + n)}%`], teeth: ['감염', (n) => `-${10 * (1 + n)}%`], acid: ['산성', (n) => `${3 + n}초`],   /* c224 */ catalyst: ['변이', (n) => `+${7 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
   const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
     bomb: '동료 하나가 자폭', mutate: '동료 하나를 변이', taser: '적을 감전', awaken: '내가 변이', cash: '적을 유혹',
