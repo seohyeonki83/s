@@ -986,6 +986,8 @@ from c218_patch import C218_R   # c218: 4겹 고정 · 가로 무제한 · 보�
 R += C218_R
 from c219_patch import C219_R   # c219: 보스 바 빨강 한 줄
 R += C219_R
+from c220_patch import C220_R   # c220: 처음 발견 빨강·경찰 약화
+R += C220_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
