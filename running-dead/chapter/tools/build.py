@@ -984,6 +984,8 @@ from c217_patch import C217_R   # c217: 넘치면 가로 늘림
 R += C217_R
 from c218_patch import C218_R   # c218: 4겹 고정 · 가로 무제한 · 보스도
 R += C218_R
+from c219_patch import C219_R   # c219: 보스 바 빨강 한 줄
+R += C219_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
