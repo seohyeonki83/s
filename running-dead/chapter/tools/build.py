@@ -1018,6 +1018,8 @@ from c234_patch import C234_R   # c234: 첫 발견 빨강 4 · 경찰 1
 R += C234_R
 from c235_patch import C235_R   # c235: 적 피해 숫자
 R += C235_R
+from c236_patch import C236_R   # c236: 빨강 바뀐 수 5명까지
+R += C236_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
