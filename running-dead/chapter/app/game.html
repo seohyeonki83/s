@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c238</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c239</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -322,7 +322,7 @@
   const ALLY_DAMAGE = DAMAGE * 1.1;   // 동료 좀비 공격력 — v163에 10% 올림 (7 → 7.7). 시민(수비형·공격형)은 DAMAGE 그대로
   const MY_DAMAGE = DAMAGE * 3 * 2 * 1.15;   // 내 공격력 = 3배 (v64), v67에 그 두 배, v120에 15% 더 (약 48.3)
   const CH_EMUL = 1.15 * 1.2 * 0.95 * 0.93 * 0.93;   // c235: 챕터 적 공격 배율 (landHit에서 곱한다) — 아래 값은 이걸 곱한 뒤 정확히 그 숫자가 되게
-  const CH_DMG_ORG = 15 / CH_EMUL, CH_DMG_RED = 18 / CH_EMUL, CH_DMG_PO = 20 / CH_EMUL, CH_DMG_SO = 5 / CH_EMUL, CH_DMG_SN = 70 / CH_EMUL;   // 주황 · 빨강 · 경찰 · 군인 한 발 · 저격수
+  const CH_EK = 0.9, CH_DMG_ORG = 15 * CH_EK / CH_EMUL, CH_DMG_RED = 18 * CH_EK / CH_EMUL, CH_DMG_PO = 20 * CH_EK / CH_EMUL, CH_DMG_SO = 5 * CH_EK / CH_EMUL, CH_DMG_SN = 70 * CH_EK / CH_EMUL, CH_DMG_YEL = DAMAGE * CH_EK;   /* c239: 보스 빼고 적 공격력 10% 줄임 */   // 주황 · 빨강 · 경찰 · 군인 한 발 · 저격수
   const HIT_EVERY = 1 / 1.3;   // 공격 간격 (초) — v71에 공속 30% 올림 (약 0.77초)
   const MELEE = 1.7;      // 근접 공격 거리 (원 중심끼리, 유닛) — v97에 1.0 → 1.7
   const LUNGE = 0.35;     // 때릴 때 상대 쪽으로 살짝 붙는 거리 (유닛, 그림만)
@@ -4641,7 +4641,7 @@
       if (b.lungeT >= 0) {                    // 때리는 모션 시간 — 붙는 순간 데미지
         const before = b.lungeT;
         b.lungeT += dt;
-        if (before < LUNGE_IN && b.lungeT >= LUNGE_IN && b.lungeVictim) { landHit(b, b.lungeVictim, isZombie(b) ? zDamage(b) : (CHAPTER && b.attacker ? (b.vig || b.boss ? CH_DMG_RED : CH_DMG_ORG) : DAMAGE) * (b.dmgK || 1)   /* c235 */); b.lungeVictim = null; }   // 좀비 공격력 = 강한 팔 반영 (v201)
+        if (before < LUNGE_IN && b.lungeT >= LUNGE_IN && b.lungeVictim) { landHit(b, b.lungeVictim, isZombie(b) ? zDamage(b) : (CHAPTER && b.attacker ? (b.vig || b.boss ? CH_DMG_RED : CH_DMG_ORG) : CHAPTER ? CH_DMG_YEL : DAMAGE) * (b.dmgK || 1)   /* c235 */); b.lungeVictim = null; }   // 좀비 공격력 = 강한 팔 반영 (v201)
         if (b.lungeT >= LUNGE_IN + LUNGE_OUT) b.lungeT = -1;
       }
     }
