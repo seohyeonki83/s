@@ -1028,6 +1028,8 @@ from c239_patch import C239_R   # c239: 적 공격력 10% 줄임
 R += C239_R
 from c240_patch import C240_R   # c240: 나·동료 공격력 10% 올림
 R += C240_R
+from c241_patch import C241_R   # c241: 덩치 사물 2배
+R += C241_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
