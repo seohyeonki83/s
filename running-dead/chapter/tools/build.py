@@ -1052,6 +1052,8 @@ from c251_patch import C251_R   # c251: 테이저 쿨타임·장탄
 R += C251_R
 from c252_patch import C252_R   # c252: 70% · 14명
 R += C252_R
+from c253_patch import C253_R   # c253: 적 피해 2% 줄임
+R += C253_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

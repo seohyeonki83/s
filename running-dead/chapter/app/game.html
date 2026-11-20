@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c252</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c253</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -322,7 +322,7 @@
   const ALLY_DAMAGE = DAMAGE * 1.1;   // 동료 좀비 공격력 — v163에 10% 올림 (7 → 7.7). 시민(수비형·공격형)은 DAMAGE 그대로
   const MY_DAMAGE = DAMAGE * 3 * 2 * 1.15;   // 내 공격력 = 3배 (v64), v67에 그 두 배, v120에 15% 더 (약 48.3)
   const CH_EMUL = 1.15 * 1.2 * 0.95 * 0.93 * 0.93;   // c235: 챕터 적 공격 배율 (landHit에서 곱한다) — 아래 값은 이걸 곱한 뒤 정확히 그 숫자가 되게
-  const CH_EK = 0.9 * 0.95,   /* c245: 5% 더 */ CH_DMG_ORG = 15 * CH_EK / CH_EMUL, CH_DMG_RED = 18 * CH_EK / CH_EMUL, CH_DMG_PO = 20 * CH_EK / CH_EMUL, CH_DMG_SO = 5 * CH_EK / CH_EMUL, CH_DMG_SN = 70 * CH_EK / CH_EMUL, CH_DMG_YEL = DAMAGE * CH_EK;   /* c239: 보스 빼고 적 공격력 10% 줄임 */   // 주황 · 빨강 · 경찰 · 군인 한 발 · 저격수
+  const CH_EK = 0.9 * 0.95 * 0.98,   /* c253 */   /* c245: 5% 더 */ CH_DMG_ORG = 15 * CH_EK / CH_EMUL, CH_DMG_RED = 18 * CH_EK / CH_EMUL, CH_DMG_PO = 20 * CH_EK / CH_EMUL, CH_DMG_SO = 5 * CH_EK / CH_EMUL, CH_DMG_SN = 70 * CH_EK / CH_EMUL, CH_DMG_YEL = DAMAGE * CH_EK;   /* c239: 보스 빼고 적 공격력 10% 줄임 */   // 주황 · 빨강 · 경찰 · 군인 한 발 · 저격수
   const HIT_EVERY = 1 / 1.3;   // 공격 간격 (초) — v71에 공속 30% 올림 (약 0.77초)
   const MELEE = 1.7;      // 근접 공격 거리 (원 중심끼리, 유닛) — v97에 1.0 → 1.7
   const LUNGE = 0.35;     // 때릴 때 상대 쪽으로 살짝 붙는 거리 (유닛, 그림만)
@@ -6656,7 +6656,7 @@
     if (v.mode === 'pounce') stopPounce(v);
     giveKnock(v, v.foot.x - car.x, v.foot.z - car.z, V, T);
   }
-  const CH_SP_RATE = 10 * 4 / HIT_EVERY, CH_SP_DMG = POLICE_DAMAGE * 1.2 / 4 * 0.9 * 0.9 / 10 * 0.85 * 0.9   /* c221: 15% 줄임 · c222: 10% 더 */, chSpBuf = [];
+  const CH_SP_RATE = 10 * 4 / HIT_EVERY, CH_SP_DMG = POLICE_DAMAGE * 1.2 / 4 * 0.9 * 0.9 / 10 * 0.85 * 0.9 * 0.98   /* c221: 15% 줄임 · c222: 10% 더 · c253: 2% 더 */, chSpBuf = [];
   function chTankSprayAim(car) {               // c201: 사거리 안 좀비가 가장 많이 모인 곳 → 반지름 2.5칸 안 아무 데
     const rim = CAR_L * CH_TK_KL / 2, R = SIGHT + rim, L = [];
     for (const z of nearIn(zCells, car.x, car.z, R, chSpBuf)) if (isZombie(z) && z.hp > 0 && Math.hypot(z.foot.x - car.x, z.foot.z - car.z) <= R && !fireBlocked(car.x, car.z, z.foot.x, z.foot.z)) L.push(z);
@@ -8226,7 +8226,7 @@
     const kx = nX * vn * KNOCK * k2 + tX * 0.6 * k2, kz = nZ * vn * KNOCK * k2 + tZ * 0.6 * k2;   // 법선 쪽으로 튕기고, 스친 쪽으로는 조금 쓸려 간다
     b.hitT = clock + 1; if (car.tr) { b.trHit = car; b.trHitT = clock + 3; }
     const tkD = car.tank && car.tkPh === 'dash';
-    const dmg = CAR_HIT_DMG * ve / CAR_SPEED * (tkD ? (0.5 + Math.max(0, car.tkM)) * 0.9 * 0.85 : 1);   /* c221: 돌진 10% 줄임 · c222: 15% 더 */   // c172: 장갑차 돌진 = 기세만큼
+    const dmg = CAR_HIT_DMG * ve / CAR_SPEED * (tkD ? (0.5 + Math.max(0, car.tkM)) * 0.9 * 0.85 * 0.98 : 1);   /* c253 */   /* c221: 돌진 10% 줄임 · c222: 15% 더 */   // c172: 장갑차 돌진 = 기세만큼
     if (tkD) car.tkM -= m / (CAR_MASS * chCarM(car)) * 0.25;
     if (isZombie(b)) { b.hp = Math.max(0, b.hp - dmg); if (b.hp <= 0) b.knockDie = true; }   // 좀비는 죽으면 밀려가서 멈춘 뒤에 사라진다
     else if (b.hp > 0) b.hp = Math.max(0, b.hp - dmg);             // 시민·경찰은 체력이 깎인다 (0이 되면 덮칠 수 있게 된다)
