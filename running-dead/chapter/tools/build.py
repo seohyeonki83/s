@@ -992,6 +992,8 @@ from c221_patch import C221_R   # c221: 보스 피해 · 첫 발견 확률
 R += C221_R
 from c222_patch import C222_R   # c222: 보스 돌진·기관포·체력
 R += C222_R
+from c223_patch import C223_R   # c223: 특공대 구성
+R += C223_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
