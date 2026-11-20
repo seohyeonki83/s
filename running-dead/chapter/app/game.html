@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c211</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c212</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -785,7 +785,7 @@
       if (B.side && B.sideK !== undefined) {   // c203: 쓰는 쪽문(판마다 같은 자리)·정문·열린 자리만 비우고 나머지 면은 통째로
         const cand = B.locks.filter((L) => !L.front), on = (B.block === START_BLOCK && B.local === 0 && cand.find((L) => L.side === 'n')) || cand[B.sideK % cand.length];
         for (const L of cand) if (L !== on) L.merged = true;
-        const gapsOf = (sd) => [...B.doors, ...B.locks.filter((L) => !L.merged)].filter((D) => D.side === sd).map((D) => { const h = (D.w || DOOR) / 2, c = sd === 'n' || sd === 's' ? D.cx : D.cz; return [c - h, c + h]; }).sort((a, b) => a[0] - b[0]);
+        const gapsOf = (sd) => [...B.doors, ...B.locks.filter((L) => !L.merged), ...(B.rooms || []).flatMap((Q) => Q.locks.filter((L) => L.ext))]   /* c212: 방 바깥 쪽문 자리도 */.filter((D) => D.side === sd).map((D) => { const h = (D.w || DOOR) / 2, c = sd === 'n' || sd === 's' ? D.cx : D.cz; return [c - h, c + h]; }).sort((a, b) => a[0] - b[0]);
         segs = [];
         for (const [sd, hz, k, lo, hi] of [['n', 1, B.z0, B.x0, B.x1], ['s', 1, B.z1, B.x0, B.x1], ['w', 0, B.x0, B.z0, B.z1], ['e', 0, B.x1, B.z0, B.z1]]) {
           let cur = lo; const mk = (a, b) => { if (b - a > 1e-6) segs.push(hz ? [a, k, b, k] : [k, a, k, b]); };
@@ -2975,7 +2975,7 @@
       a.splashing = false;
     }
     if (v.kind === 'obj' && v.type === 'wall' && !v.dead) { if (a === me) { v.F.meT = clock; v.B.meT = clock; }   /* c206: 나만 센다 · c210: 건물도 */ }   // c200 · c207: 벽은 체력바 없음
-    if (v.kind === 'obj') { if (!v.dead) { v.hp = Math.max(0, v.hp - dmg); if (v.type === 'wall') chWallWarp(v); if (v.hp <= 0) breakObj(v); } return; }   // 잠긴 문·경찰차 (v239)
+    if (v.kind === 'obj') { if (!v.dead) { v.hp = Math.max(0, v.hp - dmg); if (v.type === 'wall') { chWallWarp(v); chWallFlash(v); } if (v.hp <= 0) breakObj(v); } return; }   // 잠긴 문·경찰차 (v239)
     if (v.dead || !(v.kind === 'citizen' || v.kind === 'safe' || isZombie(v)) || v.hp <= 0) return;
     v.hp = Math.max(0, v.hp - dmg);
     if (v.kind === 'safe') { if (v.hp <= 0) breakSafe(v); return; }   // 금고 (v190)
@@ -5166,7 +5166,8 @@
     for (const f of fx) scene.remove(f.s);
     fx.length = 0;
   }
-  function drawObjBars(dt) {                  // 깎인 사물만 체력바
+  function drawObjBars(dt) {
+    if (CHAPTER) chWallFlashTick();   // c212                  // 깎인 사물만 체력바
     for (const OL of chObjLists2) for (const o of OL) {
       if (!o.hpBar) continue;
       o.hpBar.visible = !o.dead && o.hp < o.maxHp && !(o.L && o.L.out && !o.L.out.open) && !(o.type === 'table' && !(o.B.parent || o.B).open);   // c53: 방문 체력바는 건물 지붕이 열렸을 때만
@@ -6658,6 +6659,9 @@
       chWallBreak(R, rs, c);
     }
   }
+  const chWallRedMat = flatMat(0xd42a1e), chWallFl = new Set();
+  function chWallFlash(o) { const m = o.seg.m; if (!m || o.dead) return; m.material = chWallRedMat; o.flT = clock + 0.12; chWallFl.add(o); }   // c212: 맞으면 빨갛게 번쩍
+  function chWallFlashTick() { for (const o of chWallFl) if (o.dead || clock >= o.flT || clock < o.flT - 1) { if (o.seg.m) o.seg.m.material = wallMat; chWallFl.delete(o); } }
   function chWallWarp(o, force) {              // c207: 데미지 30% 이상 = 살짝 뒤틀림 · 60% 이상 = 조금 더 (그림만)
     const st = o.hp <= o.maxHp * 0.4 ? 2 : o.hp <= o.maxHp * 0.7 ? 1 : 0;
     if (st === (o.warp || 0) && !force) return;
