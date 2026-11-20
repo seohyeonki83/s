@@ -978,6 +978,8 @@ from c214_patch import C214_R   # c214: 벽 체력 25% 줄임
 R += C214_R
 from c215_patch import C215_R   # c215: 벽 토막 30% 줄임
 R += C215_R
+from c216_patch import C216_R   # c216: 체력바 고정 길이·색 겹
+R += C216_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
