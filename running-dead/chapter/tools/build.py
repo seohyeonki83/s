@@ -1006,6 +1006,8 @@ from c228_patch import C228_R   # c228: 다시 채우기 절반
 R += C228_R
 from c229_patch import C229_R   # c229: 벽 체력 20% 올림
 R += C229_R
+from c230_patch import C230_R   # c230: 나 빼고 체력 10% 줄임
+R += C230_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
