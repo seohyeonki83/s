@@ -988,6 +988,8 @@ from c219_patch import C219_R   # c219: 보스 바 빨강 한 줄
 R += C219_R
 from c220_patch import C220_R   # c220: 처음 발견 빨강·경찰 약화
 R += C220_R
+from c221_patch import C221_R   # c221: 보스 피해 · 첫 발견 확률
+R += C221_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
