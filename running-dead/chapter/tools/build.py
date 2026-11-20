@@ -1046,6 +1046,8 @@ from c248_patch import C248_R   # c248: 경보 출동 인원·간격·섞기
 R += C248_R
 from c249_patch import C249_R   # c249: 특공대 4분의 1 줄임
 R += C249_R
+from c250_patch import C250_R   # c250: 특공대 걸어서·군인차
+R += C250_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
