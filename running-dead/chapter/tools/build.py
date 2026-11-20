@@ -1076,6 +1076,8 @@ from c263_patch import C263_R   # c263: 수상함 전 경계 5배
 R += C263_R
 from c264_patch import C264_R   # c264: 주황·빨강 경계 = 경찰
 R += C264_R
+from c265_patch import C265_R   # c265: 도트 숫자
+R += C265_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

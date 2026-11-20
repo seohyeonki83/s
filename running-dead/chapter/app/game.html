@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c264</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c265</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5529,11 +5529,21 @@
       if (gone || !e.acid.length) { if (e.acidS) { e.mesh.remove(e.acidS); e.acidS = null; } e.acid.length = 0; e.acidT = 0; chAcidL.splice(i, 1); continue; }
       if ((e.acidT += dt) < 0.5) continue;
       e.acidT -= 0.5; const d = 1 + chAcidB();   // c259 · c261: 한 겹만 — 1 + 산성 강도
-      if (car) { const o = e.obj; if (o && o.hp > d) o.hp -= d; continue; }
+      if (car) { const o = e.obj; if (o && o.hp > d) { o.hp -= d; chDotPop(e.x + 0.9, e.z, d, 2.2); } continue; }   // c265
       if (e.hp <= 0) continue;
-      e.hp = Math.max(0, e.hp - d);
+      e.hp = Math.max(0, e.hp - d); if (e.mesh.visible) chDotPop(e.foot.x + 0.6, e.foot.z, d);   // c265
       if (e.hp <= 0 && !e.police && e.state !== 'held') enterPanic(e, null, true);
     }
+  }
+  const chDotTexC = new Map();
+  function chDotTex(n) {                       // c265: '-n' 글자 (숫자마다 한 번만 만든다)
+    let t = chDotTexC.get(n); if (t) return t;
+    const cv = document.createElement('canvas'); cv.width = 128; cv.height = 64; const g = cv.getContext('2d'); g.font = '800 52px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,0.75)'; g.strokeText('-' + n, 64, 34); g.fillStyle = '#ff4a3d'; g.fillText('-' + n, 64, 34);
+    t = new THREE.CanvasTexture(cv); chDotTexC.set(n, t); return t;
+  }
+  function chDotPop(x, z, n, y = 1.3) {        // c265: 도트 숫자가 떠올랐다 사라진다
+    const f = puff(x, y, z, 0xffffff, 0.5, 0.5, 0.75, 0, 0.9, 0, 1);
+    f.s.material.map = chDotTex(n); f.s.scale.set(1.0, 0.5, 1); f.fixedScale = true; f.peak = true; f.s.renderOrder = UI - 1;
   }
   function gooTick(dt) {
     for (const c of bodies) {
@@ -5548,10 +5558,7 @@
       if (c.hp <= 0) continue;                // 체력 0에서 멈춘다 (그다음은 감염)
       c.hp = Math.max(0, c.hp - 2 - chAcidB());   /* c123: 도트 2 · c259: + 산성 강도 */
       if (c.hp <= 0 && !c.police && c.state !== 'held') enterPanic(c, null, true);
-      if (c.mesh.visible) {                   // 아주 작은 -1 이 떠올랐다 사라진다
-        const f = puff(c.foot.x + 0.6, 1.3, c.foot.z, 0xffffff, 0.5, 0.5, 0.75, 0, 0.9, 0, 1);   // v294: 커진 만큼 옆으로
-        f.s.material.map = minusTex; f.s.scale.set(1.0, 0.5, 1); f.fixedScale = true; f.peak = true; f.s.renderOrder = UI - 1;   // v294: 2배 (0.5×0.25 → 1×0.5)
-      }
+      if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, 2 + chAcidB());   // c265: 실제 피해 숫자
     }
   }
 
@@ -6963,7 +6970,7 @@
     }
     const spd = (car.tkSeen ? CAR_SPEED * CH_TR_SPD.sedan * CH_TR_SLOW / 2 * 1.2 :   /* c183: 20% 빠르게 */ CAR_SPEED * 0.9) * (car.goo ? 0.8 : 1);   /* c179: 눈에 띄기 전 = 경찰차의 90% */   /* c168: 보인 뒤 속도 2배 (보통 차의 절반) */   /* c137: 눈에 띄기 전엔 보통 차 속도 */   // 보통 차(승용차)의 4분의 1
     if (car.goo && (car.gooLeft -= dt) <= 0) { car.goo = false; for (const s of car.gooS) car.g.remove(s); }   // c123
-    if (car.goo && (car.gooT += dt) >= 0.5) { car.gooT -= 0.5; const gd = 2 + chAcidB(); if (o && o.hp > gd) o.hp -= gd; }   // c259
+    if (car.goo && (car.gooT += dt) >= 0.5) { car.gooT -= 0.5; const gd = 2 + chAcidB(); if (o && o.hp > gd) { o.hp -= gd; chDotPop(car.x + 0.9, car.z, gd, 2.2); } }   // c259 · c265
     // 벽
     if (chTankWalls(car, dt)) {
       if (car.tkPX !== undefined) { car.x = car.tkPX; car.z = car.tkPZ; car.h = car.tkPH; car.foot.set(car.x, 0, car.z); if (o) o.foot.set(car.x, 0, car.z); }
