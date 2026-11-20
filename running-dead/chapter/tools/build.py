@@ -1010,6 +1010,8 @@ from c230_patch import C230_R   # c230: 나 빼고 체력 10% 줄임
 R += C230_R
 from c231_patch import C231_R   # c231: 내 공격력 10% 줄임
 R += C231_R
+from c232_patch import C232_R   # c232: 적 체력 10% 올림
+R += C232_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
