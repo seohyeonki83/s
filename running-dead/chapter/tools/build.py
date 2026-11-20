@@ -1022,6 +1022,8 @@ from c236_patch import C236_R   # c236: 빨강 바뀐 수 5명까지
 R += C236_R
 from c237_patch import C237_R   # c237: 그대로 남은 수 기준
 R += C237_R
+from c238_patch import C238_R   # c238: 배회 경찰만 굴림
+R += C238_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

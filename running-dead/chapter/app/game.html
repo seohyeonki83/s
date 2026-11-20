@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c237</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c238</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -934,7 +934,7 @@
   let chExact = false;                        // c101: 색을 한 단계 낮추지 않고 말한 그대로 만든다 (현금 수송차에서 내리는 사람)
   let chNoW = false;
   const chRoundP = (x) => Math.floor(x) + (Math.random() < x - Math.floor(x) ? 1 : 0);   // c133: 소수점 아래는 그 확률로 한 명
-  function chCop(p) { const y = Math.random() < 0.1; if (y) chExact = true; const c = chPut(p[0], p[1], chRoamArea(p[0], p[1]), y ? 'guard' : 'police'); if (y) chExact = false; return c; }   // c130: 배회 경찰 열에 하나는 노랑
+  function chCop(p) { const y = Math.random() < 0.1; if (y) chExact = true; const c = chPut(p[0], p[1], chRoamArea(p[0], p[1]), y ? 'guard' : 'police'); if (y) chExact = false; c.street = true; return c; }   /* c238: 길거리 배회 */   // c130: 배회 경찰 열에 하나는 노랑
   function chPut(x, z, area, type, B) {
     let wOut = false; if (!chExact && !chNoW && !B && (type === 'vig' || type === 'attacker') && Math.random() < (type === 'vig' ? 0.19 : 0.1)) { type = ''; wOut = true; }   /* c132: 빨강은 10% 한 번 더 */   // c129: 길거리 빨강·주황 열에 하나는 하양
     if (!chExact && Math.random() < 0.1) type = type === 'guard' ? '' : type === 'attacker' ? 'guard' : type === 'vig' ? 'attacker' : type;   // c98: 열에 하나는 한 단계 약한 색으로 (노랑 → 하양 · 주황 → 노랑 · 빨강 → 주황)
@@ -6559,7 +6559,7 @@
     if ((chDiscT -= dt) > 0) return; chDiscT = 0.1;
     for (const c of bodies) {
       if (c.kind !== 'citizen' || c.disc || c.boss || !(c.hp > 0)) continue;
-      const red = c.attacker && c.vig, cop = c.police && !c.military;
+      const red = c.attacker && c.vig, cop = c.police && !c.military && c.street;   /* c238: 배회 경찰만 */
       if (!(red && chDiscR < CH_DISC_R) && !(cop && chDiscP < CH_DISC_P)) continue;
       if (!(iSee(c) || zSeen(c))) continue;
       c.disc = true;
