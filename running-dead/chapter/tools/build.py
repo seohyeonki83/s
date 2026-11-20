@@ -1050,6 +1050,8 @@ from c250_patch import C250_R   # c250: 특공대 걸어서·군인차
 R += C250_R
 from c251_patch import C251_R   # c251: 테이저 쿨타임·장탄
 R += C251_R
+from c252_patch import C252_R   # c252: 70% · 14명
+R += C252_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c251</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c252</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6549,7 +6549,7 @@
     chSfHud();
   }
   let chDiscR = 0, chDiscP = 0, chDiscT = 0;
-  const CH_DISC_N = 7;   // c246: 그대로 남은 빨강·경찰 합이 7명이 될 때까지
+  const CH_DISC_N = 14;   /* c252: 2배 */   // c246: 그대로 남은 빨강·경찰 합이 7명이 될 때까지
   function chDemote(c, to) {                   // c220: 그 자리에서 노랑('guard') 또는 하양('')으로
     if (c.police) { c.police = false; c.military = false; if (c.tracer) { scene.remove(c.tracer); c.tracer = null; } c.calls = []; c.heading = null; c.onDuty = false; }
     c.attacker = false; c.vig = false; c.guard = to === 'guard';
@@ -6569,7 +6569,7 @@
       if (!red && !cop) continue;
       if (!(iSee(c) || zSeen(c))) continue;
       c.disc = true;
-      const r = Math.random(); if (r < 0.6) chDemote(c, r < 0.3 ? 'guard' : ''); else chDiscR++;   /* c246: 30% · 30% · 40% — 그대로 남은 수(빨강+경찰)를 센다 */
+      const r = Math.random(); if (r < 0.7) chDemote(c, r < 0.35 ? 'guard' : ''); else chDiscR++;   /* c252: 35 · 35 · 30 */   /* c246: 30% · 30% · 40% — 그대로 남은 수(빨강+경찰)를 센다 */
       if (chDiscR >= CH_DISC_N) return;
     }
   }
