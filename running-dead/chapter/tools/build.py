@@ -972,6 +972,8 @@ from c211_patch import C211_R   # c211: 죽은 장갑차 멈춤
 R += C211_R
 from c212_patch import C212_R   # c212: 방 쪽문 자리 · 벽 번쩍
 R += C212_R
+from c213_patch import C213_R   # c213: 벽 체력
+R += C213_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
