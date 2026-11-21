@@ -1196,6 +1196,8 @@ from c323_patch import C323_R   # door overlap width, ally grid nav in room spac
 R += C323_R
 from c324_patch import C324_R   # vomit projectile look
 R += C324_R
+from c325_patch import C325_R   # spit 1.5x
+R += C325_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

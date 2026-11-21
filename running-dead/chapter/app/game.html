@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c324</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c325</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5548,7 +5548,7 @@
   const spV = new THREE.Vector3(), spW = new THREE.Vector3();
   function spit(z, t) {                       // 녹색 토사물 — 날아가서 맞으면 일반 데미지의 2배 · c324: 방향을 가진 덩어리 (머리 앞 · 꼬리 뒤) + 테두리
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: spitTex, color: 0xffffff, transparent: true, depthTest: false, depthWrite: false }));
-    s.scale.set(1.0, 0.5, 1); s.renderOrder = UI_ME - 1;
+    s.scale.set(1.5, 0.75, 1); s.renderOrder = UI_ME - 1;   /* c325: 토사물 1.5배 */
     s.position.copy(z.foot).addScaledVector(UP, RADIUS);
     scene.add(s);
     spits.push({ s, z, t, dmg: z === me ? zDamage(z) : zDamage(z) * 4, dT: 0 });   // v558: 각성한 나는 내 데미지 그대로   // v301: 2배 더 (일반 데미지의 2 → 4배)
