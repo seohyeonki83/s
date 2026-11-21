@@ -1108,6 +1108,8 @@ from c279_patch import C279_R   # 자폭 쿨타임 -25%
 R += C279_R
 from c280_patch import C280_R   # 산성 폭발 확률
 R += C280_R
+from c281_patch import C281_R   # 빠루 50%씩
+R += C281_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
