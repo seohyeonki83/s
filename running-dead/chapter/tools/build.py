@@ -1114,6 +1114,8 @@ from c282_patch import C282_R   # 촉매제
 R += C282_R
 from c283_patch import C283_R   # 틀니 덮치기 · MAX
 R += C283_R
+from c284_patch import C284_R   # 틀니 아이콘
+R += C284_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
