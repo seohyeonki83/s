@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c300</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c301</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -463,7 +463,8 @@
   const TUT_B = CH_TUT ? (() => {             // c289~c300: 큰 맵 남쪽 바깥 — 마을에서 아무도 오지 않는 자리
     const cz = CH_MAP.mm.z1 + 88,   /* c300: 위로 가는 복도가 생겨서 30칸 더 남쪽으로 */ W = 12, D = 13 * 2 / 3, x0 = -W / 2, z0 = cz - D / 2, z1 = cz + D / 2, BS = MELEE * 2 * 2 / 3, doorX = W / 2 - 2.6, CW = 4.4, CL = W, n = CH_MAP.b.length;
     const cTop = z0 - CL, R2x = doorX + CW / 2 + CL, R2z = cTop + CW / 2, C3z = R2z + W / 2 - CW / 2, C3x1 = R2x + D + CL;   // 두 번째 방 · 세 번째 복도
-    const C4x = C3x1 + CW / 2, C4L = 18, C4z0 = C3z + CW / 2 - C4L, R3W = 9, R3D = D * 2, R3z0 = C4z0 - R3D, R3x0 = C4x - R3W / 2, SDx = R3x0 + 2.4;   // c300: 네 번째 복도(위로) · 세 번째 방 · 강철문 자리
+    const C4x = C3x1 + CW / 2, C4L = 18, C4z0 = C3z + CW / 2 - C4L, R3W = 9, R3D = D * 2, R3z0 = C4z0 - R3D, R3x0 = C4x - R3W / 2, SDx = R3x0 + 2.4;
+    const C5L = 16, C6z = R3z0 - C5L - CW / 2, C6L = CW + CL, R4x0 = SDx - CW / 2 + C6L, R4W = D, R4D = W / 2, R4z1 = C6z + R4D / 2, C7L = 20;   // c301: 바리케이트 복도(16) · 꺾인 복도 · 덩치 방(8.7×6) · 넓은 복도(20)   // c300: 네 번째 복도(위로) · 세 번째 방 · 강철문 자리
     return [
       { x: 0, z: cz, w: W, d: D, doors: [], locks: ['n'], at: { n: doorX }, kinds: {}, local: 900, block: -1, t: 'lab', zone: 0 },                 // 실험실 — 문은 위쪽 벽 오른쪽
       { x: x0 + 1 + BS / 2, z: z1 - 1 - BS / 2, w: BS, d: BS, doors: [], locks: [], kinds: {}, local: 901, block: -1, t: 'box', zone: 0, parent: n, room: { doors: [] } },   // 박스
@@ -473,7 +474,10 @@
       { x: R2x + D + CL / 2, z: C3z, w: CL, d: CW, doors: [], open: ['w'], locks: ['e'], kinds: {}, local: 905, block: -1, t: 'labc', zone: 0 },   // 세 번째 복도 — 오른쪽으로 · c300: 끝에 문
       { x: C4x, z: C4z0 + C4L / 2, w: CW, d: C4L, doors: [], open: ['w'], at: { w: C3z }, locks: ['n'], kinds: {}, local: 906, block: -1, t: 'labc', zone: 0 },   // c300: 네 번째 복도 — 위로 쭉
       { x: C4x, z: R3z0 + R3D / 2, w: R3W, d: R3D, doors: [], open: ['s'], at: { s: C4x, n: SDx }, locks: ['n'], kinds: {}, local: 907, block: -1, t: 'lab', zone: 0 },   // c300: 세 번째 방 — 세로로 김 (실험실 세로의 2배) · 아래 문 · 왼쪽 위 강철문
-      { x: SDx, z: R3z0 - CL / 2, w: CW, d: CL, doors: [], open: ['s'], locks: [], kinds: {}, local: 908, block: -1, t: 'labc', zone: 0 },   // c300: 강철문 너머 복도 — 위로 (끝은 막힘)
+      { x: SDx, z: R3z0 - C5L / 2, w: CW, d: C5L, doors: [], open: ['s'], locks: ['n'], kinds: {}, local: 908, block: -1, t: 'labc', zone: 0 },   // c300 · c301: 강철문 너머 복도 — 위로 (바리케이트 둘 · 경찰 3) · 끝에 문
+      { x: SDx - CW / 2 + C6L / 2, z: C6z, w: C6L, d: CW, doors: [], open: ['s'], at: { s: SDx }, locks: ['e'], kinds: {}, local: 909, block: -1, t: 'labc', zone: 0 },   // c301: 오른쪽으로 꺾인 복도 · 끝에 문
+      { x: R4x0 + R4W / 2, z: C6z, w: R4W, d: R4D, doors: [], open: ['w'], at: { e: R4z1 - 2.2 }, locks: ['e'], kinds: {}, local: 910, block: -1, t: 'lab', zone: 0 },   // c301: 덩치 수조 방 (실험실의 반) · 오른쪽 아래 문
+      { x: R4x0 + R4W + C7L / 2, z: R4z1 - 2.2, w: C7L, d: CW * 1.5, doors: [], open: ['w'], locks: [], kinds: {}, local: 911, block: -1, t: 'labc', zone: 0 },   // c301: 1.5배 넓은 복도 — 바리케이트 여섯 · 끝은 막힘
     ];
   })() : [];
   const BUILDINGS = CHAPTER ? (CH_TUT ? CH_MAP.b.concat(TUT_B) : CH_MAP.b) : TEST_MAP ? TEST_BLDGS : BLOCKS.flatMap(([ox, oz], k) => TOWN.map((s) => (k === START_BLOCK && s.station ? BIG : s)).map((s) => ({ ...s, x: s.x + ox, z: s.z + oz, block: k })));
@@ -4709,6 +4713,7 @@
       }
     }
     for (const car of cars) {                 // 경찰차도 (v174)
+      if (CH_TUT && car.z > MM.z1 + 5) { if (car.tutX !== undefined) { car.x = car.tutX; car.z = car.tutZ; car.h = car.tutH; car.vx = car.vz = 0; } continue; }   // c301: 튜토리얼 바리케이트 — 지도 경계에 안 묶이고, 늘 제자리 (밀리거나 서로 밀어내지 않는다)
       const m = CAR_L * ckl(car) / 2;
       if (car.x < MM.x0 + m || car.x > MM.x1 - m) { car.x = Math.max(MM.x0 + m, Math.min(MM.x1 - m, car.x)); car.vx = 0; }
       if (car.z < MM.z0 + m || car.z > MM.z1 - m) { car.z = Math.max(MM.z0 + m, Math.min(MM.z1 - m, car.z)); car.vz = 0; }
@@ -5133,7 +5138,7 @@
     let best = null, bd = Infinity, any = null, ad = Infinity;
     for (const o of objs) {
       if (o.dead || o.off || o.type === 'table') continue;   // c70: 건물 안 사물은 따로 (맨 마지막 순위)
-      if (o.type === 'car' ? z.space : (z.space ? z.space !== o.B && z.space !== o.L.out : !!o.L.out)) continue;   /* c53: 방문은 복도·방 안에서, 쪽문은 밖·방 안에서 */   // 차는 밖에서만, 문은 그 경찰서 밖이나 안에서
+      if (o.type === 'car' ? z.space && z.space !== o.car.tutS : (z.space ? z.space !== o.B && z.space !== o.L.out : !!o.L.out)) continue;   /* c301: 튜토리얼 바리케이트는 그 복도 안에서 친다 */   /* c53: 방문은 복도·방 안에서, 쪽문은 밖·방 안에서 */   // 차는 밖에서만, 문은 그 경찰서 밖이나 안에서
       if (o.type === 'car' && (Math.abs(o.car.x - z.foot.x) > z.sense + 2 || Math.abs(o.car.z - z.foot.z) > z.sense + 2)) continue;   // c59
       if (CHAPTER && o.type === 'door' && (Math.abs(o.L.cx - z.foot.x) > z.sense + 3.5 || Math.abs(o.L.cz - z.foot.z) > z.sense + 3.5)) continue;   // c71: 인지거리보다 먼 문 (문 반폭 여유 3.5칸)
       const tk = CHAPTER && o.type === 'car' && o.car.tank, g = tk ? Math.max(0, Math.hypot(o.car.x - z.foot.x, o.car.z - z.foot.z) - CAR_L * CH_TK_KL / 2) : objGap(o, z);   // c200: 보스는 몸 둘레(원)부터 인지거리
@@ -5733,7 +5738,7 @@
     b.dead = true;
     scene.remove(b.mesh); if (b.hpBar) scene.remove(b.hpBar);
     const i = bodies.indexOf(b); if (i >= 0) bodies.splice(i, 1);
-    if (b.prop) { const P = CH_PROP[b.prop]; if (b.prop === 'pump') boom(b.foot.x, b.foot.z);   /* c85: 주유기는 터진다 (보기만) */ chFurnBreak(b.foot.x, b.foot.z, P, b.space, P.r > 0.45 ? 14 : 9, P.r > 0.45 ? 0.36 : 0.28); if (b.prop === 'zvat' || b.prop === 'hvat') chTutFree(b);   /* c294: 좀비 수조를 깨면 갇힌 좀비가 동료로 */ if (b.space) b.space.navDirty = true; return; }   // c70
+    if (b.prop) { const P = CH_PROP[b.prop]; if (b.prop === 'pump') boom(b.foot.x, b.foot.z);   /* c85: 주유기는 터진다 (보기만) */ chFurnBreak(b.foot.x, b.foot.z, P, b.space, P.r > 0.45 ? 14 : 9, P.r > 0.45 ? 0.36 : 0.28); if (b.prop === 'zvat' || b.prop === 'hvat' || b.prop === 'avat') chTutFree(b);   /* c294: 좀비 수조를 깨면 갇힌 좀비가 동료로 */ if (b.space) b.space.navDirty = true; return; }   // c70
     if (CHAPTER) for (const Q of chFurnSpaces) if (Q === b.B || Q.parent === b.B) Q.navDirty = true;   // c70: 금고가 사라졌다 → 길 찾기 격자 다시
     if (CHAPTER && b.B) b.B.done = true;       // c19: 금고를 깬 건물 = 잠식 (지붕·미니맵 아이콘이 X로)
     debris(b.foot.x, b.foot.z, 20, CHEST_BITS, 0.42, 6.5); if (!b.dud) dust(b.foot.x, b.foot.z, 16, 1.4);   // c24: 금고 — 먼지 + 상자 조각 (꽝 금고 포함. 꽝은 바로 아래에서 먼지를 낸다)
@@ -6514,6 +6519,7 @@
   }
   let chBar = null;
   const chNB = [], chNB2 = [], chNB3 = [];
+  window.__cars = () => cars;   // 테스트용
   function chNearBodies(car) {                 // 그 차 둘레 칸의 몸들 (좀비 + 사람)
     nearIn(zCells, car.x, car.z, 2.6, chNB); const n = chNB.length; nearIn(cCells, car.x, car.z, 2.6, chNB2);
     for (let i = 0; i < chNB2.length; i++) chNB[n + i] = chNB2[i];
@@ -7656,6 +7662,9 @@
     tubes: { r: 0.3, w: 0.62, h: 0.5, hits: 1, f: 1 / 4, bits: 'white', px: [80, 64], draw: (g, w, h) => { const C = ['#6fdc5a', '#d42a1e', '#9b59ff', '#f2c230']; for (let i = 0; i < 4; i++) { chBx(g, 14 + i * 15, 8, 9, h - 26, 'rgba(230,240,245,0.9)'); chFl(g, 15 + i * 15, 22 + i * 3, 7, h - 41 - i * 3, C[i]); } chBx(g, 6, h - 24, w - 12, 18, '#e8ecef'); } },
     biodrum: { r: 0.4, w: 0.78, h: 1.05, hits: 3, f: 1 / 2, bits: 'olive', px: [100, 134], draw: (g, w, h) => { chBx(g, 12, 10, w - 24, h - 18, '#e8c21e'); chFl(g, 12, 36, w - 24, 6, '#b8970f'); chFl(g, 12, h - 36, w - 24, 6, '#b8970f'); g.fillStyle = '#111'; g.font = 'bold 44px sans-serif'; g.textAlign = 'center'; g.fillText('☣', w / 2, h / 2 + 16); } },
     wcab: { r: 0.45, w: 0.9, h: 1.4, hits: 3, f: 2 / 3, bits: 'white', px: [116, 180], draw: (g, w, h) => { chBx(g, 8, 8, w - 16, h - 16, '#eef1f3'); chBx(g, 16, 18, w - 32, h - 70, 'rgba(170,210,225,0.8)'); for (const [x, y, c] of [[24, 36, '#6fdc5a'], [44, 34, '#d42a1e'], [66, 38, '#f2f2ee'], [30, 78, '#9b59ff'], [56, 74, '#e89aa8'], [78, 80, '#6fdc5a']]) chFl(g, x, y, 10, 22, c); chFl(g, 16, 64, w - 32, 4, '#9aa3ad'); chFl(g, w / 2 - 12, h - 44, 24, 8, '#d42a1e'); chFl(g, w / 2 - 4, h - 52, 8, 24, '#d42a1e'); } },
+    avat: { r: 1.15, w: 2.3, h: 2.5, hits: 6, f: 1, bits: 'white', px: [300, 326], draw: (g, w, h) => { chBx(g, 10, h - 36, w - 20, 28, '#4a4f5c'); chBx(g, 10, 8, w - 20, 24, '#4a4f5c'); chBx(g, 16, 32, w - 32, h - 68, 'rgba(120,200,220,0.5)'); chFl(g, 20, 46, w - 40, h - 86, 'rgba(60,140,170,0.55)');   // c301: 덩치 좀비가 갇힌 아주 큰 수조 — 덩치 크기(1.5배) 짙은 파랑 원
+        g.beginPath(); g.arc(w / 2, h / 2 + 4, 96, 0, Math.PI * 2); g.fillStyle = '#1f3d99'; g.fill();
+        for (const [x, y, r] of [[44, 80, 7], [252, 110, 6], [240, 250, 8], [54, 240, 6], [150, 60, 5]]) { g.beginPath(); g.arc(x, y, r, 0, 7); g.fillStyle = 'rgba(220,245,255,0.8)'; g.fill(); } } },
     hvat: { r: 0.8, w: 1.6, h: 2.0, hits: 5, f: 1, bits: 'white', px: [208, 260], draw: (g, w, h) => { chBx(g, 10, h - 34, w - 20, 26, '#4a4f5c'); chBx(g, 10, 8, w - 20, 22, '#4a4f5c'); chBx(g, 16, 30, w - 32, h - 64, 'rgba(120,220,170,0.5)'); chFl(g, 20, 44, w - 40, h - 82, 'rgba(70,170,110,0.55)');   // c300: 히드라 좀비가 갇힌 수조 — 초록 원 + 보라 보석
         const cx = w / 2, cy = h / 2 + 4; g.beginPath(); g.arc(cx, cy, 64, 0, Math.PI * 2); g.fillStyle = '#2fb84a'; g.fill();
         const gem = (s, c) => { g.beginPath(); g.moveTo(cx, cy - 64 - s); g.lineTo(cx + s, cy - 64); g.lineTo(cx, cy - 64 + s); g.lineTo(cx - s, cy - 64); g.closePath(); g.fillStyle = c; g.fill(); }; gem(24, '#1c1c1e'); gem(17, '#b05cff');
@@ -7867,7 +7876,7 @@
   const chTutArrowTex = chTexOf(96, 80, (g) => { g.beginPath(); g.moveTo(10, 10); g.lineTo(86, 10); g.lineTo(48, 70); g.closePath(); g.lineJoin = 'round'; g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,0.85)'; g.stroke(); g.fillStyle = '#ffffff'; g.fill(); });   // c296: 얻을 수 있는 곳 표시 — 하얀 세모
   function chTutFx() {                         // c296: 좀비 수조 — 뒤에서 빛이 깜빡이고 머리 위 하얀 세모가 위아래로
     const t = performance.now() / 1000;
-    for (const b of chProps) { if ((b.prop !== 'zvat' && b.prop !== 'hvat') || b.dead || !bodies.includes(b)) continue;
+    for (const b of chProps) { if ((b.prop !== 'zvat' && b.prop !== 'hvat' && b.prop !== 'avat') || b.dead || !bodies.includes(b)) continue;
       if (!b.glowS) { b.glowS = new THREE.Sprite(new THREE.SpriteMaterial({ map: flashTex, color: 0x9dffc8, transparent: true, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false })); b.glowS.renderOrder = -0.3; scene.add(b.glowS);
         b.arrS = new THREE.Sprite(new THREE.SpriteMaterial({ map: chTutArrowTex, transparent: true, depthTest: false, depthWrite: false })); b.arrS.renderOrder = UI; b.arrS.scale.set(0.55, 0.46, 1); scene.add(b.arrS); }
       const H = (b.halfH || 1) * 2, on = b.mesh.visible;
@@ -7879,6 +7888,7 @@
   function chTutFree(b) {
     if (b.glowS) { scene.remove(b.glowS); scene.remove(b.arrS); b.glowS = b.arrS = null; }   // c296                     // c294: 수조에서 풀려난 좀비 = 바로 내 동료
     const x = b.foot.x, z = b.foot.z + 0.3, A = { x0: x - 1, z0: z - 1, x1: x + 1, z1: z + 1 }, c = addCitizen(x, z, A, ''); c.space = b.space; c.disc = true; makeZombie(c);
+    if (b.prop === 'avat') mutate(c, 'armor');   // c301: 덩치 수조 = 영구 덩치 동료
     if (b.prop === 'hvat') { mutate(c, 'hydra'); const gq = new THREE.Group(), mk = (sz, col, zz) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(sz, sz), new THREE.MeshBasicMaterial({ color: col, transparent: true, depthTest: false, depthWrite: false })); m.rotation.z = Math.PI / 4; m.position.z = zz; m.renderOrder = 1; return m; }; gq.add(mk(0.38, 0x1c1c1e, 0), mk(0.27, 0xb05cff, 0.002)); gq.position.set(0, 0.5, 0.02); c.mesh.add(gq); c.gem = gq; }   // c300: 히드라 수조 = 영구 히드라 동료 (보석 표시)
     for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; puff(x, 0.6, z, i % 2 ? 0x7ed3a0 : 0x8aa4f5, 0.4, 1.3, 0.55, Math.cos(a) * 3, 0.5, Math.sin(a) * 3, 0.9); }
   }
@@ -7901,7 +7911,16 @@
     const [, , C3, C4, C5] = buildings.filter((B) => B.type === 'labc'), L3 = buildings.find((B) => B.local === 907);   // c300
     for (const dz of [-0.9, 0.9]) { const p = man(C3, 'police', C3.x1 - 1.2, (C3.z0 + C3.z1) / 2 + dz, 0.5); p.post = p.area; enterNormal(p); }   // 세 번째 복도 끝 경찰 2
     for (const dx of [-0.9, 0.9]) { const p = man(C4, 'police', (C4.x0 + C4.x1) / 2 + dx, (C4.z0 + C4.z1) / 2, 0.5); p.post = p.area; enterNormal(p); }   // 네 번째 복도 중간 경찰 2
-    for (const dx of [-1.2, 0, 1.2]) { const p = man(C5, 'police', (C5.x0 + C5.x1) / 2 + dx, (C5.z0 + C5.z1) / 2, 0.5); p.post = p.area; enterNormal(p); }   // 강철문 너머 복도 중간 경찰 3
+    const barr = (x, z, h, len) => { const car = chParked(x, z, h, true); car.kl = len / CAR_L; car.g.scale.set(car.kl, 1, 1); car.massK = 1e6; car.tutS = buildings.find((B) => x > B.x0 && x < B.x1 && z > B.z0 && z < B.z1 && CH_TUTT.has(B.type)); car.tutX = x; car.tutZ = z; car.tutH = h; return car; };   // 튜토리얼 바리케이트는 안 밀린다 (부숴야 한다)   // c301: 큰 맵 바리케이트 그대로 — 길이만 늘려 벽에서 벽까지 (겹쳐서 빈틈없이)
+    barr(C5.x0 + 1.3, C5.z1 - 7, 0, 2.6); barr(C5.x1 - 1.3, C5.z1 - 7.7, 0, 2.6);   // 강철문 너머 복도: 바리케이트 둘 (가운데 0.8칸 겹침)
+    for (const dx of [-1.2, 0, 1.2]) { const p = man(C5, 'police', (C5.x0 + C5.x1) / 2 + dx, C5.z1 - 10.2, 0.5); p.post = p.area; enterNormal(p); }   // 그 뒤 경찰 3
+    { const C7 = buildings.find((B) => B.local === 911), R4 = buildings.find((B) => B.local === 910), zc = (C7.z0 + C7.z1) / 2;
+      for (const [dx, dz] of [[0, -2.1], [0, 0], [0, 2.1], [0.75, -1.1], [0.75, 1.1], [0.75, 0]]) barr(C7.x0 + 10 + dx, zc + dz, Math.PI / 2, dx ? 2.6 : 2.6);   // 넓은 복도: 바리케이트 여섯 (두 줄 · 겹쳐서 빈틈없이)
+      for (const [t, dz] of [['vig', -2.0], ['attacker', -0.7], ['attacker', 0.7], ['vig', 2.0]]) { const c = man(C7, t === 'vig' ? 'attacker' : t, C7.x0 + 7.6, zc + dz, 0.4); if (t === 'vig') chVig(c); }   // 바리케이트 앞: 빨강 2 · 주황 2
+      for (const dz of [-2.4, -0.8, 0.8, 2.4]) { const p = man(C7, 'police', C7.x0 + 13.2, zc + dz, 0.4); p.post = p.area; enterNormal(p); }   // 바리케이트 뒤: 경찰 4
+      { const sf = addSafe(C7) || C7.safe; sf.foot.set(C7.x0 + 17, 0, zc); sf.px = sf.foot.x; sf.pz = sf.foot.z; sf.space = C7; sf.B = C7; sf.room = null; sf.loot = chLoot('house'); sf.dud = !sf.loot; }   // 그 뒤 금고 하나
+      put(R4, [['avat', 4.3, 1.4], ['wcab', 1.0, 0.6], ['tubes', 2.2, 0.6], ['jarEye', 6.6, 0.6], ['jarBrain', 7.6, 0.6], ['iv', 0.6, 4.5], ['biodrum', 5.4, 5.2], ['scope', 7.9, 1.6]]);   // 덩치 수조 방 — 적 없음
+      chAddSlab('rbed', R4.x0 + 2.6, R4.z0 + 4.9, 0, R4); }
     for (const [x, z] of [[2.4, 5.0], [5.0, 5.0], [2.4, 12.0], [5.0, 12.0]]) chAddSlab('lbench', L3.x0 + x, L3.z0 + z, Math.PI / 2, L3);   // 세 번째 방: 긴 실험대 4
     chAddSlab('rbed', L3.x0 + 1.6, L3.z0 + 15.6, 0, L3);
     put(L3, [['hvat', 5.0, 1.0], ['vat', 8.3, 0.9], ['wcab', 7.0, 0.55], ['chair', 1.55, 4.2], ['chair', 1.55, 5.8], ['chair', 5.85, 4.2], ['chair', 5.85, 5.8], ['chair', 1.55, 11.2], ['chair', 1.55, 12.8], ['chair', 5.85, 11.2], ['chair', 5.85, 12.8],

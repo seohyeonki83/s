@@ -1148,6 +1148,8 @@ from c299_patch import C299_R   # 구속 침대
 R += C299_R
 from c300_patch import C300_R   # 세 번째 방
 R += C300_R
+from c301_patch import C301_R   # 바리케이트 · 덩치 방
+R += C301_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
