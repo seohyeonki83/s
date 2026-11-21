@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c310</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c311</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2763,6 +2763,11 @@
   }
   let pushedCar = false;
   function carClampB(car) {                   // v463: 건물에 파고든 차를 가장 가까운 벽 밖으로
+    if (CHAPTER && car.tutS) {                  // c311: 복도 안 바리케이트 — 거꾸로 그 복도 벽 안쪽으로 (돌아간 만큼의 폭까지)
+      const S = car.tutS, c = Math.abs(Math.cos(car.h)), s = Math.abs(Math.sin(car.h)), L = CAR_L * ckl(car), W = CAR_W * ck(car) * (car.barr ? CH_BARR_W : 1), ex = c * L / 2 + s * W / 2, ez = s * L / 2 + c * W / 2;
+      car.x = Math.max(S.x0 + ex, Math.min(S.x1 - ex, car.x)); car.z = Math.max(S.z0 + ez, Math.min(S.z1 - ez, car.z));
+      return;
+    }
     for (const B of buildings) {
       const m = CAR_W * ck(car) / 2 + 0.2;
       if (car.x <= B.x0 - m || car.x >= B.x1 + m || car.z <= B.z0 - m || car.z >= B.z1 + m) continue;

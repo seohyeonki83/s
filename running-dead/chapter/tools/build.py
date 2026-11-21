@@ -1168,6 +1168,8 @@ from c309_patch import C309_R   # 큰 맵 바리케이트 그대로
 R += C309_R
 from c310_patch import C310_R   # 세모 문 바로 앞
 R += C310_R
+from c311_patch import C311_R   # 바리케이트 복도 안에 가둠
+R += C311_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
