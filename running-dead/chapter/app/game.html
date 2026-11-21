@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c287</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c288</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3178,7 +3178,7 @@
     }
     return false;
   }
-  const chDown = (b) => b.hp <= 0 || (CHAPTER && owned.teeth && !b.boss && b.hp <= b.maxHp * 0.05 * (1 + lv('teeth')));   // c283: 틀니 — 체력이 이만큼 남으면 덮칠 수 있다
+  const chDown = (b) => b.hp <= 0;   // c288: 틀니 덮치기 기준 없앰 — 체력 0일 때만
   function pounceable(z) {
     let best = null, bd = z.attack;
     for (const b of nearIn(cCells, z.foot.x, z.foot.z, z.attack, poBuf)) {   // 둘레 칸의 시민만 (v177)
@@ -3223,7 +3223,6 @@
     z.vel.set(0, 0);
     z.fixed = t.fixed = true;                // 무는 동안 둘 다 그 자리에 붙는다
     t.state = 'held';
-    if (t.hp > 0) t.hp = 0;   // c283: 틀니로 덮친 사람 — 물리는 순간 쓰러진다
     t.lureAlert = false;                      // v195: 덮쳐져도 다시 유혹에 걸릴 수 있다 (풀려나면 돈다발이 보이면 다시 간다)
     t.biter = z;                              // 게이지는 무는 쪽의 남은 시간으로 찬다
     t.vel.set(0, 0);
@@ -4779,7 +4778,7 @@
     stim: ['일정 시간마다 동료 한 마리를 강화시키는 주사를 주입합니다.', '강화 시 주사 효과가 더 강해집니다.'],
     revive: ['죽으면 되살아납니다. 다시 쓰려면 2분이 지나야 합니다.', '강화 시 기다리는 시간이 10%씩 줄어듭니다.'],
     shoes: ['나와 동료들의 이동 속도 증가', '강화 시 더 빨라집니다.'],   /* c225: 사용자 문구 */
-    teeth: ['나와 동료들이 인간을 더 빠르게 좀비로 만듭니다', '강화 시 더 빨라집니다.'],   /* c226 */
+    teeth: ['인간을 덮칠 때 감염시키는 시간이 줄어듭니다. 체력 회복량이 늘어납니다.', '강화 시 더 빨라지고 회복량이 더 늘어납니다.'],   /* c226 */
     acidp: ['산성 피해를 입은 적의 도트 데미지가 늘어납니다', '강화 시 더 늘어납니다.'],   /* c259 */
     acid: ['동료들이 산성피를 뿌리며 전사합니다', '강화 시 터질 확률이 오르고 더 오래 갑니다.'],
     bag: ['들 수 있는 무기가 하나 늘어납니다.', '강화 시 하나 더 늘어납니다.'],
@@ -4831,10 +4830,10 @@
   const vestK = (n) => CHAPTER ? 1 - 0.1 * (n + 1) : Math.pow(0.8, n + 1);   /* c21: 방탄복 10%, 강화마다 +10%p (60%까지) */   // v582: 원거리 20% 감쇄, 강화마다 남은 데미지에서 20%씩 더
   const vestPct = (n) => Math.round((1 - vestK(n)) * 100);   // v580: 다시 강화마다 +10%
   const bitePct = (n = up.bite) => 12 * Math.max(0, n);
-  const biteK = (n = up.bite) => Math.max(0, 1 - bitePct(n) / 100) * (CHAPTER && owned.teeth ? 1 - 0.1 * (1 + lv('teeth')) : 1);   /* c224: 틀니 */   // 감염 시간 배율 — 0이면 즉시 감염
+  const biteK = (n = up.bite) => Math.max(0, 1 - bitePct(n) / 100) * (CHAPTER && owned.teeth ? 1 / (1 + 0.8 / 6 * (1 + lv('teeth'))) : 1);   /* c288: 틀니 — 감염 속도 113 · 127 · 140 · 153 · 167 · 180% */   // 감염 시간 배율 — 0이면 즉시 감염
   const myBiteLen = (n = up.bite) => INFECT / MY_INFECT * biteK(n);
   const zDamage = (z) => (z === me ? MY_DAMAGE : ALLY_DAMAGE) * (1 + 0.07 * up.arm) * (z.mut === 'armor' && z !== me ? 1.3 * 1.3 * 2 : 1) * (CHAPTER && z.mut && owned.catalyst ? 1 + 0.1 * (1 + lv('catalyst')) : 1   /* c282: 10%씩 */);   /* c19: 촉매제 */   /* v558: 각성한 나는 내 공격력 그대로 */   /* v551: 덩치 기본 데미지 2배 */   // v275: 갑옷좀비 공격력 1.3배
-  const zHeal = (z) => (z === me ? MY_BITE_HEAL : BITE_HEAL) + 0.04 * up.meat;   // 감염 시간 1배 기준 초당 회복 (최대 체력 대비)
+  const zHeal = (z) => ((z === me ? MY_BITE_HEAL : BITE_HEAL) + 0.04 * up.meat) * (CHAPTER && owned.teeth ? 1 + 0.05 * (1 + lv('teeth')) : 1);   /* c288: 틀니 — 회복량 +5%씩 (나·동료 전부) */   // 감염 시간 1배 기준 초당 회복 (최대 체력 대비)
   const allyMaxHp = () => ALLY_HP * 0.9 * 0.9 * (1 + 0.07 * up.skin);   /* c230: 10% 줄임 */   /* c164: c163의 7%를 되돌림 (85.05) */   /* c163: 동료 7% 올림 (85.05 → 91.0) */   /* c136: 동료 10% 깎음 (94.5 → 85.05) — 체력바 한 겹 기준(ALLY_HP)은 그대로 */   // v267: 단단한 피부 3% → 5%
   const allyAttack = () => ALLY_ATTACK;       // v256: 빠른 다리는 이제 습격 거리가 아니라 이동 속도
   const legK = () => 1 + 0.07 * up.leg + (CHAPTER && owned.shoes ? 0.05 * (1 + lv('shoes')) : 0);   /* c224: 운동화 = 나·동료·변이 · c257: 5%씩 */      // 빠른 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
@@ -5472,7 +5471,7 @@
   function useBomb() {                        // v520: 맵 전체 동료 중 — 터지는 범위 안에 있는 가장 높은 티어(저격수 > 군인 > 경찰 > 빨강 > 주황 > 노랑)를 맞힐 수 있는 동료들 가운데, 범위 안 적이 가장 많은 동료가 터진다
     const all = zombies.filter((z) => z !== me && isZombie(z));
     if (!all.length) return false;
-    const plain = all.filter((z) => !z.mut), al = plain.length ? plain : all;   // v521: 변이 좀비는 최후순위 — 일반 동료가 하나도 없을 때만
+    const al = all.filter((z) => !z.mut); if (!al.length) return false;   // c288: 변이 좀비는 자폭하지 않는다   // v521: 변이 좀비는 최후순위 — 일반 동료가 하나도 없을 때만
     const R = 1.5 + lv('bomb');   /* c139: 1.5칸에서 강화마다 +1칸 */   // c21: 자폭 범위 = 내 덮치는 거리(3.24칸), 강화마다 +20% (2배까지)   // v559: 20% 줄임 (5.4 → 4.32칸) — v556: 1.5배
     const tier = (c) => CHAPTER ? chTier(c) : c.sniper ? 5 : c.soldier ? 4 : c.police ? 3 : c.attacker ? 2 : c.guard ? 1 : 0;
     let best = null, bT = -1, bN = -1, bD = Infinity, bS = -1, ties = [];
@@ -5803,7 +5802,7 @@
     crowbar: '내가 문, 벽, 금고, 차, 사물을 때릴 때 피해가 늘어납니다. 동료에게는 적용되지 않습니다. 강화하면 더 늘어납니다.',
     vest: '총격처럼 멀리서 날아오는 공격의 피해를 줄이고, 총에 맞아 뒤로 밀리는 힘도 줄여 줍니다. 나에게만 적용됩니다. 강화하면 더 잘 버팁니다.',
     shoes: '나와 동료, 변이한 좀비 모두의 이동 속도가 오릅니다. 강화하면 더 빨라집니다.',
-    teeth: '나와 동료들이 인간을 좀비로 만드는 시간이 줄어들고, 체력이 조금 남은 인간도 바로 덮칠 수 있습니다. 강화하면 더 빨라지고 더 많이 남아도 덮칩니다.',
+    teeth: '나와 동료들이 인간을 덮칠 때 감염시키는 시간이 줄어들고, 물어뜯으며 회복하는 체력이 늘어납니다. 강화하면 더 빨라지고 더 많이 회복합니다.',
     acid: '동료가 죽는 자리에 산성피가 퍼져 그 안의 적에게 계속 피해를 줍니다. 확률로 터지고, 겹쳐도 피해는 쌓이지 않습니다. 강화하면 터질 확률이 오르고 더 오래 남습니다.',
     acidp: '산성 폭발과 산성 자폭 스위치의 산성 피해가 늘어납니다. 산성 무기나 장비가 없으면 효과가 없습니다. 강화하면 더 늘어납니다.',
     catalyst: '변이한 좀비의 공격력과 최대 체력이 함께 오릅니다. 강화하면 더 오릅니다.',
@@ -5922,7 +5921,7 @@
     absorb: (n) => `충격 흡수 ${2 + 2.5 * n} (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12)`,
     vest: (n) => `원거리 공격 ${10 * (1 + n)}% 감소 · 밀림 ${2 + 2.5 * n} 감소`,   /* c273 */
     shoes: (n) => `나·동료 이동 속도 +${5 * (1 + n)}%`,
-    teeth: (n) => `감염 시간 -${10 * (1 + n)}% · 체력 ${5 * (1 + n)}% 이하면 덮침`,   /* c224 */
+    teeth: (n) => `감염 속도 ${Math.round(100 + 80 / 6 * (1 + n))}% · 체력 회복량 +${5 * (1 + n)}%`,   /* c224 */
     acidp: (n) => `산성 도트 +${1 + n} (0.5초마다)`,   /* c259 */
     acid: (n) => `터질 확률 ${50 + 10 * n}% · ${+(3 + 0.4 * n).toFixed(1)}초 · 0.5초마다 1 · 범위 = 근접 거리 x1.2`,   /* c280 */   /* c261: 겹치지 않음 */
     revive: (n) => `체력 가득으로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,
@@ -5981,11 +5980,11 @@
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
     bomb: ['', (n) => `${1.5 + n}칸·${4 + 2 * n}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['강도', (n) => `${n ? '+' : ''}${CH_WV('cashH', n)}`]   /* c226 */,
     book: ['쿨타임', (n) => `-${7 * (1 + n)}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${10 + 10 * n}%`], crowbar: ['사물', (n) => `+${50 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`]   /* c278: 카드는 총격만 (밀림은 설명 칸에) */,
-    shoes: ['이동', (n) => `+${5 * (1 + n)}%`], teeth: ['감염', (n) => `-${10 * (1 + n)}%`], acid: ['확률', (n) => `${50 + 10 * n}%`], acidp: ['도트', (n) => `+${1 + n}`],   /* c224 */ catalyst: ['공격', (n) => `+${10 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
+    shoes: ['이동', (n) => `+${5 * (1 + n)}%`], teeth: ['감염', (n) => `${Math.round(100 + 80 / 6 * (1 + n))}%`], acid: ['확률', (n) => `${50 + 10 * n}%`], acidp: ['도트', (n) => `+${1 + n}`],   /* c224 */ catalyst: ['공격', (n) => `+${10 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
   const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
     bomb: '동료 하나가 자폭', mutate: '동료 하나를 변이', taser: '적을 감전', awaken: '내가 변이', cash: '적을 유혹',
-    book: '무기 쿨타임 단축', bag: '쓸 수 있는 무기 +1', rage: '동료들의 공격·이동 속도 증가', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해·밀림 감소', shoes: '나와 동료들의 이동 속도 증가', teeth: '나와 동료들의 감염 속도 증가', acid: '동료가 죽으면 산성피', acidp: '산성 도트 데미지 증가', catalyst: '변이 좀비 공격력·체력 증가', blood: '내 최대 체력 증가', revive: '죽으면 되살아남',
+    book: '무기 쿨타임 단축', bag: '쓸 수 있는 무기 +1', rage: '동료들의 공격·이동 속도 증가', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해·밀림 감소', shoes: '나와 동료들의 이동 속도 증가', teeth: '감염 속도·회복량 증가', acid: '동료가 죽으면 산성피', acidp: '산성 도트 데미지 증가', catalyst: '변이 좀비 공격력·체력 증가', blood: '내 최대 체력 증가', revive: '죽으면 되살아남',
   };
   function chUpPool() {                       // 레벨업에 나올 수 있는 것 — 14종 전부, 끝까지 올린 것만 뺀다
     return CH_ITEMS.filter((k) => ITEM[k].passive && !(chHas(k) && lv(k) >= chLvMax(k)));   /* c125: 레벨업에는 장비만 (무기는 '무기 강화' 카드로) */
