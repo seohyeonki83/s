@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c349</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c350</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -9006,7 +9006,7 @@
     acqOpen = true; paused = true; stopInput();
     const ov = document.createElement('div');
     ov.id = 'acq'; ov.dataset.kind = 'mut:' + type;
-    const name = type === 'armor' ? '덩치 좀비' : type === 'zombie' ? '좀비' : '히드라 좀비', ds = type === 'zombie' ? '동료를 획득했습니다. 더 많은 동료를 모으세요.' : type === 'armor' ? '덩치 큰 동료를 얻었습니다. 밀어붙이세요' : '토사물을 내뿜는 동료를 얻었습니다. 원거리 공격이 가능합니다.';
+    const name = type === 'armor' ? '덩치 변이 좀비' : type === 'zombie' ? '좀비' : '히드라 변이 좀비',   /* c350: 변이 동료는 이름에 "변이" */ ds = type === 'zombie' ? '동료를 획득했습니다. 더 많은 동료를 모으세요.' : type === 'armor' ? '덩치 큰 동료를 얻었습니다. 밀어붙이세요' : '토사물을 내뿜는 동료를 얻었습니다. 원거리 공격이 가능합니다.';
     ov.innerHTML = `<div style="font:900 54px/1 var(--font);letter-spacing:3px;color:#ff4a3a;text-shadow:0 0 16px rgba(255,60,0,0.95),0 0 44px #ff2a00,0 4px 10px rgba(0,0,0,0.85);animation:wpnpop 0.45s ease-out both;margin-bottom:14px">동료 획득</div><div class="big">${chMutIcon(type)}</div><div class="t" style="font-size:30px;color:#ffd34d">${name}</div><div class="ds">${ds}</div>`;
     stage.appendChild(ov);
     tapOk(ov, '확인', () => {

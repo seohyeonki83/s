@@ -1,0 +1,1 @@
+C350_R = [("const name = type === 'armor' ? '덩치 좀비' : type === 'zombie' ? '좀비' : '히드라 좀비',", 'const name = type === \'armor\' ? \'덩치 변이 좀비\' : type === \'zombie\' ? \'좀비\' : \'히드라 변이 좀비\',   /* c350: 변이 동료는 이름에 "변이" */')]
