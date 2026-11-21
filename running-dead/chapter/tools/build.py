@@ -1116,6 +1116,8 @@ from c283_patch import C283_R   # 틀니 덮치기 · MAX
 R += C283_R
 from c284_patch import C284_R   # 틀니 아이콘
 R += C284_R
+from c285_patch import C285_R   # 산성 폭발 시간
+R += C285_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
