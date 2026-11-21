@@ -1170,6 +1170,8 @@ from c310_patch import C310_R   # 세모 문 바로 앞
 R += C310_R
 from c311_patch import C311_R   # 바리케이트 복도 안에 가둠
 R += C311_R
+from c312_patch import C312_R   # 긴 탁자 줄임
+R += C312_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
