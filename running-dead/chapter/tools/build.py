@@ -1250,6 +1250,8 @@ from c350_patch import C350_R   # mutant ally names include 변이
 R += C350_R
 from c351_patch import C351_R   # minimap me dot 2x
 R += C351_R
+from c352_patch import C352_R   # minimap dot 1.5x, bomb pick by score at target within my circle
+R += C352_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

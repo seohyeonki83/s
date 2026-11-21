@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c351</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c352</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2967,7 +2967,7 @@
       g.fillStyle = 'rgba(0, 0, 0, 0.9)'; g.beginPath(); g.arc(px, py, pr, 0, Math.PI * 2); g.fill(); g.lineWidth = 1 * u; g.strokeStyle = '#ffd34d'; g.stroke();
       g.fillStyle = '#ffd34d'; g.font = '900 ' + Math.round(8.5 * u) + 'px system-ui, -apple-system, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', px, py + 0.4 * u);
     }
-    const r = 2.1 * 2 * u;   /* c351: 2배 */                          // 나 = 빨간 점
+    const r = 2.1 * 1.5 * u;   /* c352: 1.5배 */                          // 나 = 빨간 점
     g.beginPath(); g.arc(X(me.foot.x), Z(me.foot.z), r, 0, Math.PI * 2);
     g.fillStyle = '#ff3b30'; g.fill(); g.lineWidth = 1 * u; g.strokeStyle = 'rgba(255, 255, 255, 0.9)'; g.stroke();
   }
@@ -3054,7 +3054,7 @@
       mmCtx.fillStyle = '#ffd25a'; mmCtx.beginPath(); mmCtx.arc(px, py, pr, 0, Math.PI * 2); mmCtx.fill();
       if (p.img && p.img.complete && p.img.naturalWidth) mmCtx.drawImage(p.img, px - pr * 0.8, py - pr * 0.8, pr * 1.6, pr * 1.6);
     }
-    const r = 2.2 * 2 * mmDpr;   /* c351: 2배 */                    // 나 = 빨간 점 (미니맵이 작아져서 조금 작게)
+    const r = 2.2 * 1.5 * mmDpr;   /* c352: 1.5배 */                    // 나 = 빨간 점 (미니맵이 작아져서 조금 작게)
     mmCtx.beginPath(); mmCtx.arc(X(me.foot.x), Z(me.foot.z), r, 0, Math.PI * 2);
     mmCtx.fillStyle = '#ff3b30'; mmCtx.fill();
     mmCtx.lineWidth = 1 * mmDpr; mmCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; mmCtx.stroke();
@@ -5625,11 +5625,28 @@
   }
 
   // 자폭 스위치: 내 인지거리 안 동료 중 둘레(인지거리의 1/3)에 적이 가장 많이(가까울수록 더) 붙은 동료가 터진다 — 데미지는 없고 산성 덩어리만
+  function chBombPick(al, R) {               // c352: 내 원(인지거리) 안 동료만 — 각자 가장 가까운 인간에게 달려들어 터진다고 보고, 그 자리 둘레 점수가 가장 큰 동료가 터진다
+    const cand = al.filter((z) => Math.hypot(z.foot.x - me.foot.x, z.foot.z - me.foot.z) <= me.sense);
+    if (!cand.length) return false;
+    let best = null, bS = -1, bT = null, bD = Infinity, ties = [];
+    for (const z of cand) {
+      let t = null, bd = 14; for (const c of nearIn(cCells, z.foot.x, z.foot.z, 14, chBombBuf)) { if (c.kind !== 'citizen' || c.space !== z.space) continue; const d = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z); if (d < bd) { bd = d; t = c; } }
+      if (!t) continue;
+      let sc = 0; for (const c of nearIn(cCells, t.foot.x, t.foot.z, R, mutBuf)) { if (c.kind !== 'citizen' || c.space !== t.space || Math.hypot(c.foot.x - t.foot.x, c.foot.z - t.foot.z) > R) continue; sc += c.boss ? 40 : CH_BOMB_PT[chTier(c)]; }
+      if (chTank && !chTank.wreck && !t.space && Math.hypot(chTank.x - t.foot.x, chTank.z - t.foot.z) <= R + 1.4) sc += 100;   // 보스(장갑차) 100점
+      if (sc > bS || (sc === bS && bd < bD)) { bS = sc; bD = bd; ties = [[z, t]]; } else if (sc === bS && bd === bD) ties.push([z, t]);   // 점수가 같으면 더 가까이 달려들 동료
+    }
+    if (ties.length) [best, bT] = ties[Math.floor(Math.random() * ties.length)];
+    else best = cand.reduce((a, z) => Math.hypot(z.foot.x - me.foot.x, z.foot.z - me.foot.z) < Math.hypot(a.foot.x - me.foot.x, a.foot.z - me.foot.z) ? z : a);   // 둘레에 인간이 없으면 나와 가장 가까운 동료
+    chBombCharge(best, R); if (best.bombing && bT) best.bombing.tg = bT;   // 고른 그 인간에게 달려든다 — 몸에 닿으면 터진다
+    return true;
+  }
   function useBomb() {                        // v520: 맵 전체 동료 중 — 터지는 범위 안에 있는 가장 높은 티어(저격수 > 군인 > 경찰 > 빨강 > 주황 > 노랑)를 맞힐 수 있는 동료들 가운데, 범위 안 적이 가장 많은 동료가 터진다
     const all = zombies.filter((z) => z !== me && isZombie(z));
     if (!all.length) return false;
     const al = all.filter((z) => !z.mut); if (!al.length) return false;   // c288: 변이 좀비는 자폭하지 않는다   // v521: 변이 좀비는 최후순위 — 일반 동료가 하나도 없을 때만
     const R = 1.5 + lv('bomb');   /* c139: 1.5칸에서 강화마다 +1칸 */   // c21: 자폭 범위 = 내 덮치는 거리(3.24칸), 강화마다 +20% (2배까지)   // v559: 20% 줄임 (5.4 → 4.32칸) — v556: 1.5배
+    if (CHAPTER) return chBombPick(al, R);   // c352
     const tier = (c) => CHAPTER ? chTier(c) : c.sniper ? 5 : c.soldier ? 4 : c.police ? 3 : c.attacker ? 2 : c.guard ? 1 : 0;
     let best = null, bT = -1, bN = -1, bD = Infinity, bS = -1, ties = [];
     for (const z of al) {
@@ -8911,7 +8928,7 @@
     }
   }
   // ── c86: 사물·차·문·금고·바리케이트를 한 가지 규칙으로 ──
-  const CH_BOMB_PT = [0, 1, 3, 4, 6, 8, 40];   // 자폭 점수 (chTier 순서): 하양 0 · 노랑 1 · 주황 3 · 빨강 4 · 경찰 6 · 군인 8 · 저격수 40
+  const CH_BOMB_PT = [1, 1, 2, 5, 10, 20, 40];   /* c352: 하양 1 · 노랑 1 · 주황 2 · 빨강 5 · 경찰 10 · 군인 20 · 저격수 40 (보스 100) */   // 자폭 점수 (chTier 순서): 하양 0 · 노랑 1 · 주황 3 · 빨강 4 · 경찰 6 · 군인 8 · 저격수 40
   const CH_HIT_STOP = 0.05;                    // 가면서 칠 때 휘두르는 순간 서는 시간 (초)
   function chReach(z) { return MELEE - RADIUS + Math.max(0, (z.r || BODY) - BODY); }   // 사물 겉면까지 공격 거리
   function chWallN(F) { if (F.wNF !== objFrame) { F.wNF = objFrame; let n = 0; for (const [z, t] of F.wHit) { if (clock - t > 1.5 || clock < t) F.wHit.delete(z); else if (z !== me) n++; } F.wN = n; } return F.wN; }   // c204: 이 면을 지금 때리는 동료 수
