@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c331</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c332</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -478,7 +478,7 @@
       { x: SDx - CW / 2 + C6L / 2, z: C6z, w: C6L, d: CW, doors: [], open: ['s'], at: { s: SDx }, locks: ['e'], kinds: {}, local: 909, block: -1, t: 'labc', zone: 0 },   // c301: 오른쪽으로 꺾인 복도 · 끝에 문
       { x: R4x0 + R4W / 2, z: C6z, w: R4W, d: R4D, doors: [], open: ['w'], at: { e: R4z1 - 2.2 }, locks: ['e'], kinds: {}, local: 910, block: -1, t: 'lab', zone: 0 },   // c301: 덩치 수조 방 (실험실의 반) · 오른쪽 아래 문
       { x: R4x0 + R4W + C7L / 2, z: R4z1 - 2.2, w: C7L, d: CW * 1.5, doors: [], open: ['w'], locks: ['e'], kinds: {}, local: 911, block: -1, t: 'labc', zone: 0 },   // c314: 넓은 복도 끝에 문
-      { x: C8x, z: C8z1 - CL / 2, w: CW, d: CL, doors: [], open: ['w'], at: { w: R4z1 - 2.2 }, locks: ['n'], kinds: {}, local: 912, block: -1, t: 'labc', zone: 0 },   // c314: 위로 꺾인 복도 (하양 3 · 노랑 3) · 끝에 문
+      { x: C8x - CW / 2 + CW, z: C8z1 - CL / 2, w: CW * 2, d: CL, doors: [], open: ['w'], at: { w: R4z1 - 2.2, n: C8x }, locks: ['n'], kinds: {}, local: 912, block: -1, t: 'lab', zone: 0 },   // c314: 위로 꺾인 복도 (하양 3 · 노랑 3) · 끝에 문   /* c332: 저격수 앞 시민 복도 → 두 배 넓은 방 (실험실 꾸밈) · 위 문 자리는 그대로 */
       ...(() => { const W2 = CW * 1.5, L = CL * 10 / 3, top = C8z1 - CL - L, CUT = W2 / 3;   // c322: 저격수 복도 4분의 1 더 길게 (32 → 40) · 꺾이는 바깥 모서리는 살짝 45도로 깎는다 (cut)   // c321: 1.5배 넓게
         const g = 1.2, NC = 16, NR = 9, MW = NC * g, MH = NR * g, r0 = 3, zc = top + L + R4D - W2 / 2, mx0 = C8x + W2 * 1.5 + L,   /* c327: 아래 복도 가운데에 덩치 수조 방(6칸)이 끼어서 그만큼 아래로 */ Mz0 = zc - (r0 + 1) * g;   // c322: 방 구간 — 반 길이(19.2) · 3분의 2 폭(10.8) · 1.2칸 격자
         const grid = Array.from({ length: NR }, () => Array(NC).fill(-1)), carve = (c0, c1, ra, rb) => { for (let cc = c0; cc <= Math.min(NC - 1, c1); cc++) for (let rr = ra; rr <= rb; rr++) grid[rr][cc] = -2; };
@@ -495,6 +495,12 @@
           const cand = []; for (let rr = 0; rr < NR; rr++) for (let cc = 0; cc < NC; cc++) for (let h = 2; rr + h <= NR; h++) { let ok = true; for (let w = 1; cc + w <= NC; w++) { for (let y = rr; y < rr + h; y++) if (grid[y][cc + w - 1] !== -1) { ok = false; break; } if (!ok) break; if (w >= 2 && sec(cc) === sec(cc + w - 1)) cand.push([w * h, cc, rr, w, h]); } }   /* c328: 방은 문 경계를 넘지 않는다 */
           if (!cand.length) break; cand.sort((a, b) => b[0] - a[0]); const [, cc, rr, w, h] = cand[Math.floor(Math.random() * Math.min(3, cand.length))];
           for (let y = rr; y < rr + h; y++) for (let x = cc; x < cc + w; x++) grid[y][x] = rooms.length; rooms.push({ c: cc, r: rr, w, h, sides: {}, dw: {} }); }
+        for (const q of rooms.slice().sort((a, b) => a.w * a.h - b.w * b.h)) { if (q.w * q.h > 6) continue;   // c332: 아주 작은 방(6칸 이하)은 옆 큰 방과 합친다 — 합쳐서 네모가 되는 방이 있으면 그 방으로, 없으면 복도 바닥으로
+          const o = rooms.find((p) => p !== q && !p.gone && sec(p.c) === sec(q.c) && ((p.r === q.r && p.h === q.h && (p.c + p.w === q.c || q.c + q.w === p.c)) || (p.c === q.c && p.w === q.w && (p.r + p.h === q.r || q.r + q.h === p.r))));
+          if (o) { const c0 = Math.min(o.c, q.c), r0b = Math.min(o.r, q.r); o.w = o.r === q.r && o.h === q.h && o.c !== q.c ? o.w + q.w : o.w; o.h = o.c === q.c && o.w === q.w && o.r !== q.r ? o.h + q.h : o.h; o.c = c0; o.r = r0b; } q.gone = true; }
+        for (let k = rooms.length - 1; k >= 0; k--) if (rooms[k].gone) rooms.splice(k, 1);
+        for (const row of grid) row.fill(-1); carve(0, -1, 0, 0);
+        for (let rr = 0; rr < NR; rr++) for (let cc = 0; cc < NC; cc++) { const id = rooms.findIndex((q) => cc >= q.c && cc < q.c + q.w && rr >= q.r && rr < q.r + q.h); grid[rr][cc] = id >= 0 ? id : -2; }
         for (const row of grid) for (let x = 0; x < NC; x++) if (row[x] === -1) row[x] = -2;
         const at = (q, sd, k) => sd === 'n' || sd === 's' ? mx0 + (q.c + k + 0.5) * g : Mz0 + (q.r + k + 0.5) * g;   // 그 변의 k번째 칸 가운데
         const nbs = (q) => { const o = []; for (let k = 0; k < q.w; k++) { o.push(['n', k, q.r > 0 ? grid[q.r - 1][q.c + k] : null]); o.push(['s', k, q.r + q.h < NR ? grid[q.r + q.h][q.c + k] : null]); } for (let k = 0; k < q.h; k++) { o.push(['w', k, q.c > 0 && sec(q.c - 1) === sec(q.c) ? grid[q.r + k][q.c - 1] : null]); o.push(['e', k, q.c + q.w < NC && sec(q.c + q.w) === sec(q.c) ? grid[q.r + k][q.c + q.w] : null]); } return o.filter((v) => v[2] !== null && v[2] !== -1); };
@@ -508,9 +514,9 @@
           { x: C8x + W2 + L, z: top + L / 4, w: W2, d: L / 2, doors: [], open: ['w', 's'], at: { w: top + W2 / 2 }, ow: { w: W2, s: W2 }, cut: { ne: CUT }, locks: [], kinds: {}, local: 915, block: -1, t: 'labc', zone: 0 },   // c327: 아래로 (경찰 2 · 주황 2 · 노랑 2) — 앞 절반
           { x: C8x + W2 + L, z: top + L / 2 + R4D / 2, w: R4W, d: R4D, doors: [], open: ['n'], ow: { n: W2 }, locks: ['s'], kinds: {}, local: 919, block: -1, t: 'lab', zone: 0 },   // c327: 두 번째 덩치 수조 방 (첫 덩치 방과 같은 크기) · 아래 문을 부숴야 나간다
           { x: C8x + W2 + L, z: top + L * 3 / 4 + R4D, w: W2, d: L / 2, doors: [], open: ['n', 'e'], at: { e: top + L + R4D - W2 / 2 }, ow: { e: W2 }, cut: { sw: CUT }, locks: [], kinds: {}, local: 920, block: -1, t: 'labc', zone: 0 },   // c327: 뒤 절반 · 끝에서 오른쪽으로
-          { x: mx0 + (BND[0] + BND[1]) / 2 * g, z: Mz0 + MH / 2, w: (BND[1] - BND[0]) * g, d: MH, doors: [], open: ['w'], at: { w: zc, e: gz(G1) }, ow: { w: 2 * g }, locks: ['e'], lw: { e: gw(G1) }, kinds: {}, local: 916, block: -1, t: 'labm', zone: 0 },   // 방 구간 앞 — c328: 끝에 복도를 막은 문
-          { x: mx0 + (BND[1] + BND[2]) / 2 * g, z: Mz0 + MH / 2, w: (BND[2] - BND[1]) * g, d: MH, doors: [], open: ['w'], at: { w: gz(G1), e: gz(G2) }, ow: { w: gw(G1) }, locks: ['e'], lw: { e: gw(G2) }, kinds: {}, local: 924, block: -1, t: 'labm', zone: 0 },   // 가운데 — 끝에 문
-          { x: mx0 + (BND[2] + BND[3]) / 2 * g, z: Mz0 + MH / 2, w: (BND[3] - BND[2]) * g, d: MH, doors: [], open: ['w', 'e'], at: { w: gz(G2), e: ze }, ow: { w: gw(G2), e: 2 * g }, locks: [], kinds: {}, local: 925, block: -1, t: 'labm', zone: 0 },   // 뒤
+          { x: mx0 + (BND[0] + BND[1]) / 2 * g, z: Mz0 + MH / 2, w: (BND[1] - BND[0]) * g, d: MH, doors: [], open: ['w'], at: { w: zc, e: gz(G1) }, ow: { w: 2 * g }, locks: ['e'], lw: { e: gw(G1) }, brk: ['e'], kinds: {}, local: 916, block: -1, t: 'labm', zone: 0 },   // 방 구간 앞 — c328: 끝에 복도를 막은 문
+          { x: mx0 + (BND[1] + BND[2]) / 2 * g, z: Mz0 + MH / 2, w: (BND[2] - BND[1]) * g, d: MH, doors: [], open: ['w'], at: { w: gz(G1), e: gz(G2) }, ow: { w: gw(G1) }, locks: ['e'], lw: { e: gw(G2) }, brk: ['w', 'e'], kinds: {}, local: 924, block: -1, t: 'labm', zone: 0 },   // 가운데 — 끝에 문
+          { x: mx0 + (BND[2] + BND[3]) / 2 * g, z: Mz0 + MH / 2, w: (BND[3] - BND[2]) * g, d: MH, doors: [], open: ['w', 'e'], at: { w: gz(G2), e: ze }, ow: { w: gw(G2), e: 2 * g }, locks: [], brk: ['w'], kinds: {}, local: 925, block: -1, t: 'labm', zone: 0 },   // 뒤
           { x: mx0 + MW + 4, z: ze, w: 8, d: CW, doors: [], open: ['w', 'e'], locks: [], kinds: {}, local: 917, block: -1, t: 'labc', zone: 0 },   // 처음 복도만큼 좁은 복도 — 오른쪽으로
           { x: mx0 + MW + 8 + CW / 2, z: ze + CW / 2 - 6, w: CW, d: 12, doors: [], open: ['w'], at: { w: ze }, locks: ['n'], kinds: {}, local: 918, block: -1, t: 'labc', zone: 0 } ];   // 위로 꺾임 · 끝에 문 (밖은 아직 없음)
         rooms.forEach((q, i) => { const sd = Object.keys(q.sides); out.push({ x: mx0 + (q.c + q.w / 2) * g, z: Mz0 + (q.r + q.h / 2) * g, w: q.w * g, d: q.h * g, doors: sd, at: q.sides, locks: [], kinds: {}, local: 930 + i, block: -1, t: 'room', zone: 0, parent: n + 18 + sec(q.c), room: { doors: sd.map((v) => ({ s: v, w: q.dw[v], ext: false })), keepAt: true } }); });   // 방문은 판마다 반은 뚫려 있다 (큰 맵 방과 같다)
@@ -720,7 +726,7 @@
 
   // ── 건물 — 벽 = 선분 (문 자리는 비운다). 바닥에 그리는 건 지붕(덮개)·벽·문 앞 발판 ──
   const buildings = BUILDINGS.map((s) => {
-    const B = { x0: s.x - s.w / 2, z0: s.z - s.d / 2, x1: s.x + s.w / 2, z1: s.z + s.d / 2, kinds: s.kinds, station: !!s.station, big: !!s.big, local: s.local, block: s.block, type: s.t || '', zone: s.zone, sideK: s.sideK, garage: !!s.garage, gas: !!s.gas, rspec: s.room || null, pidx: s.parent, cut: s.cut || null };   /* c322: cut = 모서리를 45도로 깎는 길이 */
+    const B = { x0: s.x - s.w / 2, z0: s.z - s.d / 2, x1: s.x + s.w / 2, z1: s.z + s.d / 2, kinds: s.kinds, station: !!s.station, big: !!s.big, local: s.local, block: s.block, type: s.t || '', zone: s.zone, sideK: s.sideK, garage: !!s.garage, gas: !!s.gas, rspec: s.room || null, pidx: s.parent, cut: s.cut || null, brk: s.brk || null };   /* c332: brk = 부서지는 면 (나머지는 안 부서진다) */   /* c322: cut = 모서리를 45도로 깎는 길이 */
     const side2 = (side) => { const nx = side === 'e' ? 1 : side === 'w' ? -1 : 0, nz = side === 's' ? 1 : side === 'n' ? -1 : 0; return { side, cx: nx > 0 ? B.x1 : nx < 0 ? B.x0 : (s.at && s.at[side] !== undefined ? s.at[side] : s.x), cz: nz > 0 ? B.z1 : nz < 0 ? B.z0 : (s.at && s.at[side] !== undefined ? s.at[side] : s.z),   /* c289: at = 문 자리 */ nx, nz, tx: -nz, tz: nx, w: s.lw && s.lw[side] ? s.lw[side] : CHAPTER && B.type === 'house' && !B.garage ? DOOR * 2 / 3 : undefined }; };   /* c328: lw = 잠긴 문 폭 */   /* c94: 집 문은 폭 3분의 2 */
     B.side = !s.locks;                      // v242: 경찰서가 아닌 건물 = 정문 말고 다른 벽 중 하나에 판마다 랜덤으로 쪽문 (잠김)
     B.locks = (s.locks || ['n', 'e', 's', 'w'].filter((d) => !s.doors.includes(d))).map(side2);   // 잠긴 문 (v239) — 쪽문 후보는 정문 없는 벽 전부, 판마다 하나만 문이 되고 나머지는 벽
@@ -849,7 +855,7 @@
       for (let i = 0; i <= n; i++) R.inner.push(flat(0.24, 0.24, ax + (bx - ax) * i / n, az + (bz - az) * i / n, chBarMat, -0.5045));
     }
   }
-  const CH_WALL_T = { house: 3 * 0.7, store: 3 * 0.7 * 1.5, bank: 4.2, fire: 4.2, mart: 4.2, hospital: 4.2, library: 4.2, conv: 4.2, gym: 4.2, police: 4.2, army: 4.2 };   /* c213: 집 70% · 창고 집의 1.5배 · 랜드마크 집의 2배 */   // c200: 벽 체력 = 집 문의 몇 배
+  const CH_WALL_T = { house: 3 * 0.7, labm: 3 * 0.7,   /* c332: 방 구간 사이 벽 = 집 벽 */ store: 3 * 0.7 * 1.5, bank: 4.2, fire: 4.2, mart: 4.2, hospital: 4.2, library: 4.2, conv: 4.2, gym: 4.2, police: 4.2, army: 4.2 };   /* c213: 집 70% · 창고 집의 1.5배 · 랜드마크 집의 2배 */   // c200: 벽 체력 = 집 문의 몇 배
   const chWallBs = [], chWallObjs = [];
   { const hs = buildings.filter((B) => B.type === 'house' && !B.parent), sl = (w) => Math.hypot(w[2] - w[0], w[3] - w[1]);
     const jailS = chRooms.filter((R) => R.type === 'jail').flatMap((J) => J.walls);   // c275: 철창 네 변
@@ -873,7 +879,7 @@
       }
       for (const w of segs) { old.add(w); const [ax, az, bx, bz] = w, n = Math.max(1, Math.round(sl(w) / LP)); for (let i = 0; i < n; i++) out.push([ax + (bx - ax) * i / n, az + (bz - az) * i / n, ax + (bx - ax) * (i + 1) / n, az + (bz - az) * (i + 1) / n]); }
       B.walls = out; B.wos = []; B.faces = {}; add.push(...out); chWallBs.push(B);
-      for (const q of out) { if (chOnJail(q)) { q.noBrk = true; continue; }   /* c275: 철창에 붙은 바깥벽 토막은 안 부서진다 */ const sd = q[1] === q[3] ? (Math.abs(q[1] - B.z0) < 1e-6 ? 'n' : 's') : (Math.abs(q[0] - B.x0) < 1e-6 ? 'w' : 'e'), F = B.faces[sd] || (B.faces[sd] = { wHit: new Map(), wN: 0, wNF: -1, meT: -9 }); const o = { F, kind: 'obj', type: 'wall', B, seg: q, foot: new THREE.Vector3((q[0] + q[2]) / 2, 0, (q[1] + q[3]) / 2), hp: 1, maxHp: 1, dead: false, off: false, k: CH_WALL_T[B.type] }; q.wo = o; B.wos.push(o); chWallObjs.push(o); }
+      for (const q of out) { if (chOnJail(q) || (B.brk && !B.brk.includes(q[1] === q[3] ? (Math.abs(q[1] - B.z0) < 1e-6 ? 'n' : 's') : (Math.abs(q[0] - B.x0) < 1e-6 ? 'w' : 'e')))) { q.noBrk = true; continue; }   /* c275: 철창에 붙은 바깥벽 토막은 안 부서진다 */ const sd = q[1] === q[3] ? (Math.abs(q[1] - B.z0) < 1e-6 ? 'n' : 's') : (Math.abs(q[0] - B.x0) < 1e-6 ? 'w' : 'e'), F = B.faces[sd] || (B.faces[sd] = { wHit: new Map(), wN: 0, wNF: -1, meT: -9 }); const o = { F, kind: 'obj', type: 'wall', B, seg: q, foot: new THREE.Vector3((q[0] + q[2]) / 2, 0, (q[1] + q[3]) / 2), hp: 1, maxHp: 1, dead: false, off: false, k: CH_WALL_T[B.type] }; q.wo = o; B.wos.push(o); chWallObjs.push(o); }
     }
     for (const R of chRooms) {                // c275: 방 안쪽 벽도 토막으로 (체력은 그 건물 벽과 같다) — 철창과 철창에 맞붙은 벽(0.3칸 안)은 뺀다
       const P = R.parent, kW = R.type === 'box' || P.type === 'labm' ? CH_WALL_T.house : CH_WALL_T[P.type];   /* c321: 방 구간 칸막이 = 집 벽 체력 */ if (R.type === 'jail' || !kW) continue;   /* c289: 박스 벽 = 집 벽 체력 */
@@ -7000,6 +7006,7 @@
     return hit;
   }
   function chWallObjBreak(o) {                // c200: 벽 토막 하나가 통째로 뚫린다
+    { const q = o.seg, same = (a, b) => Math.abs(a[0] - b[0]) < 1e-3 && Math.abs(a[1] - b[1]) < 1e-3 && Math.abs(a[2] - b[2]) < 1e-3 && Math.abs(a[3] - b[3]) < 1e-3; for (const w2 of chWallObjs) if (w2 !== o && !w2.dead && (same(w2.seg, q) || same(w2.seg, [q[2], q[3], q[0], q[1]]))) breakObj(w2); }   // c332: 두 공간이 겹쳐 세운 같은 자리 벽은 같이 뚫린다
     const B = o.B, q = o.seg, hz = q[1] === q[3], c = { x: (q[0] + q[2]) / 2, z: (q[1] + q[3]) / 2, hw: Math.hypot(q[2] - q[0], q[3] - q[1]) / 2 + 0.01 };
     const L0 = chWallBreak(B, q, c);
     // 구멍이 좁으면(몸이 못 지나가면) 양옆 토막 끝을 조금씩 깎아 1.8칸까지 넓힌다
@@ -8022,7 +8029,7 @@
       for (const dx of [0, 1.25]) for (const k of [-1, 0, 1]) barr(C7.x0 + 10 + dx, zc + k * Lp, Math.PI / 2);   // c309: 바리케이트 여섯 — 큰 맵처럼 셋씩 두 줄   // 넓은 복도: 바리케이트 여섯 (두 줄 · 겹쳐서 빈틈없이)
       for (const [t, dz] of [['vig', -2.0], ['attacker', -0.7], ['attacker', 0.7], ['vig', 2.0]]) { const c = man(C7, t === 'vig' ? 'attacker' : t, C7.x0 + 7.6, zc + dz, 0.4); if (t === 'vig') chVig(c); }   // 바리케이트 앞: 빨강 2 · 주황 2
       for (const dz of [-2.4, -0.8, 0.8, 2.4]) { const p = man(C7, 'police', C7.x0 + 11.85, zc + dz, 0.35);   /* c302: 바리케이트 바로 뒤 */ p.post = p.area; enterNormal(p); }   // 바리케이트 뒤: 경찰 4
-      { const C8 = buildings.find((B) => B.local === 912), C9 = buildings.find((B) => B.local === 913), ok8 = []; for (const t of ['', '', '', '', '', '', 'guard', 'guard', 'guard', 'guard', 'guard', 'guard']) { let x = 0, z = 0; for (let k = 0; k < 200; k++) { x = C8.x0 + 0.8 + Math.random() * (C8.x1 - C8.x0 - 1.6); z = C8.z0 + 1.6 + Math.random() * (C8.z1 - C8.z0 - 3.2); if (ok8.every(([a, b]) => Math.hypot(a - x, b - z) > 1.0)) break; }   /* c329: 저격수 복도 바로 앞 복도 사람 2배 (하양 6 · 노랑 6) */ ok8.push([x, z]); man(C8, t, x, z, 0.8); }   // c314: 위로 꺾인 복도 — 하양 3 · 노랑 3 아무 데나
+      { const C8 = buildings.find((B) => B.local === 912), C9 = buildings.find((B) => B.local === 913), ok8 = []; put(C8, [['wcab', 7.9, 0.7], ['tubes', 6.5, 0.6], ['jarEye', 8.3, 3.0], ['jarHand', 8.3, 4.0], ['jarBrain', 8.3, 5.0], ['iv', 8.2, 7.4], ['biodrum', 8.0, 11.2], ['scope', 5.0, 11.4], ['chair', 4.4, 6.4], ['chair', 6.8, 6.4]]); chAddSlab('lbench', C8.x0 + 5.6, C8.z0 + 5.2, 0, C8); chAddSlab('labtable2', C8.x0 + 5.6, C8.z0 + 8.8, 0, C8);   /* c332: 시민 방 꾸밈 — 오른쪽 벽 · 가운데 실험대 (왼쪽 위 나가는 문 · 왼쪽 아래 들어오는 문 쪽은 비운다) */ for (const t of ['', '', '', '', '', '', 'guard', 'guard', 'guard', 'guard', 'guard', 'guard']) { let x = 0, z = 0; for (let k = 0; k < 200; k++) { x = C8.x0 + 0.8 + Math.random() * (C8.x1 - C8.x0 - 1.6); z = C8.z0 + 1.6 + Math.random() * (C8.z1 - C8.z0 - 3.2); if (ok8.every(([a, b]) => Math.hypot(a - x, b - z) > 1.0)) break; }   /* c329: 저격수 복도 바로 앞 복도 사람 2배 (하양 6 · 노랑 6) */ ok8.push([x, z]); man(C8, t, x, z, 0.8); }   // c314: 위로 꺾인 복도 — 하양 3 · 노랑 3 아무 데나
       const cx9 = (C9.x0 + C9.x1) / 2; const sn9 = [-1.4, 1.4].map((dx) => { const n = man(C9, 'sniper', cx9 + dx, C9.z1 - 16.4, 0.4); n.post = n.area; enterNormal(n); return n; }); [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5].forEach((dx, i) => { const s = man(C9, 'soldier', cx9 + dx, C9.z1 - 15, 0.5); s.master = sn9[i < 3 ? 0 : 1]; s.slotA = Math.random() * Math.PI * 2; s.slotK = rand(0.5, 1); enterNormal(s); });   /* c322: 문에서 15칸 안쪽 · 군인 6 (저격수마다 3) */   /* c320: 군인은 반씩 나눠 저격수 하나씩 호위 (큰 맵 호위와 같다) */ { const C10 = buildings.find((B) => B.local === 914), C11 = buildings.find((B) => B.local === 915), mx = (C10.x0 + C10.x1) / 2, mz = (C10.z0 + C10.z1) / 2;   // c318: 두 번째 복도 중간 — 군인 2 · 그 살짝 뒤 저격수 1
         const sn10 = man(C10, 'sniper', mx + 0.7, mz, 0.4); sn10.post = sn10.area; enterNormal(sn10); for (const dz of [-2.4, -0.8, 0.8, 2.4]) { const s = man(C10, 'soldier', mx - 0.7, mz + dz, 0.5); s.master = sn10;   /* c322: 군인 4 */ s.slotA = Math.random() * Math.PI * 2; s.slotK = rand(0.5, 1); enterNormal(s); }   /* c320: 군인 둘 다 저격수 호위 */
         const ok = []; for (const t of ['police', 'police', 'attacker', 'attacker', 'guard', 'guard']) { let x = 0, z = 0; for (let k = 0; k < 200; k++) { x = C11.x0 + 0.8 + Math.random() * (C11.x1 - C11.x0 - 1.6); z = C11.z0 + 6.6 + 1.0 + Math.random() * (C11.z1 - C11.z0 - 6.6 - 2.0); if (ok.every(([a, b]) => Math.hypot(a - x, b - z) > 1.2)) break; } ok.push([x, z]); const c = man(C11, t, x, z, 0.8); if (t === 'police') { c.post = c.area; enterNormal(c); } } } }   // c318: 아래로 꺾인 복도 — 경찰 2 · 주황 2 · 노랑 2 아무 데나   /* c317: 문에서 4칸 더 안쪽 · 군인 4 · 저격수 2 */   // c314: 문 너머 — 군인 2 · 그 살짝 뒤 저격수 1
