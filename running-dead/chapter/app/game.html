@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c315</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c316</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6469,7 +6469,7 @@
     const t = b.boss; b.boss = null; b.dmgK = 0;
     // c104: 다이아몬드 표시는 떼지 않는다 (얻은 변이 좀비 표시)
     b.r = BODY; delete b.halfH; b.mesh.scale.setScalar(1);
-    mutate(b, t);   // c56: 검은 테두리는 뺐다 (테두리는 변이한 나만)
+    mutate(b, t); pendingAward.push('mut:' + t);   /* c316: 동료 획득창 */   // c56: 검은 테두리는 뺐다 (테두리는 변이한 나만)
     if (t === 'armor') b.maxHp = 380 * 0.9; else b.maxHp *= 1.0;   /* c164: 얻은 덩치 342로 되돌림 */   /* c163: 얻은 덩치 365.9 */   /* c136: 얻은 덩치 342 (히드라는 동료 체력에서 따라 내려간다) */   /* c115: 3분의 2로 (570 → 380 · 히드라 142 → 95) */   /* c106: 얻은 덩치 체력 570 */ b.hp = b.maxHp;   // c100 · c104: 얻은 덩치는 체력 2.4배 · 얻은 히드라는 1.5배
   }
   function chSafeInRoom(s, R) {                // c54: 금고를 방 안에 — 방문에서 가장 먼 자리. 작은 방이면 그 방 사람은 복도로 옮긴다
@@ -7923,6 +7923,7 @@
     const x = b.foot.x, z = b.foot.z + 0.3, A = { x0: x - 1, z0: z - 1, x1: x + 1, z1: z + 1 }, c = addCitizen(x, z, A, ''); c.space = b.space; c.disc = true; makeZombie(c);
     if (b.prop === 'avat') mutate(c, 'armor');   // c301: 덩치 수조 = 영구 덩치 동료
     if (b.prop === 'hvat') mutate(c, 'hydra');
+    if (b.prop === 'hvat' || b.prop === 'avat') pendingAward.push(b.prop === 'avat' ? 'mut:armor' : 'mut:hydra');   // c316: 동료 획득창
     if (b.prop === 'hvat' || b.prop === 'avat') { const gq = new THREE.Group(), mk = (sz, col, zz) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(sz, sz), new THREE.MeshBasicMaterial({ color: col, transparent: true, depthTest: false, depthWrite: false })); m.rotation.z = Math.PI / 4; m.position.z = zz; m.renderOrder = 1; return m; }; gq.add(mk(0.38, 0x1c1c1e, 0), mk(0.27, 0xb05cff, 0.002)); gq.position.set(0, 0.5, 0.02); c.mesh.add(gq); c.gem = gq; }   // c300: 히드라 수조 = 영구 히드라 동료 (보석 표시) · c315: 덩치 수조 동료도 큰 맵에서 얻은 덩치처럼 다이아몬드
     for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; puff(x, 0.6, z, i % 2 ? 0x7ed3a0 : 0x8aa4f5, 0.4, 1.3, 0.55, Math.cos(a) * 3, 0.5, Math.sin(a) * 3, 0.9); }
   }
@@ -8843,6 +8844,25 @@
       ov.remove(); acqOpen = false; paused = false; last = 0;
     });
   }
+  function chMutIcon(type) {                  // c316: 얻은 변이 동료 그림 — 게임 속 모양 그대로 (색 원 + 머리 위 보석), 덩치는 1.5배
+    const r = type === 'armor' ? 48 : 32, cx = 60, cy = 68, col = type === 'armor' ? '#1f3d99' : '#2fb84a', gy = cy - r;
+    const dia = (s, c) => `<path d="M${cx} ${gy - s}L${cx + s} ${gy}L${cx} ${gy + s}L${cx - s} ${gy}Z" fill="${c}"/>`;
+    return `<svg viewBox="0 0 120 120" width="1.5em" height="1.5em" style="display:block;margin:0 auto"><circle cx="${cx}" cy="${cy}" r="${r}" fill="${col}"/>${dia(r * 0.375, '#1c1c1e')}${dia(r * 0.27, '#b05cff')}</svg>`;
+  }
+  function chShowMut(type) {                  // c316: 덩치·히드라 동료를 얻었다 — 무기 획득창과 같은 창 (사용자 문구 그대로)
+    acqOpen = true; paused = true; stopInput();
+    const ov = document.createElement('div');
+    ov.id = 'acq'; ov.dataset.kind = 'mut:' + type;
+    const name = type === 'armor' ? '덩치 좀비' : '히드라 좀비', ds = type === 'armor' ? '덩치 큰 동료를 얻었습니다. 밀어붙이세요' : '토사물을 내뿜는 동료를 얻었습니다. 원거리 공격이 가능합니다.';
+    ov.innerHTML = `<div style="font:900 54px/1 var(--font);letter-spacing:3px;color:#ff4a3a;text-shadow:0 0 16px rgba(255,60,0,0.95),0 0 44px #ff2a00,0 4px 10px rgba(0,0,0,0.85);animation:wpnpop 0.45s ease-out both;margin-bottom:14px">동료 획득</div><div class="big">${chMutIcon(type)}</div><div class="t" style="font-size:30px;color:#ffd34d">${name}</div><div class="ds">${ds}</div>`;
+    stage.appendChild(ov);
+    tapOk(ov, '확인', () => {
+      if (ov.dataset.done) return;
+      ov.dataset.done = '1';
+      ov.style.transition = 'opacity 0.25s'; ov.style.opacity = '0';
+      setTimeout(() => { ov.remove(); acqOpen = false; paused = false; last = 0; }, 260);
+    });
+  }
   function showAward(kind) {
     acqOpen = true; paused = true; stopInput();
     const d = ITEM[kind], ov = document.createElement('div');
@@ -9269,7 +9289,7 @@
     if (ai >= 0 && !acqOpen && !lvOpen && !tutOpen && !menuOv && !victoryOn && goalShown) {   // v428 · v429: 아이템을 먹으면 획득창은 바로 — 나오던 연출은 멈췄다가 확인 뒤 이어짐, 밀린 연출은 그 뒤로
       const e = fxQueue.splice(ai, 1)[0];
       pauseFx();                              // v429: 나오던 연출은 그 자리에 멈춤
-      if (e.k === 'dud') showDud(); else if (CHAPTER && chHas(e.k)) chUpgrade(e.k); else showAward(e.k);
+      if (e.k === 'mut:hydra' || e.k === 'mut:armor') chShowMut(e.k.slice(4)); else if (e.k === 'dud') showDud(); else if (CHAPTER && chHas(e.k)) chUpgrade(e.k); else showAward(e.k);
       return;
     }
     if (curFx && curFx.paused && !acqOpen && !lvOpen && !tutOpen && !menuOv) resumeFx();   // v429: 획득창을 확인하면 멈췄던 연출이 그대로 이어진다
@@ -9287,7 +9307,7 @@
     else if (e.t === 'squad') showSquad();
     else if (e.t === 'rank') showRank(e.r);
     else if (e.t === 'lv') { if (CHAPTER) chLevelUp(); else showLevelUp(); }   // c25
-    else if (e.k === 'dud') showDud(); else if (CHAPTER && chHas(e.k)) chUpgrade(e.k); else showAward(e.k);   // v288: 꽝
+    else if (e.k === 'mut:hydra' || e.k === 'mut:armor') chShowMut(e.k.slice(4)); else if (e.k === 'dud') showDud(); else if (CHAPTER && chHas(e.k)) chUpgrade(e.k); else showAward(e.k);   // v288: 꽝
   }
   // v278: 동료 수 칭호 — 판마다 처음 도달할 때 딱 한 번. 게임은 멈추지 않고 화면 위쪽에 큰 글씨가 팡 떴다 사라진다
   const RANKS = [   // v284: 단계마다 간격이 4마리씩 더 벌어진다 (간격 5·10·15·10… → 9·14·19·14…)

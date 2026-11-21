@@ -1178,6 +1178,8 @@ from c314_patch import C314_R   # 긴 복도 · 군인
 R += C314_R
 from c315_patch import C315_R   # avat gem
 R += C315_R
+from c316_patch import C316_R   # mutant ally award popup
+R += C316_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
