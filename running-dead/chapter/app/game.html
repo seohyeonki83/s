@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c290</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c291</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -7802,11 +7802,12 @@
     if (!chFog) {
       const data = new Uint8Array(w * h * 4), tex = new THREE.DataTexture(data, w, h, THREE.RGBAFormat); tex.magFilter = tex.minFilter = THREE.NearestFilter;
       const m = new THREE.Mesh(new THREE.PlaneGeometry(w * cs, h * cs).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
-      m.position.set(x0 + w * cs / 2, 0.05, z0 + h * cs / 2); m.renderOrder = 50; scene.add(m);   // 거의 맨 위 — 안 본 곳은 사람·사물까지 다 가린다
+      m.position.set(x0 + w * cs / 2, 0.05, z0 + h * cs / 2); m.renderOrder = -0.4; scene.add(m);   // c291: 벽 그림 위 · 몸 그림 아래 (안 본 곳의 사람·사물은 원래 시야 밖이라 숨겨진다)
       chFog = { x0, zt: z0 + h * cs, cs, w, h, data, tex, seen: new Uint8Array(w * h), t: 0 };
     }
     const F = chFog; F.data.fill(0); for (let i = 3; i < F.data.length; i += 4) F.data[i] = 255; F.seen.fill(0); F.tex.needsUpdate = true; F.t = -1e9; F.wallN = -1;
   }
+  window.__fog = () => chFog;   // 테스트용
   function chFogTick(eyes) {                  // 0.1초마다 — 움직인 눈(0.25칸 넘게)만, 아직 안 본 칸만, 시야 반지름 안에서 벽에 안 가린 칸을 밝힌다
     const F = chFog; if (!F) return; const now = performance.now(); if (now - F.t < 100) return; F.t = now;
     const wn = walls.length, wallsMoved = wn !== F.wallN; F.wallN = wn;   // 벽이 뚫리면 (토막 수가 바뀌면) 다 다시 본다
@@ -7817,8 +7818,9 @@
       const i0 = Math.max(0, Math.floor((ex - R - F.x0) / F.cs)), i1 = Math.min(F.w - 1, Math.floor((ex + R - F.x0) / F.cs)), j0 = Math.max(0, Math.floor((F.zt - ez - R) / F.cs)), j1 = Math.min(F.h - 1, Math.floor((F.zt - ez + R) / F.cs));
       for (let j = j0; j <= j1; j++) { const cz = F.zt - (j + 0.5) * F.cs;
         for (let i = i0; i <= i1; i++) { const k = j * F.w + i; if (F.seen[k]) continue;
-          const cx = F.x0 + (i + 0.5) * F.cs, dx = cx - ex, dz = cz - ez, d = Math.hypot(dx, dz); if (d > R) continue;
-          const pl = d > 0.4 ? 0.4 / d : 0; if (blocked(ex, ez, cx - dx * pl, cz - dz * pl)) continue;   // 벽 바로 뒤 0.4칸까지는 밝힌다 (벽 선이 다 보이게)
+          const cx = F.x0 + (i + 0.5) * F.cs, hc = F.cs / 2, nx = Math.max(cx - hc, Math.min(cx + hc, ex)), nz = Math.max(cz - hc, Math.min(cz + hc, ez));   // c291: 칸에서 나에게 가장 가까운 점
+          const dx = nx - ex, dz = nz - ez, d = Math.hypot(dx, dz); if (d > R) continue;
+          const pl = d > 0.25 ? 0.25 / d : 0; if (blocked(ex, ez, nx - dx * pl, nz - dz * pl)) continue;   // 벽 바로 뒤 0.25칸까지는 밝힌다 (벽 그림 두께만큼)
           F.seen[k] = 1; F.data[k * 4 + 3] = 0; ch = true; } }
     }
     if (ch) F.tex.needsUpdate = true;

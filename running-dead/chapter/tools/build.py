@@ -1128,6 +1128,8 @@ from c289_patch import C289_R   # 튜토리얼 1
 R += C289_R
 from c290_patch import C290_R   # 튜토리얼 박스 · 탐험 안개
 R += C290_R
+from c291_patch import C291_R   # 안개 벽선
+R += C291_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
