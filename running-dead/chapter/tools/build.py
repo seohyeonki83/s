@@ -1120,6 +1120,8 @@ from c285_patch import C285_R   # 산성 폭발 시간
 R += C285_R
 from c286_patch import C286_R   # 산성 시간 긴 쪽
 R += C286_R
+from c287_patch import C287_R   # 자폭 산성 우선
+R += C287_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

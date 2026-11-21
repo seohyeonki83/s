@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c286</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c287</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5558,6 +5558,7 @@
   const gooMat = new THREE.SpriteMaterial({ map: flashTex, color: 0x5fcf3a, transparent: true, depthTest: false, depthWrite: false });
   function gooOn(c) {                         // 영구: 좀비가 될 때까지 이동·공격 20% 느리게 + 초당 1 데미지
     c.gooLeft = Math.max(c.goo ? c.gooLeft : 0, 4 + 2 * lv('bomb'));   // c286: 남은 시간과 새 시간 중 긴 쪽   // c123: 10초, 강화마다 +1초 (다시 맞으면 시간만 새로)
+    if (c.acid) c.acid.length = 0;   // c287: 산성 폭발은 자폭 산성으로 교체
     if (c.goo) return;
     c.goo = true; c.gooT = 0; c.smokeT = 0;
     const g = new THREE.Group();
@@ -5568,6 +5569,7 @@
   const chAcidL = [], chAcBuf = [], chAcidMat = new THREE.SpriteMaterial({ map: flashTex, color: 0x9cff3a, transparent: true, depthTest: false, depthWrite: false });
   const chAcidB = () => owned.acidp ? 1 + lv('acidp') : 0;   // c259: 산성 강도 — 도트에 더하는 값
   function chAcidOn(e, T) {                    // c224: 산성 한 겹 (겹마다 따로 시간이 간다)
+    if (e.goo) return;   // c287: 자폭 산성이 묻어 있으면 산성 폭발은 안 묻는다
     if (!e.acid) e.acid = []; if (e.acid.length) e.acid[0] = Math.max(e.acid[0], T); else e.acid.push(T);   /* c261: 겹치지 않음 */ if (e.acidT === undefined) e.acidT = 0;
     if (!chAcidL.includes(e)) chAcidL.push(e);
     if (!e.acidS && e.mesh) { const s = new THREE.Sprite(chAcidMat); s.position.set(-0.15, 0.18, 0.025); s.scale.setScalar(0.34); s.renderOrder = 1; e.mesh.add(s); e.acidS = s; }
@@ -5585,6 +5587,7 @@
     const tk = chTank; if (tk && !tk.wreck && !z.space && Math.hypot(tk.x - x, tk.z - zz) - CAR_L * CH_TK_KL / 2 <= R) chAcidOn(tk, T);   // 보스도
   }
   window.__kz = (z) => killZombie(z);   // 테스트용
+  window.__goo = (c) => gooOn(c); window.__acidOn = (c, T) => chAcidOn(c, T);   // 테스트용
   function chAcidTick(dt) {                    // c224: 겹마다 시간이 줄고, 0.5초마다 겹 수만큼 피해 (느려짐 없음)
     for (let i = chAcidL.length - 1; i >= 0; i--) {
       const e = chAcidL[i], car = e.tank;
@@ -7038,6 +7041,7 @@
   }
   function chTankGoo(car) {                    // 산성 — 이동·공격 20% 느리게 + 초당 2 데미지 (사람과 같다)
     car.gooLeft = Math.max(car.goo ? car.gooLeft : 0, 4 + 2 * lv('bomb'));   // c286   // c123
+    if (car.acid) car.acid.length = 0;   // c287
     if (car.goo) return;
     car.goo = true; car.gooT = 0; car.gooS = [];
     for (const [ox, oz, sc] of [[0.3, 0.1, 0.5], [-0.35, -0.12, 0.4], [0, 0.2, 0.34]]) { const s = new THREE.Sprite(gooMat); s.position.set(ox, 0.3, oz); s.scale.setScalar(sc); s.renderOrder = 1; car.g.add(s); car.gooS.push(s); }
