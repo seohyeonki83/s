@@ -1238,6 +1238,8 @@ from c344_patch import C344_R   # half the gate defenders, 4 barricades
 R += C344_R
 from c345_patch import C345_R   # +10 white +5 yellow in maze
 R += C345_R
+from c346_patch import C346_R   # goal popup 0.5s after start
+R += C346_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
