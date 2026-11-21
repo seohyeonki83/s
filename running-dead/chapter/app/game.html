@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c338</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c339</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -8031,19 +8031,19 @@
     const lineMat = flatMat(0xe8e8e0), CT = ['compact', 'sedan', 'sedan', 'sports', 'van', 'truck', 'compact', 'sedan'];
     for (const [side, x, h] of [[0, P.x0 + 1.7, 0], [1, P.x1 - 1.7, Math.PI]]) for (let z = P.z0 + 2.4, k = 0; z < P.z1 - 5; z += 2.3, k++) {
       flat(3.4, 0.08, side ? P.x1 - 1.7 : P.x0 + 1.7, z - 1.15, lineMat, -0.59);   // 주차 칸 선
-      if (Math.random() < 0.72) { const c = chDecoCar(CT[Math.floor(Math.random() * CT.length)], x, z, h); c.tutS = P; } }
+      if (Math.random() < 0.72 && Math.abs(z - (P.z0 + (P.z1 - P.z0) * 0.5)) > 3.4) { const c = chDecoCar(CT[Math.floor(Math.random() * CT.length)], x, z, h); c.tutS = P; } }
     for (const [t, x, z] of [['vending', P.x0 + 0.7, P.z1 - 2.4], ['booth', P.x0 + 0.6, P.z1 - 4.0], ['bench', P.x1 - 1.0, P.z1 - 2.2], ['planter', P.x1 - 0.5, P.z1 - 3.8], ['bench', P.x0 + 1.0, P.z0 + 0.7], ['dumpster', P.x1 - 1.0, P.z0 + 0.8], ['lamp', P.x0 + 3.6, P.z0 + (P.z1 - P.z0) * 0.5], ['lamp', P.x1 - 3.6, P.z0 + (P.z1 - P.z0) * 0.5], ['mailbox', P.x1 - 0.4, P.z1 - 0.6], ['vending', P.x1 - 0.7, P.z0 + 2.2]]) chAddProp(t, x, z).space = P;   // c337: 주차장 꾸밈 — 자판기 · 공중전화 · 벤치 · 화분 · 쓰레기 수거함 · 가로등 · 우편함
     for (const [t, x, z] of [['bin', P.x0 + 0.6, P.z1 - 0.8], ['bin', P.x1 - 0.6, P.z1 - 0.8], ['cone', P.x0 + 4.6, P.z1 - 6], ['cone', P.x1 - 4.6, P.z1 - 12], ['cone', P.x0 + 4.8, P.z0 + 8], ['hydrant', P.x1 - 0.5, P.z0 + 0.8], ['barrier', (P.x0 + P.x1) / 2 + 3, P.z1 - 3.4]]) chAddProp(t, x, z).space = P;
     const cx = (P.x0 + P.x1) / 2, Z1 = P.z1, post = (S, t, x, z, r = 0.5) => { const c = man(S, t, x, z, r); c.post = c.area; if (t === 'soldier') c.noMaster = true; enterNormal(c); return c; };   // c338: 주차장 = 경찰차 진지 — 가로로 세운 경찰차 7대, 차마다 뒤에 경찰 2 (영화처럼 차 뒤에 숨어 대기), 중간 바리케이트 2 (뒤에 군인 2씩)
-    const pcar = (x, z) => { const c = chParked(x, z, 0, false); c.tutS = P; post(P, 'police', x - 0.55, z - 1.3); post(P, 'police', x + 0.55, z - 1.3); }, pbar = (x, z) => { const c = chParked(x, z, 0, true); c.tutS = P; post(P, 'soldier', x - 0.5, z - 1.3); post(P, 'soldier', x + 0.5, z - 1.3); };
-    pcar(cx - 1.4, Z1 - 5.0); pcar(cx + 1.4, Z1 - 5.0);
-    pcar(cx - 1.3, Z1 - 8.6); pbar(cx + 1.5, Z1 - 8.6); post(P, 'sniper', cx, Z1 - 10.4, 0.4);   // 저격수 1 (주차장 앞쪽)
-    pcar(cx - 1.4, Z1 - 12.2); pcar(cx + 1.4, Z1 - 12.2);
-    pcar(cx + 1.3, Z1 - 15.8); pbar(cx - 1.5, Z1 - 15.8); post(P, 'sniper', cx + 0.2, Z1 - 17.6, 0.4);   // 저격수 1 (주차장 뒤쪽)
-    pcar(cx, Z1 - 19.4);
+    { const zL = P.z0 + (P.z1 - P.z0) * 0.5, pc = (x, z) => { const c = chParked(x, z, 0, false); c.tutS = P; }, br = (x, z) => { const c = chParked(x, z, 0, true); c.tutS = P; };   // c339: 주차장 한가운데 가로 한 줄 — 양 끝 벽까지 경찰차로 막은 진지 (경찰차 5 + 바리케이트 1), 바로 뒤에 경찰차 2 더 · 경찰 14 · 군인 4가 가로로 뭉쳐 있다 (저격수 없음)
+      [0, 1, 2, 3, 4, 5].forEach((k) => (k === 3 ? br : pc)(P.x0 + 1.0 + k * 2.0, zL));
+      pc(cx - 2.6, zL - 3.4); pc(cx + 2.6, zL - 3.4);
+      for (let k = 0; k < 7; k++) post(P, 'police', P.x0 + 1.0 + k * 1.67, zL - 1.4);
+      for (const [t, dx] of [['police', -4.6], ['soldier', -3.2], ['police', -1.4], ['soldier', -0.4], ['soldier', 0.6], ['police', 1.4], ['soldier', 3.2], ['police', 4.6]]) post(P, t, cx + dx, zL - (Math.abs(dx) > 2 && Math.abs(dx) < 4 ? 2.4 : 4.9));
+      post(P, 'police', cx, zL - 5.9); post(P, 'police', cx - 3.4, zL - 5.6); post(P, 'police', cx + 3.4, zL - 5.6); }
     const LX = (Q.x0 + Q.x1) / 2, R1 = Q.z1, R0 = Q.z0, obst = (x, z) => { const c = chParked(x, z, 0, true); c.tutS = Q; return c; };   // c338: 마지막 길목 = 바리케이트만 (6개, 세 줄 엇갈림) — 그 사이사이에 경찰 · 군인 · 저격수
     obst(LX - 1.1, R1 - 4.6); obst(LX + 1.4, R1 - 4.6); obst(LX - 1.4, R1 - 7.2); obst(LX + 1.1, R1 - 7.2); obst(LX - 1.1, R1 - 9.8); obst(LX + 1.4, R1 - 9.8);
-    for (const [t, dx, z] of [['police', -1.6, R1 - 5.8], ['soldier', 0.1, R1 - 5.8], ['soldier', 1.7, R1 - 5.8], ['sniper', 0.9, R1 - 6.6],
+    for (const [t, dx, z] of [['police', -1.6, R1 - 5.8], ['soldier', 0.1, R1 - 5.8], ['soldier', 1.7, R1 - 5.8], ['sniper', 0.9, R1 - 6.6], ['sniper', -1.9, R1 - 13.9], ['sniper', 1.9, R1 - 14.1],   /* c339: 저격수 4는 전부 마지막 길목에 */
       ['soldier', -2.0, R1 - 8.4], ['police', -0.6, R1 - 8.4], ['soldier', 0.8, R1 - 8.4], ['soldier', 2.2, R1 - 8.4],
       ['soldier', -2.2, R1 - 11.0], ['police', -0.8, R1 - 11.0], ['soldier', 0.7, R1 - 11.0], ['police', 2.2, R1 - 11.0], ['sniper', -0.5, R1 - 12.0],
       ['soldier', -1.5, R1 - 13.2], ['police', 0.2, R1 - 13.2], ['soldier', 1.6, R1 - 13.2], ['soldier', 2.5, R1 - 12.4]]) post(Q, t, LX + dx, z, t === 'sniper' ? 0.4 : 0.5);   // 저격수 2 (길목 앞 · 뒤)

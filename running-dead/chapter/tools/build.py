@@ -1224,6 +1224,8 @@ from c337_patch import C337_R   # shorter lot, clustered barricades, more defend
 R += C337_R
 from c338_patch import C338_R   # police-car lot, barricade-only last road, spread snipers, bright floor
 R += C338_R
+from c339_patch import C339_R   # one horizontal police-car line mid lot, snipers only in last road
+R += C339_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
