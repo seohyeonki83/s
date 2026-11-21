@@ -1,0 +1,1 @@
+C347_R = [("{ x: doorX, z: z0 - CL / 2, w: CW, d: CL, doors: [], open: ['s', 'e'], at: { e: cTop + CW / 2 }, locks: [], kinds: {}, local: 902,", "{ x: doorX, z: z0 - CL / 2, w: CW, d: CL, doors: [], open: ['s'], at: { e: cTop + CW / 2 }, locks: ['e'], kinds: {}, local: 902,   /* c347: 꺾이는 자리에 문 — 부숴야 첫 시민 복도로 */")]

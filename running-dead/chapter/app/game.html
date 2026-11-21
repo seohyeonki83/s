@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c346</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c347</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -468,7 +468,7 @@
     return [
       { x: 0, z: cz, w: W, d: D, doors: [], locks: ['n'], at: { n: doorX }, kinds: {}, local: 900, block: -1, t: 'lab', zone: 0 },                 // 실험실 — 문은 위쪽 벽 오른쪽
       { x: x0 + 1 + BS / 2, z: z1 - 1 - BS / 2, w: BS, d: BS, doors: [], locks: [], kinds: {}, local: 901, block: -1, t: 'box', zone: 0, parent: n, room: { doors: [] } },   // 박스
-      { x: doorX, z: z0 - CL / 2, w: CW, d: CL, doors: [], open: ['s', 'e'], at: { e: cTop + CW / 2 }, locks: [], kinds: {}, local: 902, block: -1, t: 'labc', zone: 0 },   // 첫 복도 — 위로
+      { x: doorX, z: z0 - CL / 2, w: CW, d: CL, doors: [], open: ['s'], at: { e: cTop + CW / 2 }, locks: ['e'], kinds: {}, local: 902,   /* c347: 꺾이는 자리에 문 — 부숴야 첫 시민 복도로 */ block: -1, t: 'labc', zone: 0 },   // 첫 복도 — 위로
       { x: doorX + CW / 2 + CL / 2, z: R2z, w: CL, d: CW, doors: [], open: ['w'], locks: ['e'], kinds: {}, local: 903, block: -1, t: 'labc', zone: 0 },   // 꺾인 복도 — 오른쪽으로
       { x: R2x + D / 2, z: R2z, w: D, d: W, doors: [], open: ['w'], at: { w: R2z, e: C3z }, locks: ['e'], kinds: {}, local: 904, block: -1, t: 'lab', zone: 0 },   // 두 번째 방 — c300: 들어오는 문은 꺾인 복도 끝에 (부숴야 열림)
       { x: R2x + D + CL / 2, z: C3z, w: CL, d: CW, doors: [], open: ['w'], locks: ['e'], kinds: {}, local: 905, block: -1, t: 'labc', zone: 0 },   // 세 번째 복도 — 오른쪽으로 · c300: 끝에 문
