@@ -1216,6 +1216,8 @@ from c333_patch import C333_R   # parking lot finale
 R += C333_R
 from c334_patch import C334_R   # safe-blocked last corridor, smaller bite clock, no minimap in tutorial
 R += C334_R
+from c335_patch import C335_R   # lot mid posts, rebalance thin maze spaces
+R += C335_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
