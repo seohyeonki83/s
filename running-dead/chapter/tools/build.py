@@ -1146,6 +1146,8 @@ from c298_patch import C298_R   # 박스 줄임
 R += C298_R
 from c299_patch import C299_R   # 구속 침대
 R += C299_R
+from c300_patch import C300_R   # 세 번째 방
+R += C300_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
