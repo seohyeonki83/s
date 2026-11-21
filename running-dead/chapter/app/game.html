@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c271</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c272</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3014,6 +3014,7 @@
       return;
     }
     if (z.dead) return;
+    if (CHAPTER && z.bombing) { chBombBoom(z); return; }   // c272: 돌진하다 죽으면 그 자리에서 터진다 (터지면서 다시 여기로 온다)
     z.dead = true;
     if (CHAPTER && owned.acid && z !== me) chAcidBurst(z);   // c224
     const t = z.target;
@@ -3434,7 +3435,8 @@
   }
 
   function updateZombie(z, dt) {
-    if (z.knockT > 0) { knockStep(z, dt); return; }
+    if (z.knockT > 0) { if (z.bombing) chBombIcon(z); knockStep(z, dt); return; }
+    if (CHAPTER && z.bombing) { chBombStep(z, dt); return; }   // c272: 자폭 돌진 중
     const commanding = z === me && cmdPid !== null;   // 명령키를 누르고 있는 동안 주인공은 가만히 선다 — 이동·사냥 안 함 (v107. 하던 습격·감염은 마저 한다)
     const touching = z === me && pid !== null && !commanding;   // 손가락을 대고 있다 (조종하는 나만)
     const input = z === me && !commanding ? move : NO_INPUT;
@@ -5459,7 +5461,7 @@
     }
     if (CHAPTER && ties.length) best = ties[Math.floor(Math.random() * ties.length)];
     if (!best) best = al.reduce((a, z) => Math.hypot(z.foot.x - me.foot.x, z.foot.z - me.foot.z) < Math.hypot(a.foot.x - me.foot.x, a.foot.z - me.foot.z) ? z : a);   // 범위 안에 적이 아무도 없으면 나와 가장 가까운 동료
-    explode(best, R);
+    if (CHAPTER) chBombCharge(best, R); else explode(best, R);   // c272: 돌진한 뒤 터진다
     return true;
   }
   function screenFlash(x, z) {               // v277: 화면 섬광 — 터진 자리에서 퍼지는 흰·연두 빛이 0.3초 만에 사라진다
@@ -5469,6 +5471,36 @@
     stage.appendChild(el);
     requestAnimationFrame(() => requestAnimationFrame(() => { el.style.opacity = '0'; }));
     setTimeout(() => el.remove(), 420);
+  }
+  const chBombTex = (() => { const cv = document.createElement('canvas'); cv.width = cv.height = 96; const g = cv.getContext('2d');
+    g.beginPath(); g.arc(48, 48, 44, 0, Math.PI * 2); g.fillStyle = 'rgba(16,24,10,0.85)'; g.fill(); g.lineWidth = 5; g.strokeStyle = '#7ed321'; g.stroke();
+    g.beginPath(); g.moveTo(48, 16); g.bezierCurveTo(62, 36, 70, 46, 70, 58); g.arc(48, 58, 22, 0, Math.PI); g.bezierCurveTo(26, 46, 34, 36, 48, 16); g.fillStyle = '#7ed321'; g.fill();
+    g.beginPath(); g.arc(40, 60, 6, 0, Math.PI * 2); g.fillStyle = '#d8ff9a'; g.fill(); return new THREE.CanvasTexture(cv); })();
+  const chBombBuf = [];
+  function chBombCharge(z, R) {                // c272: 자폭할 동료 — 산성 아이콘을 달고 돌진 시작
+    if (z.bombing) return;
+    if (z.mode === 'pounce') stopPounce(z); if (z.mode === 'bite') endBite(z, false);
+    z.bombing = { R, t: 0, tg: null };
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: chBombTex, transparent: true, depthTest: false, depthWrite: false })); s.scale.set(1.1, 1.1, 1); s.renderOrder = UI + 3; scene.add(s); z.bombS = s;
+    chBombIcon(z);
+  }
+  function chBombIcon(z) { if (z.bombS) z.bombS.position.copy(z.foot).addScaledVector(UP, (z.halfH || RADIUS) * 2 + 0.85); }
+  function chBombStep(z, dt) {                 // c272: 가장 가까운 인간에게 덮치기 속도로 — 닿으면 터진다
+    const B = z.bombing; B.t += dt; chBombIcon(z);
+    let t = B.tg;
+    if (!t || t.kind !== 'citizen' || t.space !== z.space || !bodies.includes(t)) {
+      t = null; let bd = 14;
+      for (const c of nearIn(cCells, z.foot.x, z.foot.z, 14, chBombBuf)) { if (c.kind !== 'citizen' || c.space !== z.space) continue; const d = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z); if (d < bd) { bd = d; t = c; } }
+      B.tg = t;
+    }
+    if (!t || B.t > 4) { chBombBoom(z); return; }
+    const dx = t.foot.x - z.foot.x, dz = t.foot.z - z.foot.z, d = Math.hypot(dx, dz) || 1e-6, v = z.speed * POUNCE;
+    if (d - (z.r || BODY) - (t.r || BODY) <= 0.15 + v * dt) { chBombBoom(z); return; }
+    z.vel.set(dx / d * v, dz / d * v);
+  }
+  function chBombBoom(z) {                     // c272: 터진다 (아이콘을 치우고 원래 폭발)
+    if (z.bombS) { scene.remove(z.bombS); z.bombS = null; }
+    const B = z.bombing; z.bombing = null; if (B) explode(z, B.R);
   }
   function explode(z, R) {
     const x = z.foot.x, zz = z.foot.z;
