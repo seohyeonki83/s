@@ -1156,6 +1156,8 @@ from c303_patch import C303_R   # 아이콘 · 수조 자리
 R += C303_R
 from c304_patch import C304_R   # 바리케이트 너머 덮치기 금지
 R += C304_R
+from c305_patch import C305_R   # 바닥 화살표
+R += C305_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
