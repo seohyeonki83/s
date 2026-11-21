@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c329</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c330</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5053,6 +5053,7 @@
     refreshItems();
     if (CHAPTER) chEmptySlots();   // c34
   }
+  window.__use = (k) => useItem(k); window.__cashN = () => cashes.length;   // 테스트용
   function useItem(kind) {
     const it = items.find((x) => x.kind === kind);
     if (it && it.off) { toast('가방이 있어야 쓸 수 있습니다'); return; }   // c21: 칸이 없어 꺼져 있는 도구
@@ -5089,7 +5090,7 @@
         for (let t = 0; t < 30; t++) {
           const a = Math.random() * Math.PI * 2, r = CASH_R[0] + Math.random() * (CASH_R[1] - CASH_R[0]);
           const x = me.foot.x + Math.cos(a) * r, z = me.foot.z + Math.sin(a) * r;
-          if (x < MM.x0 + 1 || x > MM.x1 - 1 || z < MM.z0 + 1 || z > MM.z1 - 1) continue;
+          if (!me.space && (x < MM.x0 + 1 || x > MM.x1 - 1 || z < MM.z0 + 1 || z > MM.z1 - 1)) continue;   /* c330: 지도 경계는 바깥(길)에서만 — 건물 안은 그 건물 안이면 된다 (지도 밖 튜토리얼 건물에서 현금이 안 뿌려졌다) */
           if (spaceOf(x, z) !== me.space || !freeSpot(x, z, me.space) || blocked(me.foot.x, me.foot.z, x, z)) continue;
           const mesh = new THREE.Mesh(cashGeo, cashMat);
           const band = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.38).rotateX(-Math.PI / 2), cashBandMat); band.position.y = 0.002; mesh.add(band);
