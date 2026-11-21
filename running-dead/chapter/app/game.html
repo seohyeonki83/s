@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c330</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c331</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -8011,7 +8011,7 @@
     { const q = man(L2, 'police', L2.x0 + 6.55, L2.z0 + 5.7, 0.4); q.post = q.area; enterNormal(q); }   /* c303: 수조 앞 경찰도 같이 */   // c296: 오른쪽 위 좀비 수조 앞 경찰 1 (제자리)
     { const p = man(L2, 'police', L2.x0 + 7.4, L2.z0 + 11.0, 0.7); p.post = p.area; enterNormal(p); chVig(man(L2, 'attacker', L2.x0 + 6.2, L2.z0 + 11.0, 0.7)); }   // c294: 오른쪽 아래 경찰 1 + 그 옆 빨강 1 (제자리)
     const busy = [[6.2, 11.0], [7.4, 11.0], [7.85, 6.55], [7.85, 4.85], [6.55, 5.7], [7.9, 0.9]], free = (x, z) => !(x > 1.9 && x < 6.9 && z > 3.9 && z < 8.1) && !(x < 1.8 && z > 4.0 && z < 8.0) && !(x < 1.9 && z < 4.0) && busy.every(([a, b]) => Math.hypot(a - x, b - z) > 1.4);
-    for (const type of ['', '', '', 'attacker', 'attacker']) { let x = 0, z = 0; for (let t = 0; t < 200; t++) { x = 1 + Math.random() * 6.7; z = 1.4 + Math.random() * 9.2; if (free(x, z)) break; } busy.push([x, z]); man(L2, type, L2.x0 + x, L2.z0 + z); }   // 하양 3 · 주황 2 — 아무 데나
+    for (const type of ['', '', '', '', 'attacker']) {   /* c331: 하양 3 → 4 · 주황 2 → 1 */ let x = 0, z = 0; for (let t = 0; t < 200; t++) { x = 1 + Math.random() * 6.7; z = 1.4 + Math.random() * 9.2; if (free(x, z)) break; } busy.push([x, z]); man(L2, type, L2.x0 + x, L2.z0 + z); }   // 하양 3 · 주황 2 — 아무 데나
     const [, , C3, C4, C5] = buildings.filter((B) => B.type === 'labc'), L3 = buildings.find((B) => B.local === 907);   // c300
     for (const dz of [-0.9, 0.9]) { const p = man(C3, 'police', C3.x1 - 1.2, (C3.z0 + C3.z1) / 2 + dz, 0.5); p.post = p.area; enterNormal(p); }   // 세 번째 복도 끝 경찰 2
     for (const dx of [-0.9, 0.9]) { const p = man(C4, 'police', (C4.x0 + C4.x1) / 2 + dx, (C4.z0 + C4.z1) / 2, 0.5); p.post = p.area; enterNormal(p); }   // 네 번째 복도 중간 경찰 2

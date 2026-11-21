@@ -1208,6 +1208,8 @@ from c329_patch import C329_R   # double citizens before sniper corridor
 R += C329_R
 from c330_patch import C330_R   # cash works inside buildings outside map bounds
 R += C330_R
+from c331_patch import C331_R   # room2 white +1 orange -1
+R += C331_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
