@@ -1124,6 +1124,8 @@ from c287_patch import C287_R   # 자폭 산성 우선
 R += C287_R
 from c288_patch import C288_R   # 틀니 새로 · 자폭 변이 제외
 R += C288_R
+from c289_patch import C289_R   # 튜토리얼 1
+R += C289_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
