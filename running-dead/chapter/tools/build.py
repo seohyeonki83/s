@@ -1184,6 +1184,8 @@ from c317_patch import C317_R   # C9 soldiers 4 snipers 2 further in
 R += C317_R
 from c318_patch import C318_R   # longer L, mid squad, down corridor
 R += C318_R
+from c319_patch import C319_R   # hit dust 2x at contact
+R += C319_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

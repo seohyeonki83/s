@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c318</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c319</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5285,11 +5285,13 @@
     fx.push(f);
     return f;
   }
-  function chHitDust(a, v) {                   // c302: 맞은 표면 쪽 (때린 몸 쪽) 작은 먼지 두 줌
-    let x, z;
-    if (v.kind === 'obj') { const p = objPoint(v, a), dx = a.foot.x - p[0], dz = a.foot.z - p[1], d = Math.hypot(dx, dz) || 1; x = p[0] - dx / d * 0.35; z = p[1] - dz / d * 0.35; }
-    else { const dx = a.foot.x - v.foot.x, dz = a.foot.z - v.foot.z, d = Math.hypot(dx, dz) || 1; x = v.foot.x + dx / d * (v.r || 0.5); z = v.foot.z + dz / d * (v.r || 0.5); }
-    for (let i = 0; i < 2; i++) { const g = Math.random() * Math.PI * 2, sp = rand(0.5, 1.2); puff(x + Math.cos(g) * 0.12, 0.35, z + Math.sin(g) * 0.12, 0x857f74, rand(0.28, 0.42), rand(0.8, 1.2), rand(0.35, 0.55), Math.cos(g) * sp, rand(0.2, 0.5), Math.sin(g) * sp, 0.6); }
+  function chHitDust(a, v) {                   // c302: 맞은 표면 쪽 (때린 몸 쪽) 작은 먼지 두 줌 · c319: 크기 2배, 나와 물건 사이 (때린 몸 바로 앞)에서
+    let tx, tz;
+    if (v.kind === 'obj' && v.type === 'wall') { const p = nearestOn(v.seg, a.foot.x, a.foot.z); tx = p.x; tz = p.y; }
+    else if (v.kind === 'obj') { const p = objPoint(v, a); tx = p[0]; tz = p[1]; }
+    else { tx = v.foot.x; tz = v.foot.z; }
+    const dx = tx - a.foot.x, dz = tz - a.foot.z, d = Math.hypot(dx, dz) || 1, k = Math.min(d, (a.r || BODY) + 0.1), x = a.foot.x + dx / d * k, z = a.foot.z + dz / d * k;
+    for (let i = 0; i < 2; i++) { const g = Math.random() * Math.PI * 2, sp = rand(0.5, 1.2) * 2; puff(x + Math.cos(g) * 0.24, 0.35, z + Math.sin(g) * 0.24, 0x857f74, rand(0.28, 0.42) * 2, rand(0.8, 1.2) * 2, rand(0.35, 0.55), Math.cos(g) * sp, rand(0.2, 0.5), Math.sin(g) * sp, 0.6); }
   }
   function dust(x, z, n, spread) {
     for (let i = 0; i < n; i++) {
