@@ -1222,6 +1222,8 @@ from c336_patch import C336_R   # narrower lot and road
 R += C336_R
 from c337_patch import C337_R   # shorter lot, clustered barricades, more defenders, lot decor
 R += C337_R
+from c338_patch import C338_R   # police-car lot, barricade-only last road, spread snipers, bright floor
+R += C338_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
