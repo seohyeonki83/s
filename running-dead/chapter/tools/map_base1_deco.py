@@ -175,9 +175,20 @@ for zi, A in enumerate(AVE):
             x, z = V['c'] - sd * (V['hw'] + 0.6), um + 12 + du
             if not hides('postbox', x, z) and put('postbox', x, z, road=0.0, wall=0.1, lot=False): break
 
+
+# ── c358: 사람 모이는 자리 — 큰 맵과 같은 규칙 (공원 버스킹 · 구경꾼, 공사 현장 일꾼) ──
+SPOTS = [sp for sp in M['spots'] if sp['k'] == 'gas']
+for P in [A for A in AREAS if A['k'] == 'park']:
+    amp = next(p for p in PROPS if p[0] == 'amp' and P['r'][0] <= p[1] <= P['r'][2] and P['r'][1] <= p[2] <= P['r'][3])
+    sg = 1 if P.get('gate', 'e') == 'e' else -1; at = [round(amp[1] - sg * 0.7, 2), round(amp[2] + 0.8, 2)]
+    SPOTS.append(dict(k='busker', zone=0, at=at, tool='guitar', mix=[['', 1, 1]]))
+    SPOTS.append(dict(k='crowd', zone=0, ring=[at[0], at[1], 2.2, 3.7, sg], mix=[['', 3, 4], ['guard', 2, 3]]))
+for S_ in [A for A in AREAS if A['k'] == 'site']:
+    x0, z0, x1, z1 = S_['r']; SPOTS.append(dict(k='site', zone=0, at=[round((x0 + x1) / 2 + 0.4, 2), round((z0 + z1) / 2 + 0.6, 2)], rad=1.9, tool='work', mix=[['', 2, 3], ['guard', 2, 3]]))
+M['spots'] = SPOTS
 M['areas'] = [a for a in M['areas'] if a['k'] != 'site'] + [A for A in AREAS if A['k'] == 'site']
 M['props'] = PROPS; M['pr'] = {t: PR[t] for t in sorted(set(p[0] for p in PROPS))}
 json.dump(M, open('../map_p1.json', 'w'), ensure_ascii=False, separators=(',', ':'))
 from collections import Counter
 print('props', len(PROPS), sorted(Counter(p[0] for p in PROPS).items(), key=lambda q: -q[1]))
-print('못 놓은 것', MISS)
+print('못 놓은 것', MISS); print('spots', [(q['k'], q.get('at') or q.get('ring')) for q in M['spots']])

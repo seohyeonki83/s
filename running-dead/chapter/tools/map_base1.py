@@ -14,6 +14,8 @@ S['start'] = [0.0, round(Z1 - r, 2)]   # 맨 남쪽 길 가운데에서 시작 �
 B = []
 def bld(t, x, z, w, d, door, **kw):
     b = dict(x=round(x, 3), z=round(z, 3), w=w, d=d, doors=[door], kinds={}, local=len(B), block=-1, t=t, zone=0, sideK=1); b.update(kw); B.append(b); return len(B) - 1
+def room(par, x, z, w, d, rd):                                # c358: 방 (큰 맵과 같은 꼴 — 부모 건물 안의 작은 건물, 안쪽 문 2.0 · 바깥 쪽문 1.5)
+    B.append(dict(x=round(x, 3), z=round(z, 3), w=w, d=d, doors=[q['s'] for q in rd], locks=[], kinds={}, local=len(B), block=-1, t='room', zone=0, parent=par, room=dict(doors=rd)))
 IX0, IX1 = X0 + RW + 0.9, X1 - RW - 0.9          # 건물 놓는 안쪽 (길에서 0.9칸)
 NZ0, NZ1, SZ0, SZ1 = Z0 + RW + 0.9, -HW - 0.9, HW + 0.9, Z1 - RW - 0.9
 LC, RC = (IX0 - 0.4) / 2 + IX0 / 2 * 0, 0         # (아래에서 칸마다 직접 잡는다)
@@ -34,11 +36,13 @@ bld('house', IX0 + 2.05, z + 9.58 / 2, 4.1, 4.95, 'e')                          
 nz_end = z + 9.58
 # ── 남쪽 칸 (위에서 아래로) — 왼쪽 줄 · 가운데 골목 · 오른쪽 줄 ──
 z = SZ0
-bld('mart', IX0 + 8.3 / 2, z + 11.9 / 2, 8.3, 11.9, 'e')                                      # 마트 (왼쪽 줄 · 세로로)
+mt = bld('mart', IX0 + 8.3 / 2, z + 11.9 / 2, 8.3, 11.9, 'e')                                      # 마트 (왼쪽 줄 · 세로로)
+room(mt, IX0 + 4.61 / 2, z + 11.9 - 2.77 / 2, 4.61, 2.77, [dict(s='n', w=2.0, ext=False), dict(s='s', w=1.5, ext=True)])   # 마트 창고방 (뒤쪽 남서 구석 · 큰 맵 마트와 같은 자리)
 for zz in (z + 2.05, z + 2.05 + 4.1 + 1.8): bld('house', IX1 - 4.95 / 2, zz, 4.95, 4.1, 'w')  # 집 둘 (오른쪽 줄 · 위아래로)
 z += 11.9 + 2.6
 GAS = [IX0, z, IX0 + 10.5, z + 10.5]                                                          # 주유소 (왼쪽 · 열린 땅)
-bld('hospital', IX1 - 6.87 / 2, z + 9.58 / 2, 6.87, 9.58, 'w')                                # 병원 (오른쪽 줄 · 세로로)
+hp = bld('hospital', IX1 - 6.87 / 2, z + 9.58 / 2, 6.87, 9.58, 'w')                                # 병원 (오른쪽 줄 · 세로로)
+for dz in (-1.3, 1.3): room(hp, IX1 - 2.77 / 2, z + 9.58 / 2 + dz, 2.77, 2.77, [dict(s='w', w=2.0, ext=False)])   # 병실 둘 (정문 반대쪽 벽 · 큰 맵 병원과 같은 꼴)
 z += 10.5 + 2.6
 bld('store', IX0 + 6.27 / 2, z + 8.67 / 2, 6.27, 8.67, 'e')                                   # 창고 (왼쪽 줄 · 세로로)
 bld('house', IX1 - 2.05, z + 8.67 / 2, 4.1, 4.95, 'w')                                        # 집 (오른쪽 줄)
