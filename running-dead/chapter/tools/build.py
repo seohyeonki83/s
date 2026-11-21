@@ -1226,6 +1226,8 @@ from c338_patch import C338_R   # police-car lot, barricade-only last road, spre
 R += C338_R
 from c339_patch import C339_R   # one horizontal police-car line mid lot, snipers only in last road
 R += C339_R
+from c340_patch import C340_R   # scattered movie-like police line, centered lot entrance
+R += C340_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
