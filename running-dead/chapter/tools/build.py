@@ -1248,6 +1248,8 @@ from c349_patch import C349_R   # narrower wall compartments, mixed people
 R += C349_R
 from c350_patch import C350_R   # mutant ally names include 변이
 R += C350_R
+from c351_patch import C351_R   # minimap me dot 2x
+R += C351_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

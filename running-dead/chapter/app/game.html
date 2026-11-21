@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c350</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c351</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2967,7 +2967,7 @@
       g.fillStyle = 'rgba(0, 0, 0, 0.9)'; g.beginPath(); g.arc(px, py, pr, 0, Math.PI * 2); g.fill(); g.lineWidth = 1 * u; g.strokeStyle = '#ffd34d'; g.stroke();
       g.fillStyle = '#ffd34d'; g.font = '900 ' + Math.round(8.5 * u) + 'px system-ui, -apple-system, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', px, py + 0.4 * u);
     }
-    const r = 2.1 * u;                                                    // 나 = 빨간 점
+    const r = 2.1 * 2 * u;   /* c351: 2배 */                          // 나 = 빨간 점
     g.beginPath(); g.arc(X(me.foot.x), Z(me.foot.z), r, 0, Math.PI * 2);
     g.fillStyle = '#ff3b30'; g.fill(); g.lineWidth = 1 * u; g.strokeStyle = 'rgba(255, 255, 255, 0.9)'; g.stroke();
   }
@@ -3054,7 +3054,7 @@
       mmCtx.fillStyle = '#ffd25a'; mmCtx.beginPath(); mmCtx.arc(px, py, pr, 0, Math.PI * 2); mmCtx.fill();
       if (p.img && p.img.complete && p.img.naturalWidth) mmCtx.drawImage(p.img, px - pr * 0.8, py - pr * 0.8, pr * 1.6, pr * 1.6);
     }
-    const r = 2.2 * mmDpr;                                       // 나 = 빨간 점 (미니맵이 작아져서 조금 작게)
+    const r = 2.2 * 2 * mmDpr;   /* c351: 2배 */                    // 나 = 빨간 점 (미니맵이 작아져서 조금 작게)
     mmCtx.beginPath(); mmCtx.arc(X(me.foot.x), Z(me.foot.z), r, 0, Math.PI * 2);
     mmCtx.fillStyle = '#ff3b30'; mmCtx.fill();
     mmCtx.lineWidth = 1 * mmDpr; mmCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; mmCtx.stroke();
