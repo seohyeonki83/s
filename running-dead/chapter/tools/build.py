@@ -1096,6 +1096,8 @@ from c273_patch import C273_R   # c273: 방탄복 = 총격 + 충격 흡수
 R += C273_R
 from c274_patch import C274_R   # 카드 설명 · 바로 강화 · 가방 분해
 R += C274_R
+from c275_patch import C275_R   # 방 벽 부서짐 · 철창만 안 부서짐
+R += C275_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
