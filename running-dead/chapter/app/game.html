@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c277</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c278</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4875,7 +4875,7 @@
     ov.innerHTML = `<div class="hd">LEVEL UP!</div><div class="sub">Lv ${level} → Lv ${level + 1} · 능력 하나를 고르세요</div><div class="cards">` +
       keys.map((k) => `<div class="card${k === 'brain' ? ' special' : ''}" data-k="${k}">${k === 'brain' ? '<div class="star">★</div>' : ''}<div class="ic">${ABIL[k].icon}</div><div class="nm">${ABIL[k].name}</div><div class="ds">${ABIL[k].desc}</div></div>`).join('') +
       `</div><div class="det"></div><button class="ok okBtn">확인</button>`;   /* c274: 설명 칸 */
-    stage.appendChild(ov);
+    stage.appendChild(ov); if (CHAPTER) chFitNames(ov);
     let chosen = null;
     const block = (e) => { e.stopPropagation(); e.preventDefault(); };
     ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
@@ -5756,7 +5756,7 @@
         return `<div class="card" data-k="${k}" style="min-height:158px;padding-top:8px${max ? ';opacity:0.4;pointer-events:none' : ''}"><div style="height:14px;font:900 12px/14px var(--font);letter-spacing:-0.5px;color:#ffd34d">${max ? 'MAX' : chStars(n + 1)}</div>` +
           `<div class="ic" style="margin-top:4px">${ITEM[k].icon}</div><div class="nm" style="margin-top:8px">${ITEM[k].name}</div><div class="ds" style="margin-top:8px">${max ? '최대 강화' : '강화'}</div>` +
           `<div class="vl">${S[0]} ${max ? S[1](n) : S[1](n) + ' → ' + S[1](n + 1)}</div></div>`; }).join('') + `</div>`;   /* c274: 확인 버튼 없음 */
-    stage.appendChild(ov);
+    stage.appendChild(ov); chFitNames(ov);
     const block = (e) => { e.stopPropagation(); e.preventDefault(); };
     ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
     ov.addEventListener('pointerdown', (e) => {
@@ -5969,12 +5969,12 @@
   // ── c25 · c27: 레벨업 = 도구·장비 14종 가운데 랜덤 3장 중 하나를 고른다 — 없는 것이면 새로 얻고, 가진 것이면 강화 +1 ──
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
     bomb: ['', (n) => `${1.5 + n}칸·${4 + 2 * n}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['강도', (n) => `${n ? '+' : ''}${CH_WV('cashH', n)}`]   /* c226 */,
-    book: ['쿨타임', (n) => `-${7 * (1 + n)}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${10 + 10 * n}%`], crowbar: ['사물', (n) => `+${20 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}% · 밀림 -${2 + 2.5 * n}`],
+    book: ['쿨타임', (n) => `-${7 * (1 + n)}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${10 + 10 * n}%`], crowbar: ['사물', (n) => `+${20 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`]   /* c278: 카드는 총격만 (밀림은 설명 칸에) */,
     shoes: ['이동', (n) => `+${5 * (1 + n)}%`], teeth: ['감염', (n) => `-${10 * (1 + n)}%`], acid: ['산성', (n) => `${3 + n}초`], acidp: ['도트', (n) => `+${1 + n}`],   /* c224 */ catalyst: ['변이', (n) => `+${7 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
   const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
     bomb: '동료 하나가 자폭', mutate: '동료 하나를 변이', taser: '적을 감전', awaken: '내가 변이', cash: '적을 유혹',
-    book: '무기 쿨타임 단축', bag: '쓸 수 있는 무기 +1', rage: '동료들의 공격 속도와 이동 속도 증가', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해 감소 · 충격에 밀리지 않음', shoes: '나와 동료들의 이동 속도 증가', teeth: '나와 동료들이 인간을 더 빠르게 좀비로 만듭니다', acid: '동료들이 산성피를 뿌리며 전사합니다', acidp: '산성 피해를 입은 적의 도트 데미지 증가', catalyst: '변이 좀비 공격력 증가', blood: '내 최대 체력 증가', revive: '죽으면 되살아남',
+    book: '무기 쿨타임 단축', bag: '쓸 수 있는 무기 +1', rage: '동료들의 공격·이동 속도 증가', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해·밀림 감소', shoes: '나와 동료들의 이동 속도 증가', teeth: '나와 동료들의 감염 속도 증가', acid: '동료가 죽으면 산성피', acidp: '산성 도트 데미지 증가', catalyst: '변이 좀비 공격력 증가', blood: '내 최대 체력 증가', revive: '죽으면 되살아남',
   };
   function chUpPool() {                       // 레벨업에 나올 수 있는 것 — 14종 전부, 끝까지 올린 것만 뺀다
     return CH_ITEMS.filter((k) => ITEM[k].passive && !(chHas(k) && lv(k) >= chLvMax(k)));   /* c125: 레벨업에는 장비만 (무기는 '무기 강화' 카드로) */
@@ -6011,7 +6011,9 @@
         `<div class="ic" style="margin-top:4px">${ITEM[k].icon}</div><div class="nm" style="margin-top:8px">${ITEM[k].name}</div><div class="ds" style="margin-top:8px">${max ? '최대 강화' : '강화'}</div>` +
         `<div class="vl">${S[0]} ${max ? S[1](n) : S[1](n) + ' → ' + S[1](n + 1)}</div></div>`; }).join('');
     ov.querySelector('.ok').classList.remove('ready');
+    chFitNames(ov);
   }
+  function chFitNames(ov) { for (const e of ov.querySelectorAll('.card .nm')) { e.style.whiteSpace = 'nowrap'; let f = 15; while (e.scrollWidth > e.clientWidth + 1 && f > 11) e.style.fontSize = (--f) + 'px'; } }   // c278: 긴 이름은 글자를 줄여 한 줄로
   const chSfAt = (n) => { let t = 0; for (let i = 0; i < n; i++) t += 120 - 5 * i; return t; };   /* c126: 120초부터 5초씩 → 120 · 235 · 345 · 450 · 550(보스) */
   { const st = document.createElement('style'); st.textContent = '@keyframes bosscd { 0% { transform: scale(1.22); text-shadow: 0 0 18px #ff2a00, 0 0 40px #ff2a00, 0 2px 4px #000; color: #fff; } 35% { transform: scale(1); color: #ff3a2a; text-shadow: 0 0 8px rgba(255,40,0,0.8), 0 2px 4px #000; } 100% { transform: scale(1); color: #ff3a2a; text-shadow: 0 0 8px rgba(255,40,0,0.8), 0 2px 4px #000; } } .bosscd { display: inline-block; font: 900 19px/1 system-ui, sans-serif; letter-spacing: 0.5px; color: #ff3a2a; animation: bosscd 1s ease-out both; } .bosscd i { font-style: normal; display: inline-block; margin: 0 6px; padding: 1px 7px 2px; border-radius: 5px; background: #ff3a2a; color: #1a0500; text-shadow: none; }'; document.head.appendChild(st); }   // n번째 출동 시각: 100 · 195 · 285 · 370 · 450(보스)
   { const st = document.createElement('style'); st.textContent = '@keyframes sfpop { 0% { transform: translateY(30vh) scale(1.9); opacity: 0; } 10% { transform: translateY(30vh) scale(1.9); opacity: 1; } 60% { transform: translateY(30vh) scale(1.9); opacity: 1; } 100% { transform: none; opacity: 1; } }' +
@@ -6037,7 +6039,7 @@
           `<div class="ic" style="margin-top:4px">${ITEM[k].icon}</div><div class="nm" style="margin-top:8px">${ITEM[k].name}</div><div class="ds" style="margin-top:8px">${has ? '강화' : CH_BRIEF[k]}</div>` +
           `<div class="vl">${S[0]} ${has ? S[1](n) + ' → ' + S[1](n + 1) : S[1](0)}</div></div>`; }).join('') +
       `</div><div class="det"></div><button class="ok okBtn">확인</button>`;   /* c274: 설명 칸 */
-    stage.appendChild(ov);
+    stage.appendChild(ov); if (CHAPTER) chFitNames(ov);
     let chosen = null;
     const block = (e) => { e.stopPropagation(); e.preventDefault(); };
     ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);

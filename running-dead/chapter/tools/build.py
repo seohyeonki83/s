@@ -1102,6 +1102,8 @@ from c276_patch import C276_R   # 분노 바이러스 설명
 R += C276_R
 from c277_patch import C277_R   # 카드 위로 · 설명 짧게
 R += C277_R
+from c278_patch import C278_R   # 카드 글 넘침
+R += C278_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
