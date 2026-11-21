@@ -1254,6 +1254,8 @@ from c352_patch import C352_R   # minimap dot 1.5x, bomb pick by score at target
 R += C352_R
 from c353_patch import C353_R   # bomber runs then pounces, explodes on contact
 R += C353_R
+from c354_patch import C354_R   # base map 1 (police stronghold, vertical, figure-8 ring)
+R += C354_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
