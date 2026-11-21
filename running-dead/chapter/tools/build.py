@@ -1198,6 +1198,8 @@ from c324_patch import C324_R   # vomit projectile look
 R += C324_R
 from c325_patch import C325_R   # spit 1.5x
 R += C325_R
+from c326_patch import C326_R   # 5 big maze rooms
+R += C326_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

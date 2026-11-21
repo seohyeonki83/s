@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c325</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c326</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -485,10 +485,11 @@
         let r = r0, c = 0;   // 복도 먼저 — 두 칸 폭 띠가 오른쪽으로 2~4칸 가다가 위아래 아무 데로 (벽에 붙기도) 꺾고, 다시 오른쪽으로
         while (c < NC) { const c1 = Math.min(NC - 1, c + 1 + Math.floor(Math.random() * 3)); carve(c, c1, r, r + 1); c = c1 + 1; if (c >= NC) break; let nr; do { nr = Math.floor(Math.random() * (NR - 1)); } while (Math.abs(nr - r) < 2); carve(c, c + 1, Math.min(r, nr), Math.max(r, nr) + 1); r = nr; c += 2; }
         const ze = Mz0 + (r + 1) * g, rooms = [];   // 나가는 자리
-        for (let rr = 0; rr < NR; rr++) for (let cc = 0; cc < NC; cc++) if (grid[rr][cc] === -1) {   // 남은 자리에 방 — 크기 아무렇게나 (가로 1~4칸 · 세로 1~4칸)
-          const tw = 1 + Math.floor(Math.random() * 4), th = 1 + Math.floor(Math.random() * 4); let w = 0; while (w < tw && cc + w < NC && grid[rr][cc + w] === -1) w++;
-          let h = 1; while (h < th && rr + h < NR && grid[rr + h].slice(cc, cc + w).every((v) => v === -1)) h++;
+        for (let n5 = 0; n5 < 5; n5++) {   // c326: 방은 5개만 (전엔 18~27개) — 남은 자리에서 가장 큰 빈 네모(2×2칸 이상) 몇 개 중 하나씩. 방이 안 된 자리는 복도 바닥
+          const cand = []; for (let rr = 0; rr < NR; rr++) for (let cc = 0; cc < NC; cc++) for (let h = 2; rr + h <= NR; h++) { let ok = true; for (let w = 1; cc + w <= NC; w++) { for (let y = rr; y < rr + h; y++) if (grid[y][cc + w - 1] !== -1) { ok = false; break; } if (!ok) break; if (w >= 2) cand.push([w * h, cc, rr, w, h]); } }
+          if (!cand.length) break; cand.sort((a, b) => b[0] - a[0]); const [, cc, rr, w, h] = cand[Math.floor(Math.random() * Math.min(3, cand.length))];
           for (let y = rr; y < rr + h; y++) for (let x = cc; x < cc + w; x++) grid[y][x] = rooms.length; rooms.push({ c: cc, r: rr, w, h, sides: {}, dw: {} }); }
+        for (const row of grid) for (let x = 0; x < NC; x++) if (row[x] === -1) row[x] = -2;
         const at = (q, sd, k) => sd === 'n' || sd === 's' ? mx0 + (q.c + k + 0.5) * g : Mz0 + (q.r + k + 0.5) * g;   // 그 변의 k번째 칸 가운데
         const nbs = (q) => { const o = []; for (let k = 0; k < q.w; k++) { o.push(['n', k, q.r > 0 ? grid[q.r - 1][q.c + k] : null]); o.push(['s', k, q.r + q.h < NR ? grid[q.r + q.h][q.c + k] : null]); } for (let k = 0; k < q.h; k++) { o.push(['w', k, q.c > 0 ? grid[q.r + k][q.c - 1] : null]); o.push(['e', k, q.c + q.w < NC ? grid[q.r + k][q.c + q.w] : null]); } return o.filter((v) => v[2] !== null && v[2] !== -1); };
         const opp = { n: 's', s: 'n', e: 'w', w: 'e' };
@@ -8017,10 +8018,10 @@
       { const M = buildings.find((B) => B.local === 916), RS = buildings.filter((B) => B.parent === M), ar = (Q) => (Q.x1 - Q.x0) * (Q.z1 - Q.z0), sfR = RS.slice().sort((a, b) => Math.min(b.x1 - b.x0, b.z1 - b.z0) * 9 + ar(b) - (Math.min(a.x1 - a.x0, a.z1 - a.z0) * 9 + ar(a))).slice(0, 2);   // c322: 방 구간 — 가장 큰 방 둘에 금고 · 보물상자(금고) · 2.4칸 넘는 방마다 사물 하나 · 사람 20 (방마다 0~3)
         for (const Q of sfR) { const sf = addSafe(Q) || Q.safe; sf.foot.set((Q.x0 + Q.x1) / 2, 0, (Q.z0 + Q.z1) / 2); sf.px = sf.foot.x; sf.pz = sf.foot.z; sf.space = Q; sf.B = Q; sf.room = null; sf.loot = chLoot('house'); sf.dud = !sf.loot; }
         const PR = ['wcab', 'tubes', 'biodrum', 'chair', 'scope', 'jarEye', 'iv', 'jarBrain'];
-        for (const Q of RS) if (!sfR.includes(Q) && Q.x1 - Q.x0 > 2.3 && Q.z1 - Q.z0 > 2.3) { const p = chAddProp(PR[Math.floor(Math.random() * PR.length)], Q.x0 + 0.7 + Math.random() * (Q.x1 - Q.x0 - 1.4), Q.z0 + 0.6); p.space = Q; }
-        const ppl = ['police', 'police', 'police', 'police', '', '', '', '', 'guard', 'guard', 'guard', 'guard', 'attacker', 'attacker', 'attacker', 'attacker', 'vig', 'vig', 'vig', 'vig'], cnt = new Map(), spots = [], pool = RS.filter((Q) => !sfR.includes(Q) && ar(Q) > 2.0), cap = (Q) => Math.min(3, Math.floor(ar(Q) / 1.4));
+        for (const Q of RS) if (!sfR.includes(Q) && Q.x1 - Q.x0 > 2.3 && Q.z1 - Q.z0 > 2.3) for (let k = 0, nP = ar(Q) > 12 ? 2 : 1; k < nP; k++) { const p = chAddProp(PR[Math.floor(Math.random() * PR.length)], Q.x0 + 0.7 + (k + Math.random()) / nP * (Q.x1 - Q.x0 - 1.4), Q.z0 + 0.6); p.space = Q; }   /* c326: 큰 방은 사물 둘 */
+        const ppl = ['police', 'police', 'police', 'police', '', '', '', '', 'guard', 'guard', 'guard', 'guard', 'attacker', 'attacker', 'attacker', 'attacker', 'vig', 'vig', 'vig', 'vig'], cnt = new Map(), spots = [], pool = RS.filter((Q) => ar(Q) > 2.0), cap = (Q) => Math.floor(ar(Q) / (sfR.includes(Q) ? 4 : 2.2));   /* c326: 방이 적고 커서 금고 방에도 · 넓이만큼 */
         for (const t of ppl) { const ok = pool.filter((Q) => (cnt.get(Q) || 0) < cap(Q)); if (!ok.length) break; const Q = ok[Math.floor(Math.random() * ok.length)]; cnt.set(Q, (cnt.get(Q) || 0) + 1);
-          let x = 0, z = 0; for (let k = 0; k < 200; k++) { x = Q.x0 + 0.5 + Math.random() * (Q.x1 - Q.x0 - 1.0); z = Q.z0 + 0.5 + Math.random() * (Q.z1 - Q.z0 - 1.0); if (spots.every(([a2, b2]) => Math.hypot(a2 - x, b2 - z) > 0.9)) break; } spots.push([x, z]);
+          let x = 0, z = 0; for (let k = 0; k < 200; k++) { x = Q.x0 + 0.5 + Math.random() * (Q.x1 - Q.x0 - 1.0); z = Q.z0 + 0.5 + Math.random() * (Q.z1 - Q.z0 - 1.0); if (spots.every(([a2, b2]) => Math.hypot(a2 - x, b2 - z) > 0.9) && !(Q.safe && Math.hypot(Q.safe.foot.x - x, Q.safe.foot.z - z) < 2.1)) break; } spots.push([x, z]);
           const c = man(Q, t === 'vig' ? 'attacker' : t, x, z, 0.4); if (t === 'vig') chVig(c); if (t === 'police') { c.post = c.area; enterNormal(c); } } }
       { const sf = addSafe(C7) || C7.safe; sf.foot.set(C7.x0 + 17, 0, zc); sf.px = sf.foot.x; sf.pz = sf.foot.z; sf.space = C7; sf.B = C7; sf.room = null; sf.loot = chLoot('house'); sf.dud = !sf.loot; }   // 그 뒤 금고 하나
       put(R4, [['avat', 4.3, 1.4], ['wcab', 1.0, 0.6], ['tubes', 2.2, 0.6], ['jarEye', 6.6, 0.6], ['jarBrain', 7.6, 0.6], ['iv', 0.6, 4.5], ['biodrum', 5.4, 5.2], ['scope', 7.9, 1.6]]);   // 덩치 수조 방 — 적 없음
