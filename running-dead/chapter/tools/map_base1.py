@@ -20,7 +20,10 @@ LC, RC = (IX0 - 0.4) / 2 + IX0 / 2 * 0, 0         # (아래에서 칸마다 직�
 # ── 북쪽 칸 (위에서 아래로) ──
 pol = bld('police', 0.0, NZ0 + 6.87 / 2, 9.58, 6.87, 's')                                     # 거점 — 맨 북쪽 가운데
 B.append(dict(x=round(-3.13, 3), z=round(NZ0 + 6.87 / 2 - 1.96, 3), w=3.32, d=2.95, doors=['s'], locks=[], kinds={}, local=len(B), block=-1, t='jail', zone=0, parent=pol, room=dict(doors=[dict(s='s', w=2.0, ext=False)])))   # 경찰서 철창 (큰 맵과 같은 자리)
-z = NZ0 + 6.87 + 2.2
+z = NZ0 + 6.87 + 1.6
+LOT = [IX0, z, IX1 - 5.1, z + 5.6]                                                            # c355: 거점 앞 주차장 (공원 반쯤 넓이 · 병력이 설 자리)
+bld('house', IX1 - 2.05, z + 2.5, 4.1, 4.95, 'e')                                             # 집 (주차장 옆)
+z += 5.6 + 2.0
 bld('bank', IX0 + 9.58 / 2, z + 6.87 / 2, 9.58, 6.87, 'w')                                    # 은행 (왼쪽)
 for k, x in enumerate((IX1 - 2.05 - 5.0, IX1 - 2.05)): bld('house', x, z + 2.5, 4.1, 4.95, 'e')   # 집 둘 (오른쪽)
 z += 6.87 + 2.2
@@ -28,22 +31,15 @@ PARK = [IX0 + 1.0, z, IX1 - 1.0, z + 7.4]                                       
 z += 7.4 + 2.2
 bld('gym', IX1 - 9.58 / 2, z + 6.87 / 2, 9.58, 6.87, 'e')                                     # 헬스장 (오른쪽)
 for x in (IX0 + 2.05, IX0 + 2.05 + 5.0): bld('house', x, z + 2.5, 4.1, 4.95, 'w')             # 집 둘 (왼쪽)
-z += 6.87 + 2.2
-for x in (IX0 + 2.05, IX0 + 2.05 + 5.0): bld('house', x, z + 2.5, 4.1, 4.95, 'w')             # 집 둘 (왼쪽)
-for x in (IX1 - 2.05, IX1 - 2.05 - 5.0): bld('house', x, z + 2.5, 4.1, 4.95, 'e')             # 집 둘 (오른쪽)
-nz_end = z + 4.95
-# ── 남쪽 칸 (위에서 아래로) ──
+nz_end = z + 6.87
+# ── 남쪽 칸 (위에서 아래로) — c355: 랜드마크 하나(도서관) · 집 셋을 뺐다 ──
 z = SZ0
 bld('mart', IX0 + 11.9 / 2, z + 8.3 / 2, 11.9, 8.3, 'w')                                      # 마트 (왼쪽)
 bld('house', IX1 - 2.05, z + 2.5, 4.1, 4.95, 'e')                                             # 집 (오른쪽)
 z += 8.3 + 2.2
 GAS = [IX0, z, IX0 + 10.5, z + 10.5]                                                          # 주유소 (왼쪽)
-for x in (IX1 - 2.05, IX1 - 2.05 - 5.0): bld('house', x, z + 2.5, 4.1, 4.95, 'e')             # 집 둘 (오른쪽)
-bld('house', IX1 - 2.5, z + 8.0, 5.0, 4.0, 'e')                                               # 집 (오른쪽 아래)
-z += 10.5 + 2.2
-for x in (IX0 + 2.05, IX0 + 2.05 + 5.0): bld('house', x, z + 2.5, 4.1, 4.95, 'w')             # 집 둘 (왼쪽)
-bld('library', IX1 - 9.1 / 2, z + 6.51 / 2, 9.1, 6.51, 'e')                                   # 도서관 (오른쪽)
-z += 6.87 + 2.2
+for x in (IX1 - 2.05, IX1 - 2.05 - 4.75): bld('house', x, z + 2.5, 4.1, 4.95, 'e')            # 집 둘 (오른쪽 · 주유소와 안 겹치게)
+z += 10.5 + 2.2 + 4.0                                                                         # 빈자리
 bld('store', IX0 + 8.67 / 2, z + 6.27 / 2, 8.67, 6.27, 'w')                                   # 창고 (왼쪽)
 bld('hospital', IX1 - 9.58 / 2, z + 6.87 / 2, 9.58, 6.87, 'e')                                # 병원 (오른쪽)
 sz_end = z + 6.87
@@ -64,7 +60,7 @@ for x, zz in ((L + r + 0.4, -HW - 0.5), (R - r - 0.4, HW + 0.5)): props.append([
 S['areas'] = [dict(k='park', r=mv(pk['r'], pdx, pdz), zone=0, v=pk['v'], gate=pk['gate']), dict(gs, r=mv(gs['r'], gdx, gdz), zone=0, can=mv(gs['can'], gdx, gdz), isl=[round(v + gdx, 3) for v in gs['isl']], iz=round(gs['iz'] + gdz, 3))]
 F = next(f for f in M['fuel'] if f['zone'] == 0); S['fuel'] = [dict(zone=0, slots=[[round(a + gdx, 2), round(b + gdz, 2), c] for a, b, c in F['slots']])]
 sp = next(s for s in M['spots'] if s['k'] == 'gas' and s['zone'] == 0); S['spots'] = [dict(sp, zone=0, at=[round(sp['at'][0] + gdx, 2), round(sp['at'][1] + gdz, 2)])]
-S['lots'] = []; S['props'] = props; S['pr'] = {t: M['pr'][t] for t in sorted(set(p[0] for p in props))}
+S['lots'] = [LOT]; S['props'] = props; S['pr'] = {t: M['pr'][t] for t in sorted(set(p[0] for p in props))}
 DX = -(W / 2) - 1.0   # 게임은 x > 0 을 다른 구역(큰 맵 오른쪽)으로 본다 — 맵 전체를 x < 0 쪽으로 옮긴다 (작은 맵 s1처럼)
 S['mm'] = dict(x0=S['mm']['x0'] + DX, z0=S['mm']['z0'], x1=S['mm']['x1'] + DX, z1=S['mm']['z1'])
 S['zones'] = [[q[0] + DX, q[1], q[2] + DX, q[3]] for q in S['zones']]
@@ -80,6 +76,7 @@ for A in S['areas']:
 for F in S['fuel']: F['slots'] = [[a + DX, b, c] for a, b, c in F['slots']]
 for p in S['spots']: p['at'] = [p['at'][0] + DX, p['at'][1]]
 for p in S['props']: p[1] = round(p[1] + DX, 2)
+S['lots'] = [[round(LOT[0] + DX, 3), round(LOT[1], 3), round(LOT[2] + DX, 3), round(LOT[3], 3)]]   # c355
 json.dump(S, open('../map_p1.json', 'w'), ensure_ascii=False, separators=(',', ':'))
 print('mm', S['mm'], 'zone', S['zones'][0], 'buildings', [(b['t'], b['x'], b['z']) for b in B if b['t'] != 'hill'])
 print('north rows end', round(nz_end, 2), '<=', round(NZ1, 2), ' south end', round(sz_end, 2), '<=', round(SZ1, 2))
