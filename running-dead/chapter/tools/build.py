@@ -1242,6 +1242,8 @@ from c346_patch import C346_R   # goal popup 0.5s after start
 R += C346_R
 from c347_patch import C347_R   # door at first corridor turn
 R += C347_R
+from c348_patch import C348_R   # partition-wall corridor after armor room, move road civilians to maze
+R += C348_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
