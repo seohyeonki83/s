@@ -1134,6 +1134,8 @@ from c292_patch import C292_R   # 튜토리얼 실험실 축소 · ㄱ자 복도
 R += C292_R
 from c293_patch import C293_R   # 실험 연구소 · 두 번째 방
 R += C293_R
+from c294_patch import C294_R   # 좀비 수조
+R += C294_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
