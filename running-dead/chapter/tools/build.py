@@ -1174,6 +1174,8 @@ from c312_patch import C312_R   # 긴 탁자 줄임
 R += C312_R
 from c313_patch import C313_R   # 히드라 속도
 R += C313_R
+from c314_patch import C314_R   # 긴 복도 · 군인
+R += C314_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
