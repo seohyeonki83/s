@@ -1104,6 +1104,8 @@ from c277_patch import C277_R   # 카드 위로 · 설명 짧게
 R += C277_R
 from c278_patch import C278_R   # 카드 글 넘침
 R += C278_R
+from c279_patch import C279_R   # 자폭 쿨타임 -25%
+R += C279_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
