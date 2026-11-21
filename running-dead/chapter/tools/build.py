@@ -1228,6 +1228,8 @@ from c339_patch import C339_R   # one horizontal police-car line mid lot, sniper
 R += C339_R
 from c340_patch import C340_R   # scattered movie-like police line, centered lot entrance
 R += C340_R
+from c341_patch import C341_R   # tutorial white discovery + first ally popup
+R += C341_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

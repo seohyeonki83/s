@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c340</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c341</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3364,6 +3364,7 @@
     z.splitT = t.splitT = 0.4;
   }
 
+  let chTutAlly1 = false;   // c341
   function makeZombie(b) {
     if (CHAPTER && b.home && b.home.x0 !== undefined) { const P = b.home.parent || b.home; if (P.called === 1) P.lost = true; }   // c54: 문이 부서진 건물 안 사람이 감염됐다 → 두 번째 출동
     if (b.mark) { scene.remove(b.mark); b.mark = null; }
@@ -3371,6 +3372,7 @@
     if (b.gooS) { b.mesh.remove(b.gooS); b.gooS = null; } b.goo = false;   // v275: 좀비가 되면 산성 덩어리는 사라진다
     if (b.scr) scr.inf[b.scr]++;              // 성장 구역 스폰이 감염됨 (v230)
     b.kind = 'ally';
+    if (CH_TUT && !chTutAlly1 && !b.fromVat) { chTutAlly1 = true; pendingAward.push('mut:zombie'); }   // c341: 튜토리얼 — 처음 감염시킨 동료 한 번만 동료 획득창
     b.state = '';
     b.mesh.material.color.setHex(COLOR.ally);
     b.mesh.remove(b.arrow);
@@ -4282,6 +4284,7 @@
     goalShown = false; tutOpen = false; spawnFrames = 0; mmBang = false; camAnim = null; tutQueue.length = 0; for (const k of Object.keys(tutSeen)) delete tutSeen[k];   // 튜토리얼도 판마다 처음부터 (v202)
     gameNo++;
     if (gameNo > TUT_GAMES || TEST_MAP) { goalShown = true; mmBang = true; for (const k of ['citizen', 'guard', 'attacker', 'police', 'station', 'soldier', 'sniper']) tutSeen[k] = true; }   // v230: 앱을 켠 뒤 처음 두 판만 목표·발견 소개 (껐다 켜면 다시)
+    if (CH_TUT) { tutSeen.citizen = false; chTutAlly1 = false; }   // c341: 튜토리얼 — 하양 첫 발견 소개만 켠다
     scr.st = 0; scr.on = !TEST_MAP; scr.t = 0; scr.tick = 0; scr.list.length = 0; scrLater.length = 0; scrWant.length = 0; for (const k in scr.inf) scr.inf[k] = 0;
     drawLv();
     for (const k of cashes.slice()) removeCash(k);
@@ -8016,7 +8019,7 @@
   function chTutSafeList() { chTutVatL.length = 0; for (const B of buildings) if (B.safe) chTutVatL.push(B); for (const p of chProps) if (!p.dead && (p.prop === 'zvat' || p.prop === 'hvat' || p.prop === 'avat') && bodies.includes(p)) chTutVatL.push({ safe: p }); return chTutVatL; }   // c302
   function chTutFree(b) {
     if (b.glowS) { scene.remove(b.glowS); scene.remove(b.arrS); b.glowS = b.arrS = null; }   // c296                     // c294: 수조에서 풀려난 좀비 = 바로 내 동료
-    const x = b.foot.x, z = b.foot.z + 0.3, A = { x0: x - 1, z0: z - 1, x1: x + 1, z1: z + 1 }, c = addCitizen(x, z, A, ''); c.space = b.space; c.disc = true; makeZombie(c);
+    const x = b.foot.x, z = b.foot.z + 0.3, A = { x0: x - 1, z0: z - 1, x1: x + 1, z1: z + 1 }, c = addCitizen(x, z, A, ''); c.space = b.space; c.disc = true; c.fromVat = true; makeZombie(c);
     if (b.prop === 'avat') mutate(c, 'armor');   // c301: 덩치 수조 = 영구 덩치 동료
     if (b.prop === 'hvat') mutate(c, 'hydra');
     if (b.prop === 'hvat' || b.prop === 'avat') pendingAward.push(b.prop === 'avat' ? 'mut:armor' : 'mut:hydra');   // c316: 동료 획득창
@@ -8986,15 +8989,15 @@
     });
   }
   function chMutIcon(type) {                  // c316: 얻은 변이 동료 그림 — 게임 속 모양 그대로 (색 원 + 머리 위 보석), 덩치는 1.5배
-    const r = type === 'armor' ? 48 : 32, cx = 60, cy = 68, col = type === 'armor' ? '#1f3d99' : '#2fb84a', gy = cy - r;
+    const r = type === 'armor' ? 48 : 32, cx = 60, cy = 68, col = type === 'armor' ? '#1f3d99' : type === 'zombie' ? '#8aa4f5' : '#2fb84a', gy = cy - r;   /* c341: zombie = 보통 동료 (보석 없음) */
     const dia = (s, c) => `<path d="M${cx} ${gy - s}L${cx + s} ${gy}L${cx} ${gy + s}L${cx - s} ${gy}Z" fill="${c}"/>`;
-    return `<svg viewBox="0 0 120 120" width="1.5em" height="1.5em" style="display:block;margin:0 auto"><circle cx="${cx}" cy="${cy}" r="${r}" fill="${col}"/>${dia(r * 0.375, '#1c1c1e')}${dia(r * 0.27, '#b05cff')}</svg>`;
+    return `<svg viewBox="0 0 120 120" width="1.5em" height="1.5em" style="display:block;margin:0 auto"><circle cx="${cx}" cy="${cy}" r="${r}" fill="${col}"/>${type === 'zombie' ? '' : dia(r * 0.375, '#1c1c1e') + dia(r * 0.27, '#b05cff')}</svg>`;
   }
   function chShowMut(type) {                  // c316: 덩치·히드라 동료를 얻었다 — 무기 획득창과 같은 창 (사용자 문구 그대로)
     acqOpen = true; paused = true; stopInput();
     const ov = document.createElement('div');
     ov.id = 'acq'; ov.dataset.kind = 'mut:' + type;
-    const name = type === 'armor' ? '덩치 좀비' : '히드라 좀비', ds = type === 'armor' ? '덩치 큰 동료를 얻었습니다. 밀어붙이세요' : '토사물을 내뿜는 동료를 얻었습니다. 원거리 공격이 가능합니다.';
+    const name = type === 'armor' ? '덩치 좀비' : type === 'zombie' ? '좀비' : '히드라 좀비', ds = type === 'zombie' ? '동료를 획득했습니다. 더 많은 동료를 모으세요.' : type === 'armor' ? '덩치 큰 동료를 얻었습니다. 밀어붙이세요' : '토사물을 내뿜는 동료를 얻었습니다. 원거리 공격이 가능합니다.';
     ov.innerHTML = `<div style="font:900 54px/1 var(--font);letter-spacing:3px;color:#ff4a3a;text-shadow:0 0 16px rgba(255,60,0,0.95),0 0 44px #ff2a00,0 4px 10px rgba(0,0,0,0.85);animation:wpnpop 0.45s ease-out both;margin-bottom:14px">동료 획득</div><div class="big">${chMutIcon(type)}</div><div class="t" style="font-size:30px;color:#ffd34d">${name}</div><div class="ds">${ds}</div>`;
     stage.appendChild(ov);
     tapOk(ov, '확인', () => {
@@ -9081,7 +9084,7 @@
   }
   // ── 튜토리얼 (v202) — 판을 시작하면 목표를 위쪽에 크게 띄웠다가 사라지고, 처음 만난 적·경찰서는 화면 가운데에 소개 (누르면 닫힘) ──
   const TUT = {
-    citizen: { col: CHAPTER ? '#f2f2f2' : '#ffcf33', name: CHAPTER ? '인간' : '좃밥', say: '살점을 뜯어먹어 체력을 회복하세요' },   // 이름 (v204) — 원 위에 뜬다
+    citizen: { col: CHAPTER ? '#f2f2f2' : '#ffcf33', name: CHAPTER ? '인간' : '좃밥', say: CHAPTER ? '물어뜯어 체력을 회복하세요' : '살점을 뜯어먹어 체력을 회복하세요' }   /* c341 */,   // 이름 (v204) — 원 위에 뜬다
     guard: { col: CHAPTER ? '#ffcf33' : '#ff8c1a', name: CHAPTER ? '강한 인간' : '헬창', say: '깝침' },
     attacker: { col: CHAPTER ? '#ff8c1a' : '#c62828', name: CHAPTER ? '위협적인 인간' : '만두귀', say: '좀 침' },
     police: { col: '#8e24aa', name: CHAPTER ? '경찰' : '짭새', say: '건법 씀' },
@@ -9164,7 +9167,7 @@
     return Math.hypot(px - mx, pz - mz) <= me.sense && !blocked(mx, mz, px, pz);
   }
   function checkTut() {                       // 처음으로 내 시야에 들어온 종류 → 소개 줄 세우기
-    if (!TEST_MAP) for (const b of bodies) {   /* c205: 챕터는 판 시작에 전부 본 것 */
+    if (!TEST_MAP || CH_TUT) for (const b of bodies) {   /* c341: 튜토리얼은 처음 본 하양만 소개 */   /* c205: 챕터는 판 시작에 전부 본 것 */
       if (b.kind !== 'citizen') continue;
       const k = b.sniper ? 'sniper' : b.soldier ? 'soldier' : b.police ? 'police' : b.attacker ? 'attacker' : b.guard ? 'guard' : 'citizen';
       if (tutSeen[k] || !(iSee(b) || zSeen(b))) continue;   // v484: 나 + 좀비 편 시야 (카메라는 그 자리로)
@@ -9430,7 +9433,7 @@
     if (ai >= 0 && !acqOpen && !lvOpen && !tutOpen && !menuOv && !victoryOn && goalShown) {   // v428 · v429: 아이템을 먹으면 획득창은 바로 — 나오던 연출은 멈췄다가 확인 뒤 이어짐, 밀린 연출은 그 뒤로
       const e = fxQueue.splice(ai, 1)[0];
       pauseFx();                              // v429: 나오던 연출은 그 자리에 멈춤
-      if (e.k === 'mut:hydra' || e.k === 'mut:armor') chShowMut(e.k.slice(4)); else if (e.k === 'dud') showDud(); else if (CHAPTER && chHas(e.k)) chUpgrade(e.k); else showAward(e.k);
+      if (e.k === 'mut:hydra' || e.k === 'mut:armor' || e.k === 'mut:zombie') chShowMut(e.k.slice(4)); else if (e.k === 'dud') showDud(); else if (CHAPTER && chHas(e.k)) chUpgrade(e.k); else showAward(e.k);
       return;
     }
     if (curFx && curFx.paused && !acqOpen && !lvOpen && !tutOpen && !menuOv) resumeFx();   // v429: 획득창을 확인하면 멈췄던 연출이 그대로 이어진다
@@ -9448,7 +9451,7 @@
     else if (e.t === 'squad') showSquad();
     else if (e.t === 'rank') showRank(e.r);
     else if (e.t === 'lv') { if (CHAPTER) chLevelUp(); else showLevelUp(); }   // c25
-    else if (e.k === 'mut:hydra' || e.k === 'mut:armor') chShowMut(e.k.slice(4)); else if (e.k === 'dud') showDud(); else if (CHAPTER && chHas(e.k)) chUpgrade(e.k); else showAward(e.k);   // v288: 꽝
+    else if (e.k === 'mut:hydra' || e.k === 'mut:armor' || e.k === 'mut:zombie') chShowMut(e.k.slice(4)); else if (e.k === 'dud') showDud(); else if (CHAPTER && chHas(e.k)) chUpgrade(e.k); else showAward(e.k);   // v288: 꽝
   }
   // v278: 동료 수 칭호 — 판마다 처음 도달할 때 딱 한 번. 게임은 멈추지 않고 화면 위쪽에 큰 글씨가 팡 떴다 사라진다
   const RANKS = [   // v284: 단계마다 간격이 4마리씩 더 벌어진다 (간격 5·10·15·10… → 9·14·19·14…)
