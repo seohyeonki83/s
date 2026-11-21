@@ -1094,6 +1094,8 @@ from c272_patch import C272_R   # c272: 산성 자폭 돌진
 R += C272_R
 from c273_patch import C273_R   # c273: 방탄복 = 총격 + 충격 흡수
 R += C273_R
+from c274_patch import C274_R   # 카드 설명 · 바로 강화 · 가방 분해
+R += C274_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
