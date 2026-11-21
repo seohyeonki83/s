@@ -1088,6 +1088,8 @@ from c269_patch import C269_R   # c269: 테이저 0.5초부터
 R += C269_R
 from c270_patch import C270_R   # c270: 보스 감전 같게
 R += C270_R
+from c271_patch import C271_R   # c271: 도트 숫자 크기·사라짐
+R += C271_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
