@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c282</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c283</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3110,7 +3110,7 @@
     const inDomain = (b) => Math.hypot(b.foot.x - areaX(), b.foot.z - areaZ()) <= (b.mut === 'armor' ? (b.attacking ? 5.8 * 1.3 : 4.6 * 1.2)   /* v367: 지배 +20% (5.52) · 공격 지배 +30% (7.54) */   /* v350: 덩치 지배 4.6 · 공격 지배 5.8칸 */   /* v347: 덩치 지배 = 자리(근접 1.3배)의 1.3배, 공격 지배는 그 1.3배 */ : (b.attacking ? DOMAIN_FIGHT : DOMAIN)) * (b.cmd ? b.cmd.mul : 1) * armyK;   // 공격 중이면 지배 거리가 늘어난다. 명령 중이면 (기본·공격 둘 다) 7초 동안 3배
   // 덮치는 중(marked)인 시민은 아무도 안 노린다. 동료가 쫓기 시작해 찜한 시민은 다른 동료가 안 노린다 (나는 상관없이 노린다).
   // HP가 남은 시민(수비형)은 찜이 없다 — 여럿이 같이 때린다. 다른 공간(건물 안·밖)에 있는 시민은 안 보인다.
-  const huntable = (z, b) => b && b.kind === 'citizen' && !b.marked && (z === me || b.hp > 0 || !b.chaser || b.chaser === z) && (b.space === z.space || (linked(z.space, b.space) && zSeen(b))) && !(CHAPTER && z === me && me.mut && b.hp <= 0 && chMeYield(b));   /* c57: 변이한 나는 덮치기 맨 끝 */   // v296: 다른 공간도 좀비 편이 보고 있으면
+  const huntable = (z, b) => b && b.kind === 'citizen' && !b.marked && (z === me || !chDown(b) || !b.chaser || b.chaser === z) && (b.space === z.space || (linked(z.space, b.space) && zSeen(b))) && !(CHAPTER && z === me && me.mut && b.hp <= 0 && chMeYield(b));   /* c57: 변이한 나는 덮치기 맨 끝 */   // v296: 다른 공간도 좀비 편이 보고 있으면
 
   // 동료 좀비 찜: 쫓기 시작하면 그 시민에 내 이름을 걸고, 그만 쫓으면 푼다
   function claimPrey(z, c) {
@@ -3139,7 +3139,7 @@
       if (z === me && b.sniper && d <= sd) { sd = d; sn = b; }   // v565: 내 덮침 거리 안 저격수는 무조건 1순위
       if (d > ad && d > bd) continue;
       if (d <= ad) { ad = d; any = b; }
-      if (d <= bd && (z === me || b.hp <= 0 || (crowd.get(b) || 0) < CROWD_MAX)) { bd = d; best = b; }   // 나는 3명 제한 없이 늘 가장 가까운 시민 (v154)
+      if (d <= bd && (z === me || chDown(b) || (crowd.get(b) || 0) < CROWD_MAX)) { bd = d; best = b; }   // 나는 3명 제한 없이 늘 가장 가까운 시민 (v154)
     }
     return ht || sn || best || any;
   }
@@ -3178,10 +3178,11 @@
     }
     return false;
   }
+  const chDown = (b) => b.hp <= 0 || (CHAPTER && owned.teeth && !b.boss && b.hp <= b.maxHp * 0.05 * (1 + lv('teeth')));   // c283: 틀니 — 체력이 이만큼 남으면 덮칠 수 있다
   function pounceable(z) {
     let best = null, bd = z.attack;
     for (const b of nearIn(cCells, z.foot.x, z.foot.z, z.attack, poBuf)) {   // 둘레 칸의 시민만 (v177)
-      if (b.kind !== 'citizen' || b.marked || b.hp > 0 || b.space !== z.space) continue;
+      if (b.kind !== 'citizen' || b.marked || !chDown(b) || b.space !== z.space) continue;   /* c283 */
       if (!inSight(z, b)) continue;            // 명령 중엔 보이는 시민만 덮친다
       const d = Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z);
       if (d <= bd && dashOk(z, b)) { bd = d; best = b; }
@@ -3189,7 +3190,7 @@
     return best;
   }
 
-  const stillPounceable = (z, b) => b && b.kind === 'citizen' && !b.marked && b.hp <= 0 && b.space === z.space && inSight(z, b) && dashOk(z, b)
+  const stillPounceable = (z, b) => b && b.kind === 'citizen' && !b.marked && chDown(b) && b.space === z.space && inSight(z, b) && dashOk(z, b)
     && Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) <= z.attack ? b : null;   // 0.1초 전에 찾아 둔 시민이 아직 덮칠 수 있나 (v172)
   // 덮쳐도 되나: 덮치는 동안은 다른 몸을 통과해서(벽만 막힌다) 거의 늘 0.2초 안에 닿는다.
   // 그래도 1초 안에 못 닿은 시민은(벽 모서리 등) 1초 동안 다시 안 덮친다 — 막혀서 제자리 덮치기를 되풀이하지 않게
@@ -3222,6 +3223,7 @@
     z.vel.set(0, 0);
     z.fixed = t.fixed = true;                // 무는 동안 둘 다 그 자리에 붙는다
     t.state = 'held';
+    if (t.hp > 0) t.hp = 0;   // c283: 틀니로 덮친 사람 — 물리는 순간 쓰러진다
     t.lureAlert = false;                      // v195: 덮쳐져도 다시 유혹에 걸릴 수 있다 (풀려나면 돈다발이 보이면 다시 간다)
     t.biter = z;                              // 게이지는 무는 쪽의 남은 시간으로 찬다
     t.vel.set(0, 0);
@@ -3474,7 +3476,7 @@
       const old = z.pick;
       if (old && crowd.has(old)) crowd.set(old, crowd.get(old) - 1);   // 내 몫을 빼고 다시 고른다
       z.pick = nearestCitizen(z, z.sense);
-      if (z.pick && z.pick.hp > 0) crowd.set(z.pick, (crowd.get(z.pick) || 0) + 1);
+      if (z.pick && !chDown(z.pick)) crowd.set(z.pick, (crowd.get(z.pick) || 0) + 1);
       if (z !== me) z.pcand = pounceable(z);    // 덮칠 시민도 타겟과 같이 0.1초마다만 찾는다 (v172 — 전엔 매 프레임 지도 전체를 뒤졌다)
     }
     if (z !== me) recallCheck(z, dt);            // 감염 중에도 시간은 센다 — 물기는 끝까지, 끝나면 바로 복귀
@@ -3510,12 +3512,12 @@
         unclaim(z);
         goSlot(z, dt);                             // 복귀 명령 — 지배 거리 안에 들어올 때까지 유혹 무시
       } else {
-        const t = aimed && aimed.kind === 'citizen' && !aimed.marked && aimed.space === z.space && !(CHAPTER && z === me && me.mut && aimed.hp <= 0 && chMeYield(aimed)) ? aimed : ready;   /* c57 */   // 테두리가 떠 있던 시민은 무조건 노린다 (문 밖으로 나가 버렸으면 빼고)
+        const t = aimed && aimed.kind === 'citizen' && !aimed.marked && aimed.space === z.space && !(CHAPTER && z === me && me.mut && chDown(aimed) && chMeYield(aimed)) ? aimed : ready;   /* c57 */   // 테두리가 떠 있던 시민은 무조건 노린다 (문 밖으로 나가 버렸으면 빼고)
         const prey = huntable(z, p) ? p : null;
         const adj = CHAPTER && !t && !prey ? chAdjFoe(z) : null, go = t || prey || adj;   /* c205: t·prey가 있으면 안 쓰인다 */   /* c64: 3명 제한에 걸렸어도 근접 거리 안의 적은 친다 */
         if (z !== me) {
           if (go) z.phase = 'track';               // 동료 좀비: 사냥이 끝나면 자기 자리로 간 다음 배회
-          if (prey && !t && prey.hp <= 0) claimPrey(z, prey); else unclaim(z);   // HP 0 시민을 쫓는 동안 찜 (덮치면 marked가 대신한다)
+          if (prey && !t && chDown(prey)) claimPrey(z, prey); else unclaim(z);   // HP 0 시민을 쫓는 동안 찜 (덮치면 marked가 대신한다)
         }
         const noObj = CHAPTER && ((z.objOff > clock && go && !chWallCut(z.foot.x, z.foot.z, go.foot.x, go.foot.z)) || !!adj);   /* c58 · c64: 맞은 지 2초 안(나도)이고 쫓을 사람이 있으면 · 근접 거리 안에 적이 있으면 사물·금고는 안 노린다 (사람이 바리케이트 너머뿐이면 바리케이트를 친다) */
         let sf = !t && !noObj && !(CHAPTER && go) ? nearSafe(z) : null;   /* v353: 동료도 금고를 때린다 */   // 나만: 금고가 가장 가까우면 가서 때린다 (v190)
@@ -3532,7 +3534,7 @@
         const meLk = CHAPTER && z === me && !(go && go.sniper) ? z.meLock : null;   // c187: 나 — 치던 금고·문은 붙잡는다 (저격수만 예외)
         if (ob && (forced || meLk === ob || !go || objGap(ob, z) < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z) - RADIUS) && (meLk === ob || !sf || objGap(ob, z) < Math.hypot(sf.foot.x - z.foot.x, sf.foot.z - z.foot.z) - sf.r)) { fightObj(z, ob, dt); if (CHAPTER && z === me) z.meLock = ob.type === 'door' || ob.type === 'wall' ? ob : null   /* c209 */; }
         else if (sf && (meLk === sf || !go || Math.hypot(sf.foot.x - z.foot.x, sf.foot.z - z.foot.z) - (CHAPTER && z === me ? sf.r : 0) < Math.hypot(go.foot.x - z.foot.x, go.foot.z - z.foot.z) - (CHAPTER && z === me ? RADIUS : 0))) { fight(z, sf, dt); if (CHAPTER && z === me) z.meLock = sf; }   /* c187: 겉면까지 거리로 견준다 · 붙잡는다 */
-        else if (go && go.hp > 0) fight(z, go, dt);     // HP가 남았으면 가서 때린다
+        else if (go && !chDown(go)) fight(z, go, dt);   /* c283 */     // HP가 남았으면 가서 때린다
         else if (t && dashOk(z, t)) { z.mode = 'pounce'; z.target = t; z.pounceT = 1; t.marked = true; }
         else if (prey || t) { const q = prey || t; steer(z.vel, toward(z, q.foot.x, q.foot.z, z.speed * RAID), ACCEL * dt); }   // 습격: 타겟이 인지거리 안 → 습격 속도로 자동으로 달려간다 (방금 덮쳐서 못 닿은 시민이면 1초 동안은 덮치지 않고 다가간다)
         else if (CHAPTER && !noObj && (z === me || z.phase !== 'track') && (z.propT = chNearFurn(z))) chHitFurn(z, z.propT, dt);   // c70: 건물 안 사물 — 정말 때릴 게 없을 때만 (맨 마지막 순위)
@@ -4821,8 +4823,9 @@
   const ilv = {};                             // c19: 아이템마다 강화 단계 (챕터) — 같은 걸 또 얻으면 그것만 +1. 테스트맵은 지금까지처럼 '장비/도구 강화' 한 값을 다 같이 쓴다
   const lv = (k) => CHAPTER ? (ilv[k] || 0) : up.brain;
   const chStars = (n) => '★'.repeat(Math.max(0, Math.min(6, n)));   // c26: 강화 단계 = 별 (최대 5개)
-  const starTag = (n) => n ? ` <span style="color:#ffd34d;letter-spacing:-1px">${chStars(n)}</span>` : '';
-  const lvText = (kind) => { const n = lv(kind); if (!CHAPTER) return `지금 (강화 ${n}단계): ${statLine(kind, n)}<br>다음 강화: ${statLine(kind, n + 1)}`; const max = n >= chLvMax(kind); return `지금${starTag(n)}${max ? ' (최대)' : ''}: ${statLine(kind, n)}` + (max ? '' : `<br>다음 강화${starTag(n + 1)}: ${statLine(kind, n + 1)}`); };
+  const chStarsK = (k, n) => CHAPTER && n >= chLvMax(k) ? 'MAX' : chStars(n);   // c283: 끝까지 강화 = 노란 MAX
+  const starTag = (n, k) => n ? ` <span style="color:#ffd34d;letter-spacing:-1px">${k ? chStarsK(k, n) : chStars(n)}</span>` : '';
+  const lvText = (kind) => { const n = lv(kind); if (!CHAPTER) return `지금 (강화 ${n}단계): ${statLine(kind, n)}<br>다음 강화: ${statLine(kind, n + 1)}`; const max = n >= chLvMax(kind); return `지금${starTag(n, kind)}${max ? ' (최대)' : ''}: ${statLine(kind, n)}` + (max ? '' : `<br>다음 강화${starTag(n + 1, kind)}: ${statLine(kind, n + 1)}`); };
   let level = 0, xp = 0, pendingLv = 0, lvOpen = false, hasVest = false, vestEl = null, victoryOn = false;
   const needXp = (L) => Math.round(5 * Math.pow(1.13, L));   /* c254: 1.13배씩 */   /* c158: 처음 5명, 1.2배씩 */   /* c96: 1.2배씩 */   /* c92: 처음 7명, 1.3배씩 */   /* c74: 챕터도 처음 10명, 1.3배씩 (c28~c73은 처음 20명, 1.2배씩) */   // 레벨 L → L+1 에 새로 필요한 수 (v238: 처음 10, 1.3배씩)
   const vestK = (n) => CHAPTER ? 1 - 0.1 * (n + 1) : Math.pow(0.8, n + 1);   /* c21: 방탄복 10%, 강화마다 +10%p (60%까지) */   // v582: 원거리 20% 감쇄, 강화마다 남은 데미지에서 20%씩 더
@@ -5758,7 +5761,7 @@
     const ov = document.createElement('div'); ov.id = 'pick';
     ov.innerHTML = `<div class="hd">무기 강화</div><div class="sub">강화할 무기를 선택하세요</div><div class="cards" style="flex-wrap:wrap;justify-content:center">` +
       chWeapons().map((k) => { const n = lv(k), S = CH_SHORT[k], max = n >= chLvMax(k);
-        return `<div class="card" data-k="${k}" style="min-height:158px;padding-top:8px${max ? ';opacity:0.4;pointer-events:none' : ''}"><div style="height:14px;font:900 12px/14px var(--font);letter-spacing:-0.5px;color:#ffd34d">${max ? 'MAX' : chStars(n + 1)}</div>` +
+        return `<div class="card" data-k="${k}" style="min-height:158px;padding-top:8px${max ? ';opacity:0.4;pointer-events:none' : ''}"><div style="height:14px;font:900 12px/14px var(--font);letter-spacing:-0.5px;color:#ffd34d">${max ? 'MAX' : chStarsK(k, n + 1)}</div>` +
           `<div class="ic" style="margin-top:4px">${ITEM[k].icon}</div><div class="nm" style="margin-top:8px">${ITEM[k].name}</div><div class="ds" style="margin-top:8px">${max ? '최대 강화' : '강화'}</div>` +
           `<div class="vl">${S[0]} ${max ? S[1](n) : S[1](n) + ' → ' + S[1](n + 1)}</div></div>`; }).join('') + `</div>`;   /* c274: 확인 버튼 없음 */
     stage.appendChild(ov); chFitNames(ov);
@@ -5797,7 +5800,7 @@
     crowbar: '내가 문, 벽, 금고, 차, 사물을 때릴 때 피해가 늘어납니다. 동료에게는 적용되지 않습니다. 강화하면 더 늘어납니다.',
     vest: '총격처럼 멀리서 날아오는 공격의 피해를 줄이고, 총에 맞아 뒤로 밀리는 힘도 줄여 줍니다. 나에게만 적용됩니다. 강화하면 더 잘 버팁니다.',
     shoes: '나와 동료, 변이한 좀비 모두의 이동 속도가 오릅니다. 강화하면 더 빨라집니다.',
-    teeth: '나와 동료들이 인간을 좀비로 만드는 시간이 줄어듭니다. 회복하는 체력의 총량은 그대로입니다. 강화하면 더 빨라집니다.',
+    teeth: '나와 동료들이 인간을 좀비로 만드는 시간이 줄어들고, 체력이 조금 남은 인간도 바로 덮칠 수 있습니다. 강화하면 더 빨라지고 더 많이 남아도 덮칩니다.',
     acid: '동료가 죽는 자리에 산성피가 퍼져 그 안의 적에게 계속 피해를 줍니다. 확률로 터지고, 겹쳐도 피해는 쌓이지 않습니다. 강화하면 터질 확률이 오르고 더 오래 남습니다.',
     acidp: '산성 폭발과 산성 자폭 스위치의 산성 피해가 늘어납니다. 산성 무기나 장비가 없으면 효과가 없습니다. 강화하면 더 늘어납니다.',
     catalyst: '변이한 좀비의 공격력과 최대 체력이 함께 오릅니다. 강화하면 더 오릅니다.',
@@ -5916,7 +5919,7 @@
     absorb: (n) => `충격 흡수 ${2 + 2.5 * n} (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12)`,
     vest: (n) => `원거리 공격 ${10 * (1 + n)}% 감소 · 밀림 ${2 + 2.5 * n} 감소`,   /* c273 */
     shoes: (n) => `나·동료 이동 속도 +${5 * (1 + n)}%`,
-    teeth: (n) => `감염 시간 -${10 * (1 + n)}%`,   /* c224 */
+    teeth: (n) => `감염 시간 -${10 * (1 + n)}% · 체력 ${5 * (1 + n)}% 이하면 덮침`,   /* c224 */
     acidp: (n) => `산성 도트 +${1 + n} (0.5초마다)`,   /* c259 */
     acid: (n) => `터질 확률 ${50 + 10 * n}% · ${3 + n}초 · 0.5초마다 1 · 범위 = 근접 거리 x1.2`,   /* c280 */   /* c261: 겹치지 않음 */
     revive: (n) => `체력 가득으로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,
@@ -5947,8 +5950,8 @@
     const d = ITEM[kind], n = lv(kind), max = n >= chLvMax(kind), ov = document.createElement('div');
     ov.id = 'acq';
     ov.innerHTML = (d.passive ? '' : `<div style="font:900 40px/1 var(--font);letter-spacing:2px;color:#ff7a4a;text-shadow:0 0 14px rgba(255,80,0,0.9),0 4px 10px rgba(0,0,0,0.85);animation:wpnpop 0.45s ease-out both;margin-bottom:12px">무기 강화</div>`) + `<div class="big">${d.icon}</div><div class="t">${d.name} ${max ? '(이미 최대 강화)' : '강화'}</div>` +
-      `<div style="margin-top:6px;font:900 22px/1 var(--font);color:#ffd34d;letter-spacing:1px;text-shadow:0 2px 6px rgba(0, 0, 0, 0.7)">${chStars(max ? n : n + 1)}</div><div class="ds">${itemDesc(kind)}<div class="up">` +   // c26: 강화 단계는 별로
-      (max ? `지금${starTag(n)} (최대): ${statLine(kind, n)}` : `지금${starTag(n)}: ${statLine(kind, n)}<br>강화 뒤${starTag(n + 1)}: ${statLine(kind, n + 1)}`) + `</div></div>`;
+      `<div style="margin-top:6px;font:900 22px/1 var(--font);color:#ffd34d;letter-spacing:1px;text-shadow:0 2px 6px rgba(0, 0, 0, 0.7)">${chStarsK(kind, max ? n : n + 1)}</div><div class="ds">${itemDesc(kind)}<div class="up">` +   // c26: 강화 단계는 별로
+      (max ? `지금${starTag(n, kind)} (최대): ${statLine(kind, n)}` : `지금${starTag(n, kind)}: ${statLine(kind, n)}<br>강화 뒤${starTag(n + 1, kind)}: ${statLine(kind, n + 1)}`) + `</div></div>`;
     stage.appendChild(ov);
     tapOk(ov, max ? '확인' : '강화', () => {
       if (ov.dataset.done) return;
@@ -6012,7 +6015,7 @@
     ov.querySelector('.sub').textContent = '강화할 무기를 선택하세요';
     const box = ov.querySelector('.cards'); box.style.flexWrap = 'wrap'; box.style.justifyContent = 'center';
     box.innerHTML = chWeapons().map((k) => { const n = lv(k), S = CH_SHORT[k], max = n >= chLvMax(k);
-      return `<div class="card" data-k="${k}" style="min-height:158px;padding-top:8px${max ? ';opacity:0.4;pointer-events:none' : ''}"><div style="height:14px;font:900 12px/14px var(--font);letter-spacing:-0.5px;color:#ffd34d">${max ? 'MAX' : chStars(n + 1)}</div>` +
+      return `<div class="card" data-k="${k}" style="min-height:158px;padding-top:8px${max ? ';opacity:0.4;pointer-events:none' : ''}"><div style="height:14px;font:900 12px/14px var(--font);letter-spacing:-0.5px;color:#ffd34d">${max ? 'MAX' : chStarsK(k, n + 1)}</div>` +
         `<div class="ic" style="margin-top:4px">${ITEM[k].icon}</div><div class="nm" style="margin-top:8px">${ITEM[k].name}</div><div class="ds" style="margin-top:8px">${max ? '최대 강화' : '강화'}</div>` +
         `<div class="vl">${S[0]} ${max ? S[1](n) : S[1](n) + ' → ' + S[1](n + 1)}</div></div>`; }).join('');
     ov.querySelector('.ok').classList.remove('ready');
@@ -6040,7 +6043,7 @@
     ov.style.paddingTop = 'calc(9vh + env(safe-area-inset-top, 0px))';   /* c277: 설명 칸 자리 — 카드를 위로 */
     ov.innerHTML = `<div class="hd">LEVEL UP!</div><div class="sub">Lv ${level} → Lv ${level + 1} · 하나를 고르세요</div><div class="cards">` +
       keys.map((k) => { if (k === '__w') return chWupCard(); const has = chHas(k), n = lv(k), S = CH_SHORT[k];
-        return `<div class="card" data-k="${k}" style="min-height:158px;padding-top:8px"><div style="height:14px;font:900 12px/14px var(--font);letter-spacing:-0.5px;color:#ffd34d">${has ? chStars(n + 1) : 'NEW'}</div>` +
+        return `<div class="card" data-k="${k}" style="min-height:158px;padding-top:8px"><div style="height:14px;font:900 12px/14px var(--font);letter-spacing:-0.5px;color:#ffd34d">${has ? chStarsK(k, n + 1) : 'NEW'}</div>` +
           `<div class="ic" style="margin-top:4px">${ITEM[k].icon}</div><div class="nm" style="margin-top:8px">${ITEM[k].name}</div><div class="ds" style="margin-top:8px">${has ? '강화' : CH_BRIEF[k]}</div>` +
           `<div class="vl">${S[0]} ${has ? S[1](n) + ' → ' + S[1](n + 1) : S[1](0)}</div></div>`; }).join('') +
       `</div><div class="det"></div><button class="ok okBtn">확인</button>`;   /* c274: 설명 칸 */
@@ -9061,7 +9064,7 @@
       let t = el.querySelector(':scope > .upn');
       if (!n) { if (t) t.remove(); continue; }
       if (!t) { t = document.createElement('span'); t.className = 'upn'; el.appendChild(t); }
-      if (CHAPTER) t.style.fontSize = el.classList.contains('pbadge') ? '9px' : '';   /* c26: 배지는 작아서 별도 작게 (5개가 한 줄에 들어가게) */ const st = CHAPTER ? chStars(n) : Array.from({ length: Math.ceil(n / 3) }, (_, i) => '★'.repeat(Math.min(3, n - i * 3))).reverse().join('<br>');   /* c26: 강화 단계만큼 별 (최대 5개, 한 줄) */ if (t.innerHTML !== st) t.innerHTML = st;   // v535: 별 3개씩 줄 — 넘치면 위로 한 줄 더
+      if (CHAPTER) t.style.fontSize = el.classList.contains('pbadge') ? '9px' : '';   /* c26: 배지는 작아서 별도 작게 (5개가 한 줄에 들어가게) */ const st = CHAPTER ? (n >= chLvMax(kd[els.indexOf(el)]) ? '<span style="color:#ffd34d;font-weight:900;letter-spacing:0">MAX</span>' : chStars(n)) :   /* c283 */ Array.from({ length: Math.ceil(n / 3) }, (_, i) => '★'.repeat(Math.min(3, n - i * 3))).reverse().join('<br>');   /* c26: 강화 단계만큼 별 (최대 5개, 한 줄) */ if (t.innerHTML !== st) t.innerHTML = st;   // v535: 별 3개씩 줄 — 넘치면 위로 한 줄 더
     }
   }
   function uiTick() {

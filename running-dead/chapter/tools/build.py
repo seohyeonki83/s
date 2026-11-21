@@ -1112,6 +1112,8 @@ from c281_patch import C281_R   # 빠루 50%씩
 R += C281_R
 from c282_patch import C282_R   # 촉매제
 R += C282_R
+from c283_patch import C283_R   # 틀니 덮치기 · MAX
+R += C283_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
