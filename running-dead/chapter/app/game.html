@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c352</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c353</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3689,7 +3689,7 @@
         if (b.foot.x - a.foot.x > reach) break;
         if (a.fixed && b.fixed) continue;
         if (a.target === b || b.target === a) continue;   // 덮치는 중·무는 중엔 둘이 겹친다
-        if (a.mode === 'pounce' || b.mode === 'pounce') continue;   // 덮치는 동안은 아무 몸이나 통과
+        if (a.mode === 'pounce' || b.mode === 'pounce' || (a.bombing && a.bombing.pounce) || (b.bombing && b.bombing.pounce)) continue;   // 덮치는 동안은 아무 몸이나 통과 (c353: 자폭 덮치기도)
         const dx = b.foot.x - a.foot.x, dz = b.foot.z - a.foot.z, d = Math.hypot(dx, dz), min = a.r + b.r;
         if (d >= min) continue;
         const nx = d > 1e-6 ? dx / d : 1, nz = d > 1e-6 ? dz / d : 0;
@@ -5697,10 +5697,12 @@
       for (const c of nearIn(cCells, z.foot.x, z.foot.z, 14, chBombBuf)) { if (c.kind !== 'citizen' || c.space !== z.space) continue; const d = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z); if (d < bd) { bd = d; t = c; } }
       B.tg = t;
     }
-    if (!t || B.t > 4) { chBombBoom(z); return; }
-    const dx = t.foot.x - z.foot.x, dz = t.foot.z - z.foot.z, d = Math.hypot(dx, dz) || 1e-6, v = z.speed * POUNCE;
+    if (!t || B.t > 6) { chBombBoom(z); return; }
+    const dx = t.foot.x - z.foot.x, dz = t.foot.z - z.foot.z, d = Math.hypot(dx, dz) || 1e-6;   // c353: 평소처럼 달려가다가 덮치는 거리(ATTACK) 안에 들면 덮친다 — 덮쳐서 닿으면 감염 대신 터진다
+    if (!B.pounce && d <= ATTACK && !chPounceBlocked(z.foot.x, z.foot.z, t.foot.x, t.foot.z)) B.pounce = true;
+    const v = B.pounce ? z.speed * POUNCE : z.speed;
     if (d - (z.r || BODY) - (t.r || BODY) <= 0.15 + v * dt) { chBombBoom(z); return; }
-    z.vel.set(dx / d * v, dz / d * v);
+    if (B.pounce) z.vel.set(dx / d * v, dz / d * v); else steer(z.vel, wantV.set(dx / d * v, dz / d * v), ACCEL * dt);
   }
   function chBombBoom(z) {                     // c272: 터진다 (아이콘을 치우고 원래 폭발)
     if (z.bombS) { scene.remove(z.bombS); z.bombS = null; }

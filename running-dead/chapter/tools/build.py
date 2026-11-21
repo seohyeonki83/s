@@ -1252,6 +1252,8 @@ from c351_patch import C351_R   # minimap me dot 2x
 R += C351_R
 from c352_patch import C352_R   # minimap dot 1.5x, bomb pick by score at target within my circle
 R += C352_R
+from c353_patch import C353_R   # bomber runs then pounces, explodes on contact
+R += C353_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
