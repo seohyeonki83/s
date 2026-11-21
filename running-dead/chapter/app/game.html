@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c292</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c293</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -462,12 +462,14 @@
   const CH_TUTT = new Set(['lab', 'labc']);   // c289: 튜토리얼 건물 (실험실 · 복도) — 금고·사람·자동 사물·랜덤 문 없음
   const TUT_B = CH_TUT ? (() => {             // c289 · c292: 큰 맵 남쪽 바깥 — 마을에서 아무도 오지 않는 자리
     const cz = CH_MAP.mm.z1 + 58, W = 12, D = 13 * 2 / 3, x0 = -W / 2, z0 = cz - D / 2, z1 = cz + D / 2, BS = MELEE * 2, doorX = W / 2 - 2.6, CW = 4.4, CL = W, n = CH_MAP.b.length;   // c292: 실험실 가로·세로 3분의 2 (18×13 → 12×8.7)
-    const cTop = z0 - CL;                     // 첫 복도 위끝
+    const cTop = z0 - CL, R2x = doorX + CW / 2 + CL;   // 첫 복도 위끝 · 두 번째 방 왼쪽 벽
     return [
       { x: 0, z: cz, w: W, d: D, doors: [], locks: ['n'], at: { n: doorX }, kinds: {}, local: 900, block: -1, t: 'lab', zone: 0 },                 // 실험실 — 문은 위쪽 벽 오른쪽
       { x: x0 + 1 + BS / 2, z: z1 - 1 - BS / 2, w: BS, d: BS, doors: [], locks: [], kinds: {}, local: 901, block: -1, t: 'box', zone: 0, parent: n, room: { doors: [] } },   // 박스 — 벽에서 1칸 떨어진 네 면 박스
       { x: doorX, z: z0 - CL / 2, w: CW, d: CL, doors: [], open: ['s', 'e'], at: { e: cTop + CW / 2 }, locks: [], kinds: {}, local: 902, block: -1, t: 'labc', zone: 0 },   // 첫 복도 — 문에서 위로 (실험실 가로만큼) · 위끝에서 오른쪽으로 열림
-      { x: doorX + CW / 2 + CL / 2, z: cTop + CW / 2, w: CL, d: CW, doors: [], open: ['w'], locks: [], kinds: {}, local: 903, block: -1, t: 'labc', zone: 0 },   // 꺾인 복도 — 오른쪽으로 (실험실 가로만큼) · 끝은 막힘
+      { x: doorX + CW / 2 + CL / 2, z: cTop + CW / 2, w: CL, d: CW, doors: [], open: ['w', 'e'], locks: [], kinds: {}, local: 903, block: -1, t: 'labc', zone: 0 },   // 꺾인 복도 — 오른쪽으로 (실험실 가로만큼) · c293: 끝은 두 번째 방으로 열림
+      { x: R2x + D / 2, z: cTop + CW / 2, w: D, d: W, doors: [], open: ['w'], at: { w: cTop + CW / 2, e: cTop + CW / 2 + W / 2 - CW / 2 }, locks: ['e'], kinds: {}, local: 904, block: -1, t: 'lab', zone: 0 },   // c293: 두 번째 방 — 실험실과 같은 크기, 세로로 김 · 왼쪽 가운데로 들어옴
+      { x: R2x + D + CL / 2, z: cTop + CW / 2 + W / 2 - CW / 2, w: CL, d: CW, doors: [], open: ['w'], locks: [], kinds: {}, local: 905, block: -1, t: 'labc', zone: 0 },   // c293: 오른쪽 아래 문 너머 복도 (끝은 막힘)
     ];
   })() : [];
   const BUILDINGS = CHAPTER ? (CH_TUT ? CH_MAP.b.concat(TUT_B) : CH_MAP.b) : TEST_MAP ? TEST_BLDGS : BLOCKS.flatMap(([ox, oz], k) => TOWN.map((s) => (k === START_BLOCK && s.station ? BIG : s)).map((s) => ({ ...s, x: s.x + ox, z: s.z + oz, block: k })));
@@ -1004,7 +1006,7 @@
       { const c = chPut(x, z, area, t); if (c.wOut) c.area = chRoamArea(x, z); else G.members.push(c); }   // c129: 하양이 된 자리는 무리에서 빠진다
     });
   }
-  function chCopTick() {                       // c189: 경보 단계에 맞춰 길거리 배회 경찰을 늘린다
+  function chCopTick() {   if (CH_TUT) return;   // c293                       // c189: 경보 단계에 맞춰 길거리 배회 경찰을 늘린다
     if (!chPop || CH_BT || chPop.copK === 1.5) return;   // c205: 최대에 닿으면 끝
     const base = CH_COPS * CH_ONE_K * 0.8 * 0.9 * 0.9, mid = Math.round((STAR_AT[0] + STAR_AT[1]) / 2);   /* c190 */
     const k = deaths >= mid ? 1.5 : stars >= 1 ? 1 : 0;   /* c192 */
@@ -6146,6 +6148,7 @@
     const [x, z] = edge(); return { x, z };
   }
   function chDispatchTick(dt) {
+    if (CH_TUT) return;   // c293: 튜토리얼은 출동 없음
     chCopTick();   // c189
     for (const z of zombies) {                // ① 랜드마크 사수 — c247: 좀비가 그 건물(방 포함) 안에 들어오는 순간 한 번
       const S = z.space; if (!S) continue;
@@ -6699,6 +6702,7 @@
     }
   }
   function chSfTick(dt) {
+    if (CH_TUT) return;   // c293: 튜토리얼은 특공대·보스 없음
     chDiscTick(dt);   // c220
     if (!chSf.on) {
       if (stars >= 2) chSf.on = true;                                             // 난리남
@@ -7639,6 +7643,17 @@
     }
   }
   const chUnderRoof = (x, z) => { if (CHAPTER) return false; for (const C of chCanopies) if (!C.open && x > C.x0 && x < C.x1 && z > C.z0 && z < C.z1) return true; return false; };   // 닫힌 주유소 지붕 밑인가 (밑에 있는 것은 안 보인다)
+  Object.assign(CH_PROP, {                    // c293: 인체 실험 연구소 소품 (하얀 톤 · 기괴한 것들)
+    scope: { r: 0.3, w: 0.6, h: 0.78, hits: 1.5, f: 1 / 3, bits: 'white', px: [80, 104], draw: (g, w, h) => { chBx(g, 10, h - 18, w - 20, 12, '#e8ecef'); chBx(g, 46, 26, 12, h - 46, '#cfd6dc'); chBx(g, 16, h - 44, 46, 8, '#9aa3ad'); chBx(g, 24, 14, 14, 42, '#eef1f3'); chBx(g, 22, 6, 18, 10, '#2a2e35'); chBx(g, 25, 56, 12, 10, '#6c7386'); } },
+    jarEye: { r: 0.28, w: 0.55, h: 0.76, hits: 1, f: 1 / 4, bits: 'white', px: [72, 100], draw: (g, w, h) => { chBx(g, 10, 24, w - 20, h - 32, 'rgba(190,235,220,0.75)'); chFl(g, 13, 40, w - 26, h - 51, 'rgba(110,190,110,0.75)'); chBx(g, 8, 12, w - 16, 12, '#9aa3ad'); chDot(g, w / 2, h / 2 + 12, 15, '#f4f1ea'); g.strokeStyle = '#c0392b'; g.lineWidth = 2; for (const a of [0.3, 1.9, 3.6, 5.0]) { g.beginPath(); g.moveTo(w / 2 + Math.cos(a) * 6, h / 2 + 12 + Math.sin(a) * 6); g.lineTo(w / 2 + Math.cos(a) * 14, h / 2 + 12 + Math.sin(a) * 14); g.stroke(); } g.beginPath(); g.arc(w / 2 + 4, h / 2 + 10, 7, 0, 7); g.fillStyle = '#3a7bd5'; g.fill(); g.beginPath(); g.arc(w / 2 + 5, h / 2 + 10, 3, 0, 7); g.fillStyle = '#111'; g.fill(); } },
+    jarHand: { r: 0.28, w: 0.55, h: 0.76, hits: 1, f: 1 / 4, bits: 'white', px: [72, 100], draw: (g, w, h) => { chBx(g, 10, 24, w - 20, h - 32, 'rgba(190,235,220,0.75)'); chFl(g, 13, 40, w - 26, h - 51, 'rgba(200,180,110,0.6)'); chBx(g, 8, 12, w - 16, 12, '#9aa3ad'); const S = '#e9c9b4'; chFl(g, 26, 58, 22, 22, S); for (let i = 0; i < 4; i++) chFl(g, 26 + i * 5.5, 40 + (i === 0 || i === 3 ? 6 : 0), 4.5, 20, S); chFl(g, 46, 62, 8, 5, S); chFl(g, 27, 80, 20, 6, '#b0302a'); } },
+    jarBrain: { r: 0.28, w: 0.55, h: 0.76, hits: 1, f: 1 / 4, bits: 'white', px: [72, 100], draw: (g, w, h) => { chBx(g, 10, 24, w - 20, h - 32, 'rgba(190,235,220,0.75)'); chFl(g, 13, 40, w - 26, h - 51, 'rgba(150,200,210,0.6)'); chBx(g, 8, 12, w - 16, 12, '#9aa3ad'); chDot(g, w / 2, h / 2 + 12, 17, '#e89aa8'); g.strokeStyle = '#b85c6e'; g.lineWidth = 2.5; for (const [a, b, c2, d] of [[22, 58, 36, 52], [36, 66, 50, 60], [26, 70, 40, 74], [42, 54, 48, 70]]) { g.beginPath(); g.moveTo(a, b); g.quadraticCurveTo((a + c2) / 2, b - 8, c2, d); g.stroke(); } } },
+    iv: { r: 0.25, w: 0.5, h: 1.4, hits: 1, f: 1 / 4, bits: 'steel', px: [64, 180], draw: (g, w, h) => { chFl(g, w / 2 - 3, 18, 6, h - 30, '#9aa3ad'); chFl(g, 14, 14, w - 28, 5, '#9aa3ad'); chBx(g, 16, 20, w - 32, 46, 'rgba(235,240,245,0.95)'); chFl(g, 19, 42, w - 38, 21, '#a51c1c'); chFl(g, w / 2 - 1, 66, 2, 40, '#a51c1c'); chFl(g, 10, h - 14, w - 20, 7, '#6c7386'); } },
+    tubes: { r: 0.3, w: 0.62, h: 0.5, hits: 1, f: 1 / 4, bits: 'white', px: [80, 64], draw: (g, w, h) => { const C = ['#6fdc5a', '#d42a1e', '#9b59ff', '#f2c230']; for (let i = 0; i < 4; i++) { chBx(g, 14 + i * 15, 8, 9, h - 26, 'rgba(230,240,245,0.9)'); chFl(g, 15 + i * 15, 22 + i * 3, 7, h - 41 - i * 3, C[i]); } chBx(g, 6, h - 24, w - 12, 18, '#e8ecef'); } },
+    biodrum: { r: 0.4, w: 0.78, h: 1.05, hits: 3, f: 1 / 2, bits: 'olive', px: [100, 134], draw: (g, w, h) => { chBx(g, 12, 10, w - 24, h - 18, '#e8c21e'); chFl(g, 12, 36, w - 24, 6, '#b8970f'); chFl(g, 12, h - 36, w - 24, 6, '#b8970f'); g.fillStyle = '#111'; g.font = 'bold 44px sans-serif'; g.textAlign = 'center'; g.fillText('☣', w / 2, h / 2 + 16); } },
+    wcab: { r: 0.45, w: 0.9, h: 1.4, hits: 3, f: 2 / 3, bits: 'white', px: [116, 180], draw: (g, w, h) => { chBx(g, 8, 8, w - 16, h - 16, '#eef1f3'); chBx(g, 16, 18, w - 32, h - 70, 'rgba(170,210,225,0.8)'); for (const [x, y, c] of [[24, 36, '#6fdc5a'], [44, 34, '#d42a1e'], [66, 38, '#f2f2ee'], [30, 78, '#9b59ff'], [56, 74, '#e89aa8'], [78, 80, '#6fdc5a']]) chFl(g, x, y, 10, 22, c); chFl(g, 16, 64, w - 32, 4, '#9aa3ad'); chFl(g, w / 2 - 12, h - 44, 24, 8, '#d42a1e'); chFl(g, w / 2 - 4, h - 52, 8, 24, '#d42a1e'); } },
+    vat: { r: 0.5, w: 0.9, h: 1.8, hits: 4, f: 1, bits: 'white', px: [116, 232], draw: (g, w, h) => { chBx(g, 10, h - 34, w - 20, 26, '#4a4f5c'); chBx(g, 10, 8, w - 20, 20, '#4a4f5c'); chBx(g, 16, 28, w - 32, h - 62, 'rgba(120,220,170,0.55)'); chFl(g, 19, 40, w - 38, h - 77, 'rgba(70,170,110,0.6)'); g.fillStyle = 'rgba(25,60,40,0.85)'; g.beginPath(); g.arc(w / 2, 70, 13, 0, 7); g.fill(); g.fillRect(w / 2 - 15, 84, 30, 62); g.fillRect(w / 2 - 25, 90, 9, 40); g.fillRect(w / 2 + 16, 90, 9, 40); g.fillRect(w / 2 - 13, 146, 10, 40); g.fillRect(w / 2 + 3, 146, 10, 40); for (const [x, y] of [[30, 120], [80, 100], [70, 160], [36, 180]]) { g.beginPath(); g.arc(x, y, 4, 0, 7); g.fillStyle = 'rgba(220,255,230,0.8)'; g.fill(); } } },
+  });
   for (const P of Object.values(CH_PROP)) { P.geo = new THREE.PlaneGeometry(P.w, P.h); P.tex = chTexOf(P.px[0], P.px[1], P.draw); }
   // 네모 — L·W = 크기(칸), hp·mass = 큰 탁자(경찰차의 1/3)의 몇 배. 위에서 본 그림
   const CH_SLAB = {
@@ -7654,6 +7669,10 @@
     pallet: { L: 1.3, W: 1.3, hp: 0.8, mass: 1.5, bits: 'card', store: true, px: [125, 125], draw: (g, w, h) => { chFl(g, 0, 0, w, h, '#2a1a0e'); chFl(g, 5, 5, w - 10, h - 10, '#9c6a3c'); for (let y = 22; y < h - 10; y += 24) chFl(g, 5, y, w - 10, 4, '#6b4426'); for (const [x, y, c] of [[14, 14, '#b98a54'], [66, 14, '#caa066'], [14, 66, '#caa066'], [66, 66, '#b98a54']]) { chFl(g, x - 2, y - 2, 48, 48, '#2a1a0e'); chFl(g, x, y, 44, 44, c); chFl(g, x + 18, y, 8, 44, '#e0c891'); } } },
     cooler: { L: 2.4, W: 0.7, hp: 1.2, mass: 1.8, bits: 'white', px: [230, 67], draw: (g, w, h) => { chFl(g, 0, 0, w, h, '#22262c'); chFl(g, 5, 5, w - 10, h - 10, '#e8eef4'); chFl(g, 11, 10, w - 22, 30, '#9fd3f0'); const C = ['#d42a1e', '#4fa35a', '#e2c84a', '#3f7fd9']; for (let x = 16, i = 0; x < w - 26; x += 17, i++) chFl(g, x, 16, 11, 18, C[i % 4]); chFl(g, 11, 45, w - 22, 12, '#c9ccd1'); } },
   };
+  Object.assign(CH_SLAB, {                    // c293: 하얀 실험대 — 작은 것(전 실험대의 반) · 세로로 긴 것
+    labtable: { L: 1.3, W: 0.75, hp: 0.6, mass: 0.5, bits: 'white', px: [130, 75], draw: (g, w, h) => { chFl(g, 0, 0, w, h, '#4a4f5c'); chFl(g, 4, 4, w - 8, h - 8, '#eef1f3'); for (const [x, y, c] of [[30, 30, '#6fdc5a'], [60, 44, '#d42a1e'], [96, 28, '#9b59ff']]) { g.beginPath(); g.arc(x, y, 9, 0, 7); g.fillStyle = c; g.fill(); g.lineWidth = 3; g.strokeStyle = '#2a2e35'; g.stroke(); } } },
+    lbench: { L: 3.4, W: 1.0, hp: 1, mass: 1, bits: 'white', px: [340, 100], draw: (g, w, h) => { chFl(g, 0, 0, w, h, '#4a4f5c'); chFl(g, 5, 5, w - 10, h - 10, '#eef1f3'); chFl(g, 40, 22, 56, 56, '#b9c3cc'); chFl(g, 48, 30, 40, 40, '#8e9aa6'); for (const [x, y, c] of [[150, 36, '#6fdc5a'], [182, 62, '#d42a1e'], [214, 34, '#f2c230'], [262, 58, '#9b59ff']]) { g.beginPath(); g.arc(x, y, 11, 0, 7); g.fillStyle = c; g.fill(); g.lineWidth = 3; g.strokeStyle = '#2a2e35'; g.stroke(); } g.fillStyle = 'rgba(160,20,20,0.55)'; g.beginPath(); g.ellipse(300, 30, 18, 9, 0.4, 0, 7); g.fill(); } },
+  });
   for (const S of Object.values(CH_SLAB)) S.tex = chTexOf(S.px[0], S.px[1], S.draw);
   const CH_SLAB_MASS = CAR_MASS * 2 / 3 / 3, CH_SLAB_HP = MY_DAMAGE * 9.5 / 3;   // 큰 탁자 = 경찰차의 1/3 (본게임 그대로)
   const CH_FURN_CUT = 0.8;                    // c77: 체력이 높은 사물은 20% 깎는다
@@ -7671,7 +7690,7 @@
   }
   function chAddSlab(type, x, z, h, S) {       // 본게임 addTable 그대로 — 방(S) 안에만 있다
     const D = CH_SLAB[type], m = new THREE.Mesh(new THREE.PlaneGeometry(D.L, D.W).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: D.tex, transparent: true, depthTest: false, depthWrite: false }));
-    m.renderOrder = -0.6; m.position.set(x, 0.04, z); m.rotation.y = -h; scene.add(m);   // 지붕(-0.46)·어둠(-0.52) 밑 — 지붕이 덮여 있으면 안 보이고, 시야 밖이면 어둡게 보인다
+    m.renderOrder = CH_TUT ? -0.58 : -0.6; m.position.set(x, 0.04, z);   /* c293: 튜토리얼은 하얀 바닥(-0.595) 위 */ m.rotation.y = -h; scene.add(m);   // 지붕(-0.46)·어둠(-0.52) 밑 — 지붕이 덮여 있으면 안 보이고, 시야 밖이면 어둡게 보인다
     const t = { room: S, B: S, x, z, h, L: D.L, W: D.W, m, type, mass: CH_SLAB_MASS * D.mass };
     t.obj = { kind: 'obj', type: 'table', t, B: S, foot: new THREE.Vector3(x, 0, z), hp: CH_SLAB_HP * D.hp * (D.hp >= 1.2 ? CH_FURN_CUT : 1), maxHp: CH_SLAB_HP * D.hp * (D.hp >= 1.2 ? CH_FURN_CUT : 1), dead: false };   /* c77: 1.2배 이상짜리(책장·냉장 진열대·계산대)만 */
     addHpBar(t.obj, hpFoeMat); objs.push(t.obj);
@@ -7802,6 +7821,8 @@
   function chFogInit() {
     const T = buildings.filter((q) => CH_TUTT.has(q.type)), cs = 0.25, x0 = Math.min(...T.map((q) => q.x0)) - 30, z0 = Math.min(...T.map((q) => q.z0)) - 30, w = Math.ceil((Math.max(...T.map((q) => q.x1)) + 30 - x0) / cs), h = Math.ceil((Math.max(...T.map((q) => q.z1)) + 30 - z0) / cs);   // c292: 튜토리얼 건물 전부 + 사방 30칸   // 사방 30칸 — 화면 밖까지 검게
     if (!chFog) {
+      for (const B of T) { const t = chTexOf(64, 64, (g) => { g.fillStyle = B.type === 'lab' ? '#c9d0d6' : '#aab2ba'; g.fillRect(0, 0, 64, 64); g.fillStyle = 'rgba(80,95,110,0.35)'; g.fillRect(0, 0, 64, 2); g.fillRect(0, 0, 2, 64); }); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(B.x1 - B.x0, B.z1 - B.z0);   // c293: 하얀 타일 바닥 (복도는 조금 어둡게)
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(B.x1 - B.x0, B.z1 - B.z0).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthTest: false, depthWrite: false })); m.position.set((B.x0 + B.x1) / 2, 0.02, (B.z0 + B.z1) / 2); m.renderOrder = -0.595; scene.add(m); }   // 지도 밖 어둠 판(-0.6) 위
       const data = new Uint8Array(w * h * 4), tex = new THREE.DataTexture(data, w, h, THREE.RGBAFormat); tex.magFilter = tex.minFilter = THREE.NearestFilter;
       const m = new THREE.Mesh(new THREE.PlaneGeometry(w * cs, h * cs).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
       m.position.set(x0 + w * cs / 2, 0.05, z0 + h * cs / 2); m.renderOrder = -0.4; scene.add(m);   // c291: 벽 그림 위 · 몸 그림 아래 (안 본 곳의 사람·사물은 원래 시야 밖이라 숨겨진다)
@@ -7828,18 +7849,21 @@
     }
     if (ch) F.tex.needsUpdate = true;
   }
-  function chTutFurn() {                     // c289 · c292: 실험실 사물 (12×8.7) — 박스 둘레와 문 앞만 비우고 빽빽하게 · 복도 사람
-    const L = buildings.find((B) => B.type === 'lab'), x0 = L.x0, z0 = L.z0;
-    for (const [x, z] of [[6.3, 3.3], [6.3, 5.9]]) chAddSlab('table', x0 + x, z0 + z, 0, L);   // 실험대 두 개
-    const P = [['pc', 1.2, 0.95], ['pc', 3.2, 0.95], ['chair', 1.2, 2.0], ['chair', 3.2, 2.0], ['cabinet', 5.0, 0.6], ['plant', 0.5, 3.1],   // 위쪽 벽 (문 앞은 비움)
-      ['chair', 5.6, 1.95], ['chair', 7.0, 1.95], ['chair', 5.6, 4.6], ['chair', 7.0, 4.6], ['chair', 5.8, 7.3],   // 실험대 둘레
-      ['locker', 11.3, 2.9], ['locker', 11.3, 3.9], ['cabinet', 11.3, 5.1], ['drum', 11.2, 6.3],   // 오른쪽 벽
-      ['crate', 10.0, 7.8], ['box', 8.8, 7.9], ['drum', 11.1, 7.8], ['box', 8.7, 3.2], ['crate', 8.8, 4.7], ['box', 9.2, 6.2], ['chair', 9.9, 2.6]];
-    for (const [t, x, z] of P) { const p = chAddProp(t, x0 + x, z0 + z); p.space = L; }
-    const [C1, C2] = buildings.filter((B) => B.type === 'labc');
-    for (const [B, type, x, z] of [[C1, '', (C1.x0 + C1.x1) / 2, (C1.z0 + C1.z1) / 2], [C2, 'guard', (C2.x0 + C2.x1) / 2, (C2.z0 + C2.z1) / 2]]) {   // c292: 첫 복도 하양 1 · 꺾인 복도 노랑 1
-      const A = { x0: x - 1.2, z0: z - 1.2, x1: x + 1.2, z1: z + 1.2 }, c = addCitizen(x, z, A, type); c.area = A; c.home = B; c.space = B; c.disc = true;   // 제자리 둘레 1.2칸만 돈다   // disc = 처음 발견 강등(노랑 → 하양)에서 뺀다
-    }
+  function chTutFurn() {                     // c293: 인체 실험 연구소 — 실험실(사물 절반 · 작은 실험대 하나) · 두 번째 방(긴 실험대 둘 · 의자 6) · 사람
+    const [L, L2] = buildings.filter((B) => B.type === 'lab'), [C1, C2] = buildings.filter((B) => B.type === 'labc');
+    const put = (S, list) => { for (const [t, x, z] of list) { const p = chAddProp(t, S.x0 + x, S.z0 + z); p.space = S; } };
+    chAddSlab('labtable', L.x0 + 6.5, L.z0 + 4.0, 0, L);   // 실험실: 작은 실험대 하나 (전 실험대의 반)
+    put(L, [['vat', 0.7, 0.9], ['wcab', 2.0, 0.55], ['wcab', 3.0, 0.55], ['scope', 5.2, 0.6], ['tubes', 6.2, 0.6], ['chair', 6.5, 4.9],
+      ['jarEye', 11.4, 2.6], ['jarHand', 11.4, 3.5], ['jarBrain', 11.4, 4.4], ['iv', 9.0, 3.3], ['biodrum', 11.1, 7.8]]);
+    for (const x of [3.0, 5.67]) chAddSlab('lbench', L2.x0 + x, L2.z0 + 6, Math.PI / 2, L2);   // 두 번째 방: 세로로 긴 실험대 둘 (세로 가운데)
+    put(L2, [['chair', 2.15, 4.8], ['chair', 2.15, 6], ['chair', 2.15, 7.2], ['chair', 6.52, 4.8], ['chair', 6.52, 6], ['chair', 6.52, 7.2],
+      ['vat', 7.9, 0.9], ['wcab', 4.3, 0.55], ['jarEye', 5.4, 0.55], ['scope', 6.4, 0.6], ['iv', 3.0, 11.4], ['biodrum', 4.4, 11.3], ['jarBrain', 5.6, 11.4]]);
+    const man = (B, type, x, z, r = 1.2) => { const A = { x0: x - r, z0: z - r, x1: x + r, z1: z + r }, c = addCitizen(x, z, A, type); c.area = A; c.home = B; c.space = B; c.disc = true; return c; };   // disc = 처음 발견 강등에서 뺀다 · 제자리 둘레만 돈다
+    man(C1, '', (C1.x0 + C1.x1) / 2, (C1.z0 + C1.z1) / 2); man(C2, 'guard', (C2.x0 + C2.x1) / 2, (C2.z0 + C2.z1) / 2);   // 복도: 하양 1 · 노랑 1
+    for (const [x, z] of [[1.0, 1.2], [1.0, 10.8]]) chVig(man(L2, 'attacker', L2.x0 + x, L2.z0 + z, 0.8));   // 두 번째 방: 왼쪽 위·아래 빨강 2
+    { const p = man(L2, 'police', L2.x0 + 7.4, L2.z0 + 11.0, 0.7); p.post = p.area; enterNormal(p); }   // 오른쪽 아래 경찰 1 (제자리)
+    const busy = [[1.0, 1.2], [1.0, 10.8], [7.4, 11.0]], free = (x, z) => !(x > 1.9 && x < 6.9 && z > 3.9 && z < 8.1) && !(x < 1.8 && z > 4.0 && z < 8.0) && busy.every(([a, b]) => Math.hypot(a - x, b - z) > 1.4);
+    for (const type of ['', '', '', 'attacker', 'attacker']) { let x = 0, z = 0; for (let t = 0; t < 200; t++) { x = 1 + Math.random() * 6.7; z = 1.4 + Math.random() * 9.2; if (free(x, z)) break; } busy.push([x, z]); man(L2, type, L2.x0 + x, L2.z0 + z); }   // 하양 3 · 주황 2 — 아무 데나
   }
   function chFurnOne(S) {
     const T = S.parent || S, type = S.type, I = { x0: S.x0 + 0.45, z0: S.z0 + 0.45, x1: S.x1 - 0.45, z1: S.z1 - 0.45 }, W = I.x1 - I.x0, H = I.z1 - I.z0;
