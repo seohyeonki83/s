@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c303</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c304</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3133,7 +3133,7 @@
     const inDomain = (b) => Math.hypot(b.foot.x - areaX(), b.foot.z - areaZ()) <= (b.mut === 'armor' ? (b.attacking ? 5.8 * 1.3 : 4.6 * 1.2)   /* v367: 지배 +20% (5.52) · 공격 지배 +30% (7.54) */   /* v350: 덩치 지배 4.6 · 공격 지배 5.8칸 */   /* v347: 덩치 지배 = 자리(근접 1.3배)의 1.3배, 공격 지배는 그 1.3배 */ : (b.attacking ? DOMAIN_FIGHT : DOMAIN)) * (b.cmd ? b.cmd.mul : 1) * armyK;   // 공격 중이면 지배 거리가 늘어난다. 명령 중이면 (기본·공격 둘 다) 7초 동안 3배
   // 덮치는 중(marked)인 시민은 아무도 안 노린다. 동료가 쫓기 시작해 찜한 시민은 다른 동료가 안 노린다 (나는 상관없이 노린다).
   // HP가 남은 시민(수비형)은 찜이 없다 — 여럿이 같이 때린다. 다른 공간(건물 안·밖)에 있는 시민은 안 보인다.
-  const huntable = (z, b) => b && b.kind === 'citizen' && !b.marked && (z === me || !chDown(b) || !b.chaser || b.chaser === z) && (b.space === z.space || (linked(z.space, b.space) && zSeen(b))) && !(CHAPTER && z === me && me.mut && b.hp <= 0 && chMeYield(b));   /* c57: 변이한 나는 덮치기 맨 끝 */   // v296: 다른 공간도 좀비 편이 보고 있으면
+  const huntable = (z, b) => b && b.kind === 'citizen' && !b.marked && !(CHAPTER && b.hp <= 0 && chPounceBlocked(z.foot.x, z.foot.z, b.foot.x, b.foot.z)) && (   /* c304: 큰 물건 너머 쓰러진 사람은 쫓지 않는다 (그 물건을 친다) */z === me || !chDown(b) || !b.chaser || b.chaser === z) && (b.space === z.space || (linked(z.space, b.space) && zSeen(b))) && !(CHAPTER && z === me && me.mut && b.hp <= 0 && chMeYield(b));   /* c57: 변이한 나는 덮치기 맨 끝 */   // v296: 다른 공간도 좀비 편이 보고 있으면
 
   // 동료 좀비 찜: 쫓기 시작하면 그 시민에 내 이름을 걸고, 그만 쫓으면 푼다
   function claimPrey(z, c) {
@@ -3217,7 +3217,18 @@
     && Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) <= z.attack ? b : null;   // 0.1초 전에 찾아 둔 시민이 아직 덮칠 수 있나 (v172)
   // 덮쳐도 되나: 덮치는 동안은 다른 몸을 통과해서(벽만 막힌다) 거의 늘 0.2초 안에 닿는다.
   // 그래도 1초 안에 못 닿은 시민은(벽 모서리 등) 1초 동안 다시 안 덮친다 — 막혀서 제자리 덮치기를 되풀이하지 않게
-  const dashOk = (z, t) => !(z.skip === t && z.skipT > 0);
+  const dashOk = (z, t) => !(z.skip === t && z.skipT > 0) && !(CHAPTER && chPounceBlocked(z.foot.x, z.foot.z, t.foot.x, t.foot.z));   // c304: 큰 물건에 가로막힌 사람은 덮치지 않는다
+  function chPounceBlocked(ax, az, bx, bz) {   // c304: 두 점 사이 직선을 자동차(바리케이트·잔해 포함)나 금고(수조)가 가로막나 — 일반 사물은 안 본다
+    const box = (car) => { const hu = CAR_L * ckl(car) / 2, hv = CAR_W * ck(car) / 2 * (car.barr ? CH_BARR_W : 1), m = hu + hv;
+      if (Math.max(ax, bx) < car.x - m || Math.min(ax, bx) > car.x + m || Math.max(az, bz) < car.z - m || Math.min(az, bz) > car.z + m) return false;
+      return chSegBox([ax, az, bx, bz], car.x, car.z, Math.cos(car.h), Math.sin(car.h), hu, hv); };
+    for (const car of cars) { if (car.obj && car.obj.dead && !car.wreck) continue; if (box(car)) return true; }
+    for (const o of chDecoObjs) if (!o.dead && o.car && box(o.car)) return true;
+    const circ = (s) => { const r = s.r || 1, dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz || 1e-9, t = Math.max(0, Math.min(1, ((s.foot.x - ax) * dx + (s.foot.z - az) * dz) / L2)); return Math.hypot(ax + dx * t - s.foot.x, az + dz * t - s.foot.z) < r; };
+    for (const B of buildings) { const s = B.safe; if (s && !s.dead && circ(s)) return true; }
+    if (CH_TUT) for (const p of chProps) if (!p.dead && (p.prop === 'zvat' || p.prop === 'hvat' || p.prop === 'avat') && circ(p)) return true;
+    return false;
+  }
 
   function stopPounce(z) {
     z.target.marked = false;
@@ -3515,7 +3526,8 @@
     if (z.mode === 'pounce') {
       const t = z.target;
       const dx = t.foot.x - z.foot.x, dz = t.foot.z - z.foot.z, d = Math.hypot(dx, dz);
-      if (touching) stopPounce(z);              // 손가락을 대면 그만
+      if (CHAPTER && chPounceBlocked(z.foot.x, z.foot.z, t.foot.x, t.foot.z)) stopPounce(z);   // c304: 덮치는 도중 큰 물건이 끼면 그만
+      else if (touching) stopPounce(z);              // 손가락을 대면 그만
       else if ((z.pounceT -= dt) <= 0) { z.skip = t; z.skipT = 1; stopPounce(z); }   // 1초 안에 못 닿았다(막혔다) → 이 시민은 1초 동안 다시 안 덮친다
       else if (d - BITE_GAP <= z.speed * POUNCE * dt + 0.02) startBite(z, t);   // 이번 걸음에 닿으면 바로 문다 (도망치는 상대도 놓치지 않게)
       else z.vel.set(dx / d * z.speed * POUNCE, dz / d * z.speed * POUNCE);   // 덮치기는 가감속 없이 확 튀어 나간다
