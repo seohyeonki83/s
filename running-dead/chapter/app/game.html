@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c269</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c270</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4962,7 +4962,7 @@
       if (CHAPTER && chTank && !chTank.wreck && !(chTank.stunT > 0)) {   /* c194: 건물 안이어도 (공격선만 본다) */ const T = chTank, d = Math.max(0, Math.hypot(T.x - me.foot.x, T.z - me.foot.z) - CAR_L * CH_TK_KL / 2);   /* c195: 몸 둘레부터 */ if (d <= me.sense && !fireBlocked(me.foot.x, me.foot.z, T.x, T.z)) cand.push({ c: T, k: 98, d }); }   // c191: 보스도 감전
       cand.sort((a, b) => b.k - a.k || a.d - b.d);
       const hit = cand.slice(0, CH_WV('taserN', lv('taser')));   /* c21: 대상만 늘어난다 (1 → 6명) */  // 한 번에 맞히는 수 = 1 + 똑똑한 두뇌 (v201)
-      for (const { c } of hit) { if (c.tank) { c.stunT = CH_WV('taserT', lv('taser')) / 3; c.vx = c.vz = 0; zaps.push({ to: c, t: 0.45 }); continue; }   /* c191: 보스 = 3분의 1 */ c.stunT = CH_WV('taserT', lv('taser'));   /* c139 */ c.vel.set(0, 0); zaps.push({ to: c, t: 0.45 }); }
+      for (const { c } of hit) { if (c.tank) { c.stunT = CH_WV('taserT', lv('taser'));   /* c270: 보스도 같다 */ c.vx = c.vz = 0; zaps.push({ to: c, t: 0.45 }); continue; }   /* c191: 보스 = 3분의 1 */ c.stunT = CH_WV('taserT', lv('taser'));   /* c139 */ c.vel.set(0, 0); zaps.push({ to: c, t: 0.45 }); }
       if (!hit.length) zaps.push({ to: null, t: 0.2 });
     } else {                                  // 돈다발 3개를 내 둘레 2~4칸에 뿌린다 (나와 같은 공간)
       const fresh = [];

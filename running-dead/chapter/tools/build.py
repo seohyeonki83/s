@@ -1086,6 +1086,8 @@ from c268_patch import C268_R   # c268: 테이저 0.5초씩
 R += C268_R
 from c269_patch import C269_R   # c269: 테이저 0.5초부터
 R += C269_R
+from c270_patch import C270_R   # c270: 보스 감전 같게
+R += C270_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
