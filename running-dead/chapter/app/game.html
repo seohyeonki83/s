@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c348</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c349</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -464,7 +464,7 @@
     const cz = CH_MAP.mm.z1 + 150,   /* c333: 마지막 문 너머 주차장이 위로 50칸 — 25칸 더 남쪽으로 */   /* c322: 저격수 복도가 8칸 더 위로 길어져서 10칸 더 남쪽으로 */   /* c314: 위로 가는 긴 복도가 생겨서 27칸 더 남쪽으로 */   /* c300: 위로 가는 복도가 생겨서 30칸 더 남쪽으로 */ W = 12, D = 13 * 2 / 3, x0 = -W / 2, z0 = cz - D / 2, z1 = cz + D / 2, BS = MELEE * 2 * 2 / 3, doorX = W / 2 - 2.6, CW = 4.4, CL = W, n = CH_MAP.b.length;
     const cTop = z0 - CL, R2x = doorX + CW / 2 + CL, R2z = cTop + CW / 2, C3z = R2z + W / 2 - CW / 2, C3x1 = R2x + D + CL;   // 두 번째 방 · 세 번째 복도
     const C4x = C3x1 + CW / 2, C4L = 18, C4z0 = C3z + CW / 2 - C4L, R3W = 9, R3D = D * 2, R3z0 = C4z0 - R3D, R3x0 = C4x - R3W / 2, SDx = R3x0 + 2.4;
-    const C5L = 16, C6z = R3z0 - C5L - CW / 2, C6L = CW + CL, R4x0 = SDx - CW / 2 + C6L, R4W = D, R4D = W / 2, R4z1 = C6z + R4D / 2, C7L = 20, KW = 18, C8x = R4x0 + R4W + KW + C7L + CW / 2, C8z1 = R4z1 - 2.2 + CW / 2;   // c314: 위로 꺾인 복도 자리   // c301: 바리케이트 복도(16) · 꺾인 복도 · 덩치 방(8.7×6) · 넓은 복도(20)   // c300: 네 번째 복도(위로) · 세 번째 방 · 강철문 자리
+    const C5L = 16, C6z = R3z0 - C5L - CW / 2, C6L = CW + CL, R4x0 = SDx - CW / 2 + C6L, R4W = D, R4D = W / 2, R4z1 = C6z + R4D / 2, C7L = 20, KW = 18 * 3 / 5, C8x = R4x0 + R4W + KW + C7L + CW / 2, C8z1 = R4z1 - 2.2 + CW / 2;   // c314: 위로 꺾인 복도 자리   // c301: 바리케이트 복도(16) · 꺾인 복도 · 덩치 방(8.7×6) · 넓은 복도(20)   // c300: 네 번째 복도(위로) · 세 번째 방 · 강철문 자리
     return [
       { x: 0, z: cz, w: W, d: D, doors: [], locks: ['n'], at: { n: doorX }, kinds: {}, local: 900, block: -1, t: 'lab', zone: 0 },                 // 실험실 — 문은 위쪽 벽 오른쪽
       { x: x0 + 1 + BS / 2, z: z1 - 1 - BS / 2, w: BS, d: BS, doors: [], locks: [], kinds: {}, local: 901, block: -1, t: 'box', zone: 0, parent: n, room: { doors: [] } },   // 박스
@@ -8106,7 +8106,7 @@
             if (spots.every(([a2, b2]) => Math.hypot(a2 - x, b2 - z) > 0.9)) break; }
           spots.push([x, z]); const c = man(Q || Ms.find((S2) => x >= S2.x0 && x < S2.x1), t === 'vig' ? 'attacker' : t, x, z, 0.4); if (t === 'vig') chVig(c); if (t === 'police') { c.post = c.area; enterNormal(c); } } }
       { const sf = addSafe(C7) || C7.safe; sf.foot.set(C7.x0 + 17, 0, zc); sf.px = sf.foot.x; sf.pz = sf.foot.z; sf.space = C7; sf.B = C7; sf.room = null; sf.loot = chLoot('house'); sf.dud = !sf.loot; }   // 그 뒤 금고 하나
-      for (const K of buildings.filter((B) => B.type === 'labw')) { const sp = []; for (const t of ['', ...Array(1 + Math.floor(Math.random() * 2)).fill('guard')]) { let x = 0, z = 0; for (let k = 0; k < 60; k++) { x = K.x0 + 0.8 + Math.random() * (K.x1 - K.x0 - 1.6); z = K.z0 + 0.8 + Math.random() * (K.z1 - K.z0 - 1.6); if (sp.every(([a, b]) => Math.hypot(a - x, b - z) > 1.0)) break; } sp.push([x, z]); man(K, t, x, z, 0.6); } }   // c348: 가벽 사이 칸마다 하양 1 · 노랑 1~2
+      for (const K of buildings.filter((B) => B.type === 'labw')) { const sp = [], MIX = ['police', 'soldier', 'vig', 'attacker', '']; for (let n = 0, N = 1 + Math.floor(Math.random() * 2); n < N; n++) { const t = MIX[Math.floor(Math.random() * MIX.length)]; let x = 0, z = 0; for (let k = 0; k < 60; k++) { x = K.x0 + 0.7 + Math.random() * (K.x1 - K.x0 - 1.4); z = K.z0 + 0.8 + Math.random() * (K.z1 - K.z0 - 1.6); if (sp.every(([a, b]) => Math.hypot(a - x, b - z) > 1.0)) break; } sp.push([x, z]); const c = man(K, t === 'vig' ? 'attacker' : t, x, z, 0.5); if (t === 'vig') chVig(c); if (t === 'police' || t === 'soldier') { c.post = c.area; if (t === 'soldier') c.noMaster = true; enterNormal(c); } } }   // c349: 가벽 칸 (5분의 2 좁힘) 마다 1~2명 — 경찰 · 군인 · 빨강 · 주황 · 하양 섞어서
       { const R5 = buildings.find((B) => B.local === 919); put(R5, [['avat', 4.33, 2.8], ['wcab', 0.8, 1.6], ['tubes', 0.7, 3.0], ['jarEye', 7.9, 1.4], ['jarBrain', 7.9, 2.4], ['iv', 0.7, 4.4], ['biodrum', 0.9, 5.3], ['scope', 2.0, 5.4]]); chAddSlab('rbed', R5.x0 + 7.0, R5.z0 + 4.9, 0, R5); }   // c327: 두 번째 덩치 수조 방 — 첫 덩치 방과 같은 꾸밈 · 적 없음
       put(R4, [['avat', 4.3, 1.4], ['wcab', 1.0, 0.6], ['tubes', 2.2, 0.6], ['jarEye', 6.6, 0.6], ['jarBrain', 7.6, 0.6], ['iv', 0.6, 4.5], ['biodrum', 5.4, 5.2], ['scope', 7.9, 1.6]]);   // 덩치 수조 방 — 적 없음
       chAddSlab('rbed', R4.x0 + 2.6, R4.z0 + 4.9, 0, R4); chTutLot(); }
