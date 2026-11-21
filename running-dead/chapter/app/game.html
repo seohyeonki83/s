@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c272</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c273</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2245,7 +2245,7 @@
   // v505: 충격 흡수복 — 넉백 거리에서 고정량을 깎는다 (단계마다 저격수 넉백의 1/4). 다 깎이면 아예 안 밀리고 멈칫도 없다
   const knockDist = (v, T) => v * (1 - Math.exp(-4 * T)) / 4;   // knockStep 감속(e^-4t)으로 밀리는 거리
   const SNIPER_KD = knockDist(2.3 * 2 * 1.3, 0.4);   /* v547: 저격 넉백 1.3배에 맞춰 — 흡수복 4단계에 완전 무효 그대로 */   /* = ARMOR_KB × 2, ARMOR_KT (아래에서 선언) */            // 저격수 넉백 거리 (약 0.92칸)
-  const absorbAmt = () => owned.absorb ? SNIPER_KD / 12 * (2 + 2.5 * lv('absorb'))   /* c198: 2씩 */ : 0;   /* c163: 처음부터 흡수 2 */   /* c21: 충격 흡수 1 = 저격수 넉백의 12분의 1 (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12). 강화마다 +1, 6까지 */
+  const absorbAmt = () => (CHAPTER ? owned.vest : owned.absorb) ? SNIPER_KD / 12 * (2 + 2.5 * lv(CHAPTER ? 'vest' : 'absorb'))   /* c273: 방탄복에 합침 */   /* c198: 2씩 */ : 0;   /* c163: 처음부터 흡수 2 */   /* c21: 충격 흡수 1 = 저격수 넉백의 12분의 1 (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12). 강화마다 +1, 6까지 */
   function giveKnock(z, kx, kz, v, T) {       // 방향(kx, kz), 처음 속도 v, 시간 T — 내가 흡수복을 입었으면 깎는다. 밀렸으면 true
     const kl = Math.hypot(kx, kz) || 1;
     if (z === me && owned.absorb) {
@@ -5787,12 +5787,12 @@
   //   금고를 깨면 건물 종류에 따라 아이템 하나 또는 꽝. 아이템은 그 자리에 떨어지고 내가 가서 닿아야 얻는다 (테스트맵과 같다)
   //   아이템 14종 = 도구 5 (자폭 스위치 · 변이 주사 · 테이저건 · 각성 주사 · 현금) + 장비 9 (백과사전 · 가방 · 분노 바이러스 · 빠루 · 충격 흡수복 · 방탄복 · 운동화 · 촉매제 · 혈액팩)
   //   같은 아이템을 또 얻으면 그 아이템만 강화 +1 (최대 5단계). 가방은 4개까지 (도구 칸 1 → 5). 끝까지 올린 아이템은 더 안 나온다 (c21)
-  const CH_ITEMS = ['bomb', 'mutate', 'taser', 'awaken', 'cash', 'book', 'bag', 'rage', 'crowbar', 'absorb', 'vest', 'shoes', 'catalyst', 'blood', 'revive', 'teeth', 'acid', 'acidp'];   /* c259: 산성 강도 */   /* c100: 변이 줄기세포 · c224: 틀니 · 산성 폭발 */
+  const CH_ITEMS = ['bomb', 'mutate', 'taser', 'awaken', 'cash', 'book', 'bag', 'rage', 'crowbar', 'vest', 'shoes',   /* c273: 충격 흡수복 없음 */ 'catalyst', 'blood', 'revive', 'teeth', 'acid', 'acidp'];   /* c259: 산성 강도 */   /* c100: 변이 줄기세포 · c224: 틀니 · 산성 폭발 */
   const CH_RARE = ['cash', 'book', 'bomb'];   // '나머지' 안에서 다른 아이템의 10분의 1 확률 (집·창고는 균등)
   const CH_SPEC_1 = 46.1893, CH_SPEC_2 = 19.8265;   // 지정 아이템 하나의 확률(%) — 랜드마크를 하나씩 다 털면 14종이 똑같이 나오게 맞춘 값 (표의 46.2 · 19.8)
   const CH_DROP = {                           // spec = 지정 아이템, p = 지정 하나의 확률(%), rest = 나머지 전체(%), 남는 것 = 꽝
     bank: { spec: ['cash'], p: CH_SPEC_1, rest: 90 - CH_SPEC_1 }, library: { spec: ['book'], p: CH_SPEC_1, rest: 90 - CH_SPEC_1 }, army: { spec: ['bomb'], p: CH_SPEC_1, rest: 90 - CH_SPEC_1 },
-    police: { spec: ['taser', 'vest'], p: CH_SPEC_2, rest: 90 - 2 * CH_SPEC_2 }, fire: { spec: ['crowbar', 'absorb'], p: CH_SPEC_2, rest: 90 - 2 * CH_SPEC_2 }, mart: { spec: ['shoes', 'bag'], p: CH_SPEC_2, rest: 90 - 2 * CH_SPEC_2 },
+    police: { spec: ['taser', 'vest'], p: CH_SPEC_2, rest: 90 - 2 * CH_SPEC_2 }, fire: { spec: ['crowbar'], p: CH_SPEC_2, rest: 90 - CH_SPEC_2 }   /* c273 */, mart: { spec: ['shoes', 'bag'], p: CH_SPEC_2, rest: 90 - 2 * CH_SPEC_2 },
     hospital: { spec: ['mutate', 'awaken', 'catalyst', 'rage', 'blood', 'revive'], p: 14, rest: 6 },
     store: { spec: [], p: 0, rest: 90, flat: true }, conv: { spec: [], p: 0, rest: 30 }, gym: { spec: [], p: 0, rest: 30 },
     house: { spec: [], p: 0, rest: 100, flat: true },   // 집: 금고가 있는 집(5%)이면 꽝 없이 14종 균등
@@ -5858,7 +5858,7 @@
     rage: (n) => `30초마다 동료 1명 · 공격 속도·이동 속도 +${10 + 10 * n}%`,
     crowbar: (n) => `사물 피해 +${20 * (1 + n)}%`,
     absorb: (n) => `충격 흡수 ${2 + 2.5 * n} (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12)`,
-    vest: (n) => `총격 피해 -${10 * (1 + n)}%`,
+    vest: (n) => `원거리 공격 ${10 * (1 + n)}% 감소 · 밀림 ${2 + 2.5 * n} 감소`,   /* c273 */
     shoes: (n) => `나·동료 이동 속도 +${5 * (1 + n)}%`,
     teeth: (n) => `감염 시간 -${10 * (1 + n)}%`,   /* c224 */
     acidp: (n) => `산성 도트 +${1 + n} (0.5초마다)`,   /* c259 */
@@ -5874,7 +5874,7 @@
     bomb: ['가장 위험한 적 곁의 동료 하나가 터지며 산성 덩어리를 뿌립니다.', '강화 시 터지는 범위가 넓어지고 산성이 오래갑니다.'],
     bag: ['쓸 수 있는 무기가 하나 늘어납니다.', '하나 더 얻을 때마다 한 칸씩 더 늘어납니다.'],
     absorb: ['총격과 충격에 덜 밀려납니다. 약한 충격은 아예 받지 않습니다.', '강화 시 더 강한 충격도 흡수합니다.'],
-    vest: ['총격 피해를 줄여 줍니다.', '강화 시 더 많이 줄여 줍니다.'],
+    vest: ['원거리 공격, 총격 데미지 감소, 충격에 밀리지 않음', '강화 시 더 많이 줄이고 더 강한 충격도 버팁니다.'],   /* c273 */
     crowbar: ['사물에 입히는 피해가 늘어납니다.', '강화 시 피해가 더 늘어납니다.'],
     rage: ['30초마다 동료 한 명을 감염시켜 공격 속도와 이동 속도를 올립니다. 변이한 동료가 먼저입니다.', '강화 시 오르는 폭이 커집니다.'],   // c22
   });
@@ -5918,12 +5918,12 @@
   // ── c25 · c27: 레벨업 = 도구·장비 14종 가운데 랜덤 3장 중 하나를 고른다 — 없는 것이면 새로 얻고, 가진 것이면 강화 +1 ──
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
     bomb: ['', (n) => `${1.5 + n}칸·${4 + 2 * n}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['강도', (n) => `${n ? '+' : ''}${CH_WV('cashH', n)}`]   /* c226 */,
-    book: ['쿨타임', (n) => `-${7 * (1 + n)}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${10 + 10 * n}%`], crowbar: ['사물', (n) => `+${20 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`],
+    book: ['쿨타임', (n) => `-${7 * (1 + n)}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${10 + 10 * n}%`], crowbar: ['사물', (n) => `+${20 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}% · 밀림 -${2 + 2.5 * n}`],
     shoes: ['이동', (n) => `+${5 * (1 + n)}%`], teeth: ['감염', (n) => `-${10 * (1 + n)}%`], acid: ['산성', (n) => `${3 + n}초`], acidp: ['도트', (n) => `+${1 + n}`],   /* c224 */ catalyst: ['변이', (n) => `+${7 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
   const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
     bomb: '동료 하나가 자폭', mutate: '동료 하나를 변이', taser: '적을 감전', awaken: '내가 변이', cash: '적을 유혹',
-    book: '무기 쿨타임 단축', bag: '쓸 수 있는 무기 +1', rage: '이동 속도, 공격 속도 증가', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해 감소', shoes: '나와 동료들의 이동 속도 증가', teeth: '나와 동료들이 인간을 더 빠르게 좀비로 만듭니다', acid: '동료들이 산성피를 뿌리며 전사합니다', acidp: '산성 피해를 입은 적의 도트 데미지 증가', catalyst: '변이 좀비 공격력 증가', blood: '내 최대 체력 증가', revive: '죽으면 되살아남',
+    book: '무기 쿨타임 단축', bag: '쓸 수 있는 무기 +1', rage: '이동 속도, 공격 속도 증가', crowbar: '사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해 감소 · 충격에 밀리지 않음', shoes: '나와 동료들의 이동 속도 증가', teeth: '나와 동료들이 인간을 더 빠르게 좀비로 만듭니다', acid: '동료들이 산성피를 뿌리며 전사합니다', acidp: '산성 피해를 입은 적의 도트 데미지 증가', catalyst: '변이 좀비 공격력 증가', blood: '내 최대 체력 증가', revive: '죽으면 되살아남',
   };
   function chUpPool() {                       // 레벨업에 나올 수 있는 것 — 14종 전부, 끝까지 올린 것만 뺀다
     return CH_ITEMS.filter((k) => ITEM[k].passive && !(chHas(k) && lv(k) >= chLvMax(k)));   /* c125: 레벨업에는 장비만 (무기는 '무기 강화' 카드로) */
@@ -8311,7 +8311,7 @@
   //   운전자: 조심형(지금까지의 운전 — 가운데 좀비 앞에 서고, 맞으면 얼어붙었다가 내린다) · 가속형(서 있다가 냅다 밟는다 — 좀비도 사람도 안 가린다) ·
   //           비비기형(물러났다가 옆으로 다시 들이민다) · 돌진형(좀비를 아예 신경 안 쓴다 — 현금 수송차는 늘 이쪽). 패닉 중엔 더 밟는다 (1.3~1.6배).
   const CH_LOOT_P = 1 / 15;   // c90: 2배
-  const CH_LOOT_CAR = { cash: ['cash'], ambul: ['mutate', 'awaken', 'catalyst', 'rage', 'blood', 'revive', 'teeth', 'acid'],   /* c224 */ parcel: ['bomb', 'taser', 'book', 'bag', 'crowbar', 'absorb', 'vest', 'shoes', 'acidp'] };
+  const CH_LOOT_CAR = { cash: ['cash'], ambul: ['mutate', 'awaken', 'catalyst', 'rage', 'blood', 'revive', 'teeth', 'acid'],   /* c224 */ parcel: ['bomb', 'taser', 'book', 'bag', 'crowbar', 'vest', 'shoes', 'acidp']   /* c273 */ };
   const CH_LOOT_N = Object.values(CH_LOOT_CAR).reduce((a, l) => a + l.length, 0);
   const chLootType = () => { let r = Math.random() * CH_LOOT_N; for (const k in CH_LOOT_CAR) if ((r -= CH_LOOT_CAR[k].length) < 0) return k; return 'parcel'; };
   const chLootBag = [];                        // c100: 다음에 나올 수송차 종류들 (실은 가짓수만큼 들어 있고 섞여 있다)
