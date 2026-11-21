@@ -1142,6 +1142,8 @@ from c296_patch import C296_R   # 수조 표시 · 첫 방 2배
 R += C296_R
 from c297_patch import C297_R   # 첫 방 크기 조정
 R += C297_R
+from c298_patch import C298_R   # 박스 줄임
+R += C298_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
