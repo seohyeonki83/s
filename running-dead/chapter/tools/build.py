@@ -1138,6 +1138,8 @@ from c294_patch import C294_R   # 좀비 수조
 R += C294_R
 from c295_patch import C295_R   # 수조 안 동그란 좀비
 R += C295_R
+from c296_patch import C296_R   # 수조 표시 · 첫 방 2배
+R += C296_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
