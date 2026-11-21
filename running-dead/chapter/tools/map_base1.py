@@ -78,5 +78,6 @@ for p in S['spots']: p['at'] = [p['at'][0] + DX, p['at'][1]]
 for p in S['props']: p[1] = round(p[1] + DX, 2)
 S['lots'] = [[round(LOT[0] + DX, 3), round(LOT[1], 3), round(LOT[2] + DX, 3), round(LOT[3], 3)]]   # c355
 json.dump(S, open('../map_p1.json', 'w'), ensure_ascii=False, separators=(',', ':'))
+json.dump([round(IX0 + DX, 3), round(sz_end + 1.4, 3), round(IX0 + 8.6 + DX, 3), round(SZ1, 3)], open('base1_site.json', 'w'))   # c357: 남쪽 끝 빈터 → 공사 현장 (map_base1_deco.py)
 print('mm', S['mm'], 'zone', S['zones'][0], 'buildings', [(b['t'], b['x'], b['z']) for b in B if b['t'] != 'hill'])
 print('north rows end', round(nz_end, 2), '<=', round(NZ1, 2), ' south end', round(sz_end, 2), '<=', round(SZ1, 2))

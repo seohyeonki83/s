@@ -1260,6 +1260,8 @@ from c355_patch import C355_R   # c355: 거점 맵 주차장 · 집 정리
 R += C355_R
 from c356_patch import C356_R   # c356: 거점 맵 세로 골목
 R += C356_R
+from c357_patch import C357_R   # c357: 거점 맵 꾸미기 · 사람 없음
+R += C357_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
