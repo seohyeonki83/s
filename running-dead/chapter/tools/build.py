@@ -1152,6 +1152,8 @@ from c301_patch import C301_R   # 바리케이트 · 덩치 방
 R += C301_R
 from c302_patch import C302_R   # 먼지 · 수조 순위 · 문 금고
 R += C302_R
+from c303_patch import C303_R   # 아이콘 · 수조 자리
+R += C303_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

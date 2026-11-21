@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c302</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c303</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3920,13 +3920,13 @@
       if (kind !== b.iconKind) {
         b.iconKind = kind;
         b.iconT = 0;
-        if (kind) b.icon.material.map = ICONS[kind];
+        if (kind) b.icon.material.map = ICONS[CHAPTER && kind === '!!' ? '!' : kind];   // c303: 느낌표는 하나만
       }
       b.icon.visible = kind !== '' && !hide;
       if (!kind) continue;
       b.iconT += dt;
       const k = Math.min(1, b.iconT / 0.12), s = ICON_H * (0.6 + 0.4 * (1 - (1 - k) * (1 - k)));   // 뜰 때 살짝 튀어나온다
-      const big = kind === '$' ? 2 : 1;      // v284: 현금에 유혹된 $ 는 2배
+      const big = kind === '$' || CHAPTER ? 2 : 1;   /* c303: 챕터는 ? ! 도 2배 */      // v284: 현금에 유혹된 $ 는 2배
       b.icon.scale.set(s * 2 * big, s * big, 1);
       b.icon.position.copy(b.foot).addScaledVector(UP, RADIUS * 2 + ICON_H * (big === 2 ? 1.1 : 0.6) + (barUp ? 0.35 : 0) + (gauged ? (CLOCK_R * 2 + 0.25) * (b.biter === me ? CLOCK_ME : CLOCK_ME * 2 / 3) : 0));   // 체력바·게이지가 있으면 그 위로
     }
@@ -7910,13 +7910,13 @@
     { const D = L.locks[0], sf = addSafe(L) || L.safe; sf.foot.set(D.cx, 0, L.z0 + 0.4);   /* 문턱에 걸쳐 — 양옆 틈(0.57칸)으로 몸(0.8칸)이 못 지나간다 */ sf.px = sf.foot.x; sf.pz = sf.foot.z; sf.space = L; sf.B = L; sf.room = null; sf.loot = 'revive'; sf.dud = false; }   // c302: 첫 방 문을 막고 선 금고 — 늘 변이 줄기세포
     for (const x of [3.0, 5.67]) chAddSlab('lbench', L2.x0 + x, L2.z0 + 6, Math.PI / 2, L2);
     chAddSlab('rbed', L2.x0 + 0.85, L2.z0 + 2.4, Math.PI / 2, L2);   // c299: 두 번째 방 왼쪽 위 — 구속 벨트 침대 (세로)   // 두 번째 방: 세로로 긴 실험대 둘 (세로 가운데)
-    put(L2, [['chair', 2.15, 4.8], ['chair', 2.15, 6], ['chair', 2.15, 7.2], ['chair', 6.52, 4.8], ['chair', 6.52, 6], ['chair', 6.52, 7.2],
-      ['zvat', 6.0, 1.0], ['zvat', 7.8, 1.0], ['wcab', 3.6, 0.55], ['jarEye', 4.6, 0.55], ['scope', 2.6, 0.6],   /* c295: 넓어진 수조 자리 */   /* c294: 오른쪽 위 좀비 수조 둘 */ ['iv', 3.0, 11.4], ['biodrum', 4.4, 11.3], ['jarBrain', 5.6, 11.4]]);
+    put(L2, [['chair', 2.15, 4.8], ['chair', 2.15, 6], ['chair', 2.15, 7.2], ['chair', 4.33, 4.8], ['chair', 4.33, 7.2],   // c303: 오른쪽 실험대 의자는 두 실험대 사이로 (출구 옆 수조 자리)
+      ['zvat', 7.85, 6.55], ['zvat', 7.85, 4.85], ['vat', 7.9, 0.9], ['wcab', 3.6, 0.55], ['jarEye', 4.6, 0.55], ['scope', 2.6, 0.6], ['tubes', 6.0, 0.6],   /* c303: 좀비 수조 둘 = 출구(오른쪽 아래 문) 바로 위 오른쪽 벽 */ ['iv', 3.0, 11.4], ['biodrum', 4.4, 11.3], ['jarBrain', 5.6, 11.4]]);
     const man = (B, type, x, z, r = 1.2) => { const A = { x0: x - r, z0: z - r, x1: x + r, z1: z + r }, c = addCitizen(x, z, A, type); c.area = A; c.home = B; c.space = B; c.disc = true; return c; };   // disc = 처음 발견 강등에서 뺀다 · 제자리 둘레만 돈다
     man(C1, '', (C1.x0 + C1.x1) / 2, (C1.z0 + C1.z1) / 2); man(C2, 'guard', (C2.x0 + C2.x1) / 2, (C2.z0 + C2.z1) / 2);   // 복도: 하양 1 · 노랑 1
-    { const q = man(L2, 'police', L2.x0 + 6.9, L2.z0 + 2.5, 0.6); q.post = q.area; enterNormal(q); }   // c296: 오른쪽 위 좀비 수조 앞 경찰 1 (제자리)
+    { const q = man(L2, 'police', L2.x0 + 6.55, L2.z0 + 5.7, 0.4); q.post = q.area; enterNormal(q); }   /* c303: 수조 앞 경찰도 같이 */   // c296: 오른쪽 위 좀비 수조 앞 경찰 1 (제자리)
     { const p = man(L2, 'police', L2.x0 + 7.4, L2.z0 + 11.0, 0.7); p.post = p.area; enterNormal(p); chVig(man(L2, 'attacker', L2.x0 + 6.2, L2.z0 + 11.0, 0.7)); }   // c294: 오른쪽 아래 경찰 1 + 그 옆 빨강 1 (제자리)
-    const busy = [[6.2, 11.0], [7.4, 11.0], [6.0, 1.0], [7.8, 1.0], [6.9, 2.5]], free = (x, z) => !(x > 1.9 && x < 6.9 && z > 3.9 && z < 8.1) && !(x < 1.8 && z > 4.0 && z < 8.0) && !(x < 1.9 && z < 4.0) && busy.every(([a, b]) => Math.hypot(a - x, b - z) > 1.4);
+    const busy = [[6.2, 11.0], [7.4, 11.0], [7.85, 6.55], [7.85, 4.85], [6.55, 5.7], [7.9, 0.9]], free = (x, z) => !(x > 1.9 && x < 6.9 && z > 3.9 && z < 8.1) && !(x < 1.8 && z > 4.0 && z < 8.0) && !(x < 1.9 && z < 4.0) && busy.every(([a, b]) => Math.hypot(a - x, b - z) > 1.4);
     for (const type of ['', '', '', 'attacker', 'attacker']) { let x = 0, z = 0; for (let t = 0; t < 200; t++) { x = 1 + Math.random() * 6.7; z = 1.4 + Math.random() * 9.2; if (free(x, z)) break; } busy.push([x, z]); man(L2, type, L2.x0 + x, L2.z0 + z); }   // 하양 3 · 주황 2 — 아무 데나
     const [, , C3, C4, C5] = buildings.filter((B) => B.type === 'labc'), L3 = buildings.find((B) => B.local === 907);   // c300
     for (const dz of [-0.9, 0.9]) { const p = man(C3, 'police', C3.x1 - 1.2, (C3.z0 + C3.z1) / 2 + dz, 0.5); p.post = p.area; enterNormal(p); }   // 세 번째 복도 끝 경찰 2
