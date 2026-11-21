@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c305</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c306</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -7922,7 +7922,7 @@
   }
   function chTutFurn() {                     // c293: 인체 실험 연구소 — 실험실(사물 절반 · 작은 실험대 하나) · 두 번째 방(긴 실험대 둘 · 의자 6) · 사람
     const [L, L2] = buildings.filter((B) => B.type === 'lab'), [C1, C2] = buildings.filter((B) => B.type === 'labc');
-    const put = (S, list, k0 = 1) => { for (const [t, x, z, k1] of list) { const k = k1 || k0, p = chAddProp(t, S.x0 + x, S.z0 + z); p.space = S; if (k !== 1) { p.mesh.scale.setScalar(k); p.r *= k; p.halfH *= k; } } };   // c296 · c297: 넷째 값 = 그 사물만 따로 배율   // c296: k = 그 방 사물 크기 배율 (그림·부딪힘 같이)
+    const put = (S, list, k0 = 1) => { for (const [t, x, z, k1] of list) { const k = k1 || k0, p = chAddProp(t, S.x0 + x, S.z0 + z); p.space = S; if (t === 'zvat' || t === 'hvat' || t === 'avat') p.fixed = true;   /* c306: 좀비 수조는 금고처럼 땅에 박혀 안 밀린다 */ if (k !== 1) { p.mesh.scale.setScalar(k); p.r *= k; p.halfH *= k; } } };   // c296 · c297: 넷째 값 = 그 사물만 따로 배율   // c296: k = 그 방 사물 크기 배율 (그림·부딪힘 같이)
     chAddSlab('labtable2', L.x0 + 6.8, L.z0 + 4.2, 0, L); chAddSlab('rbed', L.x0 + 7.6, L.z0 + 7.6, 0, L);   // c299: 구속 벨트 침대   // 실험실: 작은 실험대 하나 — c296: 1.5배
     put(L, [['vat', 0.9, 0.8, 1.4], ['wcab', 2.5, 0.7, 1.4], ['scope', 4.6, 0.7], ['tubes', 5.9, 0.7], ['chair', 6.8, 5.2, 1],   // c297: 의자 원래 크기 · 수조·약품장은 2배에서 30퍼센트 줄임 (1.4배)   // c296: 첫 방 사물은 2배 크기 — 자리도 다시
       ['jarEye', 11.4, 2.6], ['jarHand', 11.4, 3.8], ['jarBrain', 11.4, 5.0], ['iv', 9.6, 5.8], ['biodrum', 11.1, 7.8]], 2);
