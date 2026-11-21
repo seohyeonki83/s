@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c314</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c315</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -7922,7 +7922,8 @@
     if (b.glowS) { scene.remove(b.glowS); scene.remove(b.arrS); b.glowS = b.arrS = null; }   // c296                     // c294: 수조에서 풀려난 좀비 = 바로 내 동료
     const x = b.foot.x, z = b.foot.z + 0.3, A = { x0: x - 1, z0: z - 1, x1: x + 1, z1: z + 1 }, c = addCitizen(x, z, A, ''); c.space = b.space; c.disc = true; makeZombie(c);
     if (b.prop === 'avat') mutate(c, 'armor');   // c301: 덩치 수조 = 영구 덩치 동료
-    if (b.prop === 'hvat') { mutate(c, 'hydra'); const gq = new THREE.Group(), mk = (sz, col, zz) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(sz, sz), new THREE.MeshBasicMaterial({ color: col, transparent: true, depthTest: false, depthWrite: false })); m.rotation.z = Math.PI / 4; m.position.z = zz; m.renderOrder = 1; return m; }; gq.add(mk(0.38, 0x1c1c1e, 0), mk(0.27, 0xb05cff, 0.002)); gq.position.set(0, 0.5, 0.02); c.mesh.add(gq); c.gem = gq; }   // c300: 히드라 수조 = 영구 히드라 동료 (보석 표시)
+    if (b.prop === 'hvat') mutate(c, 'hydra');
+    if (b.prop === 'hvat' || b.prop === 'avat') { const gq = new THREE.Group(), mk = (sz, col, zz) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(sz, sz), new THREE.MeshBasicMaterial({ color: col, transparent: true, depthTest: false, depthWrite: false })); m.rotation.z = Math.PI / 4; m.position.z = zz; m.renderOrder = 1; return m; }; gq.add(mk(0.38, 0x1c1c1e, 0), mk(0.27, 0xb05cff, 0.002)); gq.position.set(0, 0.5, 0.02); c.mesh.add(gq); c.gem = gq; }   // c300: 히드라 수조 = 영구 히드라 동료 (보석 표시) · c315: 덩치 수조 동료도 큰 맵에서 얻은 덩치처럼 다이아몬드
     for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; puff(x, 0.6, z, i % 2 ? 0x7ed3a0 : 0x8aa4f5, 0.4, 1.3, 0.55, Math.cos(a) * 3, 0.5, Math.sin(a) * 3, 0.9); }
   }
   function chTutFurn() {                     // c293: 인체 실험 연구소 — 실험실(사물 절반 · 작은 실험대 하나) · 두 번째 방(긴 실험대 둘 · 의자 6) · 사람
