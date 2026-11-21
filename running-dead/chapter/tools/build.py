@@ -1232,6 +1232,8 @@ from c341_patch import C341_R   # tutorial white discovery + first ally popup
 R += C341_R
 from c342_patch import C342_R   # diagonal wall crossing fix
 R += C342_R
+from c343_patch import C343_R   # fewer lot police and cars, civilians in last road
+R += C343_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
