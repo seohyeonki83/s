@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c285</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c286</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5557,7 +5557,7 @@
   }
   const gooMat = new THREE.SpriteMaterial({ map: flashTex, color: 0x5fcf3a, transparent: true, depthTest: false, depthWrite: false });
   function gooOn(c) {                         // 영구: 좀비가 될 때까지 이동·공격 20% 느리게 + 초당 1 데미지
-    c.gooLeft = 4 + 2 * lv('bomb');   // c123: 10초, 강화마다 +1초 (다시 맞으면 시간만 새로)
+    c.gooLeft = Math.max(c.goo ? c.gooLeft : 0, 4 + 2 * lv('bomb'));   // c286: 남은 시간과 새 시간 중 긴 쪽   // c123: 10초, 강화마다 +1초 (다시 맞으면 시간만 새로)
     if (c.goo) return;
     c.goo = true; c.gooT = 0; c.smokeT = 0;
     const g = new THREE.Group();
@@ -7037,7 +7037,7 @@
     if (o.obj.hp <= 0) { o.obj.hp = 0; breakObj(o.obj); }
   }
   function chTankGoo(car) {                    // 산성 — 이동·공격 20% 느리게 + 초당 2 데미지 (사람과 같다)
-    car.gooLeft = 4 + 2 * lv('bomb');   // c123
+    car.gooLeft = Math.max(car.goo ? car.gooLeft : 0, 4 + 2 * lv('bomb'));   // c286   // c123
     if (car.goo) return;
     car.goo = true; car.gooT = 0; car.gooS = [];
     for (const [ox, oz, sc] of [[0.3, 0.1, 0.5], [-0.35, -0.12, 0.4], [0, 0.2, 0.34]]) { const s = new THREE.Sprite(gooMat); s.position.set(ox, 0.3, oz); s.scale.setScalar(sc); s.renderOrder = 1; car.g.add(s); car.gooS.push(s); }

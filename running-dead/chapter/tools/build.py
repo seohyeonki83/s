@@ -1118,6 +1118,8 @@ from c284_patch import C284_R   # 틀니 아이콘
 R += C284_R
 from c285_patch import C285_R   # 산성 폭발 시간
 R += C285_R
+from c286_patch import C286_R   # 산성 시간 긴 쪽
+R += C286_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
