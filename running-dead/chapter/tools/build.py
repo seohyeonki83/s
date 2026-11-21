@@ -1084,6 +1084,8 @@ from c267_patch import C267_R   # c267: 경계 5~6초 · 3초
 R += C267_R
 from c268_patch import C268_R   # c268: 테이저 0.5초씩
 R += C268_R
+from c269_patch import C269_R   # c269: 테이저 0.5초부터
+R += C269_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

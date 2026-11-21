@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c268</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c269</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4736,7 +4736,7 @@
     shoes: { icon: IC.shoes, name: '운동화', passive: true },
     teeth: { icon: IC.teeth, name: '틀니', passive: true }, acidp: { icon: IC.acidp, name: '산성 강도', passive: true },   /* c259 */ acid: { icon: IC.acid, name: '산성 폭발', passive: true },   // c224       // v275: 내 이동 속도 +10%                         // 패시브 (v201) — 총알 피해 30% 감소, 똑똑한 두뇌마다 10% 더
   };
-  const CH_W = { taserN: [1, 2, 2, 3, 3, 4, 5], taserT: [2, 2.5, 3, 3.5, 4, 4.5, 5]   /* c268: 0.5초씩 */, mutN: [1, 1, 2, 2, 3, 3, 4], cashT: [2, 3.3, 4.7, 6, 7.3, 8.7, 10], cashH: [1, 2, 4, 5, 6, 8, 9] }   /* c258 */, CH_WV = (k, n) => CH_W[k][Math.max(0, Math.min(CH_W[k].length - 1, n))];   // c139: 무기 수치표
+  const CH_W = { taserN: [1, 2, 2, 3, 3, 4, 5], taserT: [0.5, 1, 1.5, 2, 2.5, 3, 3.5]   /* c269: 처음 0.5초 · 0.5초씩 */, mutN: [1, 1, 2, 2, 3, 3, 4], cashT: [2, 3.3, 4.7, 6, 7.3, 8.7, 10], cashH: [1, 2, 4, 5, 6, 8, 9] }   /* c258 */, CH_WV = (k, n) => CH_W[k][Math.max(0, Math.min(CH_W[k].length - 1, n))];   // c139: 무기 수치표
   const taserN = (n) => 1 + Math.floor(n / 2), taserT = (n) => STUN_T + Math.ceil(n / 2);   // 테이저건 강화 n단계: 감전 대상 수 · 감전 시간(초) — 홀수 번째 강화는 시간 +1초, 짝수 번째는 대상 +1명
   const STUN_T = 3, CASH_N = 3,   /* 감전 기본 3초 (4.5 → 3.15 → 3초) */ CASH_R = [1, 2], CASH_GET = 0.7;   // v195: 감전 2 → 4초, 돈다발 뿌리는 거리 2~4 → 1~2칸
   const ITEM_TEXT = {                         // 장비·도구 설명 — [하는 일, 강화 시 달라지는 것, (덧붙임)]. 수치는 안 쓴다 (수치는 그 아래 '지금 · 다음 강화' 줄에 나온다)
