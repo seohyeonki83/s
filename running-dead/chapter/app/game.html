@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c343</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c344</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -8052,11 +8052,11 @@
       cars.forEach(([x, z], k) => { if (k === 3) return; put2('police', x + J(0.6), z - 1.7 - Math.random() * 0.6, 0.5); if (k % 2 || k === 6) return; put2('police', x + (Math.random() < 0.5 ? -1 : 1) * (0.9 + Math.random() * 0.4), z - 1.0 - Math.random() * 1.2, 0.4); });   // 차마다 경찰 2 (뒤 하나 · 옆구리 하나)
       for (let k = 0; k < 4; k++) put2('soldier', cx + J(4.2), zL - 3.0 - Math.random() * 2.6, 0.6); }
     const LX = (Q.x0 + Q.x1) / 2, R1 = Q.z1, R0 = Q.z0, obst = (x, z) => { const c = chParked(x, z, 0, true); c.tutS = Q; return c; };   // c338: 마지막 길목 = 바리케이트만 (6개, 세 줄 엇갈림) — 그 사이사이에 경찰 · 군인 · 저격수
-    obst(LX - 1.1, R1 - 4.6); obst(LX + 1.4, R1 - 4.6); obst(LX - 1.4, R1 - 7.2); obst(LX + 1.1, R1 - 7.2); obst(LX - 1.1, R1 - 9.8); obst(LX + 1.4, R1 - 9.8);
-    for (const [t, dx, z] of [['police', -1.6, R1 - 5.8], ['soldier', 0.1, R1 - 5.8], ['soldier', 1.7, R1 - 5.8], ['sniper', 0.9, R1 - 6.6], ['sniper', -1.9, R1 - 13.9], ['sniper', 1.9, R1 - 14.1],   /* c339: 저격수 4는 전부 마지막 길목에 */
-      ['soldier', -2.0, R1 - 8.4], ['police', -0.6, R1 - 8.4], ['soldier', 0.8, R1 - 8.4], ['soldier', 2.2, R1 - 8.4],
-      ['soldier', -2.2, R1 - 11.0], ['police', -0.8, R1 - 11.0], ['soldier', 0.7, R1 - 11.0], ['police', 2.2, R1 - 11.0], ['sniper', -0.5, R1 - 12.0],
-      ['soldier', -1.5, R1 - 13.2], ['police', 0.2, R1 - 13.2], ['soldier', 1.6, R1 - 13.2], ['soldier', 2.5, R1 - 12.4]]) post(Q, t, LX + dx, z, t === 'sniper' ? 0.4 : 0.5);
+    obst(LX - 1.1, R1 - 4.6); obst(LX + 1.4, R1 - 4.6); obst(LX - 1.1, R1 - 9.8); obst(LX + 1.4, R1 - 9.8);   /* c344: 철문 앞 바리케이트 6 → 4 (가운데 줄을 뺐다) */
+    for (const [t, dx, z] of [['police', -1.6, R1 - 5.8], ['soldier', 1.7, R1 - 5.8], ['sniper', 0.9, R1 - 6.7],   /* c344: 철문 앞 병력 반 — 경찰 5 → 3 · 군인 10 → 5 · 저격수 4 → 2 */
+      ['soldier', -2.0, R1 - 7.6], ['police', 0.8, R1 - 7.9],
+      ['soldier', -2.2, R1 - 11.0], ['police', 2.2, R1 - 11.0], ['soldier', 0.7, R1 - 11.0],
+      ['sniper', -1.9, R1 - 13.9], ['soldier', 1.6, R1 - 13.2]]) post(Q, t, LX + dx, z, t === 'sniper' ? 0.4 : 0.5);
     for (const [t, dx, z] of [['', -1.9, R1 - 2.6], ['guard', 0.6, R1 - 3.1], ['guard', -2.1, R1 - 9.6], ['', 2.3, R1 - 12.0]]) man(Q, t, LX + dx, z, 0.6);   // c343: 길목에 하양 2 · 노랑 2   // 저격수 2 (길목 앞 · 뒤)
     const G = Q.locks.find((L) => L.side === 'n'); chTutGate = G.obj; chTutGateZ = G.cz; G.obj.hp = G.obj.maxHp = CH_HP_CAP * 3 * 2;   // 철망 문 체력 = 바리케이트의 2배
     updateCarObs();

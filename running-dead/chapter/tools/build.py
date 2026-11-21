@@ -1234,6 +1234,8 @@ from c342_patch import C342_R   # diagonal wall crossing fix
 R += C342_R
 from c343_patch import C343_R   # fewer lot police and cars, civilians in last road
 R += C343_R
+from c344_patch import C344_R   # half the gate defenders, 4 barricades
+R += C344_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
