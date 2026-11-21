@@ -1230,6 +1230,8 @@ from c340_patch import C340_R   # scattered movie-like police line, centered lot
 R += C340_R
 from c341_patch import C341_R   # tutorial white discovery + first ally popup
 R += C341_R
+from c342_patch import C342_R   # diagonal wall crossing fix
+R += C342_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

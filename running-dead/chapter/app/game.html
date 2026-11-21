@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c341</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c342</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1573,6 +1573,12 @@
       if ((pz - az) * (qz - az) >= 0) return false;
       const x = px + (qx - px) * (az - pz) / (qz - pz);
       return x >= Math.min(ax, bx) && x <= Math.max(ax, bx);
+    }
+    if (ax !== bx) {                          // c342: 대각선 벽 — 일반 선분 교차 (전엔 세로 벽으로 잘못 봐서 복도 안에 안 보이는 세로 벽이 생겼다)
+      const ex = bx - ax, ez = bz - az, d1 = ex * (pz - az) - ez * (px - ax), d2 = ex * (qz - az) - ez * (qx - ax);
+      if (d1 * d2 >= 0) return false;
+      const fx = qx - px, fz = qz - pz, d3 = fx * (az - pz) - fz * (ax - px), d4 = fx * (bz - pz) - fz * (bx - px);
+      return d3 * d4 <= 0;
     }
     if ((px - ax) * (qx - ax) >= 0) return false;
     const z = pz + (qz - pz) * (ax - px) / (qx - px);
