@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c335</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c336</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -529,9 +529,9 @@
           { x: mx0 + (BND[2] + BND[3]) / 2 * g, z: Mz0 + MH / 2, w: (BND[3] - BND[2]) * g, d: MH, doors: [], open: ['w', 'e'], at: { w: gz(G2), e: ze }, ow: { w: gw(G2), e: 2 * g }, locks: [], brk: ['w'], kinds: {}, local: 925, block: -1, t: 'labm', zone: 0 },   // 뒤
           { x: mx0 + MW + 4, z: ze, w: 8, d: CW, doors: [], open: ['w', 'e'], locks: [], kinds: {}, local: 917, block: -1, t: 'labc', zone: 0 },   // 처음 복도만큼 좁은 복도 — 오른쪽으로
           { x: mx0 + MW + 8 + 1.2, z: ze + CW / 2 - 6, w: 2.4, d: 12, doors: [], open: ['w'], at: { w: ze }, locks: ['n'], lw: { n: 2.2 }, kinds: {}, local: 918,   /* c334: 금고 폭(2.4)만큼 좁은 마지막 복도 — 가운데 금고가 길을 막는다 */ block: -1, t: 'labc', zone: 0 },   // 위로 꺾임 · 끝에 문 — c333: 문 너머는 주차장
-          ...(() => { const X9 = mx0 + MW + 8 + 1.2, Z9 = ze + CW / 2 - 12, LX = X9 + 4, LW = 24, LD = 34, RW = 12, RL = 16;   // c333: 세로로 긴 주차장 (24 × 34) · 그 위로 길 (12 × 16) · 끝은 철망 문
+          ...(() => { const X9 = mx0 + MW + 8 + 1.2, Z9 = ze + CW / 2 - 12, LX = X9 + 3, LW = 12, LD = 34, RW = 6, RL = 16   /* c336: 주차장 · 철망 앞 길 좌우 폭 반 (24 → 12 · 12 → 6) */;   // c333: 세로로 긴 주차장 (24 × 34) · 그 위로 길 (12 × 16) · 끝은 철망 문
             return [{ x: LX, z: Z9 - LD / 2, w: LW, d: LD, doors: [], open: ['s', 'n'], at: { s: X9, n: LX }, ow: { s: 2.2, n: RW }, locks: [], kinds: {}, local: 941, block: -1, t: 'lot', zone: 0, fence: true },
-              { x: LX, z: Z9 - LD - RL / 2, w: RW, d: RL, doors: [], open: ['s'], ow: { s: RW }, locks: ['n'], lw: { n: 6 }, kinds: {}, local: 942, block: -1, t: 'lot', zone: 0, fence: true }]; })() ];
+              { x: LX, z: Z9 - LD - RL / 2, w: RW, d: RL, doors: [], open: ['s'], ow: { s: RW }, locks: ['n'], lw: { n: 4 }, kinds: {}, local: 942, block: -1, t: 'lot', zone: 0, fence: true }]; })() ];
         rooms.forEach((q, i) => { const sd = Object.keys(q.sides); out.push({ x: mx0 + (q.c + q.w / 2) * g, z: Mz0 + (q.r + q.h / 2) * g, w: q.w * g, d: q.h * g, doors: sd, at: q.sides, locks: [], kinds: {}, local: 930 + i, block: -1, t: 'room', zone: 0, parent: n + 18 + sec(q.c), room: { doors: sd.map((v) => ({ s: v, w: q.dw[v], ext: false })), keepAt: true } }); });   // 방문은 판마다 반은 뚫려 있다 (큰 맵 방과 같다)
         return out; })(),
     ];
@@ -8033,15 +8033,15 @@
       flat(3.4, 0.08, side ? P.x1 - 1.7 : P.x0 + 1.7, z - 1.15, lineMat, -0.59);   // 주차 칸 선
       if (Math.random() < 0.72) { const c = chDecoCar(CT[Math.floor(Math.random() * CT.length)], x, z, h); c.tutS = P; } }
     for (const [t, x, z] of [['bin', P.x0 + 0.6, P.z1 - 0.8], ['bin', P.x1 - 0.6, P.z1 - 0.8], ['cone', P.x0 + 4.6, P.z1 - 6], ['cone', P.x1 - 4.6, P.z1 - 12], ['cone', P.x0 + 4.8, P.z0 + 8], ['hydrant', P.x1 - 0.5, P.z0 + 0.8], ['barrier', (P.x0 + P.x1) / 2 + 3, P.z1 - 3.4]]) chAddProp(t, x, z).space = P;
-    for (const zf of [0.68, 0.3]) { const z = P.z0 + (P.z1 - P.z0) * zf, cx = (P.x0 + P.x1) / 2 + (zf > 0.5 ? -1.5 : 1.5), ob = (bar, x) => { const c = chParked(x, z, 0, bar); c.tutS = P; };   // c335: 주차장 중간중간 작은 진지 둘 — 경찰차 하나 + 바리케이트 둘 (틈 있게), 그 뒤에 경찰 2 · 군인 2 (저격수 없음)
-      ob(true, cx - 5.2); ob(false, cx); ob(true, cx + 5.2);
-      for (const [t, dx] of [['police', -3.6], ['soldier', -1.2], ['soldier', 1.2], ['police', 3.6]]) { const c = man(P, t, cx + dx, z - 2.2); c.post = c.area; if (t === 'soldier') c.noMaster = true; enterNormal(c); } }
-    const LX = (Q.x0 + Q.x1) / 2, R1 = Q.z1, R0 = Q.z0, obst = (bar, x, z) => { const c = chParked(x, z, 0, bar); c.tutS = Q; return c; };
-    obst(true, LX - 3.2, R1 - 2.5); obst(false, LX + 3.0, R1 - 2.5); obst(false, LX - 2.8, R1 - 8.0); obst(true, LX + 3.2, R1 - 8.0);   // 두 줄 — 엇갈려서 틈이 있다
-    for (const [t, dx, z] of [['police', -4.6, R1 - 4.6], ['soldier', -1.6, R1 - 4.6], ['police', 1.5, R1 - 4.8], ['soldier', 4.6, R1 - 4.6], ['police', 3.2, R1 - 5.6],
-      ['soldier', -4.6, R1 - 10.2], ['soldier', -1.6, R1 - 10.2], ['soldier', 1.6, R1 - 10.2], ['soldier', 4.6, R1 - 10.2], ['police', -3.0, R1 - 11.2], ['police', 3.0, R1 - 11.2], ['soldier', 0, R1 - 11.4]]) {
+    for (const zf of [0.68, 0.3]) { const z = P.z0 + (P.z1 - P.z0) * zf, cx = (P.x0 + P.x1) / 2, ob = (bar, x, h = 0) => { const c = chParked(x, z, h, bar); c.tutS = P; };   // c335: 주차장 중간중간 작은 진지 둘 — 경찰차 하나 + 바리케이트 둘 (틈 있게), 그 뒤에 경찰 2 · 군인 2 (저격수 없음)
+      ob(true, cx + (zf > 0.5 ? -1.4 : 1.4)); ob(false, cx + (zf > 0.5 ? 1.9 : -1.9), Math.PI / 2);   /* c336: 좁아진 가운데 길 — 바리케이트 하나 + 세로로 선 경찰차 하나 (엇갈려 틈) */
+      for (const [t, dx] of [['police', -2.0], ['soldier', -0.7], ['soldier', 0.7], ['police', 2.0]]) { const c = man(P, t, cx + dx, z - 2.2); c.post = c.area; if (t === 'soldier') c.noMaster = true; enterNormal(c); } }
+    const LX = (Q.x0 + Q.x1) / 2, R1 = Q.z1, R0 = Q.z0, obst = (bar, x, z, h = 0) => { const c = chParked(x, z, h, bar); c.tutS = Q; return c; };
+    obst(true, LX - 1.4, R1 - 2.5); obst(false, LX + 1.9, R1 - 2.5, Math.PI / 2); obst(false, LX - 1.9, R1 - 8.0, Math.PI / 2); obst(true, LX + 1.4, R1 - 8.0);   /* c336: 폭 6 — 바리케이트 + 세로 경찰차, 두 줄 엇갈림 */   // 두 줄 — 엇갈려서 틈이 있다
+    for (const [t, dx, z] of [['police', -2.3, R1 - 4.6], ['soldier', -0.8, R1 - 4.6], ['police', 0.75, R1 - 4.8], ['soldier', 2.3, R1 - 4.6], ['police', 1.6, R1 - 5.7],
+      ['soldier', -2.3, R1 - 10.2], ['soldier', -0.8, R1 - 10.2], ['soldier', 0.8, R1 - 10.2], ['soldier', 2.3, R1 - 10.2], ['police', -1.5, R1 - 11.2], ['police', 1.5, R1 - 11.2], ['soldier', 0, R1 - 11.6]]) {
       const c = man(Q, t, LX + dx, z); c.post = c.area; if (t === 'soldier') c.noMaster = true; enterNormal(c); }
-    for (const dx of [-4.5, -1.5, 1.5, 4.5]) { const n = man(Q, 'sniper', LX + dx, R0 + 2.2, 0.4); n.post = n.area; enterNormal(n); }   // 맨 뒤 저격수 4
+    for (const dx of [-2.25, -0.75, 0.75, 2.25]) { const n = man(Q, 'sniper', LX + dx, R0 + 2.2, 0.4); n.post = n.area; enterNormal(n); }   // 맨 뒤 저격수 4
     const G = Q.locks.find((L) => L.side === 'n'); chTutGate = G.obj; chTutGateZ = G.cz; G.obj.hp = G.obj.maxHp = CH_HP_CAP * 3 * 2;   // 철망 문 체력 = 바리케이트의 2배
     updateCarObs();
   }
