@@ -1160,6 +1160,8 @@ from c305_patch import C305_R   # 바닥 화살표
 R += C305_R
 from c306_patch import C306_R   # 수조 고정
 R += C306_R
+from c307_patch import C307_R   # 문 앞 세모
+R += C307_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
