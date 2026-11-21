@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c316</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c317</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -7955,7 +7955,7 @@
       for (const [t, dz] of [['vig', -2.0], ['attacker', -0.7], ['attacker', 0.7], ['vig', 2.0]]) { const c = man(C7, t === 'vig' ? 'attacker' : t, C7.x0 + 7.6, zc + dz, 0.4); if (t === 'vig') chVig(c); }   // 바리케이트 앞: 빨강 2 · 주황 2
       for (const dz of [-2.4, -0.8, 0.8, 2.4]) { const p = man(C7, 'police', C7.x0 + 11.85, zc + dz, 0.35);   /* c302: 바리케이트 바로 뒤 */ p.post = p.area; enterNormal(p); }   // 바리케이트 뒤: 경찰 4
       { const C8 = buildings.find((B) => B.local === 912), C9 = buildings.find((B) => B.local === 913), ok8 = []; for (const t of ['', '', '', 'guard', 'guard', 'guard']) { let x = 0, z = 0; for (let k = 0; k < 200; k++) { x = C8.x0 + 0.8 + Math.random() * (C8.x1 - C8.x0 - 1.6); z = C8.z0 + 1.6 + Math.random() * (C8.z1 - C8.z0 - 3.2); if (ok8.every(([a, b]) => Math.hypot(a - x, b - z) > 1.2)) break; } ok8.push([x, z]); man(C8, t, x, z, 0.8); }   // c314: 위로 꺾인 복도 — 하양 3 · 노랑 3 아무 데나
-      const cx9 = (C9.x0 + C9.x1) / 2; for (const dx of [-0.8, 0.8]) { const s = man(C9, 'soldier', cx9 + dx, C9.z1 - 2.6, 0.5); s.post = s.area; s.noMaster = true; enterNormal(s); } { const n = man(C9, 'sniper', cx9, C9.z1 - 4.0, 0.4); n.post = n.area; enterNormal(n); } }   // c314: 문 너머 — 군인 2 · 그 살짝 뒤 저격수 1
+      const cx9 = (C9.x0 + C9.x1) / 2; for (const dx of [-1.5, -0.5, 0.5, 1.5]) { const s = man(C9, 'soldier', cx9 + dx, C9.z1 - 6.6, 0.5); s.post = s.area; s.noMaster = true; enterNormal(s); } for (const dx of [-0.8, 0.8]) { const n = man(C9, 'sniper', cx9 + dx, C9.z1 - 8.0, 0.4); n.post = n.area; enterNormal(n); } }   /* c317: 문에서 4칸 더 안쪽 · 군인 4 · 저격수 2 */   // c314: 문 너머 — 군인 2 · 그 살짝 뒤 저격수 1
       { const sf = addSafe(C7) || C7.safe; sf.foot.set(C7.x0 + 17, 0, zc); sf.px = sf.foot.x; sf.pz = sf.foot.z; sf.space = C7; sf.B = C7; sf.room = null; sf.loot = chLoot('house'); sf.dud = !sf.loot; }   // 그 뒤 금고 하나
       put(R4, [['avat', 4.3, 1.4], ['wcab', 1.0, 0.6], ['tubes', 2.2, 0.6], ['jarEye', 6.6, 0.6], ['jarBrain', 7.6, 0.6], ['iv', 0.6, 4.5], ['biodrum', 5.4, 5.2], ['scope', 7.9, 1.6]]);   // 덩치 수조 방 — 적 없음
       chAddSlab('rbed', R4.x0 + 2.6, R4.z0 + 4.9, 0, R4); }

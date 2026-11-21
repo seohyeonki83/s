@@ -1180,6 +1180,8 @@ from c315_patch import C315_R   # avat gem
 R += C315_R
 from c316_patch import C316_R   # mutant ally award popup
 R += C316_R
+from c317_patch import C317_R   # C9 soldiers 4 snipers 2 further in
+R += C317_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
