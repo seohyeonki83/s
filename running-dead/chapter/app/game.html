@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c309</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c310</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -7866,7 +7866,7 @@
     if (!chFog) {
       { const tex = chTexOf(96, 96, (g) => { g.beginPath(); g.moveTo(86, 48); g.lineTo(14, 10); g.lineTo(14, 86); g.closePath(); g.lineJoin = 'round'; g.lineWidth = 8; g.strokeStyle = 'rgba(40,30,0,0.85)'; g.stroke(); g.fillStyle = '#ffd34d'; g.fill(); });   // c305 · c307: 문 앞에만 — 문마다 노란 세모 하나 (문 쪽을 가리킨다)
         const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.92, depthTest: false, depthWrite: false }), geo = new THREE.PlaneGeometry(1.2, 1.2).rotateX(-Math.PI / 2);
-        for (const B of T) for (const D of B.locks) { const off = B.local === 900 ? 2.7 : 1.6, m = new THREE.Mesh(geo, mat);   // 첫 방 문은 막고 선 금고 앞
+        for (const B of T) for (const D of B.locks) { const off = B.local === 900 ? 2.25 : 0.75,   /* c310: 문 바로 앞 */ m = new THREE.Mesh(geo, mat);   // 첫 방 문은 막고 선 금고 앞
           m.position.set(D.cx - D.nx * off, 0.025, D.cz - D.nz * off); m.rotation.y = Math.atan2(-D.nz, D.nx); m.renderOrder = -0.59; scene.add(m); } }
       for (const B of T) { const t = chTexOf(64, 64, (g) => { g.fillStyle = B.type === 'lab' ? '#c9d0d6' : '#aab2ba'; g.fillRect(0, 0, 64, 64); g.fillStyle = 'rgba(80,95,110,0.35)'; g.fillRect(0, 0, 64, 2); g.fillRect(0, 0, 2, 64); }); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(B.x1 - B.x0, B.z1 - B.z0);   // c293: 하얀 타일 바닥 (복도는 조금 어둡게)
         const m = new THREE.Mesh(new THREE.PlaneGeometry(B.x1 - B.x0, B.z1 - B.z0).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthTest: false, depthWrite: false })); m.position.set((B.x0 + B.x1) / 2, 0.02, (B.z0 + B.z1) / 2); m.renderOrder = -0.595; scene.add(m); }   // 지도 밖 어둠 판(-0.6) 위
