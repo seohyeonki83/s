@@ -1202,6 +1202,8 @@ from c326_patch import C326_R   # 5 big maze rooms
 R += C326_R
 from c327_patch import C327_R   # second armor vat room, maze people in corridors too
 R += C327_R
+from c328_patch import C328_R   # two gate doors across the maze corridor
+R += C328_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
