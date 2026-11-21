@@ -1192,6 +1192,8 @@ from c321_patch import C321_R   # wide sniper corridors, maze rooms, exit
 R += C321_R
 from c322_patch import C322_R   # longer sniper corridors, 45 cuts, generated maze, global wall attack
 R += C322_R
+from c323_patch import C323_R   # door overlap width, ally grid nav in room spaces
+R += C323_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
