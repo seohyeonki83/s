@@ -1162,6 +1162,8 @@ from c306_patch import C306_R   # 수조 고정
 R += C306_R
 from c307_patch import C307_R   # 문 앞 세모
 R += C307_R
+from c308_patch import C308_R   # 바리케이트끼리 안 밀기
+R += C308_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c307</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c308</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2676,6 +2676,7 @@
       if (act && (B === A || (B.ix < A.ix && live(B)))) continue;   // 둘 다 움직이는 쌍은 한 번만
       if (Math.abs(A.x - B.x) > 6 || Math.abs(A.z - B.z) > 6 || Math.hypot(A.x - B.x, A.z - B.z) > CAR_L * 1.6 * Math.max(ckl(A), ckl(B))) continue;
       if ((A.wall && B.state !== 'parked') || (B.wall && A.state !== 'parked')) continue;   // c59: 달리는 경찰차·군인차는 건널목 바리케이트를 그냥 지나간다
+      if (A.tutX !== undefined || B.tutX !== undefined) continue;   // c308: 튜토리얼 바리케이트는 제자리 고정 — 서로·다른 차와 밀어내지 않는다
       const kA = A.wall ? (A.wreck ? 0.16 : 1) : A.state === 'parked' ? PARKED_K * (A.wreck ? 0.16 : 1) : MOVING_K, kB = B.wall ? (B.wreck ? 0.16 : 1) : B.state === 'parked' ? PARKED_K * (B.wreck ? 0.16 : 1) : MOVING_K;
       const ax = [[Math.cos(A.h), Math.sin(A.h)], [-Math.sin(A.h), Math.cos(A.h)]], bx = [[Math.cos(B.h), Math.sin(B.h)], [-Math.sin(B.h), Math.cos(B.h)]];
       const ha = [CAR_L / 2 * kA * ckl(A), CAR_W / 2 * kA * ck(A) * (A.barr ? CH_BARR_W : 1)], hb = [CAR_L / 2 * kB * ckl(B), CAR_W / 2 * kB * ck(B) * (B.barr ? CH_BARR_W : 1)];
@@ -2734,7 +2735,7 @@
         if (hu - Math.abs(u) < hv - Math.abs(v)) u = (u < 0 ? -1 : 1) * hu; else v = (v < 0 ? -1 : 1) * hv;
         const nx = car.x + u * fx + v * rx, nz = car.z + u * fz + v * rz;
         if (car.barr) {                       // c59 · c60: 바리케이트 — 경찰차와 같은 방식으로 밀린다 (무게 3배). 좀비만 민다 (사람은 못 민다)
-          const f = CHAPTER ? (b.force || 1) : b === me ? 1 : (b.force || 1) * (b.mut === 'armor' ? 2 / 3 : 1), sh = isZombie(b) && !car.wreck   /* c109: 바리케이트 — 제 힘 그대로 */ ? f / (f + CAR_MASS * 2 / 3 * CH_BARR_K) : 0, ex = nx - b.foot.x, ez = nz - b.foot.z;
+          const f = CHAPTER ? (b.force || 1) : b === me ? 1 : (b.force || 1) * (b.mut === 'armor' ? 2 / 3 : 1), sh = isZombie(b) && !car.wreck && car.tutX === undefined   /* c308: 튜토리얼 바리케이트는 좀비도 못 민다 */   /* c109: 바리케이트 — 제 힘 그대로 */ ? f / (f + CAR_MASS * 2 / 3 * CH_BARR_K) : 0, ex = nx - b.foot.x, ez = nz - b.foot.z;
           b.foot.x += ex * (1 - sh); b.foot.z += ez * (1 - sh);
           if (sh) { car.x -= ex * sh; car.z -= ez * sh; car.pushT = clock;
             const px = b.foot.x - car.x, pz = b.foot.z - car.z, mx = -ex * sh, mz = -ez * sh, Wb = CAR_W * CH_BARR_W;
