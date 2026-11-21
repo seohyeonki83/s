@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c344</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c345</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4290,7 +4290,7 @@
     goalShown = false; tutOpen = false; spawnFrames = 0; mmBang = false; camAnim = null; tutQueue.length = 0; for (const k of Object.keys(tutSeen)) delete tutSeen[k];   // 튜토리얼도 판마다 처음부터 (v202)
     gameNo++;
     if (gameNo > TUT_GAMES || TEST_MAP) { goalShown = true; mmBang = true; for (const k of ['citizen', 'guard', 'attacker', 'police', 'station', 'soldier', 'sniper']) tutSeen[k] = true; }   // v230: 앱을 켠 뒤 처음 두 판만 목표·발견 소개 (껐다 켜면 다시)
-    if (CH_TUT) { tutSeen.citizen = false; chTutAlly1 = false; }   // c341: 튜토리얼 — 하양 첫 발견 소개만 켠다
+    if (CH_TUT) { tutSeen.citizen = false; chTutAlly1 = false; goalShown = false; }   /* c345: 튜토리얼은 시작 목표 창을 띄운다 */   // c341: 튜토리얼 — 하양 첫 발견 소개만 켠다
     scr.st = 0; scr.on = !TEST_MAP; scr.t = 0; scr.tick = 0; scr.list.length = 0; scrLater.length = 0; scrWant.length = 0; for (const k in scr.inf) scr.inf[k] = 0;
     drawLv();
     for (const k of cashes.slice()) removeCash(k);
@@ -8096,7 +8096,7 @@
         for (const Q of sfR) { const sf = addSafe(Q) || Q.safe; sf.foot.set((Q.x0 + Q.x1) / 2, 0, (Q.z0 + Q.z1) / 2); sf.px = sf.foot.x; sf.pz = sf.foot.z; sf.space = Q; sf.B = Q; sf.room = null; sf.loot = chLoot('house'); sf.dud = !sf.loot; }
         const PR = ['wcab', 'tubes', 'biodrum', 'chair', 'scope', 'jarEye', 'iv', 'jarBrain'];
         for (const Q of RS) if (!sfR.includes(Q) && Q.x1 - Q.x0 > 2.3 && Q.z1 - Q.z0 > 2.3) for (let k = 0, nP = ar(Q) > 12 ? 2 : 1; k < nP; k++) { const p = chAddProp(PR[Math.floor(Math.random() * PR.length)], Q.x0 + 0.7 + (k + Math.random()) / nP * (Q.x1 - Q.x0 - 1.4), Q.z0 + 0.6); p.space = Q; }   /* c326: 큰 방은 사물 둘 */
-        const ppl = ['police', 'police', 'police', 'police', '', '', '', '', 'guard', 'guard', 'guard', 'guard', 'attacker', 'attacker', 'attacker', 'attacker', 'vig', 'vig', 'vig', 'vig'], spots = [];   // c327: 방 안만이 아니라 복도 바닥에도 — 구간 안 아무 자리 (넓이대로 나뉜다)
+        const ppl = ['police', 'police', 'police', 'police', '', '', '', '', 'guard', 'guard', 'guard', 'guard', 'attacker', 'attacker', 'attacker', 'attacker', 'vig', 'vig', 'vig', 'vig', ...Array(10).fill(''), ...Array(5).fill('guard')], spots = [];   /* c345: 하양 10 · 노랑 5 더 (랜덤) */   // c327: 방 안만이 아니라 복도 바닥에도 — 구간 안 아무 자리 (넓이대로 나뉜다)
         const roomAt = (x, z, m) => RS.find((Q) => x > Q.x0 - m && x < Q.x1 + m && z > Q.z0 - m && z < Q.z1 + m);
         for (const t of ppl) { let x = 0, z = 0, Q = null;
           for (let k = 0; k < 400; k++) { x = M.x0 + 0.6 + Math.random() * (M.x1 - M.x0 - 1.2); z = M.z0 + 0.6 + Math.random() * (M.z1 - M.z0 - 1.2); Q = roomAt(x, z, 0);
@@ -9190,7 +9190,7 @@
     stage.appendChild(dim); dim.getBoundingClientRect(); dim.style.opacity = '1';
     const el = document.createElement('div');
     el.id = 'goal';
-    el.innerHTML = '<div class="g1">목표</div><div class="g2">모든 경찰서를 파괴해라</div><div class="g3">' + stations.map(() => '<span>!</span>').join('') + '</div><button class="ok okBtn">확인</button>';   // 경찰서 수만큼 느낌표 (v214), 확인 버튼 (v218)
+    el.innerHTML = '<div class="g1">목표</div><div class="g2">' + (CH_TUT ? '이곳을 탈출하십시오' : '모든 경찰서를 파괴해라') + '</div><div class="g3">' + stations.map(() => '<span>!</span>').join('') + '</div><button class="ok okBtn">확인</button>';   // 경찰서 수만큼 느낌표 (v214), 확인 버튼 (v218)
     stage.appendChild(el);
     el.getBoundingClientRect(); el.classList.add('on');
     const okBtn = el.querySelector('.ok');

@@ -1236,6 +1236,8 @@ from c343_patch import C343_R   # fewer lot police and cars, civilians in last r
 R += C343_R
 from c344_patch import C344_R   # half the gate defenders, 4 barricades
 R += C344_R
+from c345_patch import C345_R   # +10 white +5 yellow in maze
+R += C345_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
