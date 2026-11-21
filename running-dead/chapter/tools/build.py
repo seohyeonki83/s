@@ -1126,6 +1126,8 @@ from c288_patch import C288_R   # 틀니 새로 · 자폭 변이 제외
 R += C288_R
 from c289_patch import C289_R   # 튜토리얼 1
 R += C289_R
+from c290_patch import C290_R   # 튜토리얼 박스 · 탐험 안개
+R += C290_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
