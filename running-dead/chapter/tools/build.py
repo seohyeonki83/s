@@ -1320,6 +1320,8 @@ from c385_patch import C385_R   # c385: 산성 폭발 섬광
 R += C385_R
 from c386_patch import C386_R   # c386: 섬광 · 작은 좀비 색
 R += C386_R
+from c387_patch import C387_R   # c387: 드론 체력 30
+R += C387_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
