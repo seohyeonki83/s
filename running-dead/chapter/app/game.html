@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c380</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c381</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6852,12 +6852,17 @@
     const air = d.air, y = Math.max(0.35, air);   /* c375: 위아래로는 안 흔들린다 (좌우 선회는 진짜 자리에서) */
     d.s.position.set(d.x, y + 0.35, d.z); d.sh.position.set(d.x, 0.02, d.z);
     chDroneFx(d, dt);   // c380
+    { const v = chDroneVis(d); d.s.visible = v; d.sh.visible = v; }   // c381: 그림자 자리가 밝은 곳(나·동료 시야 전체, 벽에 안 가림)일 때만 드론이 보인다 — 그림이 어둠 위에 그려져도 보이고, 그림자가 어둠이면 그림이 밝은 원 안이어도 안 보인다
     const k = 1 - Math.min(0.35, y / 8); d.sh.scale.setScalar(k); d.s.material.rotation = d.stunT > 0 ? 0.5 : Math.sin(d.bob * 0.7) * 0.06;
   }
   const chDroneAimY = (d) => Math.max(0.35, d.air ?? d.h) + 0.35;   // 토사물이 날아가 맞는 높이 (그림)
   function chDroneDmg(d, dmg) {
     if (d.dead) return;
     d.hp -= dmg; if (d.hp <= 0) chDroneDie(d);
+  }
+  function chDroneVis(d) {                     // c381: 좀비 편(나·동료) 누구 하나라도 인지거리 안에서 벽에 안 가리고 그림자 자리를 보고 있나 (화면 밝기와 같은 판정)
+    for (const z of nearIn(zCells, d.x, d.z, eyeMaxR + RADIUS, viBuf)) { if (!isZombie(z) || Math.hypot(d.x - z.foot.x, d.z - z.foot.z) > z.sense) continue; if (!blocked(z.foot.x, z.foot.z, d.x, d.z)) return true; }
+    return false;
   }
   function chDroneDie(d) {                     // 공중에서 펑 — 차가 터지듯
     if (d.dead) return; d.dead = true;

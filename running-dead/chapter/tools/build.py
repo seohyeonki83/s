@@ -1308,6 +1308,8 @@ from c379_patch import C379_R   # c379: 테이저
 R += C379_R
 from c380_patch import C380_R   # c380: 드론 사격 효과
 R += C380_R
+from c381_patch import C381_R   # c381: 드론 보이기
+R += C381_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
