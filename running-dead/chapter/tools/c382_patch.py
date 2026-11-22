@@ -1,0 +1,2 @@
+# c382: 드론 — 개판부터 (1분 뒤) · 개판 1 · 계엄 2 · 그 뒤로 3대씩
+C382_R = [('if (!chDroneOn && stars >= 2 && isZombie(me)) { chDroneOn = true; chDroneT = CH_DRONE_EVERY - 60; }   // c375: 난리남이 되고 1분 뒤 첫 출동 (표시 없이)', 'if (!chDroneOn && stars >= 3 && isZombie(me)) { chDroneOn = true; chDroneT = CH_DRONE_EVERY - 60; }   // c382: 개판이 되고 1분 뒤 첫 출동 (표시 없이)   // c375: 난리남'), ('N = Math.max(1, Math.ceil((stars - 1) / 2)); i < N', 'N = stars <= 3 ? 1 : stars === 4 ? 2 : 3; i < N')]

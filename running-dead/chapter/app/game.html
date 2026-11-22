@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c381</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c382</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6925,10 +6925,10 @@
     return [dx / l, dz / l];
   }
   function chDroneTick(dt) {
-    if (!chDroneOn && stars >= 2 && isZombie(me)) { chDroneOn = true; chDroneT = CH_DRONE_EVERY - 60; }   // c375: 난리남이 되고 1분 뒤 첫 출동 (표시 없이)
+    if (!chDroneOn && stars >= 3 && isZombie(me)) { chDroneOn = true; chDroneT = CH_DRONE_EVERY - 60; }   // c382: 개판이 되고 1분 뒤 첫 출동 (표시 없이)   // c375: 난리남
     if (chDroneOn && (chDroneT += dt) >= CH_DRONE_EVERY) {
       chDroneT = 0;
-      for (let i = 0, N = Math.max(1, Math.ceil((stars - 1) / 2)); i < N && chDrones.length < CH_DRONE_MAX; i++) {   /* c375: 난리남 1 · 개판 1 · 계엄 2 · 데프콘 2 (두 단계마다 한 대씩) */ const p = chEdgeSpot(Math.max(0, chZoneOf(me.foot.x, me.foot.z))); if (chDroneFree(p.x, p.z)) chDroneAdd(p.x, p.z); }
+      for (let i = 0, N = stars <= 3 ? 1 : stars === 4 ? 2 : 3; i < N && chDrones.length < CH_DRONE_MAX; i++) {   /* c375: 난리남 1 · 개판 1 · 계엄 2 · 데프콘 2 (두 단계마다 한 대씩) */ const p = chEdgeSpot(Math.max(0, chZoneOf(me.foot.x, me.foot.z))); if (chDroneFree(p.x, p.z)) chDroneAdd(p.x, p.z); }
     }
     for (const d of chDrones.slice()) {
       if (d.dead) continue;
