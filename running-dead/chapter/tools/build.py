@@ -1280,6 +1280,8 @@ from c365_patch import C365_R   # c365: 적 테스트
 R += C365_R
 from c366_patch import C366_R   # c366: 큰 맵 건널목 · 30%
 R += C366_R
+from c367_patch import C367_R   # c367: 단단한 주먹
+R += C367_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
