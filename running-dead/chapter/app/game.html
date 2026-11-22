@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c396</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c397</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6197,6 +6197,7 @@
         ilv[kind] = n + 1; chItemChanged(kind);
         const el = ITEM[kind].passive ? pBadges[kind] : (items.find((x) => x.kind === kind) || {}).el;
         if (el) { el.classList.remove('pop'); el.getBoundingClientRect(); el.classList.add('pop'); }
+        if (kind === 'bag') { refreshItems(); const sr = stage.getBoundingClientRect(); chBagFly(sr.left + sr.width / 2, sr.top + sr.height * 0.3, 96); }   // c397: 가방 강화도 새 칸으로 날아가 박힌다
       }
       ov.remove(); acqOpen = false; paused = false; last = 0;
     });
@@ -6325,6 +6326,19 @@
   }
   // c34: 빈 도구 칸 — 쓸 수 있는 칸이 남아 있으면 그 자리에 가방 그림이 박혀 있다 (처음엔 1칸이라 시작하자마자 하나). 누르면 '도구를 하나 채울 수 있습니다'
   const chEmpty = [];
+  function chBagFly(sx, sy, s0) {              // c397: 가방 — 새로 열린 무기 칸으로 가방 그림이 날아가 박힌다 (그 칸은 닿을 때까지 숨겼다가 통 튀어나온다)
+    chEmptySlots();   // 빈 칸을 지금 칸 수에 맞춘다
+    const idx = chToolCap() - 1, el = idx < items.length ? items[idx] && items[idx].el : chEmpty[chEmpty.length - 1];
+    window.__bagDbg = { idx, items: items.length, empty: chEmpty.length, el: !!el };   // 테스트용
+    if (!el) return;
+    const sr = stage.getBoundingClientRect(), tr = el.getBoundingClientRect(), fly = document.createElement('div');
+    el.style.visibility = 'hidden';
+    fly.className = 'fly'; fly.innerHTML = IC.bag; fly.style.fontSize = s0 + 'px'; fly.style.left = (sx - sr.left) + 'px'; fly.style.top = (sy - sr.top) + 'px';
+    stage.appendChild(fly); fly.getBoundingClientRect();
+    fly.style.transition = 'left 0.42s ease-in, top 0.42s ease-in, font-size 0.42s ease-in';
+    fly.style.left = (tr.left + tr.width / 2 - sr.left) + 'px'; fly.style.top = (tr.top + tr.height / 2 - sr.top) + 'px'; fly.style.fontSize = '22px';
+    setTimeout(() => { fly.remove(); el.style.visibility = ''; el.classList.remove('pop'); el.getBoundingClientRect(); el.classList.add('pop'); }, 440);
+  }
   function chEmptySlots() {
     const want = Math.max(0, chToolCap() - items.length);
     while (chEmpty.length > want) chEmpty.pop().remove();
@@ -9287,6 +9301,7 @@
         if (it.passive) { owned[kind] = true; if (kind === 'vest') hasVest = true; if (kind === 'shoes' && isZombie(me)) me.speed = meSpeed(); refreshBadges(); } else { items.push(it); addActiveBadge(kind); }
         if (CHAPTER) chItemChanged(kind);
         it.el.style.visibility = ''; it.el.classList.add('pop'); refreshItems();
+        if (CHAPTER && kind === 'bag') { const r = it.el.getBoundingClientRect(); chBagFly(r.left + r.width / 2, r.top + r.height / 2, 18); }   // c397
         acqOpen = false; paused = false; last = 0;
       }, 470);
     });

@@ -1340,6 +1340,8 @@ from c395_patch import C395_R   # c395: 분열세포 20%
 R += C395_R
 from c396_patch import C396_R   # c396: 레벨업 제곱 곡선
 R += C396_R
+from c397_patch import C397_R   # c397: 가방 연출
+R += C397_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
