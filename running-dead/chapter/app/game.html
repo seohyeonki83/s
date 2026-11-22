@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c393</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c394</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5798,6 +5798,7 @@
     if (!e.acid) e.acid = []; if (e.acid.length) e.acid[0] = Math.max(e.acid[0], T); else e.acid.push(T);   /* c261: 겹치지 않음 */ if (e.acidT === undefined) e.acidT = 0;
     if (!chAcidL.includes(e)) chAcidL.push(e);
     if (!e.acidS && e.mesh) { const s = new THREE.Sprite(chAcidMat); s.position.set(-0.15, 0.18, 0.025); s.scale.setScalar(0.34); s.renderOrder = 1; e.mesh.add(s); e.acidS = s; }
+    else if (!e.acidS && e.tank && e.g) { const g = new THREE.Group(); for (const [ox, oz, sc] of [[0.3, 0.1, 0.5], [-0.35, -0.12, 0.4], [0, 0.2, 0.34]]) { const s = new THREE.Sprite(chAcidMat); s.position.set(ox, 0.3, oz); s.scale.setScalar(sc); s.renderOrder = 1; g.add(s); } e.g.add(g); e.acidS = g; }   // c394: 보스(장갑차)도 산성 폭발이 묻으면 연두 덩어리 (자폭 산성과 같은 자리)
   }
   const CH_ACID_HIT = 10;   // c371: 산성 폭발이 터지는 순간 주는 피해 (고정)
   function chAcidBurst(z) {                    // c224: 동료·변이가 죽으며 산성피 — 범위 = 그 몸의 근접 거리 × 1.2 (강화마다 +15%) · 3초 (강화마다 +1초)
@@ -5823,7 +5824,7 @@
       const e = chAcidL[i], car = e.tank;
       const gone = car ? e.wreck : (e.kind !== 'citizen' || !bodies.includes(e));
       for (let k = e.acid.length - 1; k >= 0; k--) if ((e.acid[k] -= dt) <= 0) e.acid.splice(k, 1);
-      if (gone || !e.acid.length) { if (e.acidS) { e.mesh.remove(e.acidS); e.acidS = null; } e.acid.length = 0; e.acidT = 0; chAcidL.splice(i, 1); continue; }
+      if (gone || !e.acid.length) { if (e.acidS) { (e.mesh || e.g).remove(e.acidS); e.acidS = null; } e.acid.length = 0; e.acidT = 0; chAcidL.splice(i, 1); continue; }
       if ((e.acidT += dt) < 0.5) continue;
       e.acidT -= 0.5; const d = 1 + chAcidB();   // c259 · c261: 한 겹만 — 1 + 산성 강도
       if (car) { const o = e.obj; if (o && o.hp > d) { o.hp -= d; chDotPop(e.x + 0.9, e.z, d, 2.2); } continue; }   // c265
