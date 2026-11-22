@@ -1332,6 +1332,8 @@ from c391_patch import C391_R   # c391: 드론 폭발
 R += C391_R
 from c392_patch import C392_R   # c392: 산성 섬광 2/3
 R += C392_R
+from c393_patch import C393_R   # c393
+R += C393_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
