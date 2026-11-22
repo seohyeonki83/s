@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c359</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c360</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1447,8 +1447,10 @@
     const deckMat = flatMat(0x8d7c66), railMat = flatMat(0x4a3f33);
     for (const [x0, z0, x1, z1] of CH_MAP.bridges) {
       flat(x1 - x0, z1 - z0, (x0 + x1) / 2, (z0 + z1) / 2, deckMat, -0.9);
-      if (x1 - x0 >= z1 - z0) for (const z of [z0 + 0.25, z1 - 0.25]) flat(x1 - x0, 0.5, (x0 + x1) / 2, z, railMat, -0.89);
-      else for (const x of [x0 + 0.25, x1 - 0.25]) flat(0.5, z1 - z0, x, (z0 + z1) / 2, railMat, -0.89);
+      const along = x1 - x0 >= z1 - z0, W = CH_MAP.rivers.filter((r) => along ? r[1] <= z1 + 0.1 && r[3] >= z0 - 0.1 && r[0] < x1 && r[2] > x0 : r[0] <= x1 + 0.1 && r[2] >= x0 - 0.1 && r[1] < z1 && r[3] > z0);   /* c360: 난간은 물 위에만 — 다리 끝이 길 위로 들어가도 난간이 길을 뚫지 않게 */
+      const a0 = W.length ? Math.max(along ? x0 : z0, Math.min(...W.map((r) => along ? r[0] : r[1]))) : along ? x0 : z0, a1 = W.length ? Math.min(along ? x1 : z1, Math.max(...W.map((r) => along ? r[2] : r[3]))) : along ? x1 : z1;
+      if (along) for (const z of [z0 + 0.25, z1 - 0.25]) flat(a1 - a0, 0.5, (a0 + a1) / 2, z, railMat, -0.89);
+      else for (const x of [x0 + 0.25, x1 - 0.25]) flat(0.5, a1 - a0, x, (a0 + a1) / 2, railMat, -0.89);
     }
     // c2: 산 — 구역 사이를 막는 문 없는 덩어리. 벽 선은 안 그리고(겹친 자리에 줄이 생긴다), 덩어리끼리 무늬가 이어지게 땅 기준으로 무늬를 입힌다
     const hillTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
