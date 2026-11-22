@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c399</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c400</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5801,9 +5801,9 @@
     if (!e.acidS && e.mesh) { const s = new THREE.Sprite(chAcidMat); s.position.set(-0.15, 0.18, 0.025); s.scale.setScalar(0.34); s.renderOrder = 1; e.mesh.add(s); e.acidS = s; }
     else if (!e.acidS && e.tank && e.g) { const g = new THREE.Group(); for (const [ox, oz, sc] of [[0.3, 0.1, 0.5], [-0.35, -0.12, 0.4], [0, 0.2, 0.34]]) { const s = new THREE.Sprite(chAcidMat); s.position.set(ox, 0.3, oz); s.scale.setScalar(sc); s.renderOrder = 1; g.add(s); } e.g.add(g); e.acidS = g; }   // c394: 보스(장갑차)도 산성 폭발이 묻으면 연두 덩어리 (자폭 산성과 같은 자리)
   }
-  const CH_ACID_HIT = 5;   /* c399: 10 → 5 */   // c371: 산성 폭발이 터지는 순간 주는 피해 (고정)
+  const chAcidHit = () => Math.round(3 + 7 * lv('acid') / 5);   /* c400: 터질 때 피해 — 처음 3, 다 강화하면 10 (3 · 4 · 6 · 7 · 9 · 10) */   /* c399: 5 */   // c371: 산성 폭발이 터지는 순간 주는 피해 (고정)
   function chAcidBurst(z) {                    // c224: 동료·변이가 죽으며 산성피 — 범위 = 그 몸의 근접 거리 × 1.2 (강화마다 +15%) · 3초 (강화마다 +1초)
-    const n = lv('acid'); if (Math.random() >= 0.2 + 0.1 * n) return;   /* c399: 처음 20% · 강화마다 +10% */   // c280: 50 · 60 · 70 · 80 · 90 · 100%
+    const n = lv('acid'); if (Math.random() >= 0.3 + 0.1 * n) return;   /* c400: 처음 30% · 강화마다 +10% */   /* c399: 20% */   // c280: 50 · 60 · 70 · 80 · 90 · 100%
     const R = chReach(z) * 1.2   /* c280: 범위 고정 */, T = 2 + 0.5 * n   /* c369: 2 · 2.5 · 3 · 3.5 · 4 · 4.5초 */   /* c285: 3 · 3.4 · 3.8 · 4.2 · 4.6 · 5초 */, x = z.foot.x, zz = z.foot.z;
     const f = puff(x, 0.5, zz, 0xd8ff9a, R * 0.8, R * 2.4, 0.22, 0, 0, 0, 0.9); f.s.renderOrder = UI - 0.6; f.peak = true;
     for (const [col, s0, s1, life] of [[0xffffff, 2.2 * 2 / 3, 4.0 * 2 / 3, 0.1], [0xf4ff6a, 1.4 * 2 / 3, 6.0 * 2 / 3, 0.17]]   /* c389: 2배 · c392: 3분의 1 줄임 */) { const g = puff(x, 0.8, zz, col, s0, s1, life, 0, 0, 0, 1); g.s.material.map = flashTex; g.s.renderOrder = UI - 0.55; g.peak = true; g.s.material.opacity = 1; }   // c386: 작지만 강한 섬광 — 터진 그 몸 자리에 또렷한 흰 원이 팍 (0.1초) + 노란 연두 원 (화면 번쩍 없음)
@@ -5813,10 +5813,10 @@
       if (c.kind !== 'citizen' || c.space !== z.space) continue;
       if (Math.hypot(c.foot.x - x, c.foot.z - zz) > R + (c.r || BODY) || blocked(x, zz, c.foot.x, c.foot.z)) continue;
       chAcidOn(c, T);
-      if (c.hp > 0) { c.hp = Math.max(0, c.hp - CH_ACID_HIT); if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, CH_ACID_HIT); if (c.hp <= 0 && !c.police && c.state !== 'held') enterPanic(c, null, true); }   // c371: 터질 때 10 (고정 · 강화와 상관없다)
+      if (c.hp > 0) { c.hp = Math.max(0, c.hp - chAcidHit()); if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, chAcidHit()); if (c.hp <= 0 && !c.police && c.state !== 'held') enterPanic(c, null, true); }   // c371: 터질 때 10 (고정 · 강화와 상관없다)
     }
     if (!z.space) chDroneAcid(x, zz, R, T, true);   // c374: 드론 — 그림자 점이 원기둥 안이면
-    const tk = chTank; if (tk && !tk.wreck && !z.space && Math.hypot(tk.x - x, tk.z - zz) - CAR_L * CH_TK_KL / 2 <= R) { chAcidOn(tk, T); const o = tk.obj; if (o && o.hp > CH_ACID_HIT) { o.hp -= CH_ACID_HIT; chDotPop(tk.x + 0.9, tk.z, CH_ACID_HIT, 2.2); } }   /* c371 */   // 보스도
+    const tk = chTank; if (tk && !tk.wreck && !z.space && Math.hypot(tk.x - x, tk.z - zz) - CAR_L * CH_TK_KL / 2 <= R) { chAcidOn(tk, T); const o = tk.obj; if (o && o.hp > chAcidHit()) { o.hp -= chAcidHit(); chDotPop(tk.x + 0.9, tk.z, chAcidHit(), 2.2); } }   /* c371 */   // 보스도
   }
   window.__kz = (z) => killZombie(z);   // 테스트용
   window.__goo = (c) => gooOn(c); window.__acidOn = (c, T) => chAcidOn(c, T);   // 테스트용
@@ -6038,7 +6038,7 @@
     shoes: '나와 동료, 변이한 좀비 모두의 이동 속도가 오릅니다. 강화하면 더 빨라집니다.',
     parasite: '인간을 감염시킬 때 20% 확률로 작은 좀비 하나가 더 만들어집니다. 능력치는 3분의 1입니다. 강화하면 확률이 높아집니다.',   /* c370 */
     teeth: '나와 동료들이 인간을 덮칠 때 감염시키는 시간이 줄어들고, 물어뜯으며 회복하는 체력이 늘어납니다. 강화하면 더 빨라지고 더 많이 회복합니다.',
-    acid: '동료가 죽는 자리에 산성피가 터져 그 안의 적에게 바로 5의 피해를 주고, 계속 피해를 줍니다. 확률로 터지고, 겹쳐도 피해는 쌓이지 않습니다. 강화하면 터질 확률이 오르고 더 오래 남습니다.',
+    acid: '동료가 죽는 자리에 산성피가 터져 그 안의 적에게 바로 3의 피해(강화하면 10까지)를 주고, 계속 피해를 줍니다. 확률로 터지고, 겹쳐도 피해는 쌓이지 않습니다. 강화하면 터질 확률이 오르고 더 오래 남습니다.',
     acidp: '산성 폭발과 산성 자폭 스위치의 산성 피해가 늘어납니다. 산성 무기나 장비가 없으면 효과가 없습니다. 강화하면 더 늘어납니다.',
     catalyst: '히드라 좀비의 사거리와 덩치 좀비의 미는 힘·범위 공격 크기가 늘어납니다. 얻은 변이 좀비, 만들어 낸 변이 좀비, 각성한 나 모두에게 적용됩니다. 다 강화하면 히드라 사거리 1.3배, 덩치 미는 힘 13, 덩치 범위 1.5배가 됩니다.',
     blood: '나의 최대 체력이 늘어나고, 늘어난 만큼 체력도 함께 찹니다. 강화할 때마다 더 늘어납니다.',
@@ -6159,7 +6159,7 @@
     parasite: (n) => `확률 ${20 + 5 * n}%`,   /* c370 */
     teeth: (n) => `감염 속도 ${Math.round(100 + 80 / 6 * (1 + n))}% · 체력 회복량 +${5 * (1 + n)}%`,   /* c224 */
     acidp: (n) => `산성 도트 +${1 + n} (0.5초마다)`,   /* c259 */
-    acid: (n) => `터질 확률 ${20 + 10 * n}% · 터질 때 5 · ${+(2 + 0.5 * n).toFixed(1)}초 · 0.5초마다 1 · 범위 = 근접 거리 x1.2`,   /* c280 */   /* c261: 겹치지 않음 */
+    acid: (n) => `터질 확률 ${30 + 10 * n}% · 터질 때 ${Math.round(3 + 7 * n / 5)} · ${+(2 + 0.5 * n).toFixed(1)}초 · 0.5초마다 1 · 범위 = 근접 거리 x1.2`,   /* c280 */   /* c261: 겹치지 않음 */
     revive: (n) => `체력 가득으로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,
     catalyst: (n) => `히드라 사거리 x${(2 / 3 + (1.3 - 2 / 3) * (1 + n) / 6).toFixed(2)} · 덩치 미는 힘 ${(11 * (2 / 3 + (13 / 11 - 2 / 3) * (1 + n) / 6)).toFixed(1)} · 덩치 범위 x${(0.8 + 0.7 * (1 + n) / 6).toFixed(2)}`,
     blood: (n) => `내 최대 체력 +${12 * (1 + n)}%`,
@@ -6217,7 +6217,7 @@
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
     bomb: ['', (n) => `${1.5 + n}칸·${4 + 2 * n}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['강도', (n) => `${n ? '+' : ''}${CH_WV('cashH', n)}`]   /* c226 */,
     book: ['쿨타임', (n) => `-${5 + 9 * n}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${10 + 10 * n}%`], crowbar: ['건물', (n) => `+${20 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`]   /* c278: 카드는 총격만 (밀림은 설명 칸에) */,
-    shoes: ['이동', (n) => `+${5 * (1 + n)}%`], parasite: ['확률', (n) => `${20 + 5 * n}%`], teeth: ['감염', (n) => `${Math.round(100 + 80 / 6 * (1 + n))}%`], acid: ['확률', (n) => `${20 + 10 * n}%`], acidp: ['도트', (n) => `+${1 + n}`],   /* c224 */ catalyst: ['변이', (n) => `+${Math.round((1 + n) / 6 * 100)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
+    shoes: ['이동', (n) => `+${5 * (1 + n)}%`], parasite: ['확률', (n) => `${20 + 5 * n}%`], teeth: ['감염', (n) => `${Math.round(100 + 80 / 6 * (1 + n))}%`], acid: ['확률', (n) => `${30 + 10 * n}%`], acidp: ['도트', (n) => `+${1 + n}`],   /* c224 */ catalyst: ['변이', (n) => `+${Math.round((1 + n) / 6 * 100)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
   const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
     bomb: '동료 하나가 자폭', mutate: '동료 하나를 변이', taser: '적을 감전', awaken: '내가 변이', cash: '적을 유혹',
@@ -6991,7 +6991,7 @@
     }
   }
   function chDroneAcid(x, z, R, T, blk) {      // 산성 폭발 원기둥 — 그림자 점이 원 안이면 묻는다 (터질 때 10)
-    for (const d of chDrones.slice()) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || (blk && blocked(x, z, d.x, d.z))) continue; if (d.goo <= 0) { d.acid = Math.max(d.acid, T); } chDotPop(d.x + 0.6, d.z, CH_ACID_HIT); chDroneDmg(d, CH_ACID_HIT); }
+    for (const d of chDrones.slice()) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || (blk && blocked(x, z, d.x, d.z))) continue; if (d.goo <= 0) { d.acid = Math.max(d.acid, T); } chDotPop(d.x + 0.6, d.z, chAcidHit()); chDroneDmg(d, chAcidHit()); }
   }
   function chDroneGooAt(x, z, R) {             // 산성 자폭 원기둥 — 그림자 점이 원 안이면 자폭 산성 (산성 폭발은 이걸로 바뀐다)
     for (const d of chDrones) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || blocked(x, z, d.x, d.z)) continue; d.goo = Math.max(d.goo, 4 + 2 * lv('bomb')); d.acid = 0; }

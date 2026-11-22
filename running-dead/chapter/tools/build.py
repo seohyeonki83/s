@@ -1346,6 +1346,8 @@ from c398_patch import C398_R   # c398: 떨어진 드론 최우선
 R += C398_R
 from c399_patch import C399_R   # c399: 산성 폭발 20% · 5
 R += C399_R
+from c400_patch import C400_R   # c400: 산성 폭발 30% · 3→10
+R += C400_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
