@@ -1312,6 +1312,8 @@ from c381_patch import C381_R   # c381: 드론 보이기
 R += C381_R
 from c382_patch import C382_R   # c382: 드론 출동 단계
 R += C382_R
+from c383_patch import C383_R   # c383: 분열세포 설명
+R += C383_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
