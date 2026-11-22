@@ -1326,6 +1326,8 @@ from c388_patch import C388_R   # c388: 드론 주기 60초
 R += C388_R
 from c389_patch import C389_R   # c389: 섬광 2배
 R += C389_R
+from c390_patch import C390_R   # c390: 떨어진 드론
+R += C390_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

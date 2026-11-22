@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c389</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c390</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5233,7 +5233,8 @@
   //   좀비(나·동료)는 다른 타겟이 하나도 없을 때만 인지거리 안 가장 가까운 사물을 때린다 (거리와 상관없이 맨 마지막 순위)
   const OBJ_HP = POLICE_HP * 5 * 0.7;         // v263: 경찰차·경찰서 문 = 경찰의 3.5배 (v240의 5배에서 70%)
   const OBJ_SEE = (MELEE - RADIUS) * 1.5;     // v240: 사물은 근접 공격 거리의 1.5배 안에 있어야 알아챈다
-  function objPoint(o, z) {                   // 좀비가 서서 때릴 자리 (그 좀비 쪽)
+  function objPoint(o, z) {                   // 좀비가 서서 때릴 자리
+    if (o.drone) return [o.x, o.z];   // c390 (그 좀비 쪽)
     if (o.type === 'car') return [o.car.x, o.car.z];
     if (o.type === 'table') return [o.t.x, o.t.z];   // c70
     if (o.type === 'wall') { const p = nearestOn(o.seg, z.foot.x, z.foot.z), dx = z.foot.x - p.x, dz = z.foot.z - p.y, d = Math.hypot(dx, dz) || 1; return [p.x + dx / d * 0.6, p.y + dz / d * 0.6]; }   // c200: 벽 — 그 좀비 쪽 가장 가까운 자리
@@ -5241,6 +5242,7 @@
     return [L.cx + L.nx * 0.6 * sgn, L.cz + L.nz * 0.6 * sgn];
   }
   function objGap(o, z) {                     // 좀비 몸 가운데에서 사물 겉면까지
+    if (o.drone) return Math.max(0, Math.hypot(o.x - z.foot.x, o.z - z.foot.z) - o.r);   // c390: 땅에 떨어진 드론
     if (o.type === 'table') {                 // c70: 네모 사물 (경찰차와 같은 방식)
       const t = o.t, fx = Math.cos(t.h), fz = Math.sin(t.h), dx = z.foot.x - t.x, dz = z.foot.z - t.z;
       const u = Math.abs(dx * fx + dz * fz) - t.L / 2, v = Math.abs(-dx * fz + dz * fx) - t.W / 2;
@@ -5271,6 +5273,10 @@
       if (blocked(z.foot.x, z.foot.z, px, pz)) continue;
       if (g < ad) { ad = g; any = o; }
       if (g < bd && (CHAPTER || z === me || (objCrowd.get(o) || 0) - (z.objC === o ? 1 : 0) < CROWD_MAX)) { bd = g; best = o; }   /* c205: 챕터는 3명 제한을 안 센다 */   // v243·v244: 경찰차·문에 다른 좀비 3명이 붙어 있으면 다음 걸로 (나는 제한 없음)
+    }
+    if (CHAPTER && !z.space) for (const d of chDrones) {   // c390: 땅에 떨어진(감전된) 드론 — 이때는 누구나 때릴 수 있다 (인지거리 안이면 달려가서)
+      if (d.dead || !chDroneDown(d)) continue; const g = objGap(d, z); if (g > z.sense || (g >= bd && g >= ad)) continue; if (blocked(z.foot.x, z.foot.z, d.x, d.z)) continue;
+      if (g < ad) { ad = g; any = d; } if (g < bd) { bd = g; best = d; }
     }
     if (CHAPTER && (!z.space || z.space.type === 'lot')) {   /* c333: 주차장 안 꾸밈 차도 (그 공간 차만) */               // c69: 꾸밈 차 — 나는 손 닿는 차(와 이미 때리던 차)만, 동료는 내가 때리는 차만
       for (const o of chDecoObjs) {   // c85: 서 있는 민간 차도 경찰차와 똑같은 규칙 — 나는 인지거리, 동료는 근접 거리의 1.5배 안 (내가 때리는 차는 인지거리) · 한 대에 동료 3명까지
@@ -6855,13 +6861,14 @@
     d.s.position.set(d.x, y + 0.35, d.z); d.sh.position.set(d.x, 0.02, d.z);
     chDroneFx(d, dt);   // c380
     { const v = chDroneVis(d); d.s.visible = v; d.sh.visible = v; }   // c381: 그림자 자리가 밝은 곳(나·동료 시야 전체, 벽에 안 가림)일 때만 드론이 보인다 — 그림이 어둠 위에 그려져도 보이고, 그림자가 어둠이면 그림이 밝은 원 안이어도 안 보인다
-    const k = 1 - Math.min(0.35, y / 8); d.sh.scale.setScalar(k); d.s.material.rotation = d.stunT > 0 ? 0.5 : Math.sin(d.bob * 0.7) * 0.06;
+    const k = 1 - Math.min(0.35, y / 8); d.sh.scale.setScalar(k); d.s.material.rotation = d.stunT > 0 ? 0.5 : Math.sin(d.bob * 0.7) * 0.06; d.s.material.color.setHex(d.stunT > 0 && Math.floor(clock * 14) % 2 ? 0x8fdcff : 0xffffff);   /* c390: 감전 중 번쩍번쩍 (사람·장갑차와 같은 깜빡임) */
   }
   const chDroneAimY = (d) => Math.max(0.35, d.air ?? d.h) + 0.35;   // 토사물이 날아가 맞는 높이 (그림)
   function chDroneDmg(d, dmg) {
     if (d.dead) return;
     d.hp -= dmg; if (d.hp <= 0) chDroneDie(d);
   }
+  const chDroneDown = (d) => d.stunT > 0 && (d.air ?? d.h) <= 0.6;   // c390: 땅에 떨어져 있나
   function chDroneVis(d) {                     // c381: 좀비 편(나·동료) 누구 하나라도 인지거리 안에서 벽에 안 가리고 그림자 자리를 보고 있나 (화면 밝기와 같은 판정)
     for (const z of nearIn(zCells, d.x, d.z, eyeMaxR + RADIUS, viBuf)) { if (!isZombie(z) || Math.hypot(d.x - z.foot.x, d.z - z.foot.z) > z.sense) continue; if (!blocked(z.foot.x, z.foot.z, d.x, d.z)) return true; }
     return false;
@@ -6937,7 +6944,7 @@
       // 산성 (폭발 = 1 + 산성 강도 · 자폭 = 2 + 산성 강도, 0.5초마다)
       if (d.goo > 0) { d.goo -= dt; if ((d.gooT += dt) >= 0.5) { d.gooT -= 0.5; const n = 2 + chAcidB(); chDotPop(d.x + 0.6, d.z, n); chDroneDmg(d, n); if (d.dead) continue; } }
       else if (d.acid > 0) { d.acid -= dt; if ((d.acidT += dt) >= 0.5) { d.acidT -= 0.5; const n = 1 + chAcidB(); chDotPop(d.x + 0.6, d.z, n); chDroneDmg(d, n); if (d.dead) continue; } }
-      if (d.stunT > 0) { d.stunT -= dt; chDroneDraw(d, dt); continue; }   // 감전 — 땅에 떨어져서 가만히
+      if (d.stunT > 0) { if ((d.air ?? 0) <= 0.45) d.stunT -= dt; chDroneDraw(d, dt); continue; }   // 감전 — 땅에 떨어져서 가만히 · c390: 감전 시간은 땅에 닿은 뒤부터 센다
       // 노릴 좀비 — 시야 안 가장 가까운 (나 포함, 건물 안 좀비는 벽에 가려 못 본다)
       if (!d.tg || !isZombie(d.tg) || !chDroneSees(d.tg.foot.x, d.tg.foot.z, d, CH_DRONE_SIGHT)) {
         d.tg = null; let bd = CH_DRONE_SIGHT;
