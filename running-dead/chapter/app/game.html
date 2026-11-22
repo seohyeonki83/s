@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c397</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c398</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3652,7 +3652,7 @@
       } else {
         const t = aimed && aimed.kind === 'citizen' && !aimed.marked && aimed.space === z.space && !(CHAPTER && z === me && me.mut && chDown(aimed) && chMeYield(aimed)) ? aimed : ready;   /* c57 */   // 테두리가 떠 있던 시민은 무조건 노린다 (문 밖으로 나가 버렸으면 빼고)
         const prey = huntable(z, p) ? p : null;
-        const adj = CHAPTER && !t && !prey ? chAdjFoe(z) : null, go = (CHAPTER && z === me && z.mut === 'hydra' && !z.space ? chHydDrone(z) : null) || t || prey || adj;   /* c375: 히드라인 나도 드론이 1순위 */   /* c374: 히드라인 나 — 노릴 사람이 없으면 드론 */   /* c205: t·prey가 있으면 안 쓰인다 */   /* c64: 3명 제한에 걸렸어도 근접 거리 안의 적은 친다 */
+        const adj = CHAPTER && !t && !prey ? chAdjFoe(z) : null, go = (CHAPTER && !z.space ? chDownDrone(z) : null) || (CHAPTER && z === me && z.mut === 'hydra' && !z.space ? chHydDrone(z) : null) || t || prey || adj;   /* c398: 땅에 떨어진 드론 = 저격수처럼 맨 먼저 (나·동료) */   /* c375: 히드라인 나도 드론이 1순위 */   /* c374: 히드라인 나 — 노릴 사람이 없으면 드론 */   /* c205: t·prey가 있으면 안 쓰인다 */   /* c64: 3명 제한에 걸렸어도 근접 거리 안의 적은 친다 */
         if (z !== me) {
           if (go) z.phase = 'track';               // 동료 좀비: 사냥이 끝나면 자기 자리로 간 다음 배회
           if (prey && !t && chDown(prey)) claimPrey(z, prey); else unclaim(z);   // HP 0 시민을 쫓는 동안 찜 (덮치면 marked가 대신한다)
@@ -5589,6 +5589,7 @@
       const d = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z);
       if (d < bd && d <= zs && (cross || !blocked(z.foot.x, z.foot.z, c.foot.x, c.foot.z) || zSeen(c))) { bd = d; t = c; }
     }
+    if (CHAPTER && z.mut === 'armor' && !z.space) { const dd = chDownDrone(z); if (dd) { t = dd; bd = Math.hypot(dd.x - z.foot.x, dd.z - z.foot.z); } }   // c398: 덩치도 떨어진 드론이 맨 먼저
     if (CHAPTER && z.mut === 'hydra' && !z.space) { let dq = Infinity, dt2 = null; for (const dr of chDrones) { const q = Math.hypot(dr.x - z.foot.x, dr.z - z.foot.z); if (!dr.dead && q < dq && q <= zs && !fireBlocked(z.foot.x, z.foot.z, dr.x, dr.z)) { dq = q; dt2 = dr; } } if (dt2) { bd = dq; t = dt2; } }   // c375: 히드라는 드론이 1순위 (보이는 드론 중 가장 가까운 것)   // c374: 히드라만 드론을 노린다 (그림자 점까지 거리)
     if (!t && CHAPTER && z.objOff > clock) { allyIdle(z, dt); return; }   // c58: 맞은 변이 동료도 2초 동안 사물을 안 노린다
     if (z.mut === 'armor') {
@@ -6866,7 +6867,7 @@
   function chDroneAdd(x, z) {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: chDroneTex, transparent: true, depthTest: false, depthWrite: false })); s.scale.set(1.35, 1.35, 1); s.renderOrder = UI - 1; scene.add(s);
     const sh = new THREE.Mesh(chDroneShadowGeo, chDroneShadowMat); sh.renderOrder = UI - 1.5; sh.position.set(x, 0.02, z); scene.add(sh);
-    const d = { kind: 'drone', drone: true, x, z, foot: new THREE.Vector3(x, 0, z), hp: CH_DRONE_HP, maxHp: CH_DRONE_HP, h: CH_DRONE_H, bob: Math.random() * 6.28, atkT: rand(0, HIT_EVERY), burst: 0, burstT: 0, tg: null, stunT: 0, shotT: -1, recoilT: -1, acid: 0, acidT: 0, goo: 0, gooT: 0, dead: false, s, sh, side: Math.random() < 0.5 ? 1 : -1, stuckT: 0, r: 0.5 };
+    const d = { kind: 'drone', drone: true, space: null, x, z, foot: new THREE.Vector3(x, 0, z), hp: CH_DRONE_HP, maxHp: CH_DRONE_HP, h: CH_DRONE_H, bob: Math.random() * 6.28, atkT: rand(0, HIT_EVERY), burst: 0, burstT: 0, tg: null, stunT: 0, shotT: -1, recoilT: -1, acid: 0, acidT: 0, goo: 0, gooT: 0, dead: false, s, sh, side: Math.random() < 0.5 ? 1 : -1, stuckT: 0, r: 0.5 };
     chDrones.push(d); chDroneDraw(d, 0); return d;
   }
   function chDroneReset() { if (!chDrones) return; for (const d of chDrones) { scene.remove(d.s); d.s.material.dispose(); scene.remove(d.sh); if (d.tr) { scene.remove(d.tr); d.tr.material.dispose(); } } chDrones.length = 0; chDroneT = 0; chDroneOn = false; }
@@ -6889,6 +6890,7 @@
     d.hp -= dmg; if (d.hp <= 0) chDroneDie(d);
   }
   const chDroneDown = (d) => d.stunT > 0 && (d.air ?? d.h) <= 0.6;   // c390: 땅에 떨어져 있나
+  function chDownDrone(z) { let best = null, bd = z.sense; for (const d of chDrones) { if (d.dead || !chDroneDown(d)) continue; const q = Math.hypot(d.x - z.foot.x, d.z - z.foot.z); if (q < bd && !blocked(z.foot.x, z.foot.z, d.x, d.z)) { bd = q; best = d; } } return best; }   // c398: 인지거리 안 떨어진 드론 (가장 가까운 것)
   function chDroneVis(d) {                     // c381: 좀비 편(나·동료) 누구 하나라도 인지거리 안에서 벽에 안 가리고 그림자 자리를 보고 있나 (화면 밝기와 같은 판정)
     for (const z of nearIn(zCells, d.x, d.z, eyeMaxR + RADIUS, viBuf)) { if (!isZombie(z) || Math.hypot(d.x - z.foot.x, d.z - z.foot.z) > z.sense) continue; if (!blocked(z.foot.x, z.foot.z, d.x, d.z)) return true; }
     return false;

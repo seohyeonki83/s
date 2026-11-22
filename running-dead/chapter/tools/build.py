@@ -1342,6 +1342,8 @@ from c396_patch import C396_R   # c396: 레벨업 제곱 곡선
 R += C396_R
 from c397_patch import C397_R   # c397: 가방 연출
 R += C397_R
+from c398_patch import C398_R   # c398: 떨어진 드론 최우선
+R += C398_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
