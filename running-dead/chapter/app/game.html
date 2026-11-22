@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c400</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c401</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5820,14 +5820,15 @@
   }
   window.__kz = (z) => killZombie(z);   // 테스트용
   window.__goo = (c) => gooOn(c); window.__acidOn = (c, T) => chAcidOn(c, T);   // 테스트용
+  const CH_DOT_T = 1;   // c401: 산성 도트(산성 폭발·산성 자폭 — 사람·보스·드론 모두) 간격 0.5 → 1초
   function chAcidTick(dt) {                    // c224: 겹마다 시간이 줄고, 0.5초마다 겹 수만큼 피해 (느려짐 없음)
     for (let i = chAcidL.length - 1; i >= 0; i--) {
       const e = chAcidL[i], car = e.tank;
       const gone = car ? e.wreck : (e.kind !== 'citizen' || !bodies.includes(e));
       for (let k = e.acid.length - 1; k >= 0; k--) if ((e.acid[k] -= dt) <= 0) e.acid.splice(k, 1);
       if (gone || !e.acid.length) { if (e.acidS) { (e.mesh || e.g).remove(e.acidS); e.acidS = null; } e.acid.length = 0; e.acidT = 0; chAcidL.splice(i, 1); continue; }
-      if ((e.acidT += dt) < 0.5) continue;
-      e.acidT -= 0.5; const d = 1 + chAcidB();   // c259 · c261: 한 겹만 — 1 + 산성 강도
+      if ((e.acidT += dt) < CH_DOT_T) continue;
+      e.acidT -= CH_DOT_T; const d = 1 + chAcidB();   // c259 · c261: 한 겹만 — 1 + 산성 강도
       if (car) { const o = e.obj; if (o && o.hp > d) { o.hp -= d; chDotPop(e.x + 0.9, e.z, d, 2.2); } continue; }   // c265
       if (e.hp <= 0) continue;
       e.hp = Math.max(0, e.hp - d); if (e.mesh.visible) chDotPop(e.foot.x + 0.6, e.foot.z, d);   // c265
@@ -5852,8 +5853,8 @@
         c.smokeT = rand(0.25, 0.45);
         puff(c.foot.x + rand(-0.25, 0.25), 0.7, c.foot.z + rand(-0.15, 0.15), 0xa9c28a, 0.12, 0.42, 0.9, rand(-0.1, 0.1), 0.7, rand(-0.1, 0.1), 0.55);
       }
-      if ((c.gooT += dt) < 0.5) continue;   // v344: 1초 → 0.5초마다 1
-      c.gooT -= 0.5;
+      if ((c.gooT += dt) < CH_DOT_T) continue;   // c401: 1초마다   // v344: 1초 → 0.5초마다 1
+      c.gooT -= CH_DOT_T;
       if (c.hp <= 0) continue;                // 체력 0에서 멈춘다 (그다음은 감염)
       c.hp = Math.max(0, c.hp - 2 - chAcidB());   /* c123: 도트 2 · c259: + 산성 강도 */
       if (c.hp <= 0 && !c.police && c.state !== 'held') enterPanic(c, null, true);
@@ -6158,8 +6159,8 @@
     shoes: (n) => `나·동료 이동 속도 +${5 * (1 + n)}%`,
     parasite: (n) => `확률 ${20 + 5 * n}%`,   /* c370 */
     teeth: (n) => `감염 속도 ${Math.round(100 + 80 / 6 * (1 + n))}% · 체력 회복량 +${5 * (1 + n)}%`,   /* c224 */
-    acidp: (n) => `산성 도트 +${1 + n} (0.5초마다)`,   /* c259 */
-    acid: (n) => `터질 확률 ${30 + 10 * n}% · 터질 때 ${Math.round(3 + 7 * n / 5)} · ${+(2 + 0.5 * n).toFixed(1)}초 · 0.5초마다 1 · 범위 = 근접 거리 x1.2`,   /* c280 */   /* c261: 겹치지 않음 */
+    acidp: (n) => `산성 도트 +${1 + n} (1초마다)`,   /* c259 */
+    acid: (n) => `터질 확률 ${30 + 10 * n}% · 터질 때 ${Math.round(3 + 7 * n / 5)} · ${+(2 + 0.5 * n).toFixed(1)}초 · 1초마다 1 · 범위 = 근접 거리 x1.2`,   /* c280 */   /* c261: 겹치지 않음 */
     revive: (n) => `체력 가득으로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,
     catalyst: (n) => `히드라 사거리 x${(2 / 3 + (1.3 - 2 / 3) * (1 + n) / 6).toFixed(2)} · 덩치 미는 힘 ${(11 * (2 / 3 + (13 / 11 - 2 / 3) * (1 + n) / 6)).toFixed(1)} · 덩치 범위 x${(0.8 + 0.7 * (1 + n) / 6).toFixed(2)}`,
     blood: (n) => `내 최대 체력 +${12 * (1 + n)}%`,
@@ -6962,8 +6963,8 @@
     for (const d of chDrones.slice()) {
       if (d.dead) continue;
       // 산성 (폭발 = 1 + 산성 강도 · 자폭 = 2 + 산성 강도, 0.5초마다)
-      if (d.goo > 0) { d.goo -= dt; if ((d.gooT += dt) >= 0.5) { d.gooT -= 0.5; const n = 2 + chAcidB(); chDotPop(d.x + 0.6, d.z, n); chDroneDmg(d, n); if (d.dead) continue; } }
-      else if (d.acid > 0) { d.acid -= dt; if ((d.acidT += dt) >= 0.5) { d.acidT -= 0.5; const n = 1 + chAcidB(); chDotPop(d.x + 0.6, d.z, n); chDroneDmg(d, n); if (d.dead) continue; } }
+      if (d.goo > 0) { d.goo -= dt; if ((d.gooT += dt) >= CH_DOT_T) { d.gooT -= CH_DOT_T; const n = 2 + chAcidB(); chDotPop(d.x + 0.6, d.z, n); chDroneDmg(d, n); if (d.dead) continue; } }
+      else if (d.acid > 0) { d.acid -= dt; if ((d.acidT += dt) >= CH_DOT_T) { d.acidT -= CH_DOT_T; const n = 1 + chAcidB(); chDotPop(d.x + 0.6, d.z, n); chDroneDmg(d, n); if (d.dead) continue; } }
       if (d.stunT > 0) { if ((d.air ?? 0) <= 0.45) d.stunT -= dt; chDroneDraw(d, dt); continue; }   // 감전 — 땅에 떨어져서 가만히 · c390: 감전 시간은 땅에 닿은 뒤부터 센다
       // 노릴 좀비 — 시야 안 가장 가까운 (나 포함, 건물 안 좀비는 벽에 가려 못 본다)
       if (!d.tg || !isZombie(d.tg) || !chDroneSees(d.tg.foot.x, d.tg.foot.z, d, CH_DRONE_SIGHT)) {
@@ -7495,7 +7496,7 @@
     }
     const spd = (car.tkSeen ? CAR_SPEED * CH_TR_SPD.sedan * CH_TR_SLOW / 2 * 1.2 :   /* c183: 20% 빠르게 */ CAR_SPEED * 0.9) * (car.goo ? 0.8 : 1);   /* c179: 눈에 띄기 전 = 경찰차의 90% */   /* c168: 보인 뒤 속도 2배 (보통 차의 절반) */   /* c137: 눈에 띄기 전엔 보통 차 속도 */   // 보통 차(승용차)의 4분의 1
     if (car.goo && (car.gooLeft -= dt) <= 0) { car.goo = false; for (const s of car.gooS) car.g.remove(s); }   // c123
-    if (car.goo && (car.gooT += dt) >= 0.5) { car.gooT -= 0.5; const gd = 2 + chAcidB(); if (o && o.hp > gd) { o.hp -= gd; chDotPop(car.x + 0.9, car.z, gd, 2.2); } }   // c259 · c265
+    if (car.goo && (car.gooT += dt) >= CH_DOT_T) { car.gooT -= CH_DOT_T; const gd = 2 + chAcidB(); if (o && o.hp > gd) { o.hp -= gd; chDotPop(car.x + 0.9, car.z, gd, 2.2); } }   // c259 · c265
     // 벽
     if (chTankWalls(car, dt)) {
       if (car.tkPX !== undefined) { car.x = car.tkPX; car.z = car.tkPZ; car.h = car.tkPH; car.foot.set(car.x, 0, car.z); if (o) o.foot.set(car.x, 0, car.z); }
