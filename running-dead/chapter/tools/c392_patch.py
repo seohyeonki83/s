@@ -1,0 +1,2 @@
+# c392: 산성 폭발 섬광 3분의 1 줄임
+C392_R = [('[[0xffffff, 2.2, 4.0, 0.1], [0xf4ff6a, 1.4, 6.0, 0.17]]   /* c389: 2배 */', '[[0xffffff, 2.2 * 2 / 3, 4.0 * 2 / 3, 0.1], [0xf4ff6a, 1.4 * 2 / 3, 6.0 * 2 / 3, 0.17]]   /* c389: 2배 · c392: 3분의 1 줄임 */'), ('0.44, 0.16, 0.14, Math.cos(a) * sp * 2,', '0.44 * 2 / 3, 0.16 * 2 / 3, 0.14, Math.cos(a) * sp * 2 * 2 / 3,'), ('Math.sin(a) * sp, 1); g.s.material.map = flashTex; g.s.renderOrder = UI - 0.55;', 'Math.sin(a) * sp * 2 * 2 / 3, 1); g.s.material.map = flashTex; g.s.renderOrder = UI - 0.55;')]

@@ -1330,6 +1330,8 @@ from c390_patch import C390_R   # c390: 떨어진 드론
 R += C390_R
 from c391_patch import C391_R   # c391: 드론 폭발
 R += C391_R
+from c392_patch import C392_R   # c392: 산성 섬광 2/3
+R += C392_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
