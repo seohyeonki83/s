@@ -1304,6 +1304,8 @@ from c377_patch import C377_R   # c377: 덩치 최대 13
 R += C377_R
 from c378_patch import C378_R   # c378: 덩치 개편
 R += C378_R
+from c379_patch import C379_R   # c379: 테이저
+R += C379_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
