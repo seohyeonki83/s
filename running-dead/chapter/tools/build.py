@@ -1336,6 +1336,8 @@ from c393_patch import C393_R   # c393
 R += C393_R
 from c394_patch import C394_R   # c394: 보스 산성 덩어리
 R += C394_R
+from c395_patch import C395_R   # c395: 분열세포 20%
+R += C395_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

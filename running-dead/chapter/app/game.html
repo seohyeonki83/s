@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c394</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c395</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3366,7 +3366,7 @@
     t.marked = false;
     if (ok) {                                 // 감염 성공 → 동료 좀비, 경찰 쪽엔 사건 하나 (경찰이 감염돼도)
       makeZombie(t);
-      if (CHAPTER && owned.parasite && Math.random() < 0.1 + 0.05 * lv('parasite')) chParasite(t);   // c370: 기생체 — 10% · 강화마다 +5%
+      if (CHAPTER && owned.parasite && Math.random() < 0.2 + 0.05 * lv('parasite')   /* c395: 처음 20% */) chParasite(t);   // c370: 기생체 — 10% · 강화마다 +5%
       gainXp();                               // 경험치 — 동료가 생길 때마다 (v201)
       callPolice(t.foot);
     } else if (t.police) enterFight(t, z, true);   // 경찰은 HP 0인 채 풀려나도 바로 다시 쏜다
@@ -4926,7 +4926,7 @@
     stim: ['일정 시간마다 동료 한 마리를 강화시키는 주사를 주입합니다.', '강화 시 주사 효과가 더 강해집니다.'],
     revive: ['죽으면 되살아납니다. 다시 쓰려면 2분이 지나야 합니다.', '강화 시 기다리는 시간이 10%씩 줄어듭니다.'],
     shoes: ['나와 동료들의 이동 속도 증가', '강화 시 더 빨라집니다.'],   /* c225: 사용자 문구 */
-    parasite: ['인간을 감염시킬 때 10% 확률로 작은 좀비 하나가 더 만들어집니다. 능력치는 3분의 1입니다.', '강화 시 확률이 높아집니다.'],   /* c370 */
+    parasite: ['인간을 감염시킬 때 20% 확률로 작은 좀비 하나가 더 만들어집니다. 능력치는 3분의 1입니다.', '강화 시 확률이 높아집니다.'],   /* c370 */
     teeth: ['인간을 덮칠 때 감염시키는 시간이 줄어듭니다. 체력 회복량이 늘어납니다.', '강화 시 더 빨라지고 회복량이 더 늘어납니다.'],   /* c226 */
     acidp: ['산성 피해를 입은 적의 도트 데미지가 늘어납니다', '강화 시 더 늘어납니다.'],   /* c259 */
     acid: ['동료들이 산성피를 뿌리며 전사합니다', '강화 시 터질 확률이 오르고 더 오래 갑니다.'],
@@ -6035,7 +6035,7 @@
     crowbar: '나와 동료들이 문, 벽, 금고, 차, 사물을 때릴 때 피해가 20%씩 늘어납니다. 강화하면 20%씩 더 늘어납니다.',
     vest: '총격처럼 멀리서 날아오는 공격의 피해를 줄이고, 총에 맞아 뒤로 밀리는 힘도 줄여 줍니다. 나에게만 적용됩니다. 강화하면 더 잘 버팁니다.',
     shoes: '나와 동료, 변이한 좀비 모두의 이동 속도가 오릅니다. 강화하면 더 빨라집니다.',
-    parasite: '인간을 감염시킬 때 10% 확률로 작은 좀비 하나가 더 만들어집니다. 능력치는 3분의 1입니다. 강화하면 확률이 높아집니다.',   /* c370 */
+    parasite: '인간을 감염시킬 때 20% 확률로 작은 좀비 하나가 더 만들어집니다. 능력치는 3분의 1입니다. 강화하면 확률이 높아집니다.',   /* c370 */
     teeth: '나와 동료들이 인간을 덮칠 때 감염시키는 시간이 줄어들고, 물어뜯으며 회복하는 체력이 늘어납니다. 강화하면 더 빨라지고 더 많이 회복합니다.',
     acid: '동료가 죽는 자리에 산성피가 터져 그 안의 적에게 바로 10의 피해를 주고, 계속 피해를 줍니다. 확률로 터지고, 겹쳐도 피해는 쌓이지 않습니다. 강화하면 터질 확률이 오르고 더 오래 남습니다.',
     acidp: '산성 폭발과 산성 자폭 스위치의 산성 피해가 늘어납니다. 산성 무기나 장비가 없으면 효과가 없습니다. 강화하면 더 늘어납니다.',
@@ -6155,7 +6155,7 @@
     absorb: (n) => `충격 흡수 ${2 + 2.5 * n} (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12)`,
     vest: (n) => `원거리 공격 ${10 * (1 + n)}% 감소 · 밀림 ${2 + 2.5 * n} 감소`,   /* c273 */
     shoes: (n) => `나·동료 이동 속도 +${5 * (1 + n)}%`,
-    parasite: (n) => `확률 ${10 + 5 * n}%`,   /* c370 */
+    parasite: (n) => `확률 ${20 + 5 * n}%`,   /* c370 */
     teeth: (n) => `감염 속도 ${Math.round(100 + 80 / 6 * (1 + n))}% · 체력 회복량 +${5 * (1 + n)}%`,   /* c224 */
     acidp: (n) => `산성 도트 +${1 + n} (0.5초마다)`,   /* c259 */
     acid: (n) => `터질 확률 ${50 + 10 * n}% · 터질 때 10 · ${+(2 + 0.5 * n).toFixed(1)}초 · 0.5초마다 1 · 범위 = 근접 거리 x1.2`,   /* c280 */   /* c261: 겹치지 않음 */
@@ -6215,7 +6215,7 @@
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
     bomb: ['', (n) => `${1.5 + n}칸·${4 + 2 * n}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['강도', (n) => `${n ? '+' : ''}${CH_WV('cashH', n)}`]   /* c226 */,
     book: ['쿨타임', (n) => `-${5 + 9 * n}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['속도', (n) => `+${10 + 10 * n}%`], crowbar: ['건물', (n) => `+${20 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`]   /* c278: 카드는 총격만 (밀림은 설명 칸에) */,
-    shoes: ['이동', (n) => `+${5 * (1 + n)}%`], parasite: ['확률', (n) => `${10 + 5 * n}%`], teeth: ['감염', (n) => `${Math.round(100 + 80 / 6 * (1 + n))}%`], acid: ['확률', (n) => `${50 + 10 * n}%`], acidp: ['도트', (n) => `+${1 + n}`],   /* c224 */ catalyst: ['변이', (n) => `+${Math.round((1 + n) / 6 * 100)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
+    shoes: ['이동', (n) => `+${5 * (1 + n)}%`], parasite: ['확률', (n) => `${20 + 5 * n}%`], teeth: ['감염', (n) => `${Math.round(100 + 80 / 6 * (1 + n))}%`], acid: ['확률', (n) => `${50 + 10 * n}%`], acidp: ['도트', (n) => `+${1 + n}`],   /* c224 */ catalyst: ['변이', (n) => `+${Math.round((1 + n) / 6 * 100)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
   const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
     bomb: '동료 하나가 자폭', mutate: '동료 하나를 변이', taser: '적을 감전', awaken: '내가 변이', cash: '적을 유혹',
