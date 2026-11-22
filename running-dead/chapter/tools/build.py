@@ -1284,6 +1284,8 @@ from c367_patch import C367_R   # c367: 단단한 주먹
 R += C367_R
 from c368_patch import C368_R   # c368: 벽 체력 +25%
 R += C368_R
+from c369_patch import C369_R   # c369: 산성 폭발 시간
+R += C369_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

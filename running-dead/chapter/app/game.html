@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c368</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c369</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5755,7 +5755,7 @@
   }
   function chAcidBurst(z) {                    // c224: 동료·변이가 죽으며 산성피 — 범위 = 그 몸의 근접 거리 × 1.2 (강화마다 +15%) · 3초 (강화마다 +1초)
     const n = lv('acid'); if (Math.random() >= 0.5 + 0.1 * n) return;   // c280: 50 · 60 · 70 · 80 · 90 · 100%
-    const R = chReach(z) * 1.2   /* c280: 범위 고정 */, T = 3 + 0.4 * n   /* c285: 3 · 3.4 · 3.8 · 4.2 · 4.6 · 5초 */, x = z.foot.x, zz = z.foot.z;
+    const R = chReach(z) * 1.2   /* c280: 범위 고정 */, T = 2 + 0.5 * n   /* c369: 2 · 2.5 · 3 · 3.5 · 4 · 4.5초 */   /* c285: 3 · 3.4 · 3.8 · 4.2 · 4.6 · 5초 */, x = z.foot.x, zz = z.foot.z;
     const f = puff(x, 0.5, zz, 0xd8ff9a, R * 0.8, R * 2.4, 0.22, 0, 0, 0, 0.9); f.s.renderOrder = UI - 0.6; f.peak = true;
     for (let i = 0; i < 12; i++) { const a = Math.random() * Math.PI * 2, sp = rand(1.5, 3.5) * R; const g = puff(x, 0.3, zz, i % 2 ? 0x3f8f2a : 0x7ed321, rand(0.25, 0.4), rand(0.3, 0.5), rand(0.35, 0.6), Math.cos(a) * sp, 0, Math.sin(a) * sp, 0.95); g.s.material.map = flashTex; }
     for (const c of nearIn(cCells, x, zz, R + 1, chAcBuf)) {
@@ -6103,7 +6103,7 @@
     shoes: (n) => `나·동료 이동 속도 +${5 * (1 + n)}%`,
     teeth: (n) => `감염 속도 ${Math.round(100 + 80 / 6 * (1 + n))}% · 체력 회복량 +${5 * (1 + n)}%`,   /* c224 */
     acidp: (n) => `산성 도트 +${1 + n} (0.5초마다)`,   /* c259 */
-    acid: (n) => `터질 확률 ${50 + 10 * n}% · ${+(3 + 0.4 * n).toFixed(1)}초 · 0.5초마다 1 · 범위 = 근접 거리 x1.2`,   /* c280 */   /* c261: 겹치지 않음 */
+    acid: (n) => `터질 확률 ${50 + 10 * n}% · ${+(2 + 0.5 * n).toFixed(1)}초 · 0.5초마다 1 · 범위 = 근접 거리 x1.2`,   /* c280 */   /* c261: 겹치지 않음 */
     revive: (n) => `체력 가득으로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,
     catalyst: (n) => `변이 좀비 공격력 +${10 * (1 + n)}% · 최대 체력 +${5 * (1 + n)}%`,
     blood: (n) => `내 최대 체력 +${12 * (1 + n)}%`,
