@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c367</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c368</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -7118,7 +7118,7 @@
     if (!chObjLists2.includes(chWallObjs)) chObjLists2.push(chWallObjs);
     const hd = objs.find((o) => o.type === 'door' && o.B.type === 'house'), u = hd ? hd.maxHp : MY_DAMAGE * 3.5;
     for (const o of chWallObjs) if (o.seg.orig) { for (let i = 0; i < 4; i++) o.seg[i] = o.seg.orig[i]; o.seg.orig = null; chWallRedraw(o); }
-    for (const o of chWallObjs) { o.dead = false; o.hp = o.maxHp = u * o.k * 0.75 * 1.2;   /* c214: 25% 줄임 · c229: 20% 올림 */ o.hpDisp = o.hp; o.hotF = undefined; if (o.hpBar) o.hpBar.visible = false; chWallWarp(o, true); }   /* c207 */
+    for (const o of chWallObjs) { o.dead = false; o.hp = o.maxHp = u * o.k * 0.75 * 1.2 * 1.25;   /* c214: 25% 줄임 · c229: 20% 올림 · c368: 25% 올림 (모든 맵) */ o.hpDisp = o.hp; o.hotF = undefined; if (o.hpBar) o.hpBar.visible = false; chWallWarp(o, true); }   /* c207 */
     chWallAny = -9; for (const B of chWallBs) { for (const F of Object.values(B.faces)) { F.wHit.clear(); F.wN = 0; F.meT = -9; } B.meT = -9; for (const L of B.locks) if (L.merged && L.obj) { const o = L.obj, i = walls.indexOf(o.seg), j = B.walls.indexOf(o.seg); if (i >= 0) walls.splice(i, 1); if (j >= 0) B.walls.splice(j, 1); o.off = true; o.mesh.visible = false; if (o.fill) o.fill.visible = false; } }   // c203
   }
   function chWallBreak(B, sg, car) {
