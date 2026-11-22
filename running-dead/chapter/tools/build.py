@@ -1276,6 +1276,8 @@ from c363_patch import C363_R   # c363: 실제 이동 속도
 R += C363_R
 from c364_patch import C364_R   # c364: 15%
 R += C364_R
+from c365_patch import C365_R   # c365: 적 테스트
+R += C365_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
