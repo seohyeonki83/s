@@ -1288,6 +1288,8 @@ from c369_patch import C369_R   # c369: 산성 폭발 시간
 R += C369_R
 from c370_patch import C370_R   # c370: 기생체
 R += C370_R
+from c371_patch import C371_R   # c371
+R += C371_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
