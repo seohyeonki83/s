@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c373</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c374</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3097,7 +3097,8 @@
       if (v.mode === 'pounce') stopPounce(v);
       giveKnock(v, v.foot.x - a.foot.x, v.foot.z - a.foot.z, V, T);
     }
-    if (a && a.stim) dmg *= a.stimK || 1.5;   // v369 · v370: 스팀팩 (강화마다 +10%p)
+    if (a && a.stim) dmg *= a.stimK || 1.5;
+    if (CHAPTER && v.kind === 'drone') { chDroneDmg(v, dmg); return; }   // c374: 드론 (히드라 토사물만 닿는다)   // v369 · v370: 스팀팩 (강화마다 +10%p)
     if ((v.kind === 'obj' || v.kind === 'safe') && a.mut === 'armor') dmg *= 2;   /* c241: 3 → 2배 */   // v550: 덩치만 사물(문·차·금고)에 3배   // v378: 금고도   // v344: 2 → 4배   // v295: 덩치 — 문·경찰차 피해 2배
     if ((v.kind === 'obj' || v.kind === 'safe') && (a === me || (CHAPTER && a.kind === 'ally')) && owned.crowbar) dmg *= 1 + (CHAPTER ? 0.2 : 0.5) * (1 + lv('crowbar'));   /* c367: 단단한 주먹 — 동료도 · 20%씩 */   /* c281: 50%씩 */   /* c197: 20%씩 */   /* c163: 빠루 +15%, 강화마다 +15%p */   /* c21: 빠루 +10%, 강화마다 +10%p (60%까지) */   /* v563: 빠루 처음 +40%, 강화마다 +10% */
     // v549: 금고도 나·동료 배율 없음 — 공격력 그대로   // v391: 금고 — 나한테는 3배, 동료(덩치·히드라 포함)한테는 2/3   // v275: 빠루 — 내가 건물·사물에 입히는 피해
@@ -3190,6 +3191,7 @@
   }
 
   // 좀비가 HP 있는 시민을 노리면: 근접 거리까지 달려가서 1초마다 때린다 (HP가 0이 되면 그다음은 덮치기)
+  function chHydDrone(z) { let best = null, bd = z.sense * 0.91 * chHydK(); for (const d of chDrones) { const q = Math.hypot(d.x - z.foot.x, d.z - z.foot.z); if (!d.dead && q <= bd && !fireBlocked(z.foot.x, z.foot.z, d.x, d.z)) { bd = q; best = d; } } return best; }   // c374
   function hydraMe(z, c, dt) {               // v558: 히드라로 각성한 나 — 사거리 안이면 서서 토사물
     if (z !== me || z.mut !== 'hydra' || !c || c.kind === 'citizen' && c.hp <= 0) return false;
     const [px, pz] = c.kind === 'obj' ? objPoint(c, z) : [c.foot.x, c.foot.z];
@@ -3648,7 +3650,7 @@
       } else {
         const t = aimed && aimed.kind === 'citizen' && !aimed.marked && aimed.space === z.space && !(CHAPTER && z === me && me.mut && chDown(aimed) && chMeYield(aimed)) ? aimed : ready;   /* c57 */   // 테두리가 떠 있던 시민은 무조건 노린다 (문 밖으로 나가 버렸으면 빼고)
         const prey = huntable(z, p) ? p : null;
-        const adj = CHAPTER && !t && !prey ? chAdjFoe(z) : null, go = t || prey || adj;   /* c205: t·prey가 있으면 안 쓰인다 */   /* c64: 3명 제한에 걸렸어도 근접 거리 안의 적은 친다 */
+        const adj = CHAPTER && !t && !prey ? chAdjFoe(z) : null, go = t || prey || adj || (CHAPTER && z === me && z.mut === 'hydra' && !z.space ? chHydDrone(z) : null);   /* c374: 히드라인 나 — 노릴 사람이 없으면 드론 */   /* c205: t·prey가 있으면 안 쓰인다 */   /* c64: 3명 제한에 걸렸어도 근접 거리 안의 적은 친다 */
         if (z !== me) {
           if (go) z.phase = 'track';               // 동료 좀비: 사냥이 끝나면 자기 자리로 간 다음 배회
           if (prey && !t && chDown(prey)) claimPrey(z, prey); else unclaim(z);   // HP 0 시민을 쫓는 동안 찜 (덮치면 marked가 대신한다)
@@ -4308,7 +4310,7 @@
     scr.st = 0; scr.on = !TEST_MAP; scr.t = 0; scr.tick = 0; scr.list.length = 0; scrLater.length = 0; scrWant.length = 0; for (const k in scr.inf) scr.inf[k] = 0;
     drawLv();
     for (const k of cashes.slice()) removeCash(k);
-    zaps.length = 0; pendingAward.length = 0; shownStars = 0;
+    zaps.length = 0; pendingAward.length = 0; shownStars = 0; if (CHAPTER) chDroneReset();   /* c374 */
     for (const el of stage.querySelectorAll('#acq, .fly, #pauseOv')) el.remove();
     acqOpen = starAnim = paused = false;
     menuOv = null; pauseEl.classList.remove('on');   // v284: 일시정지·설명창도 닫힌 채로 새 판
@@ -4839,6 +4841,7 @@
     if (CHAPTER) chDispatchTick(dt);   // c46
     if (CHAPTER) chFurnTick(dt);  // c70
     if (CHAPTER) chBarTick(dt);   // c59: 건널목 바리케이트와 수비대
+    if (CHAPTER && !CH_TUT) chDroneTick(dt);   // c374: 드론
     if (CHAPTER) { chRespawnTick(dt); if (chStartW) chStartTick(); }   // c56: 사람·무리 다시 채우기 · 집 점령 표시                         // 수배 별에 따라 경찰서에서 출동
     draw(dt);
     if (CHAPTER) chShadow();                  // c13: 산 그림자
@@ -5133,9 +5136,10 @@
         cand.push({ c, k: CHAPTER && c.boss ? 99 : DANGER(c), d });   /* c120: 변이 좀비가 될 사람(분홍)이 맨 먼저 — 저격수보다 위 */
       }
       if (CHAPTER && chTank && !chTank.wreck && !(chTank.stunT > 0)) {   /* c194: 건물 안이어도 (공격선만 본다) */ const T = chTank, d = Math.max(0, Math.hypot(T.x - me.foot.x, T.z - me.foot.z) - CAR_L * CH_TK_KL / 2);   /* c195: 몸 둘레부터 */ if (d <= me.sense && !fireBlocked(me.foot.x, me.foot.z, T.x, T.z)) cand.push({ c: T, k: 98, d }); }   // c191: 보스도 감전
+      if (CHAPTER) for (const d of chDrones) { if (d.dead || d.stunT > 0) continue; const q = Math.hypot(d.x - me.foot.x, d.z - me.foot.z); if (q <= me.sense && !fireBlocked(me.foot.x, me.foot.z, d.x, d.z)) cand.push({ c: d, k: 4, d: q }); }   // c374: 드론 (경찰과 같은 위험도)
       cand.sort((a, b) => b.k - a.k || a.d - b.d);
       const hit = cand.slice(0, CH_WV('taserN', lv('taser')));   /* c21: 대상만 늘어난다 (1 → 6명) */  // 한 번에 맞히는 수 = 1 + 똑똑한 두뇌 (v201)
-      for (const { c } of hit) { if (c.tank) { c.stunT = CH_WV('taserT', lv('taser'));   /* c270: 보스도 같다 */ c.vx = c.vz = 0; zaps.push({ to: c, t: 0.45 }); continue; }   /* c191: 보스 = 3분의 1 */ c.stunT = CH_WV('taserT', lv('taser'));   /* c139 */ c.vel.set(0, 0); zaps.push({ to: c, t: 0.45 }); }
+      for (const { c } of hit) { if (c.drone) { c.stunT = CH_WV('taserT', lv('taser')); zaps.push({ to: c, t: 0.45 }); continue; }   /* c374: 드론 — 땅에 떨어져 감전 */ if (c.tank) { c.stunT = CH_WV('taserT', lv('taser'));   /* c270: 보스도 같다 */ c.vx = c.vz = 0; zaps.push({ to: c, t: 0.45 }); continue; }   /* c191: 보스 = 3분의 1 */ c.stunT = CH_WV('taserT', lv('taser'));   /* c139 */ c.vel.set(0, 0); zaps.push({ to: c, t: 0.45 }); }
       if (!hit.length) zaps.push({ to: null, t: 0.2 });
     } else {                                  // 돈다발 3개를 내 둘레 2~4칸에 뿌린다 (나와 같은 공간)
       const fresh = [];
@@ -5576,6 +5580,7 @@
       const d = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z);
       if (d < bd && d <= zs && (cross || !blocked(z.foot.x, z.foot.z, c.foot.x, c.foot.z) || zSeen(c))) { bd = d; t = c; }
     }
+    if (CHAPTER && z.mut === 'hydra' && !z.space) for (const dr of chDrones) { const q = Math.hypot(dr.x - z.foot.x, dr.z - z.foot.z); if (!dr.dead && q < bd && q <= zs && !fireBlocked(z.foot.x, z.foot.z, dr.x, dr.z)) { bd = q; t = dr; } }   // c374: 히드라만 드론을 노린다 (그림자 점까지 거리)
     if (!t && CHAPTER && z.objOff > clock) { allyIdle(z, dt); return; }   // c58: 맞은 변이 동료도 2초 동안 사물을 안 노린다
     if (z.mut === 'armor') {
       if (!t) { const ob = nearObj(z), sf = nearSafe(z); if (ob) fightObj(z, ob, dt); else if (sf) fight(z, sf, dt); else if (CHAPTER && (z.propT = chNearFurn(z))) chHitFurn(z, z.propT, dt); else allyIdle(z, dt); return; }   // v353: 덩치도 금고
@@ -5629,9 +5634,9 @@
   function stepSpits(dt) {
     for (let i = spits.length - 1; i >= 0; i--) {
       const p = spits[i];
-      sV2.copy(p.t.foot).addScaledVector(UP, RADIUS).sub(p.s.position);
+      sV2.copy(p.t.foot).addScaledVector(UP, p.t.drone ? chDroneAimY(p.t) : RADIUS).sub(p.s.position);   // c374: 드론은 떠 있는 그림 높이로
       const d = sV2.length(), step = 13 * dt;
-      const live = p.t.kind === 'citizen' ? bodies.includes(p.t) : (p.t.kind === 'obj' || p.t.kind === 'safe') && !p.t.dead;   // v380: 사물·금고도 맞힌다
+      const live = p.t.drone ? !p.t.dead : p.t.kind === 'citizen' ? bodies.includes(p.t) : (p.t.kind === 'obj' || p.t.kind === 'safe') && !p.t.dead;   // v380: 사물·금고도 맞힌다
       if (d <= step || !live) {
         if (live) { landHit(p.z, p.t, p.dmg); chSpitHit(p.s.position.x, p.s.position.z, sV2.x, sV2.z); }   // c324: 녹색 액체가 탁 터진다
         scene.remove(p.s); p.s.material.dispose(); spits.splice(i, 1);
@@ -5647,6 +5652,9 @@
   function chBombPick(al, R) {               // c352: 내 원(인지거리) 안 동료만 — 각자 가장 가까운 인간에게 달려들어 터진다고 보고, 그 자리 둘레 점수가 가장 큰 동료가 터진다
     const cand = al.filter((z) => Math.hypot(z.foot.x - me.foot.x, z.foot.z - me.foot.z) <= me.sense);
     if (!cand.length) return false;
+    { const D = chDroneSeen(); let bz = null, bd = null, bq = Infinity;   // c374: 내 시야 안 드론이 있으면 무조건 1순위 — 드론과 가장 가까운 동료가 그 그림자 점으로 뛰어들어 터진다
+      for (const z of cand) if (!z.space) for (const d of D) { const q = Math.hypot(d.x - z.foot.x, d.z - z.foot.z); if (q < bq) { bq = q; bz = z; bd = d; } }
+      if (bz) { chBombCharge(bz, R); if (bz.bombing) bz.bombing.drone = bd; return true; } }
     let best = null, bS = -1, bT = null, bD = Infinity, ties = [];
     for (const z of cand) {
       let t = null, bd = 14; for (const c of nearIn(cCells, z.foot.x, z.foot.z, 14, chBombBuf)) { if (c.kind !== 'citizen' || c.space !== z.space) continue; const d = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z); if (d < bd) { bd = d; t = c; } }
@@ -5710,6 +5718,19 @@
   function chBombIcon(z) { if (z.bombS) z.bombS.position.copy(z.foot).addScaledVector(UP, (z.halfH || RADIUS) * 2 + 0.85); }
   function chBombStep(z, dt) {                 // c272: 가장 가까운 인간에게 덮치기 속도로 — 닿으면 터진다
     const B = z.bombing; B.t += dt; chBombIcon(z);
+    if (B.drone) {                             // c374: 드론 그림자 점으로 — 덮치는 거리 안이면 덮치는 속도, 닿으면 터진다 (드론이 먼저 터지면 원래대로 사람에게)
+      const D = B.drone;
+      if (D.dead) B.drone = null;
+      else {
+        if (B.t > 6) { chBombBoom(z); return; }
+        const dx = D.x - z.foot.x, dz = D.z - z.foot.z, d = Math.hypot(dx, dz) || 1e-6;
+        if (!B.pounce && d <= ATTACK) B.pounce = true;
+        const v = B.pounce ? z.speed * POUNCE : z.speed;
+        if (d <= 0.3 + v * dt) { chBombBoom(z); return; }
+        if (B.pounce) z.vel.set(dx / d * v, dz / d * v); else steer(z.vel, wantV.set(dx / d * v, dz / d * v), ACCEL * dt);
+        return;
+      }
+    }
     let t = B.tg;
     if (!t || t.kind !== 'citizen' || t.space !== z.space || !bodies.includes(t)) {
       t = null; let bd = 14;
@@ -5747,6 +5768,7 @@
       gooOn(c);
     }
     if (CHAPTER && chTank && !chTank.wreck && Math.hypot(chTank.x - x, chTank.z - zz) <= R + 1.4) chTankGoo(chTank);   // c122
+    if (CHAPTER && !z.space) chDroneGooAt(x, zz, R);   // c374: 드론 — 그림자 점이 원기둥 안이면 자폭 산성
     killZombie(z);                            // 자폭한 동료는 죽는다 (우리 편은 안 다친다)
   }
   const gooMat = new THREE.SpriteMaterial({ map: flashTex, color: 0x5fcf3a, transparent: true, depthTest: false, depthWrite: false });
@@ -5780,6 +5802,7 @@
       chAcidOn(c, T);
       if (c.hp > 0) { c.hp = Math.max(0, c.hp - CH_ACID_HIT); if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, CH_ACID_HIT); if (c.hp <= 0 && !c.police && c.state !== 'held') enterPanic(c, null, true); }   // c371: 터질 때 10 (고정 · 강화와 상관없다)
     }
+    if (!z.space) chDroneAcid(x, zz, R, T, true);   // c374: 드론 — 그림자 점이 원기둥 안이면
     const tk = chTank; if (tk && !tk.wreck && !z.space && Math.hypot(tk.x - x, tk.z - zz) - CAR_L * CH_TK_KL / 2 <= R) { chAcidOn(tk, T); const o = tk.obj; if (o && o.hp > CH_ACID_HIT) { o.hp -= CH_ACID_HIT; chDotPop(tk.x + 0.9, tk.z, CH_ACID_HIT, 2.2); } }   /* c371 */   // 보스도
   }
   window.__kz = (z) => killZombie(z);   // 테스트용
@@ -6794,6 +6817,131 @@
     }
     updateCarObs();
   }
+  // ── c374: 드론 — 경보 '난리남'부터 30초마다 2대 (동시에 8대까지). 진짜 자리 = 땅 위 그림자 한 점 (이동·시야·사거리·맞기는 전부 이 점), 그림은 그 점에서 수직 위로 띄운다 ──
+  //   기관총 (경찰 공격력의 1/3 · 경찰과 같은 공격 간격, 한 번에 세 발) · 체력 7 · 건물·산 위로는 못 간다 · 몸끼리 안 부딪힌다
+  //   히드라(동료·각성한 나)만 맞힐 수 있다 · 테이저 = 땅에 떨어져 감전, 풀리면 다시 뜬다 · 산성 폭발·산성 자폭(원기둥) 안이면 산성이 묻는다 · 좀비가 안 되고 공중에서 터진다
+  var chDrones = [], chDroneT = 0, chDroneOn = false;
+  const CH_DRONE_HP = 7, CH_DRONE_MAX = 8, CH_DRONE_EVERY = 30, CH_DRONE_N = 2, CH_DRONE_H = 1.9, CH_DRONE_SIGHT = 12, CH_DRONE_RANGE = 6.5, CH_DRONE_SPEED = SPEED * 0.85;
+  const CH_DRONE_DMG = CH_DMG_PO / 3 * 1.15 * 1.2 * 0.95 * 0.93 * 0.93;   // 경찰 한 발의 1/3 (적 공격 배율 그대로)
+  const chDroneTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+    g.lineCap = 'round'; g.strokeStyle = '#1d2128'; g.lineWidth = 12; g.beginPath(); g.moveTo(30, 34); g.lineTo(98, 94); g.moveTo(98, 34); g.lineTo(30, 94); g.stroke();
+    g.strokeStyle = '#5a6270'; g.lineWidth = 6; g.stroke();
+    for (const [x, y] of [[28, 32], [100, 32], [28, 96], [100, 96]]) { g.beginPath(); g.ellipse(x, y, 22, 9, 0, 0, 7); g.fillStyle = 'rgba(210, 225, 240, 0.55)'; g.fill(); g.lineWidth = 3; g.strokeStyle = '#1d2128'; g.stroke(); g.beginPath(); g.arc(x, y, 5, 0, 7); g.fillStyle = '#1d2128'; g.fill(); }
+    g.fillStyle = '#3a414d'; g.fillRect(46, 50, 36, 28); g.lineWidth = 5; g.strokeStyle = '#13161b'; g.strokeRect(46, 50, 36, 28);
+    g.beginPath(); g.arc(64, 64, 5, 0, 7); g.fillStyle = '#ff3b30'; g.fill();
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+  const chDroneShadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.38, depthTest: false, depthWrite: false });
+  const chDroneShadowGeo = new THREE.CircleGeometry(0.62, 24).rotateX(-Math.PI / 2);
+  function chDroneFree(x, z) {                 // 건물·산 위가 아니고 지도 안이면 갈 수 있다
+    if (x < MM.x0 + 0.5 || x > MM.x1 - 0.5 || z < MM.z0 + 0.5 || z > MM.z1 - 0.5) return false;
+    for (const B of buildings) if (!B.parent && x > B.x0 - 0.45 && x < B.x1 + 0.45 && z > B.z0 - 0.45 && z < B.z1 + 0.45) return false;
+    return true;
+  }
+  function chDroneAdd(x, z) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: chDroneTex, transparent: true, depthTest: false, depthWrite: false })); s.scale.set(1.35, 1.35, 1); s.renderOrder = UI - 1; scene.add(s);
+    const sh = new THREE.Mesh(chDroneShadowGeo, chDroneShadowMat); sh.renderOrder = UI - 1.5; sh.position.set(x, 0.02, z); scene.add(sh);
+    const d = { kind: 'drone', drone: true, x, z, foot: new THREE.Vector3(x, 0, z), hp: CH_DRONE_HP, maxHp: CH_DRONE_HP, h: CH_DRONE_H, bob: Math.random() * 6.28, atkT: rand(0, HIT_EVERY), burst: 0, burstT: 0, tg: null, stunT: 0, acid: 0, acidT: 0, goo: 0, gooT: 0, dead: false, s, sh, side: Math.random() < 0.5 ? 1 : -1, stuckT: 0, r: 0.5 };
+    chDrones.push(d); chDroneDraw(d, 0); return d;
+  }
+  function chDroneReset() { if (!chDrones) return; for (const d of chDrones) { scene.remove(d.s); d.s.material.dispose(); scene.remove(d.sh); } chDrones.length = 0; chDroneT = 0; chDroneOn = false; }
+  function chDroneDraw(d, dt) {                // 그림 = 그림자 점에서 수직 위로 (둥둥) · 그림자는 땅에 납작하게, 모든 것 위에 반투명으로 덮는다
+    d.bob += dt * 2.6;
+    const tg = d.stunT > 0 ? 0 : d.h; d.air = d.air === undefined ? tg : d.air + (tg - d.air) * Math.min(1, dt * (tg < d.air ? 14 : 2.5));   // 감전 = 툭 떨어지고, 풀리면 천천히 다시 뜬다
+    const air = d.air, y = Math.max(0.35, air + (air > 0.5 ? Math.sin(d.bob) * 0.12 : 0));
+    d.s.position.set(d.x, y + 0.35, d.z); d.sh.position.set(d.x, 0.02, d.z);
+    const k = 1 - Math.min(0.35, y / 8); d.sh.scale.setScalar(k); d.s.material.rotation = d.stunT > 0 ? 0.5 : Math.sin(d.bob * 0.7) * 0.06;
+  }
+  const chDroneAimY = (d) => Math.max(0.35, d.air ?? d.h) + 0.35;   // 토사물이 날아가 맞는 높이 (그림)
+  function chDroneDmg(d, dmg) {
+    if (d.dead) return;
+    d.hp -= dmg; if (d.hp <= 0) chDroneDie(d);
+  }
+  function chDroneDie(d) {                     // 공중에서 펑 — 차가 터지듯
+    if (d.dead) return; d.dead = true;
+    const y = d.s.position.y;
+    puff(d.x, y, d.z, 0xfff3b0, 0.8, 6, 0.3, 0, 0, 0, 1);
+    for (let i = 0; i < 7; i++) { const a = Math.random() * Math.PI * 2, sp = rand(1, 3); puff(d.x, y, d.z, i % 2 ? 0xff7a1a : 0xffc23a, 0.8, rand(2.6, 4.2), rand(0.3, 0.5), Math.cos(a) * sp, rand(0.5, 1.5), Math.sin(a) * sp, 0.95, rand(0, 0.08)); }
+    for (let i = 0; i < 6; i++) { const a = Math.random() * Math.PI * 2, sp = rand(0.2, 0.7); puff(d.x + rand(-0.4, 0.4), y, d.z + rand(-0.4, 0.4), 0x2e2e2e, rand(0.6, 0.9), rand(1.8, 2.6), rand(1.2, 2), Math.cos(a) * sp, rand(0.8, 1.6), Math.sin(a) * sp, 0.75); }
+    debris(d.x, d.z, 10, [0x3a414d, 0x1d2128, 0x8a929e, 0xff3b30], 0.18, 4.5);
+    scene.remove(d.s); d.s.material.dispose(); scene.remove(d.sh);
+    const i = chDrones.indexOf(d); if (i >= 0) chDrones.splice(i, 1);
+  }
+  function chDroneSees(x, z, d, r) { return Math.hypot(x - d.x, z - d.z) <= r && !fireBlocked(d.x, d.z, x, z); }
+  function chDroneShot(d, t) {                 // 한 발 — 총구 불꽃(그림 높이) · 맞은 자리 피
+    const y = d.s.position.y, f = puff(d.x, y, d.z, 0xfff23a, 0.55, 0.55, 0.06, 0, 0, 0, 0.8); f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true; f.blink = true;
+    const ux = t.foot.x - d.x, uz = t.foot.z - d.z, l = Math.hypot(ux, uz) || 1;
+    for (let i = 0; i < 3; i++) { const a = Math.atan2(uz, ux) + rand(-1, 1), sp = rand(1.5, 3.5) * 2; const g = puff(t.foot.x - ux / l * 0.2, 0.6, t.foot.z - uz / l * 0.2, i % 2 ? 0xd91e1e : 0xff4a3a, rand(0.2, 0.34), rand(0.1, 0.2), rand(0.2, 0.32), Math.cos(a) * sp, rand(0.3, 1), Math.sin(a) * sp, 0.95); g.s.material.map = flashTex; g.s.renderOrder = UI - 0.5; g.peak = true; }
+    landHit(d, t, t === me && hasVest ? CH_DRONE_DMG / 3 * vestK(lv('vest')) : CH_DRONE_DMG / 3);
+  }
+  let chDG = null;                             // 드론 길 격자 (1칸) — 건물·산 위는 막힘
+  function chDroneGrid() {
+    if (chDG) return chDG;
+    const x0 = Math.floor(MM.x0), z0 = Math.floor(MM.z0), W = Math.ceil(MM.x1) - x0, H = Math.ceil(MM.z1) - z0, free = new Uint8Array(W * H);
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) free[j * W + i] = chDroneFree(x0 + i + 0.5, z0 + j + 0.5) ? 1 : 0;
+    return chDG = { x0, z0, W, H, free, dist: new Int32Array(W * H), q: new Int32Array(W * H) };
+  }
+  const chDroneLine = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.ceil(L / 0.5); for (let k = 1; k <= n; k++) { const t = k / n; if (!chDroneFree(x0 + (x1 - x0) * t, z0 + (z1 - z0) * t)) return false; } return true; };
+  function chDroneWay(d, gx, gz) {             // 곧장 갈 수 있으면 곧장, 아니면 격자 너비 우선 탐색으로 다음 칸 (0.7초마다 다시 찾는다)
+    if (chDroneLine(d.x, d.z, gx, gz)) { d.way = null; return null; }
+    const G = chDroneGrid(), ci = (x, z) => { const i = Math.floor(x - G.x0), j = Math.floor(z - G.z0); return i < 0 || j < 0 || i >= G.W || j >= G.H ? -1 : j * G.W + i; };
+    if (!d.way || (d.wayT -= 1 / 60) <= 0 || Math.hypot(d.wayGX - gx, d.wayGZ - gz) > 2) {
+      d.wayT = 0.7; d.wayGX = gx; d.wayGZ = gz;
+      const s = ci(d.x, d.z), g = ci(gx, gz); if (s < 0 || g < 0) return null;
+      const { dist, q, free, W } = G; dist.fill(-1); let h = 0, e = 0; dist[s] = 0; q[e++] = s; let hit = -1;
+      while (h < e) { const c = q[h++]; if (c === g) { hit = c; break; } const ci0 = c % W, cj0 = (c - ci0) / W;
+        for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) { const i2 = ci0 + di, j2 = cj0 + dj; if (i2 < 0 || j2 < 0 || i2 >= W || j2 >= G.H) continue; const n2 = j2 * W + i2; if (dist[n2] >= 0 || !free[n2] || (di && dj && (!free[cj0 * W + i2] || !free[j2 * W + ci0]))) continue; dist[n2] = c; q[e++] = n2; } }
+      if (hit < 0) { d.way = null; return null; }
+      const path = []; for (let c = hit; c !== s && c >= 0; c = dist[c]) path.push(c); path.reverse();
+      d.way = path.map((c) => [G.x0 + (c % W) + 0.5, G.z0 + Math.floor(c / W) + 0.5]); d.wayI = 0;
+    }
+    while (d.wayI < d.way.length - 1 && chDroneLine(d.x, d.z, d.way[d.wayI + 1][0], d.way[d.wayI + 1][1])) d.wayI++;   // 보이는 데까지 건너뛴다
+    const w = d.way[Math.min(d.wayI, d.way.length - 1)]; if (!w) return null;
+    const dx = w[0] - d.x, dz = w[1] - d.z, l = Math.hypot(dx, dz) || 1e-6; if (l < 0.3) d.wayI++;
+    return [dx / l, dz / l];
+  }
+  function chDroneTick(dt) {
+    if (!chDroneOn && stars >= 2 && isZombie(me)) { chDroneOn = true; chDroneT = CH_DRONE_EVERY; }   // 난리남이 되는 순간 첫 출동
+    if (chDroneOn && (chDroneT += dt) >= CH_DRONE_EVERY) {
+      chDroneT = 0;
+      for (let i = 0; i < CH_DRONE_N && chDrones.length < CH_DRONE_MAX; i++) { const p = chEdgeSpot(Math.max(0, chZoneOf(me.foot.x, me.foot.z))); if (chDroneFree(p.x, p.z)) chDroneAdd(p.x, p.z); }
+    }
+    for (const d of chDrones.slice()) {
+      if (d.dead) continue;
+      // 산성 (폭발 = 1 + 산성 강도 · 자폭 = 2 + 산성 강도, 0.5초마다)
+      if (d.goo > 0) { d.goo -= dt; if ((d.gooT += dt) >= 0.5) { d.gooT -= 0.5; const n = 2 + chAcidB(); chDotPop(d.x + 0.6, d.z, n); chDroneDmg(d, n); if (d.dead) continue; } }
+      else if (d.acid > 0) { d.acid -= dt; if ((d.acidT += dt) >= 0.5) { d.acidT -= 0.5; const n = 1 + chAcidB(); chDotPop(d.x + 0.6, d.z, n); chDroneDmg(d, n); if (d.dead) continue; } }
+      if (d.stunT > 0) { d.stunT -= dt; chDroneDraw(d, dt); continue; }   // 감전 — 땅에 떨어져서 가만히
+      // 노릴 좀비 — 시야 안 가장 가까운 (나 포함, 건물 안 좀비는 벽에 가려 못 본다)
+      if (!d.tg || !isZombie(d.tg) || !chDroneSees(d.tg.foot.x, d.tg.foot.z, d, CH_DRONE_SIGHT)) {
+        d.tg = null; let bd = CH_DRONE_SIGHT;
+        for (const z of zombies) { if (!isZombie(z)) continue; const q = Math.hypot(z.foot.x - d.x, z.foot.z - d.z); if (q < bd && !fireBlocked(d.x, d.z, z.foot.x, z.foot.z)) { bd = q; d.tg = z; } }
+      }
+      const t = d.tg, gx = t ? t.foot.x : me.foot.x, gz = t ? t.foot.z : me.foot.z, dist = Math.hypot(gx - d.x, gz - d.z) || 1e-6;
+      let vx = 0, vz = 0;
+      if (!t || dist > CH_DRONE_RANGE * 0.8) { vx = (gx - d.x) / dist; vz = (gz - d.z) / dist; }   // 다가간다
+      else if (dist < CH_DRONE_RANGE * 0.45) { vx = -(gx - d.x) / dist; vz = -(gz - d.z) / dist; }   // 너무 가까우면 물러선다
+      else { vx = -(gz - d.z) / dist * d.side * 0.45; vz = (gx - d.x) / dist * d.side * 0.45; }   // 사거리 안 — 옆으로 천천히 돈다
+      if (!t || dist > CH_DRONE_RANGE * 0.8) { const f = chDroneWay(d, gx, gz); if (f) { vx = f[0]; vz = f[1]; } }   // 다가갈 때 — 곧장 못 가면 건물을 돌아가는 길로
+      const sp = CH_DRONE_SPEED * dt, vl = Math.min(1, Math.hypot(vx, vz));
+      if (vl > 1e-6) { const l = Math.hypot(vx, vz), nx = d.x + vx / l * sp * vl, nz = d.z + vz / l * sp * vl;
+        if (chDroneFree(nx, nz)) { d.x = nx; d.z = nz; } else if (chDroneFree(nx, d.z)) d.x = nx; else if (chDroneFree(d.x, nz)) d.z = nz; else d.side = -d.side; }
+      d.foot.set(d.x, 0, d.z);
+      // 기관총 — 경찰과 같은 간격, 한 번에 세 발 (탕탕탕)
+      if (d.burst > 0) { if ((d.burstT -= dt) <= 0) { d.burstT = 0.09; d.burst--; if (t && isZombie(t)) chDroneShot(d, t); } }
+      else if ((d.atkT -= dt) <= 0 && t && dist <= CH_DRONE_RANGE && !fireBlocked(d.x, d.z, gx, gz)) { d.atkT = HIT_EVERY; d.burst = 3; d.burstT = 0; }
+      chDroneDraw(d, dt);
+    }
+  }
+  function chDroneAcid(x, z, R, T, blk) {      // 산성 폭발 원기둥 — 그림자 점이 원 안이면 묻는다 (터질 때 10)
+    for (const d of chDrones.slice()) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || (blk && blocked(x, z, d.x, d.z))) continue; if (d.goo <= 0) { d.acid = Math.max(d.acid, T); } chDotPop(d.x + 0.6, d.z, CH_ACID_HIT); chDroneDmg(d, CH_ACID_HIT); }
+  }
+  function chDroneGooAt(x, z, R) {             // 산성 자폭 원기둥 — 그림자 점이 원 안이면 자폭 산성 (산성 폭발은 이걸로 바뀐다)
+    for (const d of chDrones) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || blocked(x, z, d.x, d.z)) continue; d.goo = Math.max(d.goo, 4 + 2 * lv('bomb')); d.acid = 0; }
+  }
+  function chDroneSeen() {                     // 내 시야 안 드론 (거리 · 벽에 안 가림)
+    return chDrones.filter((d) => !d.dead && Math.hypot(d.x - me.foot.x, d.z - me.foot.z) <= me.sense && !fireBlocked(me.foot.x, me.foot.z, d.x, d.z));
+  }
+  window.__drones = () => chDrones; window.__droneAdd = (x, z) => chDroneAdd(x, z);   // 테스트용
   function chBarTick(dt) {
     if (!chBar || !isZombie(me)) return;
     if ((chBar.t -= dt) > 0 && stars <= chBar.stage) return;
