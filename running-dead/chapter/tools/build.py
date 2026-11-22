@@ -1296,6 +1296,8 @@ from c373_patch import C373_R   # c373: 촉매제 · 백과사전
 R += C373_R
 from c374_patch import C374_R   # c374: 드론
 R += C374_R
+from c375_patch import C375_R   # c375: 드론 번개 · 출동 수
+R += C375_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

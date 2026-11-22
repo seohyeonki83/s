@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c374</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c375</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3650,7 +3650,7 @@
       } else {
         const t = aimed && aimed.kind === 'citizen' && !aimed.marked && aimed.space === z.space && !(CHAPTER && z === me && me.mut && chDown(aimed) && chMeYield(aimed)) ? aimed : ready;   /* c57 */   // 테두리가 떠 있던 시민은 무조건 노린다 (문 밖으로 나가 버렸으면 빼고)
         const prey = huntable(z, p) ? p : null;
-        const adj = CHAPTER && !t && !prey ? chAdjFoe(z) : null, go = t || prey || adj || (CHAPTER && z === me && z.mut === 'hydra' && !z.space ? chHydDrone(z) : null);   /* c374: 히드라인 나 — 노릴 사람이 없으면 드론 */   /* c205: t·prey가 있으면 안 쓰인다 */   /* c64: 3명 제한에 걸렸어도 근접 거리 안의 적은 친다 */
+        const adj = CHAPTER && !t && !prey ? chAdjFoe(z) : null, go = (CHAPTER && z === me && z.mut === 'hydra' && !z.space ? chHydDrone(z) : null) || t || prey || adj;   /* c375: 히드라인 나도 드론이 1순위 */   /* c374: 히드라인 나 — 노릴 사람이 없으면 드론 */   /* c205: t·prey가 있으면 안 쓰인다 */   /* c64: 3명 제한에 걸렸어도 근접 거리 안의 적은 친다 */
         if (z !== me) {
           if (go) z.phase = 'track';               // 동료 좀비: 사냥이 끝나면 자기 자리로 간 다음 배회
           if (prey && !t && chDown(prey)) claimPrey(z, prey); else unclaim(z);   // HP 0 시민을 쫓는 동안 찜 (덮치면 marked가 대신한다)
@@ -5580,7 +5580,7 @@
       const d = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z);
       if (d < bd && d <= zs && (cross || !blocked(z.foot.x, z.foot.z, c.foot.x, c.foot.z) || zSeen(c))) { bd = d; t = c; }
     }
-    if (CHAPTER && z.mut === 'hydra' && !z.space) for (const dr of chDrones) { const q = Math.hypot(dr.x - z.foot.x, dr.z - z.foot.z); if (!dr.dead && q < bd && q <= zs && !fireBlocked(z.foot.x, z.foot.z, dr.x, dr.z)) { bd = q; t = dr; } }   // c374: 히드라만 드론을 노린다 (그림자 점까지 거리)
+    if (CHAPTER && z.mut === 'hydra' && !z.space) { let dq = Infinity, dt2 = null; for (const dr of chDrones) { const q = Math.hypot(dr.x - z.foot.x, dr.z - z.foot.z); if (!dr.dead && q < dq && q <= zs && !fireBlocked(z.foot.x, z.foot.z, dr.x, dr.z)) { dq = q; dt2 = dr; } } if (dt2) { bd = dq; t = dt2; } }   // c375: 히드라는 드론이 1순위 (보이는 드론 중 가장 가까운 것)   // c374: 히드라만 드론을 노린다 (그림자 점까지 거리)
     if (!t && CHAPTER && z.objOff > clock) { allyIdle(z, dt); return; }   // c58: 맞은 변이 동료도 2초 동안 사물을 안 노린다
     if (z.mut === 'armor') {
       if (!t) { const ob = nearObj(z), sf = nearSafe(z); if (ob) fightObj(z, ob, dt); else if (sf) fight(z, sf, dt); else if (CHAPTER && (z.propT = chNearFurn(z))) chHitFurn(z, z.propT, dt); else allyIdle(z, dt); return; }   // v353: 덩치도 금고
@@ -6847,7 +6847,7 @@
   function chDroneDraw(d, dt) {                // 그림 = 그림자 점에서 수직 위로 (둥둥) · 그림자는 땅에 납작하게, 모든 것 위에 반투명으로 덮는다
     d.bob += dt * 2.6;
     const tg = d.stunT > 0 ? 0 : d.h; d.air = d.air === undefined ? tg : d.air + (tg - d.air) * Math.min(1, dt * (tg < d.air ? 14 : 2.5));   // 감전 = 툭 떨어지고, 풀리면 천천히 다시 뜬다
-    const air = d.air, y = Math.max(0.35, air + (air > 0.5 ? Math.sin(d.bob) * 0.12 : 0));
+    const air = d.air, y = Math.max(0.35, air);   /* c375: 위아래로는 안 흔들린다 (좌우 선회는 진짜 자리에서) */
     d.s.position.set(d.x, y + 0.35, d.z); d.sh.position.set(d.x, 0.02, d.z);
     const k = 1 - Math.min(0.35, y / 8); d.sh.scale.setScalar(k); d.s.material.rotation = d.stunT > 0 ? 0.5 : Math.sin(d.bob * 0.7) * 0.06;
   }
@@ -6900,10 +6900,10 @@
     return [dx / l, dz / l];
   }
   function chDroneTick(dt) {
-    if (!chDroneOn && stars >= 2 && isZombie(me)) { chDroneOn = true; chDroneT = CH_DRONE_EVERY; }   // 난리남이 되는 순간 첫 출동
+    if (!chDroneOn && stars >= 2 && isZombie(me)) { chDroneOn = true; chDroneT = CH_DRONE_EVERY - 60; }   // c375: 난리남이 되고 1분 뒤 첫 출동 (표시 없이)
     if (chDroneOn && (chDroneT += dt) >= CH_DRONE_EVERY) {
       chDroneT = 0;
-      for (let i = 0; i < CH_DRONE_N && chDrones.length < CH_DRONE_MAX; i++) { const p = chEdgeSpot(Math.max(0, chZoneOf(me.foot.x, me.foot.z))); if (chDroneFree(p.x, p.z)) chDroneAdd(p.x, p.z); }
+      for (let i = 0, N = Math.max(1, Math.ceil((stars - 1) / 2)); i < N && chDrones.length < CH_DRONE_MAX; i++) {   /* c375: 난리남 1 · 개판 1 · 계엄 2 · 데프콘 2 (두 단계마다 한 대씩) */ const p = chEdgeSpot(Math.max(0, chZoneOf(me.foot.x, me.foot.z))); if (chDroneFree(p.x, p.z)) chDroneAdd(p.x, p.z); }
     }
     for (const d of chDrones.slice()) {
       if (d.dead) continue;
@@ -6925,6 +6925,10 @@
       const sp = CH_DRONE_SPEED * dt, vl = Math.min(1, Math.hypot(vx, vz));
       if (vl > 1e-6) { const l = Math.hypot(vx, vz), nx = d.x + vx / l * sp * vl, nz = d.z + vz / l * sp * vl;
         if (chDroneFree(nx, nz)) { d.x = nx; d.z = nz; } else if (chDroneFree(nx, d.z)) d.x = nx; else if (chDroneFree(d.x, nz)) d.z = nz; else d.side = -d.side; }
+      if (d.stunT <= 0) {                       // c375: 벌처럼 둥둥 — 바닥 평면에서 좌우로 작은 8자 선회 (진짜 자리 = 그림자도 같이)
+        const wx = Math.sin(d.bob * 1.1) * 0.32, wz = Math.sin(d.bob * 2.2) * 0.16, ox = d.wx || 0, oz = d.wz || 0;
+        if (chDroneFree(d.x + wx - ox, d.z + wz - oz)) { d.x += wx - ox; d.z += wz - oz; d.wx = wx; d.wz = wz; }
+      }
       d.foot.set(d.x, 0, d.z);
       // 기관총 — 경찰과 같은 간격, 한 번에 세 발 (탕탕탕)
       if (d.burst > 0) { if ((d.burstT -= dt) <= 0) { d.burstT = 0.09; d.burst--; if (t && isZombie(t)) chDroneShot(d, t); } }
@@ -6941,7 +6945,7 @@
   function chDroneSeen() {                     // 내 시야 안 드론 (거리 · 벽에 안 가림)
     return chDrones.filter((d) => !d.dead && Math.hypot(d.x - me.foot.x, d.z - me.foot.z) <= me.sense && !fireBlocked(me.foot.x, me.foot.z, d.x, d.z));
   }
-  window.__drones = () => chDrones; window.__droneAdd = (x, z) => chDroneAdd(x, z);   // 테스트용
+  window.__droneT = () => [chDroneOn, +chDroneT.toFixed(1)]; window.__drones = () => chDrones; window.__droneAdd = (x, z) => chDroneAdd(x, z);   // 테스트용
   function chBarTick(dt) {
     if (!chBar || !isZombie(me)) return;
     if ((chBar.t -= dt) > 0 && stars <= chBar.stage) return;
@@ -9717,7 +9721,7 @@
     camera.updateMatrixWorld();
     for (const zp of zaps) {                  // 테이저 번쩍 (v190) — 나에서 맞은 적까지 지그재그 번개
       const [ax, ay] = toScreen(me.foot.x, me.foot.z, W, H);
-      const [bx, by] = zp.to ? toScreen(zp.to.foot.x, zp.to.foot.z, W, H) : [ax + 18, ay - 18];
+      const [bx, by] = zp.to ? (zp.to.drone ? (sV.copy(zp.to.s.position).project(camera), [(sV.x + 1) / 2 * W, (1 - sV.y) / 2 * H + 14]) : toScreen(zp.to.foot.x, zp.to.foot.z, W, H)) : [ax + 18, ay - 18];   /* c375: 드론은 떠 있는 그림까지 번개가 올라간다 */
       smellCtx.beginPath(); smellCtx.moveTo(ax, ay - 14);
       const n = 7;
       for (let i = 1; i < n; i++) { const t = i / n, jx = (Math.random() - 0.5) * 12, jy = (Math.random() - 0.5) * 12; smellCtx.lineTo(ax + (bx - ax) * t + jx, ay - 14 + (by - ay) * t + jy); }
