@@ -1316,6 +1316,8 @@ from c383_patch import C383_R   # c383: 분열세포 설명
 R += C383_R
 from c384_patch import C384_R   # c384: 작은 좀비 색 · 설명 확률
 R += C384_R
+from c385_patch import C385_R   # c385: 산성 폭발 섬광
+R += C385_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

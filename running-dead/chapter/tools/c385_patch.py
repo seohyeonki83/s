@@ -1,0 +1,2 @@
+# c385: 산성 폭발 작은 섬광
+C385_R = [('    const f = puff(x, 0.5, zz, 0xd8ff9a, R * 0.8, R * 2.4, 0.22, 0, 0, 0, 0.9); f.s.renderOrder = UI - 0.6; f.peak = true;', '    const f = puff(x, 0.5, zz, 0xd8ff9a, R * 0.8, R * 2.4, 0.22, 0, 0, 0, 0.9); f.s.renderOrder = UI - 0.6; f.peak = true;\n    for (const [col, s0, s1, life] of [[0xffffff, 0.8, R * 3.2, 0.16], [0xf2ffd0, 0.6, R * 2.2, 0.24]]) { const g = puff(x, 0.8, zz, col, s0, s1, life, 0, 0, 0, 1); g.s.renderOrder = UI - 0.6; g.peak = true; g.s.material.opacity = 1; }   // c385: 작은 섬광 (자폭 섬광보다 작고 짧게, 화면 번쩍 없음)')]
