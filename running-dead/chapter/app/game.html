@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c379</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c380</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6842,15 +6842,16 @@
   function chDroneAdd(x, z) {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: chDroneTex, transparent: true, depthTest: false, depthWrite: false })); s.scale.set(1.35, 1.35, 1); s.renderOrder = UI - 1; scene.add(s);
     const sh = new THREE.Mesh(chDroneShadowGeo, chDroneShadowMat); sh.renderOrder = UI - 1.5; sh.position.set(x, 0.02, z); scene.add(sh);
-    const d = { kind: 'drone', drone: true, x, z, foot: new THREE.Vector3(x, 0, z), hp: CH_DRONE_HP, maxHp: CH_DRONE_HP, h: CH_DRONE_H, bob: Math.random() * 6.28, atkT: rand(0, HIT_EVERY), burst: 0, burstT: 0, tg: null, stunT: 0, acid: 0, acidT: 0, goo: 0, gooT: 0, dead: false, s, sh, side: Math.random() < 0.5 ? 1 : -1, stuckT: 0, r: 0.5 };
+    const d = { kind: 'drone', drone: true, x, z, foot: new THREE.Vector3(x, 0, z), hp: CH_DRONE_HP, maxHp: CH_DRONE_HP, h: CH_DRONE_H, bob: Math.random() * 6.28, atkT: rand(0, HIT_EVERY), burst: 0, burstT: 0, tg: null, stunT: 0, shotT: -1, recoilT: -1, acid: 0, acidT: 0, goo: 0, gooT: 0, dead: false, s, sh, side: Math.random() < 0.5 ? 1 : -1, stuckT: 0, r: 0.5 };
     chDrones.push(d); chDroneDraw(d, 0); return d;
   }
-  function chDroneReset() { if (!chDrones) return; for (const d of chDrones) { scene.remove(d.s); d.s.material.dispose(); scene.remove(d.sh); } chDrones.length = 0; chDroneT = 0; chDroneOn = false; }
+  function chDroneReset() { if (!chDrones) return; for (const d of chDrones) { scene.remove(d.s); d.s.material.dispose(); scene.remove(d.sh); if (d.tr) { scene.remove(d.tr); d.tr.material.dispose(); } } chDrones.length = 0; chDroneT = 0; chDroneOn = false; }
   function chDroneDraw(d, dt) {                // 그림 = 그림자 점에서 수직 위로 (둥둥) · 그림자는 땅에 납작하게, 모든 것 위에 반투명으로 덮는다
     d.bob += dt * 2.6;
     const tg = d.stunT > 0 ? 0 : d.h; d.air = d.air === undefined ? tg : d.air + (tg - d.air) * Math.min(1, dt * (tg < d.air ? 14 : 2.5));   // 감전 = 툭 떨어지고, 풀리면 천천히 다시 뜬다
     const air = d.air, y = Math.max(0.35, air);   /* c375: 위아래로는 안 흔들린다 (좌우 선회는 진짜 자리에서) */
     d.s.position.set(d.x, y + 0.35, d.z); d.sh.position.set(d.x, 0.02, d.z);
+    chDroneFx(d, dt);   // c380
     const k = 1 - Math.min(0.35, y / 8); d.sh.scale.setScalar(k); d.s.material.rotation = d.stunT > 0 ? 0.5 : Math.sin(d.bob * 0.7) * 0.06;
   }
   const chDroneAimY = (d) => Math.max(0.35, d.air ?? d.h) + 0.35;   // 토사물이 날아가 맞는 높이 (그림)
@@ -6865,15 +6866,32 @@
     for (let i = 0; i < 7; i++) { const a = Math.random() * Math.PI * 2, sp = rand(1, 3); puff(d.x, y, d.z, i % 2 ? 0xff7a1a : 0xffc23a, 0.8, rand(2.6, 4.2), rand(0.3, 0.5), Math.cos(a) * sp, rand(0.5, 1.5), Math.sin(a) * sp, 0.95, rand(0, 0.08)); }
     for (let i = 0; i < 6; i++) { const a = Math.random() * Math.PI * 2, sp = rand(0.2, 0.7); puff(d.x + rand(-0.4, 0.4), y, d.z + rand(-0.4, 0.4), 0x2e2e2e, rand(0.6, 0.9), rand(1.8, 2.6), rand(1.2, 2), Math.cos(a) * sp, rand(0.8, 1.6), Math.sin(a) * sp, 0.75); }
     debris(d.x, d.z, 10, [0x3a414d, 0x1d2128, 0x8a929e, 0xff3b30], 0.18, 4.5);
-    scene.remove(d.s); d.s.material.dispose(); scene.remove(d.sh);
+    scene.remove(d.s); d.s.material.dispose(); scene.remove(d.sh); if (d.tr) { scene.remove(d.tr); d.tr.material.dispose(); }
     const i = chDrones.indexOf(d); if (i >= 0) chDrones.splice(i, 1);
   }
   function chDroneSees(x, z, d, r) { return Math.hypot(x - d.x, z - d.z) <= r && !fireBlocked(d.x, d.z, x, z); }
-  function chDroneShot(d, t) {                 // 한 발 — 총구 불꽃(그림 높이) · 맞은 자리 피
-    const y = d.s.position.y, f = puff(d.x, y, d.z, 0xfff23a, 0.55, 0.55, 0.06, 0, 0, 0, 0.8); f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true; f.blink = true;
-    const ux = t.foot.x - d.x, uz = t.foot.z - d.z, l = Math.hypot(ux, uz) || 1;
-    for (let i = 0; i < 3; i++) { const a = Math.atan2(uz, ux) + rand(-1, 1), sp = rand(1.5, 3.5) * 2; const g = puff(t.foot.x - ux / l * 0.2, 0.6, t.foot.z - uz / l * 0.2, i % 2 ? 0xd91e1e : 0xff4a3a, rand(0.2, 0.34), rand(0.1, 0.2), rand(0.2, 0.32), Math.cos(a) * sp, rand(0.3, 1), Math.sin(a) * sp, 0.95); g.s.material.map = flashTex; g.s.renderOrder = UI - 0.5; g.peak = true; }
+  const chDroneTrGeo = new THREE.BoxGeometry(1, 0.07, 0.07);   // c380: 총알 선 — 떠 있는 드론에서 맞는 몸까지 공중으로 사선 (경찰 선과 같은 색 · 같은 시간)
+  function chDroneShot(d, t) {                 // 한 발 — 경찰과 같은 총구 불꽃 · 총알 선 · 피 튀김 · 반동
+    const ux = t.foot.x - d.x, uz = t.foot.z - d.z, l = Math.hypot(ux, uz) || 1, nx = ux / l, nz = uz / l;
+    const sx = d.s.position.x + nx * RADIUS * 0.95, sy = d.s.position.y, sz = d.s.position.z + nz * RADIUS * 0.95;
+    const f1 = puff(sx, sy, sz, 0xfff23a, 1.0, 1.0, 0.07, 0, 0, 0, 0.7); f1.s.material.map = flashTex; f1.s.renderOrder = UI - 0.5; f1.s.material.opacity = 0.7; f1.peak = true; f1.blink = true;
+    { const hx = t.foot.x - nx * RADIUS * 0.5, hz = t.foot.z - nz * RADIUS * 0.5;   // 맞은 자리 — 작은 빨간 원들이 피 튀듯 (경찰과 같다)
+      for (let i = 0; i < 7; i++) { const a = Math.atan2(nz, nx) + rand(-1.1, 1.1), sp = rand(1.5, 3.5) * 3; const g = puff(hx, 0.6, hz, i % 3 ? 0xd91e1e : 0xff4a3a, rand(0.28, 0.48), rand(0.12, 0.24), rand(0.25, 0.4), Math.cos(a) * sp, rand(0.3, 1), Math.sin(a) * sp, 0.95); g.s.material.map = flashTex; g.s.renderOrder = UI - 0.5; g.peak = true; } }
+    if (!d.tr) { d.tr = new THREE.Mesh(chDroneTrGeo, new THREE.MeshBasicMaterial({ color: 0xffe14d, transparent: true, depthTest: false, depthWrite: false })); d.tr.renderOrder = UI - 1.2; scene.add(d.tr); }
+    d.shotT = 0; d.shotAt = t; d.recoilT = 0; d.recoilX = -nx; d.recoilZ = -nz;
     landHit(d, t, t === me && hasVest ? CH_DRONE_DMG / 3 * vestK(lv('vest')) : CH_DRONE_DMG / 3);
+  }
+  const chTrA = new THREE.Vector3(), chTrB = new THREE.Vector3(), chTrX = new THREE.Vector3(1, 0, 0);
+  function chDroneFx(d, dt) {                  // c380: 총알 선 (그림 높이 → 맞는 몸 가운데) · 반동 (그림만 뒤로 팍 → 천천히 제자리)
+    if (d.tr) {
+      if (d.shotT >= 0 && d.shotAt && !d.dead) {
+        chTrA.copy(d.s.position); chTrB.copy(d.shotAt.foot).addScaledVector(UP, RADIUS); const L = chTrA.distanceTo(chTrB) || 1e-3;
+        d.tr.visible = true; d.tr.position.copy(chTrA).add(chTrB).multiplyScalar(0.5); d.tr.scale.set(L, 1, 1);
+        d.tr.quaternion.setFromUnitVectors(chTrX, chTrB.sub(chTrA).normalize()); d.tr.material.opacity = 1 - d.shotT / SHOT_FLASH;
+        if ((d.shotT += dt) >= SHOT_FLASH) d.shotT = -1;
+      } else d.tr.visible = false;
+    }
+    if (d.recoilT >= 0) { const t = d.recoilT, k = t < 0.04 ? t / 0.04 : Math.pow(Math.max(0, 1 - (t - 0.04) / 0.3), 2); d.s.position.x += d.recoilX * 0.2 * k; d.s.position.z += d.recoilZ * 0.2 * k; if ((d.recoilT += dt) > 0.34) d.recoilT = -1; }
   }
   let chDG = null;                             // 드론 길 격자 (1칸) — 건물·산 위는 막힘
   function chDroneGrid() {
