@@ -1338,6 +1338,8 @@ from c394_patch import C394_R   # c394: 보스 산성 덩어리
 R += C394_R
 from c395_patch import C395_R   # c395: 분열세포 20%
 R += C395_R
+from c396_patch import C396_R   # c396: 레벨업 제곱 곡선
+R += C396_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
