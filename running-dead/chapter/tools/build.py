@@ -1292,6 +1292,8 @@ from c371_patch import C371_R   # c371
 R += C371_R
 from c372_patch import C372_R   # c372: 분열세포
 R += C372_R
+from c373_patch import C373_R   # c373: 촉매제 · 백과사전
+R += C373_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
