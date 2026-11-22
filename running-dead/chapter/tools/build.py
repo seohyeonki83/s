@@ -1298,6 +1298,8 @@ from c374_patch import C374_R   # c374: 드론
 R += C374_R
 from c375_patch import C375_R   # c375: 드론 번개 · 출동 수
 R += C375_R
+from c376_patch import C376_R   # c376: 내 미는 힘 7
+R += C376_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

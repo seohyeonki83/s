@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c375</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c376</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -546,6 +546,7 @@
   const BODY = 0.4 * 2 / 3 * 1.5;   // 부딪힘 반지름 (원보다 작게 — 붙어 서면 겹쳐 보인다). v51에 1/3 줄임, v88에 1.5배 (0.4). 나도 같다 (미는 힘 MY_FORCE는 그대로)
   const WEIGHT = 3;       // 무게 — 밀고 들어간 쪽은 막히고, 밀린 쪽은 1일 때(예전)의 1/WEIGHT만큼만 밀려난다
   const MY_BODY = BODY;       // 내 부딪힘 반지름 (v52에 절반 → v61에 다른 몸과 같게 되돌림)
+  const CH_MY_FORCE = 7;   // c376: 챕터 — 평소 내 미는 힘 (히드라 동료·유혹당한 사람은 MY_FORCE 기준 그대로)
   const MY_FORCE = 8;         // 내 미는 힘 = 다른 몸의 8배 (v52 2배 → v61 2배 더 → v90 2배 더) — 내가 밀면 상대가 그만큼 더 비켜나고, 남이 밀면 나는 그만큼 덜 밀린다
   const BITE_GAP = RADIUS;   // 물 때 두 원 중심 거리 = 반지름 → 반쯤 겹친다
   const SPLIT = 1.5;      // 물기가 끝나고 둘이 떨어지는 속도 (유닛/초)
@@ -4341,7 +4342,7 @@
     me.maxHp = MY_HP;
     me.hp = MY_HP * (CHAPTER ? 0.8 : MY_START_HP);   /* c195: 처음 체력 80% */
     me.r = MY_BODY;                          // 내 부딪힘은 작고 미는 힘은 세다 — 동료들 사이에 덜 갇히게
-    me.force = MY_FORCE;
+    me.force = CHAPTER ? CH_MY_FORCE : MY_FORCE;   /* c376: 평소 나 7 */
     addHpBar(me, hpOurMat);
     me.hpBar.scale.set(barW(me, true), 3 * 0.7, 1);   // v440: 가로는 내 최대 체력에 비례 (처음 1.2)   // v275: 세로 30% 줄임   // v136에 가로 20% 늘림   // v76에 1.5배 더 두껍게 (늘 떠 있다)                    // 내 체력바는 두 배 두껍고, 다른 바·표시보다 늘 위에 그린다 (섞여도 보이게)
     for (const m of me.hpBar.children) m.renderOrder += UI_ME + 50 - UI;   // v379: 내 체력바는 언제나 맨 위 (다른 모든 그림·UI보다)   // 내 체력바 = 내 UI 층 (다른 UI보다 위)
@@ -5557,7 +5558,7 @@
     for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; puff(me.foot.x, 0.4, me.foot.z, MUT_COL[type], 0.6, 1.6, 0.55, Math.cos(a) * 3.5, 0.4, Math.sin(a) * 3.5, 0.9); }
   }
   function unmutate(z) {
-    if (z === me) { if (me.catK) { me.maxHp /= me.catK; me.hp = Math.min(me.maxHp, me.hp / me.catK); me.catK = 0; }   /* c282 */ if (CHAPTER) chMeRing(false); me.mut = null; me.mesh.material.color.setHex(COLOR.me); me.r = MY_BODY; delete me.halfH; me.mesh.scale.setScalar(1); me.force = MY_FORCE; me.speed = meSpeed(); return; }   // v558: 각성 끝
+    if (z === me) { if (me.catK) { me.maxHp /= me.catK; me.hp = Math.min(me.maxHp, me.hp / me.catK); me.catK = 0; }   /* c282 */ if (CHAPTER) chMeRing(false); me.mut = null; me.mesh.material.color.setHex(COLOR.me); me.r = MY_BODY; delete me.halfH; me.mesh.scale.setScalar(1); me.force = CHAPTER ? CH_MY_FORCE : MY_FORCE;   /* c376: 평소 나 7 */ me.speed = meSpeed(); return; }   // v558: 각성 끝
     z.mut = null;
     if (z.catK) { z.maxHp /= z.catK; z.hp = Math.min(z.hp, z.maxHp); z.catK = 0; }   // c282: 변이가 풀리면 원래 최대 체력
     z.mesh.material.color.setHex(COLOR.ally);   // v371: 흰색 없앰 (불꽃으로 표시)   // v369: 스팀팩 맞은 동료는 흰색으로
