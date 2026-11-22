@@ -1264,6 +1264,8 @@ from c357_patch import C357_R   # c357: 거점 맵 꾸미기 · 사람 없음
 R += C357_R
 from c358_patch import C358_R   # c358: 거점 맵 방 · 사람 (큰 맵 비율)
 R += C358_R
+from c359_patch import C359_R   # c359: 본 맵
+R += C359_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
