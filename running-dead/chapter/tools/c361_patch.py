@@ -1,0 +1,2 @@
+# c361: 동료가 거의 멈춰 있으면(최고 속도 30% 이하) 사물 거리 안의 벽을 스스로 친다
+C361_R = [('clock - chWallAny < 1.5 && clock >= chWallAny ? chReach(z) : -1; }', 'clock - chWallAny < 1.5 && clock >= chWallAny ? chReach(z) : z.vel.length() <= CH_WALL_SLOW * z.speed ? chReach(z) : -1; }   /* c361: 내가 안 때려도 — 동료가 거의 멈춰 있으면(제 최고 속도의 30% 이하) 사물과 같은 거리 안의 벽을 친다. 30%를 넘게 달리는 중이면 벽은 칠 목록에서 뺀다 */'), ('  function chWallLim(z, o) {', '  const CH_WALL_SLOW = 0.3;   // c361: 동료가 벽을 스스로 치는 속도 한계 (최고 속도의 30%)\n  function chWallLim(z, o) {')]

@@ -1268,6 +1268,8 @@ from c359_patch import C359_R   # c359: 본 맵
 R += C359_R
 from c360_patch import C360_R   # c360: 다리 난간 자르기
 R += C360_R
+from c361_patch import C361_R   # c361: 느린 동료는 벽을 스스로 친다
+R += C361_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
