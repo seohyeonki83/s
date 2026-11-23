@@ -1,0 +1,20 @@
+const { chromium } = require('playwright');
+const file = process.argv[2];
+(async () => {
+  const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--enable-precise-memory-info'] });
+  const p = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  const errs = []; p.on('pageerror', (e) => errs.push(e.message));
+  await p.route('**/three.module.min.js', (r) => r.fulfill({ path: __dirname + '/../../node_modules/three/build/three.module.min.js', contentType: 'application/javascript' }));
+  const t0 = Date.now();
+  await p.goto('file://' + __dirname + '/../var/' + file + '.html');
+  await p.waitForFunction(() => window.__rdReady && window.__rd && window.__rd.me, null, { timeout: 120000 });
+  const load = Date.now() - t0;
+  await p.waitForTimeout(1500);
+  await p.evaluate(() => document.querySelectorAll('.okBtn').forEach((b) => b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))));
+  const r = await p.evaluate(() => { const R = window.__rd; window.__noRender = true; for (let i = 0; i < 60; i++) R.step(1 / 60);
+    const cf = []; for (let i = 0; i < 12; i++) cf.push(window.__x.cf()); cf.sort((a, b) => a - b);
+    const cv = [...document.querySelectorAll('canvas')].map((c) => [c.id || c.className || '?', c.width, c.height]);
+    return { cfMed: +cf[6].toFixed(2), cfMin: +cf[0].toFixed(2), cfSize: window.__x.cfSize(), heapMB: Math.round(performance.memory.usedJSHeapSize / 1048576), canvases: cv, tex: window.__ri.memory.textures, geo: window.__ri.memory.geometries, bodies: R.bodies.length }; });
+  console.log(file, 'loadMs', load, JSON.stringify(r)); if (errs.length) console.log(errs);
+  await b.close();
+})();
