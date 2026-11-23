@@ -48,7 +48,6 @@ ins_after("    if (!window.__noRender) renderer.render(scene, camera);\n", "    
 D0 = "  function draw(dt) {\n    const eyes = bodies.filter((b) => isZombie(b) || b === me);\n"
 ins_after(D0, "    __td('a 눈·탐험안개');\n")
 D = [
- ("    for (const B of buildings) {              // 좀비가 하나라도 들어간 건물만 지붕이 열린다", 'b 지붕(건물전체)'),
  ("    if (CHAPTER) { chRoomDraw(); chCanopyDraw(eyes); }   // c53 · c85", 'c 방·지붕막'),
  ("    updateViewRect();\n    drawVision(eyes);", 'd 시야(광선)'),
  ("    drawCars(eyes);\n", 'e 차그림'),
@@ -57,8 +56,10 @@ D = [
  ("    if (me.aim) { me.aim.mesh.add(aimRing); aimRing.visible = true; }", 'h 조준'),
 ]
 for a, l in D: ins_before(a, "    __td('%s');\n" % l)
+# 지붕 줄은 버전마다 앞부분이 달라서 주석으로 찾는다
+_i = s.index("// 좀비가 하나라도 들어간 건물만 지붕이 열린다"); _j = s.rindex("\n", 0, _i) + 1; s = s[:_j] + "    __td('b 지붕(건물)');\n" + s[_j:]
 ins_after("    drawMyTarget();                           // v288: 내가 노리는 문·경찰차·금고 = 빨강\n", "    __td(null);\n")
 # 바깥에서 쓰게
-ins_before("  window.__rd = { get me() { return me; }", "  window.__ren = renderer; window.__scene = scene; window.__cam = camera; window.__batch = chBatchBodies;\n  window.__x = { walls, deco: chDecoObjs, reset: () => { chBlk = null; chBlocks = null; chWcGrid = null; }, cf: () => { const t = performance.now(); cfCompute(); return performance.now() - t; }, cfSize: () => [cfW, cfH] };\n")
+ins_before("  window.__rd = { get me() { return me; }", "  window.__ren = renderer; window.__scene = scene; window.__cam = camera; window.__batch = chBatchBodies;\n  if (typeof chSecs !== 'undefined') window.__secs = () => ({ live: chSecs.filter((S) => S.live).length, of: chSecs.length, dormB: chDormB.length, dormC: chDormC.length, dormO: chDormO.length, cars: cars.length, objs: objs.length, props: chProps.length }); window.__x = { walls, deco: chDecoObjs, reset: () => { chBlk = null; chBlocks = null; chWcGrid = null; }, cf: () => { const t = performance.now(); cfCompute(); return performance.now() - t; }, cfSize: () => [cfW, cfH] };\n")
 pathlib.Path(dst).write_text(s)
 print(dst)

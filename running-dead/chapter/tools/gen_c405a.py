@@ -1,0 +1,109 @@
+# c405 (1단계): 결과는 그대로, 지도 크기에 비례해 늘던 계산만 줄인다
+#   · 안 보이는 것은 위치 행렬을 다시 계산하지 않는다 · 정적 그림은 단락별 묶음으로 (화면 밖 단락은 통째로 건너뛴다)
+#   · 건물·벽·강을 지도 전체 훑던 곳을 '가까운 것만 찾기'(격자)로
+src = open('c404.mjs').read()
+R = []
+def rep(a, b, n=1):
+    assert src.count(a) == n, (src.count(a), n, a[:90])
+    R.append((a, b, n) if n != 1 else (a, b))
+
+# ── 0. 도우미: 행렬 건너뛰기 · 단락 묶음 · 가까운 건물·강 찾기 ──
+rep("  const scene = new THREE.Scene();\n",
+"  const scene = new THREE.Scene();\n"
+"  // ── c405: 지도가 커져도 계산이 늘지 않게 ──\n"
+"  // ① 안 보이는 것은 위치 행렬을 다시 계산하지 않는다 (three.js는 안 보이는 것도 매 프레임 계산한다). 보이게 되는 프레임에 바로 계산되므로 그림은 같다\n"
+"  if (CHAPTER) { const umw0 = THREE.Object3D.prototype.updateMatrixWorld; THREE.Object3D.prototype.updateMatrixWorld = function (force) { if (this.visible === false) return; umw0.call(this, force); }; }\n"
+"  // ② 단락(구역)마다 정적 그림(바닥·벽·지붕·길) 묶음 — 화면에 안 걸치는 단락은 통째로 건너뛴다 (묶음 밖으로 꺼낼 때는 scene.remove가 알아서 찾아 뺀다)\n"
+"  const chGrp = CHAPTER && CH_MAP.zones.length > 1 ? CH_MAP.zones.map((q) => { const g = new THREE.Group(); g.zr = q; g.bb = [Infinity, Infinity, -Infinity, -Infinity]; scene.add(g); return g; }) : null;\n"
+"  function chStat(m, r) {                     // 정적 그림 하나를 그 자리 단락 묶음에 (r = 그림 반지름). 아주 큰 것은 묶지 않는다\n"
+"    if (!chGrp || !(r <= 30)) { scene.add(m); return m; }\n"
+"    const x = m.position.x, z = m.position.z; let bi = 0, bd = Infinity;\n"
+"    for (let i = 0; i < chGrp.length; i++) { const q = chGrp[i].zr, dx = Math.max(q[0] - x, 0, x - q[2]), dz = Math.max(q[1] - z, 0, z - q[3]), d = dx * dx + dz * dz; if (d < bd) { bd = d; bi = i; } }\n"
+"    const g = chGrp[bi], b = g.bb; g.add(m);\n"
+"    if (x - r < b[0]) b[0] = x - r; if (z - r < b[1]) b[1] = z - r; if (x + r > b[2]) b[2] = x + r; if (z + r > b[3]) b[3] = z + r;\n"
+"    return m;\n"
+"  }\n"
+"  { const rm0 = scene.remove.bind(scene); scene.remove = function (...os) { for (const o of os) { if (o && o.parent && o.parent !== scene) o.parent.remove(o); else rm0(o); } return scene; }; }\n"
+"  const chCullV = new THREE.Vector3();\n"
+"  function chGrpCull(cam) {                   // 그리기 직전 — 화면에 보이는 바닥 네모(여유 3칸)에 안 걸치는 단락 묶음은 숨긴다\n"
+"    if (!chGrp) return;\n"
+"    cam.updateMatrixWorld();\n"
+"    let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;\n"
+"    for (const [nx, ny] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {\n"
+"      chCullV.set(nx, ny, 0.5).unproject(cam).sub(cam.position);\n"
+"      const t = chCullV.y < -1e-6 ? -cam.position.y / chCullV.y : 200, gx = cam.position.x + chCullV.x * t, gz = cam.position.z + chCullV.z * t;\n"
+"      if (gx < x0) x0 = gx; if (gx > x1) x1 = gx; if (gz < z0) z0 = gz; if (gz > z1) z1 = gz;\n"
+"    }\n"
+"    for (const g of chGrp) { const b = g.bb; g.visible = b[2] >= x0 - 3 && b[0] <= x1 + 3 && b[3] >= z0 - 3 && b[1] <= z1 + 3; }\n"
+"  }\n"
+"  // ③ 가까운 건물·강만 찾기 (8칸·16칸 격자) — 지도 전체를 훑던 곳들이 쓴다. 돌려주는 순서는 전체 목록 순서 그대로라 결과가 같다. out = 담을 곳 (부르는 곳마다 따로)\n"
+"  var chBG = null, chBGn = 0, chRG = null, chRGn = 0, chRivL = null;\n"
+"  const chBGcmp = (a, c) => a.bgI - c.bgI, chRGcmp = (a, c) => a.i - c.i;\n"
+"  const chQ1 = [], chQ2 = [], chQ3 = [], chQ4 = [], chQ5 = [], chQ6 = [], chQ7 = [], chQ8 = [], chQ9 = [], chQ10 = [], chQ11 = [], chQ12 = [], chQ13 = [], chQR1 = [], chQR2 = [], chQR3 = [], chQR4 = [], chQR5 = [];\n"
+"  function chBNear(x0, z0, x1, z1, out) {      // 그 네모에 걸칠 수 있는 건물들 (건물 둘레 1칸까지)\n"
+"    if (!(x1 - x0 < 1e5 && z1 - z0 < 1e5)) return buildings;   // 좌표가 이상하거나 너무 넓으면 전부\n"
+"    if (!chBG) { chBG = new Map(); buildings.forEach((B, i) => { B.bgI = i; B.bgF = 0; for (let cx = Math.floor((B.x0 - 1) / 8); cx <= Math.floor((B.x1 + 1) / 8); cx++) for (let cz = Math.floor((B.z0 - 1) / 8); cz <= Math.floor((B.z1 + 1) / 8); cz++) { const k = cx * 4096 + cz; let L = chBG.get(k); if (!L) chBG.set(k, L = []); L.push(B); } }); }\n"
+"    out.length = 0; chBGn++;\n"
+"    for (let cx = Math.floor(x0 / 8), cxe = Math.floor(x1 / 8); cx <= cxe; cx++) for (let cz = Math.floor(z0 / 8), cze = Math.floor(z1 / 8); cz <= cze; cz++) { const L = chBG.get(cx * 4096 + cz); if (L) for (let i = 0; i < L.length; i++) { const B = L[i]; if (B.bgF !== chBGn) { B.bgF = chBGn; out.push(B); } } }\n"
+"    if (out.length > 1) out.sort(chBGcmp);\n"
+"    return out;\n"
+"  }\n"
+"  function chRNear(x0, z0, x1, z1, out) {      // 그 네모에 걸칠 수 있는 강 토막들 {i, x0, z0, x1, z1, segs} (토막 둘레 2칸까지)\n"
+"    if (!chRG) { chRivL = CH_MAP.rivers.map((r, i) => ({ i, x0: r[0], z0: r[1], x1: r[2], z1: r[3], f: 0, segs: [[r[0], r[1], r[2], r[1]], [r[0], r[3], r[2], r[3]], [r[0], r[1], r[0], r[3]], [r[2], r[1], r[2], r[3]]] }));\n"
+"      chRG = new Map(); for (const Q of chRivL) for (let cx = Math.floor((Q.x0 - 2) / 16); cx <= Math.floor((Q.x1 + 2) / 16); cx++) for (let cz = Math.floor((Q.z0 - 2) / 16); cz <= Math.floor((Q.z1 + 2) / 16); cz++) { const k = cx * 4096 + cz; let L = chRG.get(k); if (!L) chRG.set(k, L = []); L.push(Q); } }\n"
+"    if (!(x1 - x0 < 1e5 && z1 - z0 < 1e5)) return chRivL;\n"
+"    out.length = 0; chRGn++;\n"
+"    for (let cx = Math.floor(x0 / 16), cxe = Math.floor(x1 / 16); cx <= cxe; cx++) for (let cz = Math.floor(z0 / 16), cze = Math.floor(z1 / 16); cz <= cze; cz++) { const L = chRG.get(cx * 4096 + cz); if (L) for (let i = 0; i < L.length; i++) { const Q = L[i]; if (Q.f !== chRGn) { Q.f = chRGn; out.push(Q); } } }\n"
+"    if (out.length > 1) out.sort(chRGcmp);\n"
+"    return out;\n"
+"  }\n")
+
+# ── 1. 정적 그림 → 단락 묶음 ──
+rep("    m.position.set(x, 0.03, z);\n    m.renderOrder = order;\n    scene.add(m);\n    return m;\n  }",
+    "    m.position.set(x, 0.03, z);\n    m.renderOrder = order;\n    chStat(m, Math.hypot(w, d) / 2);   /* c405: 단락 묶음에 */\n    return m;\n  }")
+rep("renderer.render = (sc, cam) => { chBatchBodies(); if (!chPf.on)", "renderer.render = (sc, cam) => { chGrpCull(cam); chBatchBodies(); if (!chPf.on)")
+
+# ── 2. 강 ──
+rep("    for (const [x0, z0, x1, z1] of CH_MAP.rivers) {\n      const x = b.foot.x, z = b.foot.z;\n      if (x <= x0 - r || x >= x1 + r || z <= z0 - r || z >= z1 + r) continue;",
+    "    for (const Q of chRNear(b.foot.x - r - 8, b.foot.z - r - 8, b.foot.x + r + 8, b.foot.z + r + 8, chQR1)) { const x0 = Q.x0, z0 = Q.z0, x1 = Q.x1, z1 = Q.z1;   /* c405: 둘레 강 토막만 */\n      const x = b.foot.x, z = b.foot.z;\n      if (x <= x0 - r || x >= x1 + r || z <= z0 - r || z >= z1 + r) continue;")
+rep("  const chNearRiver = (x, z, m) => CH_MAP.rivers.some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);",
+    "  const chNearRiver = (x, z, m) => { for (const Q of chRNear(x - m, z - m, x + m, z + m, chQR2)) if (x > Q.x0 - m && x < Q.x1 + m && z > Q.z0 - m && z < Q.z1 + m) return true; return false; };   /* c405 */")
+rep("if (!car.wreck) for (const [x0, z0, x1, z1] of CH_MAP.rivers) { const m = CAR_W * ck(car) / 3 + 0.2;",
+    "if (!car.wreck) for (const Q of chRNear(car.x - 9, car.z - 9, car.x + 9, car.z + 9, chQR3)) { const x0 = Q.x0, z0 = Q.z0, x1 = Q.x1, z1 = Q.z1, m = CAR_W * ck(car) / 3 + 0.2;")
+
+# ── 3. 건물 ──
+rep("    for (const B of buildings) if (B.x1 + WALL >= x0 && B.x0 - WALL <= x1 && B.z1 + WALL >= z0 && B.z0 - WALL <= z1) nbBuf.push(B);",
+    "    for (const B of (CHAPTER ? chBNear(x0 - WALL, z0 - WALL, x1 + WALL, z1 + WALL, chQ1) : buildings)) if (B.x1 + WALL >= x0 && B.x0 - WALL <= x1 && B.z1 + WALL >= z0 && B.z0 - WALL <= z1) nbBuf.push(B);")
+rep("    for (const B of buildings) {\n      if (B.fence || B.x1 + WALL < x0 || B.x0 - WALL > x1 || B.z1 + WALL < z0 || B.z0 - WALL > z1) continue;",
+    "    for (const B of (CHAPTER ? chBNear(x0 - WALL, z0 - WALL, x1 + WALL, z1 + WALL, chQ2) : buildings)) {\n      if (B.fence || B.x1 + WALL < x0 || B.x0 - WALL > x1 || B.z1 + WALL < z0 || B.z0 - WALL > z1) continue;")
+rep("    for (const B of buildings) {\n      if (B.x1 + WALL < x0 || B.x0 - WALL > x1 || B.z1 + WALL < z0 || B.z0 - WALL > z1) continue;\n      for (const w of B.sightW) if (crosses(ax, az, bx, bz, w)) return true;",
+    "    for (const B of (CHAPTER ? chBNear(x0 - WALL, z0 - WALL, x1 + WALL, z1 + WALL, chQ3) : buildings)) {\n      if (B.x1 + WALL < x0 || B.x0 - WALL > x1 || B.z1 + WALL < z0 || B.z0 - WALL > z1) continue;\n      for (const w of B.sightW) if (crosses(ax, az, bx, bz, w)) return true;")
+rep("    for (const S of (CH_TUT ? chTutSafeList() : buildings)) {   // c302",
+    "    for (const S of (CH_TUT ? chTutSafeList() : CHAPTER ? chBNear(z.foot.x - 4 * MELEE - 4, z.foot.z - 4 * MELEE - 4, z.foot.x + 4 * MELEE + 4, z.foot.z + 4 * MELEE + 4, chQ4) : buildings)) {   /* c405: 둘레 건물의 금고만 */   // c302")
+rep("    if (CHAPTER) for (const B of chWallBs) {   // c200: 집·랜드마크 벽 (밖에서, 또는 그 건물 안에서)\n",
+    "    if (CHAPTER) for (const B of chBNear(z.foot.x - 4 * MELEE - 1, z.foot.z - 4 * MELEE - 1, z.foot.x + 4 * MELEE + 1, z.foot.z + 4 * MELEE + 1, chQ5)) { if (!B.wos) continue;   /* c405: 둘레 건물만 (벽이 있는 건물 = chWallBs) */   // c200: 집·랜드마크 벽 (밖에서, 또는 그 건물 안에서)\n")
+rep("    let best = range, hit = null;\n    for (const w of walls) {\n      const p = nearestOn(w, c.foot.x, c.foot.z), d = Math.hypot(c.foot.x - p.x, c.foot.z - p.y);\n      if (d <= best) { best = d; hit = [p.x, p.y]; }\n    }",
+    "    let best = range, hit = null;\n    const one = (w) => { const p = nearestOn(w, c.foot.x, c.foot.z), d = Math.hypot(c.foot.x - p.x, c.foot.z - p.y); if (d <= best) { best = d; hit = [p.x, p.y]; } };\n"
+    "    if (CHAPTER) { for (const B of chBNear(c.foot.x - range - 0.1, c.foot.z - range - 0.1, c.foot.x + range + 0.1, c.foot.z + range + 0.1, chQ6)) for (const w of B.walls) one(w); }   /* c405: 둘레 건물 벽만 */\n    else for (const w of walls) one(w);")
+rep("    let best = max, hit = null;\n    for (const w of walls) {\n      const [ax, az, bx, bz] = w, ex = bx - ax, ez = bz - az, den = dx * ez - dz * ex;\n      if (Math.abs(den) < 1e-9) continue;\n      const t = ((ax - x) * ez - (az - z) * ex) / den, s = ((ax - x) * dz - (az - z) * dx) / den;\n      if (t > 0 && t < best && s >= 0 && s <= 1) { best = t; hit = w; }\n    }",
+    "    let best = max, hit = null;\n    const one = (w) => {\n      const [ax, az, bx, bz] = w, ex = bx - ax, ez = bz - az, den = dx * ez - dz * ex;\n      if (Math.abs(den) < 1e-9) return;\n      const t = ((ax - x) * ez - (az - z) * ex) / den, s = ((ax - x) * dz - (az - z) * dx) / den;\n      if (t > 0 && t < best && s >= 0 && s <= 1) { best = t; hit = w; }\n    };\n"
+    "    if (CHAPTER) { const qx = x + dx * max, qz = z + dz * max; for (const B of chBNear(Math.min(x, qx) - 0.1, Math.min(z, qz) - 0.1, Math.max(x, qx) + 0.1, Math.max(z, qz) + 0.1, chQ13)) for (const w of B.walls) one(w); }   /* c405 */\n    else for (const w of walls) one(w);")
+rep("    for (const B of buildings) if (x > B.x0 - R && x < B.x1 + R && z > B.z0 - R && z < B.z1 + R) for (const w of B.walls) chNearBuf.push(w);\n    for (const g of chRiverSegs) if (x > Math.min(g[0], g[2]) - R && x < Math.max(g[0], g[2]) + R && z > Math.min(g[1], g[3]) - R && z < Math.max(g[1], g[3]) + R) chNearBuf.push(g);",
+    "    for (const B of chBNear(x - R, z - R, x + R, z + R, chQ7)) if (x > B.x0 - R && x < B.x1 + R && z > B.z0 - R && z < B.z1 + R) for (const w of B.walls) chNearBuf.push(w);   /* c405 */\n    for (const Q of chRNear(x - R, z - R, x + R, z + R, chQR4)) for (const g of Q.segs) if (x > Math.min(g[0], g[2]) - R && x < Math.max(g[0], g[2]) + R && z > Math.min(g[1], g[3]) - R && z < Math.max(g[1], g[3]) + R) chNearBuf.push(g);")
+rep("    let hit = null, first = Infinity;\n    for (const B of buildings) {\n      if (px > B.x0 - pad && px < B.x1 + pad && pz > B.z0 - pad && pz < B.z1 + pad) {   // 그 건물 문을 지나는 중이면 빼고",
+    "    let hit = null, first = Infinity;\n    for (const B of (CHAPTER ? chBNear(Math.min(px, tx) - pad, Math.min(pz, tz) - pad, Math.max(px, tx) + pad, Math.max(pz, tz) + pad, chQ8) : buildings)) {   /* c405: 가는 길 둘레 건물만 */\n      if (px > B.x0 - pad && px < B.x1 + pad && pz > B.z0 - pad && pz < B.z1 + pad) {   // 그 건물 문을 지나는 중이면 빼고")
+rep("    for (const R of chBlk) {\n      if (px > R.x0 - GAP && px < R.x1 + GAP && pz > R.z0 - GAP && pz < R.z1 + GAP) continue;",
+    "    const qa = Math.min(px, tx) - GAP, qb = Math.min(pz, tz) - GAP, qc = Math.max(px, tx) + GAP, qd = Math.max(pz, tz) + GAP;\n    for (let k = 0; k < 2; k++) for (const R of (k ? chRNear(qa, qb, qc, qd, chQR5) : chBNear(qa, qb, qc, qd, chQ9))) {   /* c405: 가는 길 둘레 건물·강만 */\n      if (px > R.x0 - GAP && px < R.x1 + GAP && pz > R.z0 - GAP && pz < R.z1 + GAP) continue;")
+rep("    if (!chBlk) chBlk = buildings.concat(CH_MAP.rivers.map(([x0, z0, x1, z1]) => ({ x0, z0, x1, z1 })));\n", "")
+rep("    for (const B of buildings) { const s = B.safe; if (s && !s.dead && circ(s)) return true; }",
+    "    for (const B of chBNear(Math.min(ax, bx) - 3, Math.min(az, bz) - 3, Math.max(ax, bx) + 3, Math.max(az, bz) + 3, chQ10)) { const s = B.safe; if (s && !s.dead && circ(s)) return true; }   /* c405 */")
+rep("    for (const B of buildings) if (!B.parent && x > B.x0 - 0.45 && x < B.x1 + 0.45 && z > B.z0 - 0.45 && z < B.z1 + 0.45) return false;",
+    "    for (const B of chBNear(x - 0.45, z - 0.45, x + 0.45, z + 0.45, chQ11)) if (!B.parent && x > B.x0 - 0.45 && x < B.x1 + 0.45 && z > B.z0 - 0.45 && z < B.z1 + 0.45) return false;   /* c405 */")
+rep("    if (!chBlocks) chBlocks = CH_MAP.rivers.map(([x0, z0, x1, z1]) => ({ x0, z0, x1, z1 })).concat(buildings.filter((B) => B.type === 'hill'));",
+    "    if (!chBlocks || Math.abs(me.foot.x - chBlkX) > 12 || Math.abs(me.foot.z - chBlkZ) > 12) {   // c405: 내 둘레 60칸 안의 강·산만 모아 둔다 (내가 12칸 넘게 옮기면 다시) — 자리는 늘 내 둘레라 결과는 같다\n"
+    "      chBlkX = me.foot.x; chBlkZ = me.foot.z; chBlocks = chRNear(chBlkX - 60, chBlkZ - 60, chBlkX + 60, chBlkZ + 60, []).concat(chBNear(chBlkX - 60, chBlkZ - 60, chBlkX + 60, chBlkZ + 60, []).filter((B) => B.type === 'hill'));\n    }")
+rep("  let chBlocks = null;\n", "  let chBlocks = null, chBlkX = 0, chBlkZ = 0;\n")
+rep("    for (const B of buildings) {              // 좀비가 하나라도 들어간 건물만 지붕이 열린다",
+    "    for (const B of (CHAPTER && !CH_TUT ? chBNear(Math.min(eX0, viewR.x0) - 3, Math.min(eZ0, viewR.z0) - 3, Math.max(eX1, viewR.x1) + 3, Math.max(eZ1, viewR.z1) + 3, chQ12) : buildings)) {   /* c405: 화면과 좀비 둘레의 건물만 (그 밖의 건물은 바뀔 게 없다) */              // 좀비가 하나라도 들어간 건물만 지붕이 열린다")
+open('c405a_patch.py', 'w').write("# c405 (1단계): 결과는 그대로 — 안 보이는 것 행렬 생략 · 단락별 정적 그림 묶음 · 가까운 건물·강만 찾기\nC405A_R = " + repr(R) + "\n")
+print(len(R), 'entries')

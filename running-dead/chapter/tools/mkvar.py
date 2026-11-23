@@ -4,7 +4,7 @@ ver = sys.argv[1]
 base = pathlib.Path('/home/user/s/running-dead/chapter/' + ver + '.html').read_text()
 R = "    renderer.render(scene, camera);\n  }\n\n  // ── 기술 (v190)"
 assert base.count(R) == 1
-nr = base.replace(R, "    if (!window.__noRender) renderer.render(scene, camera);\n  }\n\n  // ── 기술 (v190)")
+nr = base.replace(R, "    if (!window.__noRender) renderer.render(scene, camera);\n  }\n  window.__redraw = () => { draw(0); place(); renderer.render(scene, camera); };   // 테스트용: 걸음 없이 다시 그리기만\n\n  // ── 기술 (v190)")
 H = "    if (CHAPTER) { const g = chGuide(b, tx, tz); if (g) { tx = g[0]; tz = g[1]; } }"
 assert nr.count(H) == 1
 prof = nr.replace(H, "    const __t0 = performance.now();\n" + H + "\n    window.__pf = (window.__pf || 0) + performance.now() - __t0; window.__pn = (window.__pn || 0) + 1;")
