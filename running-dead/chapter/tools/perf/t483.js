@@ -3,7 +3,7 @@ const { chromium } = require('playwright');
 const V = process.argv[2] || 'c405';
 (async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
 const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-await ctx.addInitScript(() => { window.requestAnimationFrame = () => 0; });
+await ctx.addInitScript((sd) => { window.requestAnimationFrame = () => 0; if (sd) window.__seed = sd; window.__noReload = true; }, +(process.argv[3] || 0));
 const p = await ctx.newPage(); const errs = []; p.on('pageerror', (e) => errs.push(e.message + ' ' + (e.stack || '').split('\n').slice(0, 3).join(' | ')));
 await p.route('**/three.module.min.js', (r) => r.fulfill({ path: __dirname + '/../node_modules/three/build/three.module.min.js', contentType: 'application/javascript' }));
 await p.goto('file://' + __dirname + '/var/' + V + '.html'); await p.waitForFunction(() => window.__rdReady && window.__rd && window.__rd.me, null, { timeout: 60000 }); await p.waitForTimeout(500);
@@ -42,6 +42,7 @@ const out = await p.evaluate(() => {
   R.setStars(5); step(120);
   const bar2 = R.bar().X.map((X) => ({ units: X.units.length, dorm: X.units.filter((c) => c.dorm).length, pieces: X.rows.flat().flat().filter(Boolean).length, dormPieces: X.rows.flat().flat().filter((q) => q && q.car.dorm).length, live: X.rows.flat().flat().filter((q) => q && !q.car.wreck && (q.car.dorm || R.cars().includes(q.car))).length }));
   log.push({ tag: '경보 5단계 뒤 수비대', bar2 });
+  { const zi = Z.findIndex((q) => me.foot.x >= q[0] - 3 && me.foot.x <= q[2] + 3 && me.foot.z >= q[1] - 3 && me.foot.z <= q[3] + 3); const X = R.bar().X; log.push({ tag: '내 구역 ' + zi + ' 건널목들', here: X.filter((x) => x.P.za === zi || x.P.zb === zi).map((x) => ({ units: x.units.length, pieces: x.rows.flat().flat().filter(Boolean).length, pend: (x.pend || []).length })), farPend: X.filter((x) => (x.pend || []).length).length, farUnits: X.filter((x) => (x.pend || []).length && x.units.length).length, total: X.length }); }
   return log;
 });
 for (const r of out) console.log(JSON.stringify(r));

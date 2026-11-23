@@ -12,5 +12,5 @@ for (let k = 0; k < 6; k++) { await p.mouse.move(195, 600); await p.mouse.down()
   await p.evaluate(() => document.querySelectorAll('.okBtn').forEach((b) => b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })))); }
 const info = await p.evaluate(() => { const s = window.__rd.sec(); return { ver: document.getElementById('ver').textContent, live: s.secs.filter((q) => q.live).length, bodies: window.__rd.bodies.length, dorm: s.dormB.length, me: [Math.round(window.__rd.me.foot.x), Math.round(window.__rd.me.foot.z)] }; });
 console.log(JSON.stringify(info));
-await p.screenshot({ path: '/home/user/s/running-dead/chapter/shots/c405_' + TAG + '_run.png' });
+await p.screenshot({ path: __dirname + '/perf/run_' + V + '.png' });
 console.log('errors', JSON.stringify(errs.slice(0, 4))); await b.close(); })();

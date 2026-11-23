@@ -39,7 +39,7 @@ B = [
  ("    updateStars();\n    updateMinimap(dt);", '25 경보'),
  ("    updateMinimap(dt);\n    updateCmd(dt);", '26 미니맵'),
  ("    updateCmd(dt);\n    place();", '27 명령·카메라·냄새'),
- ("    if (!window.__noRender) renderer.render(scene, camera);\n  }\n\n  // ── 기술 (v190)", '28 화면그리기(render)'),
+ ("    if (!window.__noRender) renderer.render(scene, camera);\n  }\n", '28 화면그리기(render)'),
 ]
 for a, l in B: ins_before(a, "    __tk('%s');\n" % l)
 ins_after("    if (CHAPTER) chBoardTick(dt);   // c47: 싸움이 끝난 사람은 차로 돌아간다\n", "    __tk('10 이동·타격');\n")

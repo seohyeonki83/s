@@ -3,7 +3,7 @@ const { chromium } = require('playwright'); const crypto = require('crypto'); co
 const V = process.argv[2] || 'c405';
 (async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
 const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-await ctx.addInitScript(() => { window.requestAnimationFrame = () => 0; });
+await ctx.addInitScript((sd) => { window.requestAnimationFrame = () => 0; if (sd) window.__seed = sd; window.__noReload = true; }, +(process.argv[3] || 0));
 const p = await ctx.newPage(); const errs = []; p.on('pageerror', (e) => errs.push(e.message + ' ' + (e.stack || '').split('\n').slice(0, 3).join(' | ')));
 await p.route('**/three.module.min.js', (r) => r.fulfill({ path: __dirname + '/../node_modules/three/build/three.module.min.js', contentType: 'application/javascript' }));
 await p.goto('file://' + __dirname + '/var/' + V + '.html'); await p.waitForFunction(() => window.__rdReady && window.__rd && window.__rd.me, null, { timeout: 60000 }); await p.waitForTimeout(500);
@@ -20,7 +20,8 @@ const out = await p.evaluate(() => {
   for (const q of P) { spots.push(['건널목 가운데 ' + q.axis, (q.ax + q.bx) / 2, (q.az + q.bz) / 2]); spots.push(['건널목 a끝', q.ax, q.az]); spots.push(['건널목 b끝', q.bx, q.bz]); }
   Z.forEach((q, i) => { spots.push(['구역 ' + i + ' 모서리', q[0] + 2.25, q[1] + 2.25]); spots.push(['구역 ' + i + ' 맞은편 모서리', q[2] - 2.25, q[3] - 2.25]); spots.push(['구역 ' + i + ' 가운데 길', (q[0] + q[2]) / 2, q[1] + 2.25]); });
   window.__noRender = true;
-  for (const [name, x, z] of spots) {
+  const EVERY = spots.length > 60 ? 6 : 1;
+  for (const [name, x, z] of spots.filter((q, i) => i % EVERY === 0)) {
     window.__secOff = false; put(x, z);
     for (let i = 0; i < 90; i++) { me.foot.x = x; me.foot.z = z; R.step(1 / 60); }   // 1.5초 — 단락이 깨고 자리를 잡게
     window.__secOff = true;                    // 여기서부터 단락 상태를 얼린다

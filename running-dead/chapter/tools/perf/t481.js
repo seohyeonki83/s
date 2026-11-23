@@ -3,7 +3,7 @@ const { chromium } = require('playwright');
 const V = process.argv[2] || 'c405', MODE = process.argv[3] || 'cross';
 (async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
 const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-await ctx.addInitScript(() => { window.requestAnimationFrame = () => 0; });   // 걸음은 손으로 돌린다
+await ctx.addInitScript((sd) => { window.requestAnimationFrame = () => 0; if (sd) window.__seed = sd; window.__noReload = true; }, +(process.argv[4] || 0));   // 걸음은 손으로 돌린다
 const p = await ctx.newPage(); const errs = []; p.on('pageerror', (e) => errs.push(e.message + ' ' + (e.stack || '').split('\n').slice(0, 3).join(' | ')));
 await p.route('**/three.module.min.js', (r) => r.fulfill({ path: __dirname + '/../node_modules/three/build/three.module.min.js', contentType: 'application/javascript' }));
 await p.goto('file://' + __dirname + '/var/' + V + '.html'); await p.waitForFunction(() => window.__rdReady && window.__rd && window.__rd.me, null, { timeout: 60000 }); await p.waitForTimeout(500);

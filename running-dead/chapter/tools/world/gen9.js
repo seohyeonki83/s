@@ -1,0 +1,125 @@
+  // ── c406: 본 맵 — 시작할 때마다 새로 만드는 랜덤 월드 ──
+  //   큰 맵의 단락 4개(큰 2 + 작은 2)를 한 그룹으로, 그룹 9개를 3×3으로 놓는다. 단락마다 90°씩 돌리고·뒤집고, 그룹 안에서 자리를 섞는다.
+  //   그룹과 단락을 가운데 쪽으로 밀어 붙이고 (단락 사이 틈 13칸), 마주 보는 면마다 건널목을 놓는다 (작은 단락 한 면에 하나 · 큰 단락 한 면에 하나나 둘 · 면마다 적어도 하나).
+  //   단락 사이는 전부 물, 건널목은 다리. 맵 데이터 모양은 다른 맵과 같아서 나머지 코드는 그대로 돈다
+  function chWorldGen(M, seed0) {
+    const GAP = M.gap, RH = M.ring / 2, PW = M.passW / 2;
+    const SRC = M.zones.map(([x0, z0, x1, z1], zi) => ({ zi, x0, z0, w: x1 - x0, h: z1 - z0, big: z1 - z0 > 60 }));
+    for (let seed = seed0 >>> 0, tries = 0; ; seed = (seed + 1000003) >>> 0, tries++) {
+      let st = seed; const rnd = () => { st = (st + 0x6D2B79F5) >>> 0; let t = st; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+      const ri = (n) => Math.floor(rnd() * n), shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = ri(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+      // 1. 그룹 9개 — 2×2 칸에 단락을 섞어 놓고, 그룹 가운데 쪽으로 붙인다 (안쪽 틈 13)
+      const zones = [], groups = [];
+      for (let g = 0; g < 9; g++) {
+        const kinds = shuffle([0, 1, 2, 3]), zs = kinds.map((si, s) => { const k = ri(4), f = ri(2), S = SRC[si]; return { si, k, f, W: k % 2 ? S.h : S.w, H: k % 2 ? S.w : S.h, r: s >> 1, c: s & 1, g }; });
+        const cw = [0, 1].map((c) => Math.max(...zs.filter((z) => z.c === c).map((z) => z.W))), rh = [0, 1].map((r) => Math.max(...zs.filter((z) => z.r === r).map((z) => z.H)));
+        for (const z of zs) { z.ox = z.c === 0 ? cw[0] - z.W : cw[0] + GAP; z.oz = z.r === 0 ? rh[0] - z.H : rh[0] + GAP; }
+        groups.push({ zs, W: cw[0] + GAP + cw[1], H: rh[0] + GAP + rh[1] });
+      }
+      const CW = [0, 1, 2].map((c) => Math.max(...[0, 1, 2].map((r) => groups[r * 3 + c].W))), RHt = [0, 1, 2].map((r) => Math.max(...[0, 1, 2].map((c) => groups[r * 3 + c].H)));
+      const GX = [0, CW[0] + GAP, CW[0] + CW[1] + 2 * GAP], GZ = [0, RHt[0] + GAP, RHt[0] + RHt[1] + 2 * GAP];
+      groups.forEach((G, gi) => { const r = Math.floor(gi / 3), c = gi % 3;
+        G.x = GX[c] + (c === 0 ? CW[c] - G.W : c === 2 ? 0 : (CW[c] - G.W) / 2); G.z = GZ[r] + (r === 0 ? RHt[r] - G.H : r === 2 ? 0 : (RHt[r] - G.H) / 2);
+        for (const z of G.zs) { z.x0 = G.x + z.ox; z.z0 = G.z + z.oz; z.x1 = z.x0 + z.W; z.z1 = z.z0 + z.H; zones.push(z); } });
+      // 2. 밀어 붙이기 — 틈이 13칸이 될 때까지 가운데 쪽으로 (그룹 안 단락 → 그룹 → 단락 하나하나)
+      const E = 1e-6, hits = (a, dx, dz, list) => { for (const b of list) { if (b === a) continue; if (a.x0 + dx < b.x1 + GAP - E && b.x0 < a.x1 + dx + GAP - E && a.z0 + dz < b.z1 + GAP - E && b.z0 < a.z1 + dz + GAP - E) return true; } return false; };
+      const slide = (a, cx, cz, list) => { let mv = false;   // 단락 하나를 (cx, cz) 쪽으로 x · z 차례로
+        for (const ax of [0, 1]) { const c = ax ? (a.z0 + a.z1) / 2 - cz : (a.x0 + a.x1) / 2 - cx; if (Math.abs(c) < 0.5) continue;
+          const u = c > 0 ? -1 : 1; let step = 0;
+          for (const d of [8, 4, 2, 1, 0.5]) while (step + d <= Math.abs(c) && !hits(a, ax ? 0 : u * (step + d), ax ? u * (step + d) : 0, list)) step += d;
+          if (step) { if (ax) { a.z0 += u * step; a.z1 += u * step; } else { a.x0 += u * step; a.x1 += u * step; } mv = true; } }
+        return mv; };
+      for (const G of groups) { const gcx = G.zs.reduce((s, z) => s + z.x0 + z.x1, 0) / 8, gcz = G.zs.reduce((s, z) => s + z.z0 + z.z1, 0) / 8;
+        for (let it = 0; it < 20; it++) { let mv = false; for (const a of G.zs) if (slide(a, gcx, gcz, G.zs)) mv = true; if (!mv) break; } }
+      const box = (G) => { G.x = Math.min(...G.zs.map((z) => z.x0)); G.z = Math.min(...G.zs.map((z) => z.z0)); G.W = Math.max(...G.zs.map((z) => z.x1)) - G.x; G.H = Math.max(...G.zs.map((z) => z.z1)) - G.z; };
+      groups.forEach(box);
+      const cx = groups[4].x + groups[4].W / 2, cz = groups[4].z + groups[4].H / 2;
+      const gClash = (G, dx, dz) => { for (const a of G.zs) for (const b of zones) { if (b.g === a.g) continue; if (a.x0 + dx < b.x1 + GAP - E && b.x0 < a.x1 + dx + GAP - E && a.z0 + dz < b.z1 + GAP - E && b.z0 < a.z1 + dz + GAP - E) return true; } return false; };
+      const order = [0, 1, 2, 3, 5, 6, 7, 8].sort((p, q) => { const d = (G) => Math.abs(G.x + G.W / 2 - cx) + Math.abs(G.z + G.H / 2 - cz); return d(groups[p]) - d(groups[q]); });
+      for (let it = 0; it < 60; it++) { let moved = false;
+        for (const gi of order) { const G = groups[gi]; let gx = G.x + G.W / 2 - cx, gz = G.z + G.H / 2 - cz;
+          for (const ax of [0, 1]) { const c = ax ? gz : gx; if (Math.abs(c) <= 0.5) continue; const u = c > 0 ? -1 : 1; let step = 0;
+            for (const d of [8, 4, 2, 1, 0.5]) while (step + d <= Math.abs(c) + 0.01 && !gClash(G, ax ? 0 : u * (step + d), ax ? u * (step + d) : 0)) step += d;
+            if (step > 0) { for (const a of G.zs) { if (ax) { a.z0 += u * step; a.z1 += u * step; } else { a.x0 += u * step; a.x1 += u * step; } } if (ax) { G.z += u * step; gz += u * step; } else { G.x += u * step; gx += u * step; } moved = true; } } }
+        if (!moved) break; }
+      for (let it = 0; it < 80; it++) { let mv = false; const byC = zones.slice().sort((p, q) => Math.abs((p.x0 + p.x1) / 2 - cx) + Math.abs((p.z0 + p.z1) / 2 - cz) - Math.abs((q.x0 + q.x1) / 2 - cx) - Math.abs((q.z0 + q.z1) / 2 - cz));
+        for (const a of byC) if (slide(a, cx, cz, zones)) mv = true; if (!mv) break; }
+      { const mx = Math.min(...zones.map((z) => z.x0)), mz = Math.min(...zones.map((z) => z.z0)), sx = Math.round((mx + Math.max(...zones.map((z) => z.x1))) / 2), sz = Math.round((mz + Math.max(...zones.map((z) => z.z1))) / 2);
+        for (const a of zones) { a.x0 -= sx; a.x1 -= sx; a.z0 -= sz; a.z1 -= sz; } }   // 월드 한가운데를 (0, 0)쯤으로
+      groups.forEach(box);
+      // 3. 건널목 — 마주 보는 두 면 (틈 13~25칸, 사이에 다른 단락 없음, 겹치는 길이 14칸 넘게). 한 면에 작은 단락 1개 · 큰 단락 1~2개, 같은 면 건널목끼리는 24칸 넘게
+      const MAXG = 25, cap = {}, used = {}, key = (i, s) => i * 4 + s;   // 면: 0 = 북 · 1 = 동 · 2 = 남 · 3 = 서
+      zones.forEach((z, i) => { for (let s = 0; s < 4; s++) { cap[key(i, s)] = SRC[z.si].big ? 1 + ri(2) : 1; used[key(i, s)] = []; } });
+      let pairs = [];
+      for (let i = 0; i < zones.length; i++) for (let j = i + 1; j < zones.length; j++) for (const [pi, qi, x] of [[i, j, 1], [j, i, 1], [i, j, 0], [j, i, 0]]) {
+        const p = zones[pi], q = zones[qi], g = x ? q.x0 - p.x1 : q.z0 - p.z1, lo = x ? Math.max(p.z0, q.z0) : Math.max(p.x0, q.x0), hi = x ? Math.min(p.z1, q.z1) : Math.min(p.x1, q.x1);
+        if (!(g >= GAP - 0.01 && g <= MAXG) || hi - lo < 14) continue;
+        if (zones.some((o) => o !== p && o !== q && (x ? o.x0 < q.x0 && o.x1 > p.x1 && o.z0 < hi && o.z1 > lo : o.z0 < q.z0 && o.z1 > p.z1 && o.x0 < hi && o.x1 > lo))) continue;
+        pairs.push({ pi, qi, sa: x ? 1 : 2, sb: x ? 3 : 0, x, g, lo, hi });
+      }
+      shuffle(pairs); pairs = pairs.filter((t) => zones[t.pi].g !== zones[t.qi].g).concat(pairs.filter((t) => zones[t.pi].g === zones[t.qi].g));   // 그룹끼리 잇는 것부터
+      const par = zones.map((_, i) => i), fd = (v) => { while (par[v] !== v) { par[v] = par[par[v]]; v = par[v]; } return v; }, cross = [];
+      const put = (t, u) => { used[key(t.pi, t.sa)].push(u); used[key(t.qi, t.sb)].push(u); par[fd(t.pi)] = fd(t.qi); cross.push({ pi: t.pi, qi: t.qi, x: t.x, u, g: t.g }); };
+      const pick = (t, gapMin) => { for (let k = 0; k < 40; k++) { const u = t.lo + 7 + rnd() * (t.hi - t.lo - 14); if (used[key(t.pi, t.sa)].concat(used[key(t.qi, t.sb)]).every((v) => Math.abs(u - v) >= gapMin)) return u; } return null; };
+      for (let round = 0; round < 2; round++) for (const t of pairs) {   // 두 바퀴 — 한 번에 하나씩
+        if (Math.min(cap[key(t.pi, t.sa)] - used[key(t.pi, t.sa)].length, cap[key(t.qi, t.sb)] - used[key(t.qi, t.sb)].length) <= 0) continue;
+        const u = pick(t, 24); if (u !== null) put(t, u);
+      }
+      for (const t of pairs) {                  // 아직 건널목이 없는 면 — '면마다 하나'가 상한보다 먼저 (간격 24칸, 안 되면 14칸)
+        if (used[key(t.pi, t.sa)].length && used[key(t.qi, t.sb)].length) continue;
+        let u = pick(t, 24); if (u === null) u = pick(t, 14); if (u !== null) put(t, u);
+      }
+      if (new Set(zones.map((_, i) => fd(i))).size !== 1 && tries < 50) continue;   // 끊긴 곳이 있으면 다른 씨앗으로 다시
+      return chWorldBuild(M, SRC, zones, cross, seed, rnd);
+    }
+  }
+  function chWorldBuild(M, SRC, zones, cross, seed, rnd) {   // 배치 → 맵 데이터 (다른 맵과 같은 모양)
+    const GAP = M.gap, RH = M.ring / 2, PW = M.passW / 2, SIDES = ['n', 'e', 's', 'w'];
+    const out = { seed, world: true, mmRef: { w: M.mm.x1 - M.mm.x0, h: M.mm.z1 - M.mm.z0 }, ring: M.ring, gap: M.gap, passW: M.passW, zrMid: 0, passes: [], paths: [], curves: [], cross: Object.assign({}, M.cross, { ends: [] }), pr: M.pr,
+      zones: [], roads: [], lots: [], b: [], net: [], ave: [], areas: [], props: [], spots: [], fuel: [], rivers: [], bridges: [], passes2: [], passPts: [], startZ: [] };
+    const inZ = (S, x, z) => x >= S.x0 - 0.01 && x <= S.x0 + S.w + 0.01 && z >= S.z0 - 0.01 && z <= S.z0 + S.h + 0.01;
+    const srcOf = (x, z) => SRC.findIndex((S) => inZ(S, x, z));
+    zones.forEach((Z, zi) => {
+      const S = SRC[Z.si], k = Z.k, f = Z.f;
+      const pt = (x, z) => { let u = x - S.x0, v = z - S.z0, W = S.w, H = S.h; if (f) u = W - u; for (let i = 0; i < k; i++) { const t = u; u = H - v; v = t; const w = W; W = H; H = w; } return [Z.x0 + u, Z.z0 + v]; };
+      const rc = (r) => { const a = pt(r[0], r[1]), b = pt(r[2], r[3]); return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1])]; };
+      const sd = (s) => { let i = SIDES.indexOf(s); if (f && (i === 1 || i === 3)) i = 4 - i; return SIDES[(i + k) % 4]; };
+      const hd = (h) => (f ? Math.PI - h : h) + k * Math.PI / 2;
+      out.zones.push([Z.x0, Z.z0, Z.x1, Z.z1]); if (Z.g === 4) out.startZ.push(zi);
+      for (const r of M.roads) { const c = [Math.max(r[0], S.x0), Math.max(r[1], S.z0), Math.min(r[2], S.x0 + S.w), Math.min(r[3], S.z0 + S.h)]; if (c[2] - c[0] > 0.05 && c[3] - c[1] > 0.05) out.roads.push(rc(c)); }
+      for (const l of M.lots) if (inZ(S, (l[0] + l[2]) / 2, (l[1] + l[3]) / 2)) out.lots.push(rc(l));
+      const idx = new Map();                     // 건물 — 방은 부모 뒤에 (원래 순서 그대로)
+      M.b.forEach((b, bi) => { if (b.zone !== Z.si || b.t === 'hill') return;
+        const [x, z] = pt(b.x, b.z), n = Object.assign({}, b, { x, z, w: k % 2 ? b.d : b.w, d: k % 2 ? b.w : b.d, doors: b.doors.map(sd), zone: zi, local: out.b.length });
+        if (b.open) n.open = b.open.map(sd); if (b.locks) n.locks = b.locks.map(sd); if (b.room) n.room = { doors: b.room.doors.map((d) => Object.assign({}, d, { s: sd(d.s) })) };
+        if (b.parent !== undefined) n.parent = idx.get(b.parent);
+        idx.set(bi, out.b.length); out.b.push(n); });
+      { const N = M.net[Z.si]; out.net.push({ nodes: N.nodes.map(([x, z]) => pt(x, z)), edges: N.edges }); }
+      { const A = M.ave[Z.si], o = { V: null, H: null };
+        for (const [kk, q] of [['V', A.V], ['H', A.H]]) { if (!q) continue; const a = kk === 'V' ? pt(q.c, q.a) : pt(q.a, q.c), b = kk === 'V' ? pt(q.c, q.b) : pt(q.b, q.c);
+          if (Math.abs(a[0] - b[0]) < 1e-6) o.V = { c: a[0], hw: q.hw, a: Math.min(a[1], b[1]), b: Math.max(a[1], b[1]) }; else o.H = { c: a[1], hw: q.hw, a: Math.min(a[0], b[0]), b: Math.max(a[0], b[0]) }; }
+        out.ave.push(o); }
+      for (const A of M.areas) if (A.zone === Z.si) out.areas.push(Object.assign({}, A, { r: rc(A.r), zone: zi, src: A, rk: k, rf: f }, A.can ? { can: rc(A.can) } : {}, A.gate ? { gate: sd(A.gate) } : {}));
+      for (const p of M.props) if (srcOf(p[1], p[2]) === Z.si) { const q = pt(p[1], p[2]); out.props.push([p[0], q[0], q[1]].concat(p.slice(3))); }
+      for (const s of M.spots) if (s.zone === Z.si) { const n = Object.assign({}, s, { zone: zi }); if (s.at) n.at = pt(s.at[0], s.at[1]); if (s.ring) n.ring = pt(s.ring[0], s.ring[1]).concat(s.ring.slice(2)); out.spots.push(n); }
+      for (const F of M.fuel) if (F.zone === Z.si) out.fuel.push({ zone: zi, slots: F.slots.map(([x, z, h]) => pt(x, z).concat([hd(h)])) });
+    });
+    // 건널목 = 다리 — 양 끝은 순환도로 한가운데까지 (단락 안으로 2.25칸)
+    const span = [];                             // 다리가 놓인 틈 (물을 채울 때 비운다)
+    for (const c of cross) { const p = zones[c.pi], q = zones[c.qi], u = c.u;
+      if (c.x) { out.bridges.push([p.x1 - RH, u - PW, q.x0 + RH, u + PW, p.x1, q.x0]); span.push([p.x1, u - PW, q.x0, u + PW]);
+        out.passes2.push({ axis: 'v', c: u, len: c.g + 2 * RH, ax: p.x1 - RH, az: u, bx: q.x0 + RH, bz: u, za: c.pi, zb: c.qi, pin: c.g / 2, mid: (p.x1 + q.x0) / 2 }); out.passPts.push({ x: (p.x1 + q.x0) / 2, z: u, dir: 'h' }); }
+      else { out.bridges.push([u - PW, p.z1 - RH, u + PW, q.z0 + RH, p.z1, q.z0]); span.push([u - PW, p.z1, u + PW, q.z0]);
+        out.passes2.push({ axis: 'h', c: u, len: c.g + 2 * RH, ax: u, az: p.z1 - RH, bx: u, bz: q.z0 + RH, za: c.pi, zb: c.qi, pin: c.g / 2, mid: (p.z1 + q.z0) / 2 }); out.passPts.push({ x: u, z: (p.z1 + q.z0) / 2, dir: 'v' }); } }
+    // 지도 = 단락 전체 둘레 + 틈 반 칸. 단락과 다리 틈이 아닌 곳은 전부 물 — 단락 변과 다리 변으로 칸을 나눠 물인 칸을 가로로, 다시 세로로 이어 붙인다
+    const M2 = GAP / 2, mm = out.mm = { x0: Math.min(...zones.map((z) => z.x0)) - M2, z0: Math.min(...zones.map((z) => z.z0)) - M2, x1: Math.max(...zones.map((z) => z.x1)) + M2, z1: Math.max(...zones.map((z) => z.z1)) + M2 };
+    const land = zones.map((z) => [z.x0, z.z0, z.x1, z.z1]).concat(span), uniq = (a) => { a.sort((p, q) => p - q); return a.filter((v, i) => !i || v - a[i - 1] > 1e-6); };
+    const xs = uniq([mm.x0 - 0.5, mm.x1 + 0.5].concat(land.flatMap((r) => [r[0], r[2]]))), zs = uniq([mm.z0 - 0.5, mm.z1 + 0.5].concat(land.flatMap((r) => [r[1], r[3]])));
+    let prev = [];
+    for (let j = 0; j + 1 < zs.length; j++) { const zc = (zs[j] + zs[j + 1]) / 2, rows = land.filter((r) => zc > r[1] && zc < r[3]), cur = [];
+      for (let i = 0, s = -1; i <= xs.length - 1; i++) { const wet = i + 1 < xs.length && !rows.some((r) => (xs[i] + xs[i + 1]) / 2 > r[0] && (xs[i] + xs[i + 1]) / 2 < r[2]);
+        if (wet && s < 0) s = i; if (!wet && s >= 0) { cur.push([xs[s], zs[j], xs[i], zs[j + 1]]); s = -1; } }
+      for (const r of cur) { const up = prev.find((q) => Math.abs(q[0] - r[0]) < 1e-6 && Math.abs(q[2] - r[2]) < 1e-6 && Math.abs(q[3] - r[1]) < 1e-6 && q[3] - q[1] + r[3] - r[1] <= 60); if (up) { up[3] = r[3]; r.m = up; } else out.rivers.push(r); }   // 위 칸과 폭이 같으면 세로로 잇는다 (60칸까지)
+      prev = cur.map((r) => r.m || r); }
+    return out;
+  }

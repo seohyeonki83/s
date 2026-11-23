@@ -1360,6 +1360,8 @@ from c405a_patch import C405A_R   # c405 1단계
 R += C405A_R
 from c405b_patch import C405B_R   # c405 2단계: 내 단락만
 R += C405B_R
+from c406_patch import C406_R   # c406: 새 본 맵
+R += C406_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
