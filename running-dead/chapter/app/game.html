@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c406</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c407</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -447,7 +447,7 @@
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:1000;background:#0e1014;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:system-ui,-apple-system,sans-serif;color:#fff;padding:24px;box-sizing:border-box';
     ov.innerHTML = '<div style="font-size:26px;font-weight:900;letter-spacing:1px">맵 선택</div>';
-    for (const [k, name, sub] of [['t', '튜토리얼 1', '실험실 · 박스 안에서 시작'], ['b', '큰 맵', '구역 4개 · 다리와 산길 · 랜드마크 9'], ['m', '본 맵', '그룹 9개 · 단락 36개 · 시작할 때마다 새로'], ['s', '작은 맵', '구역 1개 · 사방이 산 · 랜드마크 2'], ['p', '거점 맵', '경찰서 거점 · 세로 · 8자 순환도로 · 랜드마크 5'], ['k', '적 테스트', '큰 맵 · 동료 70 · 무적 · 바로 보스 출동']]) {
+    for (const [k, name, sub] of [['t', '튜토리얼 1', '실험실 · 박스 안에서 시작'], ['b', '큰 맵', '구역 4개 · 다리와 산길 · 랜드마크 9'], ['m', '본 맵', '그룹 9개 · 단락 36개 · 시작할 때마다 새로'], ['w', '본 맵 테스트', '둘러보기 · 속도 3배 · 이동만 · 적이 나를 못 봄'], ['s', '작은 맵', '구역 1개 · 사방이 산 · 랜드마크 2'], ['p', '거점 맵', '경찰서 거점 · 세로 · 8자 순환도로 · 랜드마크 5'], ['k', '적 테스트', '큰 맵 · 동료 70 · 무적 · 바로 보스 출동']]) {
       const bt = document.createElement('button');
       bt.style.cssText = 'width:min(300px,80vw);padding:18px 16px;border-radius:16px;border:2px solid #3a4250;background:#1b2028;color:#fff;font:inherit;text-align:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent';
       bt.innerHTML = '<div style="font-size:22px;font-weight:900">' + name + '</div><div style="margin-top:6px;font-size:13px;color:#9aa6b8">' + sub + '</div>';
@@ -456,8 +456,8 @@
     }
     document.body.appendChild(ov);
   }));
-  const CH_MAIN = CH_PICK === 'm', CH_BASE = CH_PICK === 'p', CH_NOHUM = false, CH_SMALL = CH_PICK === 's' || CH_BASE, CH_BT = CH_PICK === 'k', CH_TUT = CH_PICK === 't';   /* c354: 거점 맵 (사람 수는 작은 맵 몫) */   // c289: 튜토리얼 1   // c166: 보스 테스트
-  { const v = document.getElementById('ver'); if (v) v.textContent = v.textContent.replace('챕터', CH_TUT ? '튜토리얼 1' : CH_MAIN ? '본 맵' : CH_BASE ? '거점 맵' : CH_SMALL ? '작은 맵' : CH_BT ? '적 테스트' : '큰 맵'); }
+  const CH_TOUR = CH_PICK === 'w', CH_MAIN = CH_PICK === 'm' || CH_TOUR, CH_BASE = CH_PICK === 'p',   /* c407: 본 맵 테스트 = 본 맵 + 둘러보기 */ CH_NOHUM = false, CH_SMALL = CH_PICK === 's' || CH_BASE, CH_BT = CH_PICK === 'k', CH_TUT = CH_PICK === 't';   /* c354: 거점 맵 (사람 수는 작은 맵 몫) */   // c289: 튜토리얼 1   // c166: 보스 테스트
+  { const v = document.getElementById('ver'); if (v) v.textContent = v.textContent.replace('챕터', CH_TUT ? '튜토리얼 1' : CH_TOUR ? '본 맵 테스트' : CH_MAIN ? '본 맵' : CH_BASE ? '거점 맵' : CH_SMALL ? '작은 맵' : CH_BT ? '적 테스트' : '큰 맵'); }
   // ── c406: 본 맵 — 시작할 때마다 새로 만드는 랜덤 월드 ──
   //   큰 맵의 단락 4개(큰 2 + 작은 2)를 한 그룹으로, 그룹 9개를 3×3으로 놓는다. 단락마다 90°씩 돌리고·뒤집고, 그룹 안에서 자리를 섞는다.
   //   그룹과 단락을 가운데 쪽으로 밀어 붙이고 (단락 사이 틈 13칸), 마주 보는 면마다 건널목을 놓는다 (작은 단락 한 면에 하나 · 큰 단락 한 면에 하나나 둘 · 면마다 적어도 하나).
@@ -2157,7 +2157,7 @@
     b.zsT = clock; b.zsV = seen(b, zombies);
     return b.zsV;
   }
-  const sees = (c, z) => z && isZombie(z) && (z.space === c.space || (linked(c.space, z.space) && (CHAPTER || hSeen(z))));   /* c58 */   // v296: 같은 공간이거나, 사람 편 누가 보고 있고 문으로 이어져 있다   // 살아 있는 좀비이고 같은 공간(같은 건물 안, 또는 둘 다 밖)에 있다
+  const sees = (c, z) => z && isZombie(z) && !(CH_TOUR && z === me) && (z.space === c.space || (linked(c.space, z.space) && (CHAPTER || hSeen(z))));   /* c58 */   // v296: 같은 공간이거나, 사람 편 누가 보고 있고 문으로 이어져 있다   // 살아 있는 좀비이고 같은 공간(같은 건물 안, 또는 둘 다 밖)에 있다
 
   // 틱마다 주변을 본다. 좀비 = 나 + 동료 좀비 전부. 같은 공간(같은 건물 안, 또는 둘 다 밖)에 있는 좀비만 보인다
   // ── 근처 찾기 칸 (v177) — 걸음마다 좀비·시민을 4칸 네모 칸에 나눠 담는다. 근처를 찾을 땐 둘레 칸만 본다 (지도 전체 330명을 매번 훑지 않게) ──
@@ -2194,7 +2194,7 @@
     const seen = [];
     let near = Infinity, nearZ = null;
     for (const z of nearIn(zCells, c.foot.x, c.foot.z, c.sight, seBuf)) {   // 둘레 칸의 좀비만 (v177)
-      if (!isZombie(z)) continue;
+      if (!isZombie(z) || (CH_TOUR && z === me)) continue;   /* c407: 본 맵 테스트 — 나를 못 본다 */
       if (z.space !== c.space && !(linked(c.space, z.space) && (CHAPTER || hSeen(z)))) continue;   /* c58: 챕터 — 문이 뚫려 이어진 공간은 한 공간으로 본다 */   // v296: 다른 공간 — 사람 편 누가 보고 있고 문으로 이어져 있으면 반응
       const d = Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
       if (d > c.sight) continue;
@@ -2467,7 +2467,7 @@
     if (c.stuckT >= 2) { c.stuckT = 0; c.isolated = true; enterFight(c, null, true); return; }   // 2초 넘게 막힘 → 고립: 회피를 버리고 제자리에서 공격
     const list = [];
     const ER = c.evadeR * 1.2 * 0.9;   // v503: 회피거리의 1.08배 (v538: 회피거리가 30% 줄어 같이 30% 줄어든다)   // v441: 회피 중 인지거리 = 회피거리의 1.2배 (전엔 7.2칸)
-    for (const z of nearIn(zCells, c.foot.x, c.foot.z, ER, evBuf)) if (isZombie(z) && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= ER) list.push(z);
+    for (const z of nearIn(zCells, c.foot.x, c.foot.z, ER, evBuf)) if (isZombie(z) && !(CH_TOUR && z === me) && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= ER) list.push(z);
     if (!list.length) { c.evadeR = sniperEvadeR(); enterFight(c, null, true); return; }   // v406: 다음 회피거리는 새로 뽑는다
     if ((c.tick -= dt) <= 0) { c.tick += TICK; c.flee.copy(fleeDir(c, list)); }
     steer(c.vel, wantV.copy(c.flee).multiplyScalar(copSpeed(c)), accelOf(c) * dt);   /* v508: 회피도 2.91 */   /* v483: 회피도 평소(군인)와 같은 속도 (3.06) */   /* v442: 회피 = 동료 속도와 같음 (v441: 1.05배) */
@@ -2635,7 +2635,7 @@
     if (CHAPTER && c.gar && !(c.soldier && c.master) && chHoldLeash(c, dt)) { moveShoot(c, dt); return; }   // c59: 사수지역 — 자리에서 지배 거리 밖이면 돌아온다   // v442: 복귀하면서도 쏜다   // v410: 주인 저격수에게서 지배 거리 밖에 1~2초 → 복귀
     if (c.sniper && !c.isolated) {   // v510: 건물 안에서도 회피 (벽은 그냥 막히는 것 — 막히면 고립 규칙)   // v396: 저격수 — 좀비가 회피거리 안이면 바로 도망 (건물 안 · 고립 중엔 안 함)
       const er = c.evadeR;                    // v406: 회피거리 = 내 덮침 거리(3.24칸)의 1.1배 = 3.56칸 ±10% (회피할 때마다 새로 뽑는다)
-      for (const z of nearIn(zCells, c.foot.x, c.foot.z, er, evBuf)) if (isZombie(z) && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= er) { c.state = 'evade'; c.foe = null; c.tick = 0; c.stuckT = 0; return; }
+      for (const z of nearIn(zCells, c.foot.x, c.foot.z, er, evBuf)) if (isZombie(z) && !(CH_TOUR && z === me) && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= er) { c.state = 'evade'; c.foe = null; c.tick = 0; c.stuckT = 0; return; }
     }
     const far = (z) => Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
     if (tick || !sees(c, c.foe)) {          // 틱마다 다시 뽑는다 (상대가 죽었거나 아직 없거나 안 보이면 바로)
@@ -3093,9 +3093,9 @@
   }
   const MM_S = Math.min((CHAPTER ? 88 : 128 * 2 / 3) / (MM.x1 - MM.x0), (CHAPTER ? 107 : 136 * 2 / 3) / (MM.z1 - MM.z0));   /* c6: 미니맵을 3분의 1 줄여 테스트맵 크기쯤으로 (132×160 → 88×107) */   // 미니맵 배율 (화면 px / 유닛) — 가로세로 같은 비율로 (v125, v126), v129에 3분의 2 크기 (약 85×91)
   const MM_CW = Math.round((MM.x1 - MM.x0) * MM_S), MM_CH = Math.round((MM.z1 - MM.z0) * MM_S);
-  // c404: 챕터 미니맵 — 작게 볼 때는 정사각형(88px)에 내 둘레만, 나는 늘 한가운데 (미니맵이 나를 따라다닌다). 전에 지도 전체를 비추던 배율보다 1.25배 확대 = 비추는 폭이 80%.
+  // c404: 챕터 미니맵 — 작게 볼 때는 정사각형(88px)에 내 둘레만, 나는 늘 한가운데 (미니맵이 나를 따라다닌다). 배율은 전에 지도 전체를 비추던 그대로 (c407: 1.25배 확대를 되돌렸다 — 20% 더 넓게 비춘다) · 모양은 원.
   //   여러 그룹을 이어 붙인 큰 월드는 그룹 하나 크기(mmRef)를 기준 배율로 쓴다. 누르면 지도 전체 (c18)
-  const MM_SIDE = 88, MM_ZOOM = 1.25, MM_REF_S = CHAPTER && CH_MAP.mmRef ? Math.min(88 / CH_MAP.mmRef.w, 107 / CH_MAP.mmRef.h) : MM_S, MM_VIEW = MM_SIDE / (MM_REF_S * MM_ZOOM);
+  const MM_SIDE = 88, MM_ZOOM = 1, MM_REF_S = CHAPTER && CH_MAP.mmRef ? Math.min(88 / CH_MAP.mmRef.w, 107 / CH_MAP.mmRef.h) : MM_S, MM_VIEW = MM_SIDE / (MM_REF_S * MM_ZOOM);
   const MM_SW = CHAPTER ? MM_SIDE : MM_CW, MM_SH = CHAPTER ? MM_SIDE : MM_CH;   // 작게 볼 때 크기
   let mmWin = null;                           // 작게 볼 때 비추는 창 {x0, z0, V} (크게 볼 때는 null)
   const MM_CELL = 2;                          // 가 본 곳 기록 칸 (유닛)
@@ -3106,7 +3106,7 @@
   const mmFogCtx = mmFog.getContext('2d'), mmImg = mmFogCtx.createImageData(mmW, mmH);
   const mmEl = document.getElementById('minimap'), mmCtx = mmEl.getContext('2d');
   const mmDpr = Math.min(window.devicePixelRatio || 1, 3);
-  mmEl.style.width = MM_SW + 'px'; mmEl.style.height = MM_SH + 'px'; if (CH_TUT) mmEl.style.display = 'none';   /* c334: 튜토리얼은 미니맵 없음 */
+  mmEl.style.width = MM_SW + 'px'; mmEl.style.height = MM_SH + 'px'; if (CHAPTER) { mmEl.style.borderRadius = '50%'; mmEl.style.outline = 'none'; mmEl.style.boxShadow = '0 0 0 1px rgba(255, 255, 255, 0.25)'; }   /* c407: 원 (테두리는 그림자로 — 둥글게 따라간다) */ if (CH_TUT) mmEl.style.display = 'none';   /* c334: 튜토리얼은 미니맵 없음 */
   for (const [id, dx] of [['pause', 0], ['reset', 42]]) {   // v526: 일시정지·되감기 = 미니맵 바로 밑 (오른쪽부터 나란히)
     const el = document.getElementById(id); el.style.bottom = 'auto'; if (CHAPTER) el.style.opacity = '0';   /* c9: 되감기·일시정지 버튼은 안 보이게 (자리와 누르는 건 그대로) */
     el.style.top = `calc(${6 + MM_SH + 6}px + env(safe-area-inset-top, 0px))`; el.style.right = `calc(max(16px, env(safe-area-inset-right, 0px)) + ${dx}px)`;
@@ -3199,11 +3199,11 @@
   function mmLayout() {
     const S = mmEl.style;
     if (!mmBig) {
-      S.width = MM_SW + 'px'; S.height = MM_SH + 'px'; S.top = ''; S.left = ''; S.right = ''; S.transform = ''; S.zIndex = ''; S.borderRadius = ''; S.boxShadow = '';
+      S.width = MM_SW + 'px'; S.height = MM_SH + 'px'; S.top = ''; S.left = ''; S.right = ''; S.transform = ''; S.zIndex = ''; S.borderRadius = CHAPTER ? '50%' : ''; S.boxShadow = CHAPTER ? '0 0 0 1px rgba(255, 255, 255, 0.25)' : ''; S.outline = CHAPTER ? 'none' : '';
       mmEl.width = Math.round(MM_SW * mmDpr); mmEl.height = Math.round(MM_SH * mmDpr);
     } else {                                  // 화면 폭의 92% (높이의 70%를 넘지 않게), 한가운데보다 살짝 위 — 조이스틱을 가리지 않는다
       const vw = stage.clientWidth, vh = stage.clientHeight, k = Math.min(vw * 0.92 / MM_CW, vh * 0.7 / MM_CH), w = Math.round(MM_CW * k), h = Math.round(MM_CH * k), d = Math.min(mmDpr, 2);
-      S.width = w + 'px'; S.height = h + 'px'; S.top = '46%'; S.left = '50%'; S.right = 'auto'; S.transform = 'translate(-50%, -50%)'; S.zIndex = '15'; S.borderRadius = '12px'; S.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.65)';
+      S.width = w + 'px'; S.height = h + 'px'; S.top = '46%'; S.left = '50%'; S.right = 'auto'; S.transform = 'translate(-50%, -50%)'; S.zIndex = '15'; S.borderRadius = '12px'; S.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.65)'; S.outline = '';
       mmEl.width = Math.round(w * d); mmEl.height = Math.round(h * d);
     }
     mmT = 0; updateMinimap(0);                // 크기를 바꾸면 그림이 지워진다 — 바로 다시 그린다 (일시정지 중이어도)
@@ -3368,7 +3368,7 @@
 
   // HP 0이 된 좀비: 동료는 사라지고, 나는 '죽었어'를 띄우고 멈춘다
   function killZombie(z) {
-    if (CH_BT && z === me) { me.hp = me.maxHp; return; }   // c166: 보스 테스트 — 나는 무적
+    if ((CH_BT || CH_TOUR) && z === me) { me.hp = me.maxHp; return; }   // c166: 보스 테스트 — 나는 무적 · c407: 본 맵 테스트도
     if (z === me && owned.revive && reviveT <= 0) {   // v375: 부활 — 체력 가득으로 되살아난다
       reviveT = reviveCd(); me.hp = me.maxHp * reviveHp(); refreshBadges();
       for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; puff(me.foot.x, 0.5, me.foot.z, 0xff5a6e, 0.55, 1.5, 0.55, Math.cos(a) * 3.2, 0.5, Math.sin(a) * 3.2, 0.9); }
@@ -3825,6 +3825,7 @@
   function updateZombie(z, dt) {
     if (z.knockT > 0) { if (z.bombing) chBombIcon(z); knockStep(z, dt); return; }
     if (CHAPTER && z.bombing) { chBombStep(z, dt); return; }   // c272: 자폭 돌진 중
+    if (CH_TOUR && z === me) { const on = pid !== null; steer(z.vel, wantV.set(on ? move.x * z.speed : 0, on ? move.y * z.speed : 0), ACCEL * 3 * dt); z.pick = null; z.aim = null; z.engaging = null; return; }   // c407: 본 맵 테스트 — 나는 이동만 한다 (공격·덮치기·물기 없음)
     const commanding = z === me && cmdPid !== null;   // 명령키를 누르고 있는 동안 주인공은 가만히 선다 — 이동·사냥 안 함 (v107. 하던 습격·감염은 마저 한다)
     const touching = z === me && pid !== null && !commanding;   // 손가락을 대고 있다 (조종하는 나만)
     const input = z === me && !commanding ? move : NO_INPUT;
@@ -4577,7 +4578,7 @@
     me.hpBar.scale.set(barW(me, true), 3 * 0.7, 1);   // v440: 가로는 내 최대 체력에 비례 (처음 1.2)   // v275: 세로 30% 줄임   // v136에 가로 20% 늘림   // v76에 1.5배 더 두껍게 (늘 떠 있다)                    // 내 체력바는 두 배 두껍고, 다른 바·표시보다 늘 위에 그린다 (섞여도 보이게)
     for (const m of me.hpBar.children) m.renderOrder += UI_ME + 50 - UI;   // v379: 내 체력바는 언제나 맨 위 (다른 모든 그림·UI보다)   // 내 체력바 = 내 UI 층 (다른 UI보다 위)
     me.sense = SIGHT;                        // 좀비 인지거리 = 시야 기준 7.2로 고정 (v198 — 전엔 판마다 ±10%). 동료도 이 값
-    me.speed = MY_SPEED;                     // 이동 속도 (동료와 같다)
+    me.speed = MY_SPEED * (CH_TOUR ? 3 : 1);   /* c407: 본 맵 테스트는 3배 */                     // 이동 속도 (동료와 같다)
     me.attack = ATTACK;
     me.tick = 0;
     me.pick = null;
@@ -5057,6 +5058,7 @@
   function stepWorld(dt) {
     clock += dt;
     if (CHAPTER) chSecTick(dt);   // c405: 내가 있는 단락만 돌린다
+    if (CH_TOUR && isZombie(me)) me.hp = me.maxHp;   // c407: 본 맵 테스트 — 체력은 늘 가득
     if (CHAPTER) { const k = chMvDt > 0 ? Math.min(1, chMvDt * 8) : 1; for (const b of bodies) { if (!isZombie(b)) continue; if (b.mvX !== undefined && chMvDt > 0) { const s = Math.hypot(b.foot.x - b.mvX, b.foot.z - b.mvZ) / chMvDt; b.realSp = b.realSp === undefined ? s : b.realSp + (s - b.realSp) * k; } b.mvX = b.foot.x; b.mvZ = b.foot.z; } chMvDt = dt; }   /* c363: 실제 이동 속도 — 지난 걸음 동안 지도 위에서 실제로 움직인 거리 ÷ 시간 (막혀서 못 가면 0에 가깝다), 0.125초쯤으로 고르게 */
     if (CHAPTER && CH_BT) chBossTest(dt);   // c166
     if (!TEST_MAP) trickle(dt);
@@ -6661,6 +6663,7 @@
     setTimeout(() => { fly.remove(); el.style.visibility = ''; el.classList.remove('pop'); el.getBoundingClientRect(); el.classList.add('pop'); }, 440);
   }
   function chEmptySlots() {
+    if (CH_TOUR) return;   // c407: 본 맵 테스트 — 무기 칸 없음
     const want = Math.max(0, chToolCap() - items.length);
     while (chEmpty.length > want) chEmpty.pop().remove();
     chEmpty.forEach((el, j) => { const [dx, dy] = slotPos(items.length + j); el.style.left = `calc(50% + ${dx}px)`; el.style.bottom = `calc(118px - var(--joyd, 0px) + env(safe-area-inset-bottom, 0px) + ${dy}px)`; });
@@ -9113,7 +9116,7 @@
     let zMid = false, zL = false, zR = false, zAl = 0;   /* c80: zAl = 옆 3분의 1에 보인 것까지의 거리 (가장 먼 것) */  // 좀비 — 앞으로 곧게 뻗은 좁은 띠 (길이 car.sight · 폭 = 차 폭의 80%)를 가로로 셋으로. 띠 밖·건물 안·벽 너머는 못 보고, 이 차가 방금 친 좀비는 3초 동안 없는 셈 친다 (받고 지나간다)
     const sw = W * CH_TR_SEE_W / 2;
     for (const z of nearIn(zCells, car.x, car.z, car.sight + L, chTrL)) {
-      if (z.space || !isZombie(z) || (z.trHit === car && z.trHitT > clock)) continue;
+      if (z.space || !isZombie(z) || (CH_TOUR && z === me) || (z.trHit === car && z.trHitT > clock)) continue;
       const dx = z.foot.x - car.x, dz = z.foot.z - car.z, al = dx * fx + dz * fz - L / 2; if (al <= 0 || al > car.sight) continue;   // 앞 범퍼에서부터
       const lt = -dx * fz + dz * fx; if (Math.abs(lt) > sw) continue;   // + = 오른쪽
       if (blocked(car.x, car.z, z.foot.x, z.foot.z)) continue;
