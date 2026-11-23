@@ -1364,6 +1364,8 @@ from c406_patch import C406_R   # c406: 새 본 맵
 R += C406_R
 from c407_patch import C407_R   # c407: 본 맵 테스트 · 원형 미니맵
 R += C407_R
+from c408_patch import C408_R   # c408: 깨어 있는 사람은 안 뺀다
+R += C408_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

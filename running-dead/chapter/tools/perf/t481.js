@@ -17,6 +17,7 @@ const out = await p.evaluate((MODE) => {
     const setB = new Set(R.bodies);
     for (const d of s.dormB) { if (!d.dorm) bad.push('dormB without flag'); if (setB.has(d)) bad.push('dorm body in bodies'); if (d === me || d.kind === 'ally') bad.push('zombie dormant'); }
     for (const c of R.bodies) if (c.dorm) bad.push('active body with dorm flag ' + c.kind);
+    { const aw = s.dormB.filter((c) => c.kind === 'citizen' && !c.sleep); if (aw.length) bad.push('깨어 있는 사람이 빠져 있다: ' + aw.length + ' (그중 사건 받는 경찰 ' + aw.filter((c) => c.onDuty).length + ')'); }
     const zs = R.bodies.filter((c) => c.kind === 'ally' || c === me);
     let near = 0; for (const d of s.dormB) for (const z of zs) if (Math.hypot(d.foot.x - z.foot.x, d.foot.z - z.foot.z) < 10) near++;
     if (near) bad.push('dormant body within 10 of a zombie: ' + near);

@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c407</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c408</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4969,7 +4969,7 @@
   // ── c405 (2단계): 내가 있는 단락만 돌린다 ──
   //   단락(구역)은 강·산으로 갈려 있어서 서로 물리적으로 영향을 주지 않는다. 나와 동료가 있는 단락(가까이 다가간 단락 포함)만 깨워 두고,
   //   나머지 단락의 사람·사물·차·문은 목록과 장면에서 통째로 빼 둔다 — 그대로 멈춰 있다가, 그 단락에 다가가면 그 자리에서 다시 나온다.
-  //   빼지 않는 것: 나·동료 · 싸우거나 쫓거나 도망치는 중인 사람 · 사건 자리로 가는 출동 경찰 · 달리는 경찰차 · 보스 · 드론. 다시 채우기·경보·출동 시계는 그대로 돈다
+  //   빼지 않는 것: 나·동료 · 깨어 있는 사람 전부 (c408 — 자고 있는 사람만 뺀다) · 달리는 경찰차 · 사람이 다시 탈 차 · 보스 · 드론. 다시 채우기·경보·출동 시계는 그대로 돈다
   const CH_SEC_IN = 12, CH_SEC_OUT = 16, CH_SEC_GAP = 24;   // 좀비가 단락에서 12칸 안에 오면 깨운다 · 전부 16칸 밖으로 나가면 재운다 · 단락 사이 틈(건널목)은 깨어 있는 단락에서 24칸 안이면 깨어 있다
   const chSecs = CHAPTER ? CH_MAP.zones.map(([x0, z0, x1, z1], i) => ({ i, x0, z0, x1, z1, live: true })) : [];
   const CH_SEC = CHAPTER && chSecs.length > 1 && !CH_TUT;   // 단락이 하나뿐인 맵은 늘 전부 켜 둔다
@@ -4986,7 +4986,7 @@
     const far = (z) => { const dx = z.foot.x - b.foot.x, dz = z.foot.z - b.foot.z; return dx * dx + dz * dz > CH_SLEEP * CH_SLEEP; };
     return far(me) && (G_W ? nearIn(zCells, b.foot.x, b.foot.z, CH_SLEEP, chSecZB).every((z) => !isZombie(z) || far(z)) : zombies.every(far));
   }
-  const chBodyDormable = (b) => b.kind === 'safe' ? !(b.knockT > 0) : b.kind === 'citizen' && (b.sleep || chSecIdle(b));
+  const chBodyDormable = (b) => b.kind === 'safe' ? !(b.knockT > 0) : b.kind === 'citizen' && !!b.sleep;   /* c408: 자고 있는 사람만 — 깨어 있는 사람(이동 경찰·출동 경찰 포함)은 전 규칙대로 스스로 다시 잠들 때까지 그대로 돈다. 이동 경찰은 한 번 깨면 안 자니까 끝까지 사건 호출을 받는다 */
   const chCarDormable = (c) => !c.tank && (c.state === 'parked' ? !!c.wreck || !!c.done || !c.crew || !c.crew.length : c.state === 'civ');   // 서 있는 차(꾸밈·바리케이트·잔해) · 돌아다니는 민간 차. 달리는 경찰차·사람이 다시 탈 차·보스는 그대로
   function chSceneCut() {                      // 장면에서 한꺼번에 뺀다 (dCut 표시한 것) — 하나씩 빼면 그때마다 장면 전체를 훑는다
     const ch = scene.children; let w = 0;
