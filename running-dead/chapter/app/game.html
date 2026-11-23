@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c402</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c403</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3209,7 +3209,8 @@
     if (d > ATTACK_HOLD) z.attacking = false; // 상대가 1.5칸 밖 = 공격 중 아님 (다가가는 중)
     if (d > MELEE + (c.kind === 'safe' ? c.r : 0) || (c.space !== z.space && !(c.kind === 'safe' && chSafeReach(z, c)))) { steer(z.vel, toward(z, c.foot.x, c.foot.z, z.speed), ACCEL * dt); return; }   /* c54: 방을 꽉 채운 금고는 문간에서 때린다 */   // v296: 다른 공간이면 문으로 들어가서 때린다   // 큰 금고는 겉면까지 닿으면 때린다 (v196)
     if (CHAPTER && c.kind === 'citizen' && chWallCut(z.foot.x, z.foot.z, c.foot.x, c.foot.z)) { steer(z.vel, toward(z, c.foot.x, c.foot.z, z.speed), ACCEL * dt); return; }   // c86: 바리케이트 너머 사람은 못 친다 — 계속 밀어붙이면서 (가면서 치기로) 바리케이트를 친다
-    steer(z.vel, wantV.set(0, 0), ACCEL * dt);
+    if (CHAPTER && c.kind === 'citizen' && c.vel && c.vel.lengthSq() > 0.6 && c.vel.x * (c.foot.x - z.foot.x) + c.vel.y * (c.foot.z - z.foot.z) > 0) steer(z.vel, toward(z, c.foot.x, c.foot.z, z.speed), ACCEL * dt);   // c403: 뒤로 빠지는 적(저격수 회피 등) — 근접 거리 안이어도 서지 않고 계속 붙으면서 친다 (멈췄다 놓치고 다시 쫓는 걸 되풀이하지 않게)
+    else steer(z.vel, wantV.set(0, 0), ACCEL * dt);
     if (z === me && c.kind === 'safe') c.hotF = objFrame;   // v360: 내가 금고를 때리는 중
     if (z.atkT <= 0) { strike(z, c); z.atkT = HIT_EVERY; z.attacking = true; }   // 휘두르는 순간부터 공격 중
   }
