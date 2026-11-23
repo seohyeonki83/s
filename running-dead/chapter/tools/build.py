@@ -1368,6 +1368,8 @@ from c408_patch import C408_R   # c408: 깨어 있는 사람은 안 뺀다
 R += C408_R
 from c409_patch import C409_R   # c409: 물과 산 반반
 R += C409_R
+from c410_patch import C410_R   # c410: 잔해는 부딪힘이 없다
+R += C410_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c409</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c410</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2807,7 +2807,7 @@
     return out;
   }                            // 길 찾기용 서 있는 경찰차 원 {x, z, r} — 사이로 몸이 못 지나갈 만큼 붙은 차들은 한 원으로 합친다 (v139)
   function updateCarObs() {
-    const cs = cars.filter((c) => c.state === 'parked' && !CAR_TEST && !c.wall)   /* v513: 다시 계산 — 사람·차만 쓴다 */   /* v470: 좀비는 서 있는 차를 피해 돌아가지 않고 밀고 들어간다 (본편도) */.map((c) => ({ x: c.x, z: c.z, r: CAR_W * ck(c) / 2 * PARKED_K * 0.8 * (c.wreck ? 0.16 : 1) }));   // v264: 돌아가는 원을 차 부딪힘보다 작게 — 좀비가 차에 실제로 닿아야 막힌 차를 때린다 (잔해는 1/5)
+    const cs = cars.filter((c) => c.state === 'parked' && !CAR_TEST && !c.wall && !c.wreck   /* c410 */)   /* v513: 다시 계산 — 사람·차만 쓴다 */   /* v470: 좀비는 서 있는 차를 피해 돌아가지 않고 밀고 들어간다 (본편도) */.map((c) => ({ x: c.x, z: c.z, r: CAR_W * ck(c) / 2 * PARKED_K * 0.8 * (c.wreck ? 0.16 : 1) }));   // v264: 돌아가는 원을 차 부딪힘보다 작게 — 좀비가 차에 실제로 닿아야 막힌 차를 때린다 (잔해는 1/5)
     if (CHAPTER) {                           // c69: 가까운 것끼리만 합친다 (i가 커지면 그 i만 다시 본다)
       for (let i = 0; i < cs.length; i++) for (let j = i + 1; j < cs.length; j++) {
         const a = cs[i], b = cs[j], d = Math.hypot(a.x - b.x, a.z - b.z);
@@ -2982,6 +2982,7 @@
     for (let i = 0; i < (act ? act.length : cars.length); i++) for (let j = act ? 0 : i + 1; j < cars.length; j++) {
       const A = act ? act[i] : cars[i], B = cars[j];
       if (act && (B === A || (B.ix < A.ix && live(B)))) continue;   // 둘 다 움직이는 쌍은 한 번만
+      if (A.wreck || B.wreck) continue;   // c410: 잔해는 차도 그냥 지나간다
       if (Math.abs(A.x - B.x) > 6 || Math.abs(A.z - B.z) > 6 || Math.hypot(A.x - B.x, A.z - B.z) > CAR_L * 1.6 * Math.max(ckl(A), ckl(B))) continue;
       if ((A.wall && B.state !== 'parked') || (B.wall && A.state !== 'parked')) continue;   // c59: 달리는 경찰차·군인차는 건널목 바리케이트를 그냥 지나간다
       const kA = A.wall ? (A.wreck ? 0.16 : 1) : A.state === 'parked' ? PARKED_K * (A.wreck ? 0.16 : 1) : MOVING_K, kB = B.wall ? (B.wreck ? 0.16 : 1) : B.state === 'parked' ? PARKED_K * (B.wreck ? 0.16 : 1) : MOVING_K;
@@ -3009,6 +3010,7 @@
   }
   function carCollide() {                     // 경찰차 몸 = 네모 — 겹친 몸은 가장 가까운 변 밖으로. 달리던 차에 치이면 튕겨 날아가고(좀비는 데미지), 차는 그만큼 느려진다 (v137)
     for (const car of cars) {
+      if (car.wreck) { if (car.load) { car.load = 0; car.loadK = 1; } continue; }   // c410: 잔해는 보이기만 한다 — 아무것도 안 막는다
       const fx = Math.cos(car.h), fz = Math.sin(car.h), rx = -fz, rz = fx;
       for (const b of (CHAPTER && (car.state === 'parked' || car.tr) ? chNearBodies(car) : bodies)) {
         if (car.tank && b.kind === 'safe') { chTankCrush(car, b, fx, fz, rx, rz); continue; }   /* c134: 사물·금고만 (무는 중인 몸은 사물이 아니다) */   /* c122 */ if (b.fixed) { if (CHAPTER && b.out) chCarSmash(car, b, fx, fz, rx, rz); continue; } if (b.sleep && (car.tr || b.out)) continue;   // c71 · c85: 달리는 차는 박힌 사물을 부수고 지나간다 · 자는 길거리 사물(좀비 시야 밖)은 차와 서로 없는 셈 친다
@@ -3564,7 +3566,7 @@
     const box = (car) => { const hu = CAR_L * ckl(car) / 2, hv = CAR_W * ck(car) / 2 * (car.barr ? CH_BARR_W : 1), m = hu + hv;
       if (Math.max(ax, bx) < car.x - m || Math.min(ax, bx) > car.x + m || Math.max(az, bz) < car.z - m || Math.min(az, bz) > car.z + m) return false;
       return chSegBox([ax, az, bx, bz], car.x, car.z, Math.cos(car.h), Math.sin(car.h), hu, hv); };
-    for (const car of cars) { if (car.obj && car.obj.dead && !car.wreck) continue; if (box(car)) return true; }
+    for (const car of cars) { if (car.wreck || (car.obj && car.obj.dead)) continue;   /* c410: 잔해는 안 가린다 */ if (box(car)) return true; }
     for (const o of chDecoObjs) if (!o.dead && o.car && box(o.car)) return true;
     const circ = (s) => { const r = s.r || 1, dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz || 1e-9, t = Math.max(0, Math.min(1, ((s.foot.x - ax) * dx + (s.foot.z - az) * dz) / L2)); return Math.hypot(ax + dx * t - s.foot.x, az + dz * t - s.foot.z) < r; };
     for (const B of chBNear(Math.min(ax, bx) - 3, Math.min(az, bz) - 3, Math.max(ax, bx) + 3, Math.max(az, bz) + 3, chQ10)) { const s = B.safe; if (s && !s.dead && circ(s)) return true; }   /* c405 */
@@ -9415,7 +9417,7 @@
   const chOutMov = [];                         // 깨어 있는 안 박힌 길거리 사물 (0.3초마다 다시 모은다)
   function chOutCars() {                       // 이번 걸음에 밀린 길거리 사물이 차(서 있는 차 · 주차된 차 · 잔해 포함)와 겹치면 차 밖으로 — 쓰레기통이 차를 뚫고 지나가지 않게
     for (const p of chOutMov) { if (p.dead || p.sleep || (p.foot.x === p.px && p.foot.z === p.pz)) continue;
-      for (const car of cars) { const dx = p.foot.x - car.x, dz = p.foot.z - car.z; if (dx > 4 || dx < -4 || dz > 4 || dz < -4) continue;
+      for (const car of cars) { if (car.wreck) continue;   /* c410 */ const dx = p.foot.x - car.x, dz = p.foot.z - car.z; if (dx > 4 || dx < -4 || dz > 4 || dz < -4) continue;
         const k = car.wreck ? 0.16 : car.wall ? 1 : car.state === 'parked' ? PARKED_K : 1;   // 몸이 차와 부딪힐 때와 같은 크기 (잔해는 5분의 1)
         const fx = Math.cos(car.h), fz = Math.sin(car.h), hu = CAR_L * ckl(car) / 2 * k + p.r, hv = CAR_W * ck(car) / 2 * k * (car.barr ? CH_BARR_W : 1) + p.r; let u = dx * fx + dz * fz, v = -dx * fz + dz * fx;
         if (Math.abs(u) >= hu || Math.abs(v) >= hv) continue;
