@@ -1354,6 +1354,8 @@ from c402_patch import C402_R   # c402: 산성 폭발 지속 3초 고정
 R += C402_R
 from c403_patch import C403_R   # c403: 빠지는 적 붙어서 치기
 R += C403_R
+from c404_patch import C404_R   # c404: 따라다니는 미니맵
+R += C404_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
