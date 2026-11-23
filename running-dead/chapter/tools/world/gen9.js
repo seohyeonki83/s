@@ -1,7 +1,7 @@
   // ── c406: 본 맵 — 시작할 때마다 새로 만드는 랜덤 월드 ──
   //   큰 맵의 단락 4개(큰 2 + 작은 2)를 한 그룹으로, 그룹 9개를 3×3으로 놓는다. 단락마다 90°씩 돌리고·뒤집고, 그룹 안에서 자리를 섞는다.
   //   그룹과 단락을 가운데 쪽으로 밀어 붙이고 (단락 사이 틈 13칸), 마주 보는 면마다 건널목을 놓는다 (작은 단락 한 면에 하나 · 큰 단락 한 면에 하나나 둘 · 면마다 적어도 하나).
-  //   단락 사이는 전부 물, 건널목은 다리. 맵 데이터 모양은 다른 맵과 같아서 나머지 코드는 그대로 돈다
+  //   단락 사이는 물과 산이 반반 (c409) — 물 위 건널목은 다리, 산 사이 건널목은 산길. 맵 데이터 모양은 다른 맵과 같아서 나머지 코드는 그대로 돈다
   function chWorldGen(M, seed0) {
     const GAP = M.gap, RH = M.ring / 2, PW = M.passW / 2;
     const SRC = M.zones.map(([x0, z0, x1, z1], zi) => ({ zi, x0, z0, w: x1 - x0, h: z1 - z0, big: z1 - z0 > 60 }));
@@ -104,22 +104,43 @@
       for (const s of M.spots) if (s.zone === Z.si) { const n = Object.assign({}, s, { zone: zi }); if (s.at) n.at = pt(s.at[0], s.at[1]); if (s.ring) n.ring = pt(s.ring[0], s.ring[1]).concat(s.ring.slice(2)); out.spots.push(n); }
       for (const F of M.fuel) if (F.zone === Z.si) out.fuel.push({ zone: zi, slots: F.slots.map(([x, z, h]) => pt(x, z).concat([hd(h)])) });
     });
-    // 건널목 = 다리 — 양 끝은 순환도로 한가운데까지 (단락 안으로 2.25칸)
-    const span = [];                             // 다리가 놓인 틈 (물을 채울 때 비운다)
-    for (const c of cross) { const p = zones[c.pi], q = zones[c.qi], u = c.u;
-      if (c.x) { out.bridges.push([p.x1 - RH, u - PW, q.x0 + RH, u + PW, p.x1, q.x0]); span.push([p.x1, u - PW, q.x0, u + PW]);
-        out.passes2.push({ axis: 'v', c: u, len: c.g + 2 * RH, ax: p.x1 - RH, az: u, bx: q.x0 + RH, bz: u, za: c.pi, zb: c.qi, pin: c.g / 2, mid: (p.x1 + q.x0) / 2 }); out.passPts.push({ x: (p.x1 + q.x0) / 2, z: u, dir: 'h' }); }
-      else { out.bridges.push([u - PW, p.z1 - RH, u + PW, q.z0 + RH, p.z1, q.z0]); span.push([u - PW, p.z1, u + PW, q.z0]);
-        out.passes2.push({ axis: 'h', c: u, len: c.g + 2 * RH, ax: u, az: p.z1 - RH, bx: u, bz: q.z0 + RH, za: c.pi, zb: c.qi, pin: c.g / 2, mid: (p.z1 + q.z0) / 2 }); out.passPts.push({ x: u, z: (p.z1 + q.z0) / 2, dir: 'v' }); } }
-    // 지도 = 단락 전체 둘레 + 틈 반 칸. 단락과 다리 틈이 아닌 곳은 전부 물 — 단락 변과 다리 변으로 칸을 나눠 물인 칸을 가로로, 다시 세로로 이어 붙인다
+    // 지도 = 단락 전체 둘레 + 틈 반 칸. 단락과 건널목 틈이 아닌 빈 곳은 물 또는 산 (c409: 반반) — 단락 변과 건널목 변으로 칸을 나눠, 같은 종류 칸을 가로로, 다시 세로로 이어 붙인다
+    const span = cross.map((c) => { const p = zones[c.pi], q = zones[c.qi]; return c.x ? [p.x1, c.u - PW, q.x0, c.u + PW] : [c.u - PW, p.z1, c.u + PW, q.z0]; });   // 건널목이 놓인 틈 (비운다)
     const M2 = GAP / 2, mm = out.mm = { x0: Math.min(...zones.map((z) => z.x0)) - M2, z0: Math.min(...zones.map((z) => z.z0)) - M2, x1: Math.max(...zones.map((z) => z.x1)) + M2, z1: Math.max(...zones.map((z) => z.z1)) + M2 };
     const land = zones.map((z) => [z.x0, z.z0, z.x1, z.z1]).concat(span), uniq = (a) => { a.sort((p, q) => p - q); return a.filter((v, i) => !i || v - a[i - 1] > 1e-6); };
     const xs = uniq([mm.x0 - 0.5, mm.x1 + 0.5].concat(land.flatMap((r) => [r[0], r[2]]))), zs = uniq([mm.z0 - 0.5, mm.z1 + 0.5].concat(land.flatMap((r) => [r[1], r[3]])));
+    // 물 · 산 나누기: 월드에 점 12개(4×3 칸에 하나씩)를 흩어 놓고 절반은 물·절반은 산 — 빈 칸마다 가장 가까운 점을 따른다 (큼직한 호수와 산줄기).
+    //   마주 보는 두 단락 사이 틈은 통째로 한 가지 (그 틈의 건널목은 물이면 다리, 산이면 산길). 산 넓이가 42~58%가 될 때까지 다시 뽑는다
+    const pairs = new Map(); for (const c of cross) { const k = c.pi + ':' + c.qi + ':' + c.x; if (!pairs.has(k)) { const p = zones[c.pi], q = zones[c.qi]; pairs.set(k, { r: c.x ? [p.x1, Math.max(p.z0, q.z0), q.x0, Math.min(p.z1, q.z1)] : [Math.max(p.x0, q.x0), p.z1, Math.min(p.x1, q.x1), q.z0], hill: 0 }); } }
+    const cells = [];                            // 빈 칸 {i, j, 한가운데, 넓이, 틈}
+    for (let j = 0; j + 1 < zs.length; j++) { const zc = (zs[j] + zs[j + 1]) / 2, rows = land.filter((r) => zc > r[1] && zc < r[3]);
+      for (let i = 0; i + 1 < xs.length; i++) { const xc = (xs[i] + xs[i + 1]) / 2; if (rows.some((r) => xc > r[0] && xc < r[2])) continue;
+        let pr = null; for (const P of pairs.values()) if (xc > P.r[0] && xc < P.r[2] && zc > P.r[1] && zc < P.r[3]) { pr = P; break; }
+        cells.push({ i, j, xc, zc, a: (xs[i + 1] - xs[i]) * (zs[j + 1] - zs[j]), pr, hill: 0 }); } }
+    const W0 = mm.x1 - mm.x0, H0 = mm.z1 - mm.z0, tot = cells.reduce((t, c) => t + c.a, 0);
+    for (let tryN = 0; tryN < 40; tryN++) {
+      const lab = [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]; for (let i = lab.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [lab[i], lab[j]] = [lab[j], lab[i]]; }
+      const seeds = lab.map((h, i) => ({ x: mm.x0 + ((i % 4) + 0.15 + rnd() * 0.7) / 4 * W0, z: mm.z0 + (Math.floor(i / 4) + 0.15 + rnd() * 0.7) / 3 * H0, h }));
+      const near = (x, z) => { let b = 0, bd = Infinity; for (const S of seeds) { const d = (S.x - x) * (S.x - x) + (S.z - z) * (S.z - z); if (d < bd) { bd = d; b = S.h; } } return b; };
+      for (const P of pairs.values()) P.hill = near((P.r[0] + P.r[2]) / 2, (P.r[1] + P.r[3]) / 2);
+      let ha = 0; for (const c of cells) { c.hill = c.pr ? c.pr.hill : near(c.xc, c.zc); if (c.hill) ha += c.a; }
+      if (ha / tot >= 0.42 && ha / tot <= 0.58) break;
+    }
+    out.hillShare = cells.reduce((t, c) => t + (c.hill ? c.a : 0), 0) / tot;
+    const hills = [], byJ = new Map(); for (const c of cells) { if (!byJ.has(c.j)) byJ.set(c.j, []); byJ.get(c.j).push(c); }
     let prev = [];
-    for (let j = 0; j + 1 < zs.length; j++) { const zc = (zs[j] + zs[j + 1]) / 2, rows = land.filter((r) => zc > r[1] && zc < r[3]), cur = [];
-      for (let i = 0, s = -1; i <= xs.length - 1; i++) { const wet = i + 1 < xs.length && !rows.some((r) => (xs[i] + xs[i + 1]) / 2 > r[0] && (xs[i] + xs[i + 1]) / 2 < r[2]);
-        if (wet && s < 0) s = i; if (!wet && s >= 0) { cur.push([xs[s], zs[j], xs[i], zs[j + 1]]); s = -1; } }
-      for (const r of cur) { const up = prev.find((q) => Math.abs(q[0] - r[0]) < 1e-6 && Math.abs(q[2] - r[2]) < 1e-6 && Math.abs(q[3] - r[1]) < 1e-6 && q[3] - q[1] + r[3] - r[1] <= 60); if (up) { up[3] = r[3]; r.m = up; } else out.rivers.push(r); }   // 위 칸과 폭이 같으면 세로로 잇는다 (60칸까지)
+    for (let j = 0; j + 1 < zs.length; j++) { const row = byJ.get(j) || [], cur = [];
+      for (let k = 0; k < row.length; ) { let e = k; while (e + 1 < row.length && row[e + 1].i === row[e].i + 1 && row[e + 1].hill === row[k].hill && xs[row[e + 1].i + 1] - xs[row[k].i] <= 60) e++;   // 가로로 잇는다 (60칸까지)
+        const r = [xs[row[k].i], zs[j], xs[row[e].i + 1], zs[j + 1]]; r.hill = row[k].hill; cur.push(r); k = e + 1; }
+      for (const r of cur) { const up = prev.find((q) => q.hill === r.hill && Math.abs(q[0] - r[0]) < 1e-6 && Math.abs(q[2] - r[2]) < 1e-6 && Math.abs(q[3] - r[1]) < 1e-6 && q[3] - q[1] + r[3] - r[1] <= 60); if (up) { up[3] = r[3]; r.m = up; } else (r.hill ? hills : out.rivers).push(r); }   // 위 칸과 폭·종류가 같으면 세로로 잇는다 (60칸까지)
       prev = cur.map((r) => r.m || r); }
+    out.rivers = out.rivers.map((r) => [r[0], r[1], r[2], r[3]]);
+    for (const r of hills) out.b.push({ x: (r[0] + r[2]) / 2, z: (r[1] + r[3]) / 2, w: r[2] - r[0], d: r[3] - r[1], doors: [], locks: [], local: out.b.length, block: -1, t: 'hill', zone: -1 });   // 산 = 문 없는 덩어리 (큰 맵과 같다)
+    // 건널목 — 양 끝은 순환도로 한가운데까지 (단락 안으로 2.25칸). 물 위면 다리(난간은 물 위 구간만), 산 사이면 산길(길바닥)
+    for (const c of cross) { const p = zones[c.pi], q = zones[c.qi], u = c.u, hill = pairs.get(c.pi + ':' + c.qi + ':' + c.x).hill;
+      const rect = c.x ? [p.x1 - RH, u - PW, q.x0 + RH, u + PW] : [u - PW, p.z1 - RH, u + PW, q.z0 + RH];
+      if (hill) out.roads.push(rect); else out.bridges.push(rect.concat(c.x ? [p.x1, q.x0] : [p.z1, q.z0]));
+      if (c.x) { out.passes2.push({ axis: 'v', c: u, len: c.g + 2 * RH, ax: p.x1 - RH, az: u, bx: q.x0 + RH, bz: u, za: c.pi, zb: c.qi, pin: c.g / 2, mid: (p.x1 + q.x0) / 2, hill }); out.passPts.push({ x: (p.x1 + q.x0) / 2, z: u, dir: 'h' }); }
+      else { out.passes2.push({ axis: 'h', c: u, len: c.g + 2 * RH, ax: u, az: p.z1 - RH, bx: u, bz: q.z0 + RH, za: c.pi, zb: c.qi, pin: c.g / 2, mid: (p.z1 + q.z0) / 2, hill }); out.passPts.push({ x: u, z: (p.z1 + q.z0) / 2, dir: 'v' }); } }
     return out;
   }
