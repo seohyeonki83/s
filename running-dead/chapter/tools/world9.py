@@ -2,7 +2,7 @@
 import json, random, sys
 from PIL import Image, ImageDraw, ImageFont
 M = json.load(open('../map_m1.json'))
-GAP = 13.0; RW = M['ring']; COMPACT = len(sys.argv) > 3 and sys.argv[3] == 'c'; MAXG = 25 if COMPACT else 45
+GAP = 13.0; RW = M['ring']; COMPACT = len(sys.argv) > 3 and sys.argv[3] in ('c', 'd'); ZONEPACK = len(sys.argv) > 3 and sys.argv[3] == 'd'; MAXG = 25 if COMPACT else 45
 F = ImageFont.truetype('/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc', 18); FS = ImageFont.truetype('/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc', 13)
 def inside(r, q): return q[0] <= (r[0] + r[2]) / 2 <= q[2] and q[1] <= (r[1] + r[3]) / 2 <= q[3]
 # 단락 재료 (단락 기준 좌표 0..w, 0..h)
@@ -97,6 +97,28 @@ def make_world(seed):
                             if a['g'] == gi: a['x0'] += ux * step; a['x1'] += ux * step; a['z0'] += uz * step; a['z1'] += uz * step
                         G['x'] += ux * step; G['z'] += uz * step; moved = True; gx -= ux * step; gz -= uz * step
             if not moved: break
+        if ZONEPACK:   # 단락 하나하나도 가운데 쪽으로 (빈 구석 메우기) — 다른 단락과 13칸 틈까지, 더 안 움직일 때까지
+            def zhit(a, dx, dz):
+                for b in zones:
+                    if b is a: continue
+                    if a['x0'] + dx < b['x1'] + GAP - 1e-6 and b['x0'] < a['x1'] + dx + GAP - 1e-6 and a['z0'] + dz < b['z1'] + GAP - 1e-6 and b['z0'] < a['z1'] + dz + GAP - 1e-6: return True
+                return False
+            for it in range(80):
+                mv = False
+                for a in sorted(zones, key=lambda q: abs((q['x0'] + q['x1']) / 2 - cx) + abs((q['z0'] + q['z1']) / 2 - cz)):
+                    for ax in 'xz':
+                        c = (a['x0'] + a['x1']) / 2 - cx if ax == 'x' else (a['z0'] + a['z1']) / 2 - cz
+                        if abs(c) < 0.5: continue
+                        u = -1 if c > 0 else 1; step = 0
+                        for st in (8, 4, 2, 1, 0.5):
+                            while step + st <= abs(c) and not zhit(a, u * (step + st) if ax == 'x' else 0, u * (step + st) if ax == 'z' else 0): step += st
+                        if step:
+                            if ax == 'x': a['x0'] += u * step; a['x1'] += u * step
+                            else: a['z0'] += u * step; a['z1'] += u * step
+                            mv = True
+                if not mv: break
+            for gi, G in enumerate(groups):
+                gz_ = [z for z in zones if z['g'] == gi]; G['x'] = min(z['x0'] for z in gz_); G['z'] = min(z['z0'] for z in gz_); G['W'] = max(z['x1'] for z in gz_) - G['x']; G['H'] = max(z['z1'] for z in gz_) - G['z']
         mx = min(z['x0'] for z in zones) - GAP; mz = min(z['z0'] for z in zones) - GAP
         for a in zones: a['x0'] -= mx; a['x1'] -= mx; a['z0'] -= mz; a['z1'] -= mz
         for G in groups: G['x'] -= mx; G['z'] -= mz
@@ -124,6 +146,7 @@ def make_world(seed):
                 pairs.append((pi, qi, sa, sb, ax, g, lo, hi))
     rnd.shuffle(pairs)
     pairs.sort(key=lambda t: zones[t[0]]['g'] == zones[t[1]]['g'])   # 그룹끼리 잇는 것부터 (연결 보장)
+    if ZONEPACK: pairs = pairs + pairs   # 두 바퀴 — 첫 바퀴는 면마다 하나씩, 둘째 바퀴는 남은 칸 (큰 단락 두 번째)
     par = list(range(len(zones)))
     def fd(x):
         while par[x] != x: par[x] = par[par[x]]; x = par[x]
@@ -133,7 +156,8 @@ def make_world(seed):
         n = min(cap[(pi, sa)] - len(used[(pi, sa)]), cap[(qi, sb)] - len(used[(qi, sb)]))
         if n <= 0: continue
         n = min(n, 2 if hi - lo >= 50 else 1)
-        if fd(pi) == fd(qi) and rnd.random() < 0.35: n = 0   # 이미 이어진 곳은 가끔 비워 둔다
+        if ZONEPACK: n = min(n, 1) if (used[(pi, sa)] or used[(qi, sb)]) and rnd.random() < 0.5 else min(n, 1)   # 한 번에 하나씩 (두 바퀴)
+        elif fd(pi) == fd(qi) and rnd.random() < 0.35: n = 0   # 이미 이어진 곳은 가끔 비워 둔다
         for _ in range(n):
             for t in range(30):
                 u = rnd.uniform(lo + 7, hi - 7)
@@ -142,14 +166,29 @@ def make_world(seed):
             used[(pi, sa)].append(u); used[(qi, sb)].append(u); par[fd(pi)] = fd(qi)
             p, q = zones[pi], zones[qi]
             cross.append(((p['x1'], u - 4, q['x0'], u + 4) if ax == 'x' else (u - 4, p['z1'], u + 4, q['z0']), g))
+    if ZONEPACK:   # 아직 건널목이 없는 면 — 상한보다 '면마다 하나'가 먼저 (간격은 24칸, 안 되면 14칸까지 줄여서)
+        for (pi, qi, sa, sb, ax, g, lo, hi) in pairs:
+            if used[(pi, sa)] and used[(qi, sb)]: continue
+            if not (not used[(pi, sa)] or not used[(qi, sb)]): continue
+            for gapmin in (24, 14):
+                u = None
+                for t in range(40):
+                    v = rnd.uniform(lo + 7, hi - 7)
+                    if all(abs(v - w) >= gapmin for w in used[(pi, sa)] + used[(qi, sb)]): u = v; break
+                if u is not None: break
+            if u is None: continue
+            used[(pi, sa)].append(u); used[(qi, sb)].append(u); par[fd(pi)] = fd(qi)
+            p, q = zones[pi], zones[qi]
+            cross.append(((p['x1'], u - 4, q['x0'], u + 4) if ax == 'x' else (u - 4, p['z1'], u + 4, q['z0']), g))
     ok = len({fd(i) for i in range(len(zones))}) == 1
+    cand_sides = {(p[0], p[2]) for p in pairs} | {(p[1], p[3]) for p in pairs}; empty = [k for k in cand_sides if not used[k]]
     # 시작: 가운데 그룹의 단락 하나, 그 순환도로 위 아무 자리
     c4 = [z for z in zones if z['g'] == 4]; zs = rnd.choice(c4)
     t = rnd.random(); side = rnd.randrange(4); m = RW / 2
     sx = zs['x0'] + m + t * (zs['W'] - 2 * m) if side < 2 else (zs['x0'] + m if side == 2 else zs['x1'] - m)
     sz = (zs['z0'] + m if side == 0 else zs['z1'] - m) if side < 2 else zs['z0'] + m + t * (zs['H'] - 2 * m)
     Wt, Ht = max(z['x1'] for z in zones) + GAP, max(z['z1'] for z in zones) + GAP
-    return dict(zones=zones, groups=groups, cross=cross, ok=ok, start=(sx, sz), W=Wt, H=Ht)
+    return dict(zones=zones, groups=groups, cross=cross, ok=ok, empty=len(empty), sides=len(cand_sides), start=(sx, sz), W=Wt, H=Ht)
 COL = dict(police=(70, 110, 200), army=(110, 120, 70), fire=(200, 70, 60), hospital=(240, 240, 240), mart=(230, 140, 50), bank=(60, 160, 100), gym=(170, 80, 160), library=(120, 80, 40), conv=(230, 200, 60), store=(140, 120, 100), house=(200, 185, 160), room=(220, 210, 190), jail=(90, 90, 100))
 ACOL = dict(park=(120, 180, 110), gas=(230, 210, 120), site=(170, 130, 90), court=(210, 120, 70))
 def draw(Wd, path, seed):
@@ -181,4 +220,4 @@ for i, seed in enumerate(range(int(sys.argv[1]), int(sys.argv[1]) + int(sys.argv
         W = make_world(s)
         if W['ok']: break
         s += 1000
-    L = [g for (r, g) in W['cross']]; print(seed, '->', s, 'avgLen', round(sum(L) / len(L), 1), 'maxLen', round(max(L), 1), draw(W, f'/home/user/s/running-dead/chapter/shots/world9{"c" if COMPACT else ""}_{i + 1:02d}.png', s), len(W['cross']), round(W['W']), round(W['H']))
+    L = [g for (r, g) in W['cross']]; print(seed, '->', s, 'avgLen', round(sum(L) / len(L), 1), 'emptySides', W['empty'], '/', W['sides'], 'maxLen', round(max(L), 1), draw(W, f'/home/user/s/running-dead/chapter/shots/world9{sys.argv[3] if COMPACT else ""}_{i + 1:02d}.png', s), len(W['cross']), round(W['W']), round(W['H']))
