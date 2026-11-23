@@ -1370,6 +1370,8 @@ from c409_patch import C409_R   # c409: 물과 산 반반
 R += C409_R
 from c410_patch import C410_R   # c410: 잔해는 부딪힘이 없다
 R += C410_R
+from c411_patch import C411_R   # c411: 작은 좀비 미는 힘 3분의 1
+R += C411_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
