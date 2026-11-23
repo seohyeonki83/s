@@ -2,7 +2,7 @@
 import json, random, sys
 from PIL import Image, ImageDraw, ImageFont
 M = json.load(open('../map_m1.json'))
-GAP = 13.0; RW = M['ring']
+GAP = 13.0; RW = M['ring']; COMPACT = len(sys.argv) > 3 and sys.argv[3] == 'c'; MAXG = 25 if COMPACT else 45
 F = ImageFont.truetype('/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc', 18); FS = ImageFont.truetype('/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc', 13)
 def inside(r, q): return q[0] <= (r[0] + r[2]) / 2 <= q[2] and q[1] <= (r[1] + r[3]) / 2 <= q[3]
 # 단락 재료 (단락 기준 좌표 0..w, 0..h)
@@ -47,6 +47,60 @@ def make_world(seed):
         gz = Zr[r] + (RH[r] - G['H'] if r == 0 else 0 if r == 2 else (RH[r] - G['H']) / 2)
         G['x'], G['z'] = gx, gz
         for z in G['zs']: z['g'] = gi; z['x0'] = gx + z['ox']; z['z0'] = gz + z['oz']; z['x1'] = z['x0'] + z['W']; z['z1'] = z['z0'] + z['H']; zones.append(z)
+    # 밀어 붙이기 — 가운데에서 가까운 그룹부터, 다른 그룹 단락과 13칸 틈이 될 때까지 가운데 쪽으로 (x · z 번갈아, 더 안 움직일 때까지)
+    if COMPACT:
+        cx = sum(z['x0'] + z['x1'] for z in zones) / (2 * len(zones)); cz = sum(z['z0'] + z['z1'] for z in zones) / (2 * len(zones))
+        G4 = groups[4]; cx = G4['x'] + G4['W'] / 2; cz = G4['z'] + G4['H'] / 2
+        def clash(gi, dx, dz):
+            for a in zones:
+                if a['g'] != gi: continue
+                ax0, az0, ax1, az1 = a['x0'] + dx, a['z0'] + dz, a['x1'] + dx, a['z1'] + dz
+                for b in zones:
+                    if b['g'] == gi: continue
+                    if ax0 < b['x1'] + GAP - 1e-6 and b['x0'] < ax1 + GAP - 1e-6 and az0 < b['z1'] + GAP - 1e-6 and b['z0'] < az1 + GAP - 1e-6: return True
+            return False
+        for G in groups:   # 그룹 안 — 단락을 그룹 가운데 쪽으로 (다른 단락과 13칸 틈까지)
+            gz_ = [z for z in G['zs']]; gcx = sum(z['x0'] + z['x1'] for z in gz_) / 8; gcz = sum(z['z0'] + z['z1'] for z in gz_) / 8
+            def hit(a, dx, dz):
+                for b in gz_:
+                    if b is a: continue
+                    if a['x0'] + dx < b['x1'] + GAP - 1e-6 and b['x0'] < a['x1'] + dx + GAP - 1e-6 and a['z0'] + dz < b['z1'] + GAP - 1e-6 and b['z0'] < a['z1'] + dz + GAP - 1e-6: return True
+                return False
+            for it in range(20):
+                mv = False
+                for a in gz_:
+                    for ax in 'xz':
+                        c = (a['x0'] + a['x1']) / 2 - gcx if ax == 'x' else (a['z0'] + a['z1']) / 2 - gcz
+                        if abs(c) < 0.5: continue
+                        u = -1 if c > 0 else 1; step = 0
+                        for st in (8, 4, 2, 1, 0.5):
+                            while step + st <= abs(c) and not hit(a, u * (step + st) if ax == 'x' else 0, u * (step + st) if ax == 'z' else 0): step += st
+                        if step:
+                            if ax == 'x': a['x0'] += u * step; a['x1'] += u * step
+                            else: a['z0'] += u * step; a['z1'] += u * step
+                            mv = True
+                if not mv: break
+            G['x'] = min(z['x0'] for z in gz_); G['z'] = min(z['z0'] for z in gz_); G['W'] = max(z['x1'] for z in gz_) - G['x']; G['H'] = max(z['z1'] for z in gz_) - G['z']
+        order = sorted(range(9), key=lambda gi: abs(groups[gi]['x'] + groups[gi]['W'] / 2 - cx) + abs(groups[gi]['z'] + groups[gi]['H'] / 2 - cz))
+        for it in range(60):
+            moved = False
+            for gi in order:
+                if gi == 4: continue
+                G = groups[gi]; gx = G['x'] + G['W'] / 2 - cx; gz = G['z'] + G['H'] / 2 - cz
+                for (ux, uz) in ((-1 if gx > 0 else 1, 0) if abs(gx) > 0.5 else (0, 0), (0, -1 if gz > 0 else 1) if abs(gz) > 0.5 else (0, 0)):
+                    if not ux and not uz: continue
+                    step = 0
+                    for st in (8, 4, 2, 1, 0.5):
+                        while not clash(gi, ux * (step + st), uz * (step + st)) and abs((ux * (step + st))) <= abs(gx) + 0.01 and abs(uz * (step + st)) <= abs(gz) + 0.01: step += st
+                    if step > 0:
+                        for a in zones:
+                            if a['g'] == gi: a['x0'] += ux * step; a['x1'] += ux * step; a['z0'] += uz * step; a['z1'] += uz * step
+                        G['x'] += ux * step; G['z'] += uz * step; moved = True; gx -= ux * step; gz -= uz * step
+            if not moved: break
+        mx = min(z['x0'] for z in zones) - GAP; mz = min(z['z0'] for z in zones) - GAP
+        for a in zones: a['x0'] -= mx; a['x1'] -= mx; a['z0'] -= mz; a['z1'] -= mz
+        for G in groups: G['x'] -= mx; G['z'] -= mz
+        X[2] = max(z['x1'] for z in zones) + GAP - CW[2]; Zr[2] = max(z['z1'] for z in zones) + GAP - RH[2]
     # 건널목: 마주 보는 단락 변 사이 (틈 13 ~ 45, 사이에 다른 단락 없음), 겹치는 길이 14 이상
     cap = {}
     for i, z in enumerate(zones):
@@ -59,7 +113,7 @@ def make_world(seed):
             for (p, q, sa, sb, ax) in ((a, b, 'E', 'W', 'x'), (b, a, 'E', 'W', 'x'), (a, b, 'S', 'N', 'z'), (b, a, 'S', 'N', 'z')):
                 if ax == 'x': g = q['x0'] - p['x1']; lo, hi = max(p['z0'], q['z0']), min(p['z1'], q['z1'])
                 else: g = q['z0'] - p['z1']; lo, hi = max(p['x0'], q['x0']), min(p['x1'], q['x1'])
-                if not (GAP - 0.01 <= g <= 45) or hi - lo < 14: continue
+                if not (GAP - 0.01 <= g <= MAXG) or hi - lo < 14: continue
                 blk = False
                 for o in zones:
                     if o is p or o is q: continue
@@ -94,7 +148,7 @@ def make_world(seed):
     t = rnd.random(); side = rnd.randrange(4); m = RW / 2
     sx = zs['x0'] + m + t * (zs['W'] - 2 * m) if side < 2 else (zs['x0'] + m if side == 2 else zs['x1'] - m)
     sz = (zs['z0'] + m if side == 0 else zs['z1'] - m) if side < 2 else zs['z0'] + m + t * (zs['H'] - 2 * m)
-    Wt, Ht = X[2] + CW[2], Zr[2] + RH[2]
+    Wt, Ht = max(z['x1'] for z in zones) + GAP, max(z['z1'] for z in zones) + GAP
     return dict(zones=zones, groups=groups, cross=cross, ok=ok, start=(sx, sz), W=Wt, H=Ht)
 COL = dict(police=(70, 110, 200), army=(110, 120, 70), fire=(200, 70, 60), hospital=(240, 240, 240), mart=(230, 140, 50), bank=(60, 160, 100), gym=(170, 80, 160), library=(120, 80, 40), conv=(230, 200, 60), store=(140, 120, 100), house=(200, 185, 160), room=(220, 210, 190), jail=(90, 90, 100))
 ACOL = dict(park=(120, 180, 110), gas=(230, 210, 120), site=(170, 130, 90), court=(210, 120, 70))
@@ -127,4 +181,4 @@ for i, seed in enumerate(range(int(sys.argv[1]), int(sys.argv[1]) + int(sys.argv
         W = make_world(s)
         if W['ok']: break
         s += 1000
-    print(seed, '->', s, draw(W, f'/home/user/s/running-dead/chapter/shots/world9_{i + 1:02d}.png', s), len(W['cross']), round(W['W']), round(W['H']))
+    L = [g for (r, g) in W['cross']]; print(seed, '->', s, 'avgLen', round(sum(L) / len(L), 1), 'maxLen', round(max(L), 1), draw(W, f'/home/user/s/running-dead/chapter/shots/world9{"c" if COMPACT else ""}_{i + 1:02d}.png', s), len(W['cross']), round(W['W']), round(W['H']))
