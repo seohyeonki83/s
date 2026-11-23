@@ -1,0 +1,2 @@
+# c413: 또 얻은 가방도 분해
+C413_R = [("    mk(label, kind === 'bag' ? '무기 칸이 하나 늘어납니다' : '무기를 사용할 수 있습니다', 'rgba(255,255,255,0.92)', done);", "    mk(label, ov.dataset.ds || (kind === 'bag' ? '무기 칸이 하나 늘어납니다' : '무기를 사용할 수 있습니다'), 'rgba(255,255,255,0.92)', done);"), ("    stage.appendChild(ov);\n    tapOk(ov, max ? '확인' : '강화', () => {", "    stage.appendChild(ov); ov.dataset.kind = kind; if (max) ov.dataset.ds = '이미 최대라 더 늘어나지 않습니다';\n    (kind === 'bag' && chCanDis(kind) ? chTwoOk : tapOk)(ov, max ? '확인' : '강화', () => {   // c413: 또 얻은 가방도 분해할 수 있다 (강화할 무기가 있을 때만)")]

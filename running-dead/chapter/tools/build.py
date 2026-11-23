@@ -1374,6 +1374,8 @@ from c411_patch import C411_R   # c411: 작은 좀비 미는 힘 3분의 1
 R += C411_R
 from c412_patch import C412_R   # c412: 작은 좀비 색 더 밝게
 R += C412_R
+from c413_patch import C413_R   # c413: 또 얻은 가방도 분해
+R += C413_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

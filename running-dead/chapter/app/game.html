@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c412</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c413</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6323,7 +6323,7 @@
       const t = document.createElement('div'); t.style.cssText = 'margin-top:0;font:700 13px/1.35 var(--font);color:rgba(255,255,255,0.8);text-align:center;word-break:keep-all'; t.textContent = ds;
       b.addEventListener('pointerdown', (e) => { blockA(e); if (ov.dataset.done) return; row.style.visibility = 'hidden'; fn(); });
       col.append(b, t); row.appendChild(col); };
-    mk(label, kind === 'bag' ? '무기 칸이 하나 늘어납니다' : '무기를 사용할 수 있습니다', 'rgba(255,255,255,0.92)', done);
+    mk(label, ov.dataset.ds || (kind === 'bag' ? '무기 칸이 하나 늘어납니다' : '무기를 사용할 수 있습니다'), 'rgba(255,255,255,0.92)', done);
     mk('분해', '분해해서 다른 무기를 강화 합니다', '#ffb26b', () => { ov.dataset.done = '1'; chDisasm(ov, kind); });
     ov.appendChild(row);
   }
@@ -6537,8 +6537,8 @@
     ov.innerHTML = (d.passive ? '' : `<div style="font:900 40px/1 var(--font);letter-spacing:2px;color:#ff7a4a;text-shadow:0 0 14px rgba(255,80,0,0.9),0 4px 10px rgba(0,0,0,0.85);animation:wpnpop 0.45s ease-out both;margin-bottom:12px">무기 강화</div>`) + `<div class="big">${d.icon}</div><div class="t">${d.name} ${max ? '(이미 최대 강화)' : '강화'}</div>` +
       `<div style="margin-top:6px;font:900 22px/1 var(--font);color:#ffd34d;letter-spacing:1px;text-shadow:0 2px 6px rgba(0, 0, 0, 0.7)">${chStarsK(kind, max ? n : n + 1)}</div><div class="ds">${itemDesc(kind)}<div class="up">` +   // c26: 강화 단계는 별로
       (max ? `지금${starTag(n, kind)} (최대): ${statLine(kind, n)}` : `지금${starTag(n, kind)}: ${statLine(kind, n)}<br>강화 뒤${starTag(n + 1, kind)}: ${statLine(kind, n + 1)}`) + `</div></div>`;
-    stage.appendChild(ov);
-    tapOk(ov, max ? '확인' : '강화', () => {
+    stage.appendChild(ov); ov.dataset.kind = kind; if (max) ov.dataset.ds = '이미 최대라 더 늘어나지 않습니다';
+    (kind === 'bag' && chCanDis(kind) ? chTwoOk : tapOk)(ov, max ? '확인' : '강화', () => {   // c413: 또 얻은 가방도 분해할 수 있다 (강화할 무기가 있을 때만)
       if (ov.dataset.done) return;
       ov.dataset.done = '1';
       if (!max) {
