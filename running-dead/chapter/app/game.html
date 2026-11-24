@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c430</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c431</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4553,7 +4553,7 @@
     while (!itemOrder.includes(mustInj)) itemOrder = pickItems();
     { const i = itemOrder.indexOf(mustInj); itemOrder.splice(i, 1); itemOrder.splice(Math.random() < 0.5 ? 0 : 1, 0, mustInj); }   // v276: 9종 중 랜덤 4개 — 금고 4개 전부에서 하나씩 (사용 아이템은 2개까지)
     for (const k of Object.keys(owned)) delete owned[k];
-    for (const k of Object.keys(ilv)) delete ilv[k]; for (const k of Object.keys(chBr)) delete chBr[k];   /* c422 */ for (const k of Object.keys(CH_BRANCH)) chBrLook(k);   /* c427 */ chAbsK = null;   /* c430 */   // c19
+    for (const k of Object.keys(ilv)) delete ilv[k]; for (const k of Object.keys(chBr)) delete chBr[k];   /* c422 */ for (const k of Object.keys(CH_BRANCH)) chBrLook(k);   /* c427 */ chAbsK = null;   /* c430 */ chChainL.length = 0;   /* c431 */   // c19
     for (const el of Object.values(pBadges)) el.remove();
     for (const k of Object.keys(pBadges)) delete pBadges[k];
     for (const el of Object.values(aBadges)) el.remove();
@@ -5497,7 +5497,8 @@
       it.ammo--; refreshItems(); return;
     }
     it.ammo--;
-    if (kind === 'taser') {                   // 내 인지거리 안 적 1명 — 위험도 높은 순(경찰 > 공격형 > 수비형 > 일반), 같으면 가까운 순. 없으면 한 발 날린다
+    if (kind === 'taser' && CHAPTER && chBr.taser === 'bomb') chEBomb();   // c431: 전기폭탄 — 쏘는 대신 파장
+    else if (kind === 'taser') {                   // 내 인지거리 안 적 1명 — 위험도 높은 순(경찰 > 공격형 > 수비형 > 일반), 같으면 가까운 순. 없으면 한 발 날린다
       const cand = [];
       for (const c of bodies) {                // 누를 때 한 번이라 전체를 본다
         if (c.kind !== 'citizen' || c.stunT > 0) continue;
@@ -5511,7 +5512,7 @@
       if (CHAPTER) for (const d of chDrones) { if (d.dead || d.stunT > 0) continue; const q = Math.hypot(d.x - me.foot.x, d.z - me.foot.z); if (q <= me.sense && !fireBlocked(me.foot.x, me.foot.z, d.x, d.z)) cand.push({ c: d, k: 999, d: q }); }   // c374 · c379: 드론은 무조건 1순위 (변이될 사람보다도 먼저)
       cand.sort((a, b) => b.k - a.k || a.d - b.d);
       const hit = cand.slice(0, CH_WV('taserN', lv('taser')));   /* c21: 대상만 늘어난다 (1 → 6명) */  // 한 번에 맞히는 수 = 1 + 똑똑한 두뇌 (v201)
-      for (const { c } of hit) { if (c.drone) { c.stunT = CH_WV('taserT', lv('taser')) * chLingK(); zaps.push({ to: c, t: 0.45 }); continue; }   /* c374: 드론 — 땅에 떨어져 감전 */ if (c.tank) { c.stunT = CH_WV('taserT', lv('taser')) * chLingK();   /* c270: 보스도 같다 */ c.vx = c.vz = 0; zaps.push({ to: c, t: 0.45 }); continue; }   /* c191: 보스 = 3분의 1 */ c.stunT = CH_WV('taserT', lv('taser')) * chLingK();   /* c139 */ c.vel.set(0, 0); zaps.push({ to: c, t: 0.45 }); }
+      for (const { c } of hit) { if (c.drone) { c.stunT = chTaserT(c);   /* c431 */ zaps.push({ to: c, t: 0.45 }); continue; }   /* c374: 드론 — 땅에 떨어져 감전 */ if (c.tank) { c.stunT = chTaserT(c);   /* c431 */   /* c270: 보스도 같다 */ c.vx = c.vz = 0; zaps.push({ to: c, t: 0.45 }); continue; }   /* c191: 보스 = 3분의 1 */ c.stunT = chTaserT(c);   /* c431 */   /* c139 */ c.vel.set(0, 0); zaps.push({ to: c, t: 0.45 }); }
       if (!hit.length) zaps.push({ to: null, t: 0.2 });
     } else {                                  // 돈다발 3개를 내 둘레 2~4칸에 뿌린다 (나와 같은 공간)
       const fresh = [];
@@ -6185,6 +6186,33 @@
     killZombie(z);                            // 자폭한 동료는 죽는다 (우리 편은 안 다친다)
   }
   const gooMat = new THREE.SpriteMaterial({ map: flashTex, color: 0x5fcf3a, transparent: true, depthTest: false, depthWrite: false });
+  const chChainL = [], chChBuf = [];           // c431: 전이 감전 숙주 {e, t: 남은 감전, k: 다음 번개까지, r: 빨간 별}
+  function chTaserT(e) {                       // c431: 테이저 감전 시간 (전이 감전이면 +0.3초씩 · 숙주로 등록)
+    const r = chBrR('taser', 'chain'), T = (CH_WV('taserT', lv('taser')) + 0.3 * r) * chLingK();
+    if (r) chChainL.push({ e, t: T, k: 0.8, r });
+    return T;
+  }
+  function chChainTick(dt) {                   // c431: 숙주가 감전된 동안 0.8초마다 둘레 적 0.2초 감전 (잔류제 영향 없음 · 다시 번지지 않음)
+    for (let i = chChainL.length - 1; i >= 0; i--) {
+      const H = chChainL[i], e = H.e, gone = e.drone ? e.dead : e.tank ? e.wreck : e.kind !== 'citizen' || !bodies.includes(e);
+      if (gone || (H.t -= dt) <= 0) { chChainL.splice(i, 1); continue; }
+      if ((H.k -= dt) > 0) continue; H.k = 0.8;
+      const x = e.foot ? e.foot.x : e.x, z = e.foot ? e.foot.z : e.z, Rr = MELEE * (1 + 0.2 * (H.r - 1));
+      const zap = (tx, tz) => { const f = puff(tx, 0.7, tz, 0xfff27a, 0.5, 0.15, 0.18, 0, 0.4, 0, 1); f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true; };
+      zap(x, z);
+      for (const c of nearIn(cCells, x, z, Rr, chChBuf)) { if (c === e || c.kind !== 'citizen' || c.space !== (e.space ?? null) || Math.hypot(c.foot.x - x, c.foot.z - z) > Rr) continue; c.stunT = Math.max(c.stunT || 0, 0.2); c.vel.set(0, 0); c.lungeT = -1; zap(c.foot.x, c.foot.z); }
+      for (const d of chDrones) { if (d === e || d.dead || Math.hypot(d.x - x, d.z - z) > Rr + d.r) continue; d.stunT = Math.max(d.stunT || 0, 0.2); zap(d.x, d.z); }
+      const T = chTank; if (T && T !== e && !T.wreck && Math.hypot(T.x - x, T.z - z) - CAR_L * CH_TK_KL / 2 <= Rr) { T.stunT = Math.max(T.stunT || 0, 0.2); T.vx = T.vz = 0; zap(T.x, T.z); }
+    }
+  }
+  function chEBomb() {                         // c431: 전기폭탄 — 나를 중심으로 360° 파장, 범위 안 모든 적 3.5초 감전 (잔류제 영향)
+    const r = chBrR('taser', 'bomb'), Rr = SIGHT * r / 6, T = 3.5 * chLingK(), x = me.foot.x, z = me.foot.z;
+    const f = puff(x, 0.4, z, 0xfff27a, 0.6, Rr * 2.2, 0.35, 0, 0, 0, 0.55); f.s.material.map = flashTex; f.s.renderOrder = UI - 0.6; f.peak = true;
+    const g = puff(x, 0.5, z, 0xffffff, 0.4, Rr * 1.2, 0.18, 0, 0, 0, 0.8); g.s.material.map = flashTex; g.s.renderOrder = UI - 0.55; g.peak = true;
+    for (const c of bodies) { if (c.kind !== 'citizen' || c.state === 'held') continue; if ((c.space !== me.space && !linked(c.space, me.space)) || Math.hypot(c.foot.x - x, c.foot.z - z) > Rr || fireBlocked(x, z, c.foot.x, c.foot.z)) continue; c.stunT = Math.max(c.stunT || 0, T); c.vel.set(0, 0); zaps.push({ to: c, t: 0.3 }); }
+    for (const d of chDrones) { if (d.dead || Math.hypot(d.x - x, d.z - z) > Rr + d.r) continue; d.stunT = Math.max(d.stunT || 0, T); zaps.push({ to: d, t: 0.3 }); }
+    const tk = chTank; if (tk && !tk.wreck && Math.hypot(tk.x - x, tk.z - z) - CAR_L * CH_TK_KL / 2 <= Rr) { tk.stunT = Math.max(tk.stunT || 0, T); tk.vx = tk.vz = 0; zaps.push({ to: tk, t: 0.3 }); }
+  }
   function chMutLook(z) {                      // c430: 괴물 = 빨간 후광 · 흡수 = 흡수한 무기 색 후광 (깜빡)
     const B = z.mut ? chMB(z) : null, bc = chBr.bomb === 'sticky' ? 0x9b59ff : chBr.bomb === 'split' ? 0xff7fbf : 0x5fcf3a;
     const want = !B ? null : B.id === 'monster' ? 0xff2a2a : chAbsK === 'taser' ? 0xffe14a : chAbsK === 'bomb' ? bc : 0xdfe6f0;
@@ -6313,6 +6341,7 @@
   const reviveHp = (n = up.brain) => CHAPTER ? 1 : Math.min(1, 0.3 + 0.1 * n);   /* c102: 챕터는 체력 가득 */   // v376: 부활 체력 30%, 장비 강화마다 +10%p
   let reviveT = 0;
   function itemsTick(dt) {
+    if (CHAPTER && chChainL.length) chChainTick(dt);   // c431
     if (reviveT > 0) { const p = Math.ceil(reviveT); reviveT = Math.max(0, reviveT - dt); if (Math.ceil(reviveT) !== p) refreshBadges(); }
     stimTick(dt);
     if (CHAPTER) rageTick(dt);
@@ -6565,6 +6594,10 @@
     cash: [   // c427
       { id: 'dia', nm: '다이아몬드', icon: IC.diamond, col: '#7fe3ff', name: '다이아몬드', desc: '인간들이 다이아몬드를 두고 서로 싸웁니다. 자동차도 반응합니다.', line: (r) => `서로 싸울 확률 ${Math.round(100 * r / 6)}% · 알아채는 거리 ${(8.64 * chCashStep(6 + r)).toFixed(1)}칸`, short: ['싸움', (r) => `${Math.round(100 * r / 6)}%`] },   /* c429 */
       { id: 'gold', nm: '금', icon: IC.gold, col: '#f2c94c', name: '금', desc: '기계들도 정신을 못 차립니다.', line: (r) => `기계 유혹 — 드론 ${20 + 5 * (r - 1)}% · 보스 ${5 * r}% (유혹 시간의)`, short: ['기계', (r) => `${20 + 5 * (r - 1)}%`] },
+    ],
+    taser: [   // c431
+      { id: 'chain', nm: '전이 감전', name: '전이 감전', desc: '감전된 적이 더 오래 감전되고, 그 적 둘레의 적들도 0.8초마다 0.2초씩 감전됩니다.', line: (r) => `감전 ${(3.5 + 0.3 * r).toFixed(1)}초 · 둘레 ${(MELEE * (1 + 0.2 * (r - 1))).toFixed(1)}칸 안 적 0.8초마다 0.2초 감전`, short: ['전이', (r) => `${(MELEE * (1 + 0.2 * (r - 1))).toFixed(1)}칸`] },
+      { id: 'bomb', nm: '전기폭탄', name: '전기폭탄', desc: '나를 중심으로 전기 파장이 퍼져, 범위 안의 모든 적(드론 · 보스 포함)을 3.5초 동안 감전시킵니다.', line: (r) => `범위 ${(SIGHT * r / 6).toFixed(1)}칸 · 감전 3.5초`, short: ['범위', (r) => `${(SIGHT * r / 6).toFixed(1)}칸`] },
     ],
     mutate: [   // c430: 동료 변이 좀비
       { id: 'monster', name: '괴물 좀비', desc: '변이한 동료가 괴물이 됩니다. 히드라는 사거리가, 덩치는 미는 힘과 범위 공격이 커지고 범위 공격 피해가 줄지 않습니다. 덩치는 차와 바리케이트도 밀어냅니다.', line: (r) => `히드라 사거리 ×${(1 + r / 6).toFixed(2)} · 덩치 미는 힘 ${(10 + 4 * r / 6).toFixed(1)} · 범위 ×${(0.5 + r / 6).toFixed(2)}`, short: ['괴물', (r) => `×${(1 + r / 6).toFixed(1)}`] },

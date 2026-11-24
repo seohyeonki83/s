@@ -1410,6 +1410,8 @@ from c429_patch import C429_R   # c429: 현금 사거리 · 다이아몬드 싸�
 R += C429_R
 from c430_patch import C430_R   # c430: 변이·각성 갈림길
 R += C430_R
+from c431_patch import C431_R   # c431: 테이저건 갈림길
+R += C431_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
