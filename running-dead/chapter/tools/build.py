@@ -1378,6 +1378,8 @@ from c413_patch import C413_R   # c413: 또 얻은 가방도 분해
 R += C413_R
 from c414_patch import C414_R   # c414: 본 맵 건널목·작은 단락 줄이기
 R += C414_R
+from c415_patch import C415_R   # c415: 마주 보는 면마다 건널목 하나
+R += C415_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
