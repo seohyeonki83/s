@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c421</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c422</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3635,6 +3635,14 @@
     for (let i = 0; i < 8; i++) { const g = i / 8 * Math.PI * 2; puff(x, 0.3, z, 0xb65fd6, 0.25, 0.7, 0.4, Math.cos(g) * 1.6, 0.3, Math.sin(g) * 1.6, 0.85); }
     return c;
   }
+  function chSplitAcid(t) {                    // c422: 분열 산성 — 그 인간은 죽고 새끼 좀비 2마리 (경험치 1 · 사건 하나는 감염과 같다)
+    for (const z of bodies) if (z.target === t && z.mode === 'pounce') { z.mode = 'free'; z.target = null; }
+    t.marked = false; const x = t.foot.x, zz = t.foot.z;
+    makeZombie(t); chMini(t); t.hp = t.maxHp = t.maxHp / 3; if (t.hpBar) t.hpDisp = t.hp;
+    chParasite(t);
+    for (let i = 0; i < 10; i++) { const g = i / 10 * Math.PI * 2; puff(x, 0.3, zz, 0x7ed321, 0.3, 0.8, 0.45, Math.cos(g) * 2, 0.3, Math.sin(g) * 2, 0.85); }
+    gainXp(); callPolice(t.foot);
+  }
   function chMini(c) { c.mini = true; c.mesh.scale.setScalar(0.5); if (!c.mut) { c.mesh.material.color.setHex(0xdce4fc); c.force = 1 / 3;   /* c411: 미는 힘 = 보통 좀비의 3분의 1 */ } }   /* c384 · c386: 작은 좀비 색 — 동료(0x8aa4f5)보다 40% 밝게 */   // c370: 작은 좀비 그림 (변이가 풀려도 다시 이 크기) · c371: 그림만 반 — 몸(부딪힘 크기)·미는 힘은 보통 좀비와 같다
   function makeZombie(b) {
     if (CHAPTER && b.home && b.home.x0 !== undefined) { const P = b.home.parent || b.home; if (P.called === 1) P.lost = true; }   // c54: 문이 부서진 건물 안 사람이 감염됐다 → 두 번째 출동
@@ -4543,7 +4551,7 @@
     while (!itemOrder.includes(mustInj)) itemOrder = pickItems();
     { const i = itemOrder.indexOf(mustInj); itemOrder.splice(i, 1); itemOrder.splice(Math.random() < 0.5 ? 0 : 1, 0, mustInj); }   // v276: 9종 중 랜덤 4개 — 금고 4개 전부에서 하나씩 (사용 아이템은 2개까지)
     for (const k of Object.keys(owned)) delete owned[k];
-    for (const k of Object.keys(ilv)) delete ilv[k];   // c19
+    for (const k of Object.keys(ilv)) delete ilv[k]; for (const k of Object.keys(chBr)) delete chBr[k];   /* c422 */   // c19
     for (const el of Object.values(pBadges)) el.remove();
     for (const k of Object.keys(pBadges)) delete pBadges[k];
     for (const el of Object.values(aBadges)) el.remove();
@@ -5145,7 +5153,7 @@
     }
     if (CHAPTER) chBoardTick(dt);   // c47: 싸움이 끝난 사람은 차로 돌아간다
     for (const b of bodies) {
-      if (!b.fixed && !b.sleep) { const gk = (b.goo && !CHAPTER ? 0.56 : 1)   /* c421 */ * (b.rage && !CHAPTER ? 1 + rageK() : 1) * chDownK(b);   /* c420: 분노 — 챕터는 이동 속도 없음 */   /* c418: 체력이 다한 적은 반 */   /* c19 · c22: 분노 바이러스 — 이동 속도 +5~15% */   /* v344: 20% → 44% 느리게 (0.8 × 0.7) */ b.foot.x += b.vel.x * dt * gk; b.foot.z += b.vel.y * dt * gk; }   // v275: 산성 덩어리 묻으면 이동 20% 느리게
+      if (!b.fixed && !b.sleep) { const gk = (b.goo && !CHAPTER ? 0.56 : 1)   /* c421 */ * (CHAPTER && b.goo ? chStickyK() : 1)   /* c422: 끈적 산성 */ * (b.rage && !CHAPTER ? 1 + rageK() : 1) * chDownK(b);   /* c420: 분노 — 챕터는 이동 속도 없음 */   /* c418: 체력이 다한 적은 반 */   /* c19 · c22: 분노 바이러스 — 이동 속도 +5~15% */   /* v344: 20% → 44% 느리게 (0.8 × 0.7) */ b.foot.x += b.vel.x * dt * gk; b.foot.z += b.vel.y * dt * gk; }   // v275: 산성 덩어리 묻으면 이동 20% 느리게
       if (b.split && (b.splitT -= dt) <= 0) b.split = null;
       if (b.stick) { const L = LUNGE_IN + LUNGE_OUT, u = b.lungeT >= 0 ? Math.min(1, b.lungeT / L) : -1; b.stick.rotation.z = u < 0 ? -0.5 : -0.5 + 2.6 * Math.sin(Math.PI * u); }   // c40
       if (b.lungeT >= 0) {                    // 때리는 모션 시간 — 붙는 순간 데미지
@@ -5315,7 +5323,7 @@
   const ilv = {};                             // c19: 아이템마다 강화 단계 (챕터) — 같은 걸 또 얻으면 그것만 +1. 테스트맵은 지금까지처럼 '장비/도구 강화' 한 값을 다 같이 쓴다
   const lv = (k) => CHAPTER ? (ilv[k] || 0) : up.brain;
   const chStars = (n) => '★'.repeat(Math.max(0, Math.min(6, n)));   // c26: 강화 단계 = 별 (최대 5개)
-  const chStarsK = (k, n) => CHAPTER && n >= chLvMax(k) ? 'MAX' : chStars(n);   // c283: 끝까지 강화 = 노란 MAX
+  const chStarsK = (k, n) => CHAPTER && n >= chLvMax(k) ? 'MAX' : CHAPTER && n > 6 ? `<span style="color:#ff3b30">${'★'.repeat(n - 6)}</span>` : chStars(n);   /* c422: 흰 ★6 다음은 빨간 별 */   // c283: 끝까지 강화 = 노란 MAX
   const starTag = (n, k) => n ? ` <span style="color:#ffd34d;letter-spacing:-1px">${k ? chStarsK(k, n) : chStars(n)}</span>` : '';
   const lvText = (kind) => { const n = lv(kind); if (!CHAPTER) return `지금 (강화 ${n}단계): ${statLine(kind, n)}<br>다음 강화: ${statLine(kind, n + 1)}`; const max = n >= chLvMax(kind); return `지금${starTag(n, kind)}${max ? ' (최대)' : ''}: ${statLine(kind, n)}` + (max ? '' : `<br>다음 강화${starTag(n + 1, kind)}: ${statLine(kind, n + 1)}`); };
   let level = 0, xp = 0, pendingLv = 0, lvOpen = false, hasVest = false, vestEl = null, victoryOn = false;
@@ -6028,7 +6036,7 @@
     const all = zombies.filter((z) => z !== me && isZombie(z));
     if (!all.length) return false;
     const al = all.filter((z) => !z.mut); if (!al.length) return false;   // c288: 변이 좀비는 자폭하지 않는다   // v521: 변이 좀비는 최후순위 — 일반 동료가 하나도 없을 때만
-    const R = 1.5 + lv('bomb');   /* c139: 1.5칸에서 강화마다 +1칸 */   // c21: 자폭 범위 = 내 덮치는 거리(3.24칸), 강화마다 +20% (2배까지)   // v559: 20% 줄임 (5.4 → 4.32칸) — v556: 1.5배
+    const R = 1.5 + chLvB('bomb');   /* c422 */   /* c139: 1.5칸에서 강화마다 +1칸 */   // c21: 자폭 범위 = 내 덮치는 거리(3.24칸), 강화마다 +20% (2배까지)   // v559: 20% 줄임 (5.4 → 4.32칸) — v556: 1.5배
     if (CHAPTER) return chBombPick(al, R);   // c352
     const tier = (c) => CHAPTER ? chTier(c) : c.sniper ? 5 : c.soldier ? 4 : c.police ? 3 : c.attacker ? 2 : c.guard ? 1 : 0;
     let best = null, bT = -1, bN = -1, bD = Infinity, bS = -1, ties = [];
@@ -6129,7 +6137,7 @@
   }
   const gooMat = new THREE.SpriteMaterial({ map: flashTex, color: 0x5fcf3a, transparent: true, depthTest: false, depthWrite: false });
   function gooOn(c) {                         // 영구: 좀비가 될 때까지 이동·공격 20% 느리게 + 초당 1 데미지
-    c.gooLeft = Math.max(c.goo ? c.gooLeft : 0, (4 + 2 * lv('bomb')) * chLingK());   /* c420: 잔류제 */   // c286: 남은 시간과 새 시간 중 긴 쪽   // c123: 10초, 강화마다 +1초 (다시 맞으면 시간만 새로)
+    c.gooLeft = Math.max(c.goo ? c.gooLeft : 0, (4 + 2 * chLvB('bomb')) * chLingK());   /* c420: 잔류제 */   // c286: 남은 시간과 새 시간 중 긴 쪽   // c123: 10초, 강화마다 +1초 (다시 맞으면 시간만 새로)
     if (c.acid) c.acid.length = 0;   // c287: 산성 폭발은 자폭 산성으로 교체
     if (c.goo) return;
     c.goo = true; c.gooT = 0; c.smokeT = 0;
@@ -6194,6 +6202,7 @@
   function gooTick(dt) {
     for (const c of bodies) {
       if (!c.goo || c.kind !== 'citizen') continue;
+      if (CHAPTER && c.maxHp > 0 && c.hp <= 0 && !c.brSplitT && c.state !== 'held') { c.brSplitT = 1; const p = 0.15 * chBrR('bomb', 'split'); if (p && Math.random() < p) { chSplitAcid(c); continue; } }   // c422: 분열 산성 (쓰러진 순간 한 번만 굴린다)
       if ((c.gooLeft -= dt) <= 0) { if (c.gooS) { c.mesh.remove(c.gooS); c.gooS = null; } c.goo = false; continue; }   // c123: 시간이 다 되면 사라진다
       if ((c.smokeT -= dt) <= 0 && c.mesh.visible) {   // 묻은 데서 작은 연기
         c.smokeT = rand(0.25, 0.45);
@@ -6358,6 +6367,22 @@
       chPickClose(ov, () => { acqOpen = false; });
     });
   }
+  function chBranchPick(k) {                   // c422: 갈림길 — 카드 2장 중 하나 (전직처럼). 고르면 빨간 ★1의 능력이 바로 붙는다
+    acqOpen = true; paused = true; stopInput();
+    const ov = document.createElement('div'); ov.id = 'pick';
+    ov.innerHTML = `<div class="hd">${ITEM[k].name} 갈림길</div><div class="sub">둘 중 하나를 선택하세요</div><div class="cards" style="flex-wrap:wrap;justify-content:center">` +
+      CH_BRANCH[k].map((B) => `<div class="card" data-k="${B.id}" style="min-height:178px;padding-top:8px"><div style="height:14px;font:900 12px/14px var(--font);color:#ff3b30">★</div>` +
+        `<div class="ic" style="margin-top:4px">${ITEM[k].icon}</div><div class="nm" style="margin-top:8px">${B.name}</div><div class="ds" style="margin-top:8px">${B.desc}</div><div class="vl">${B.line(1)}</div></div>`).join('') + `</div>`;
+    stage.appendChild(ov); chFitNames(ov);
+    const block = (e) => { e.stopPropagation(); e.preventDefault(); };
+    ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
+    ov.addEventListener('pointerdown', (e) => {
+      block(e); if (ov.dataset.done) return;
+      const card = e.target.closest('.card'); if (!card) return;
+      chPickWin(ov, card.dataset.k); chBr[k] = card.dataset.k; chItemChanged(k); chPopBtn(k);
+      chPickClose(ov, () => { acqOpen = false; });
+    });
+  }
   function chPickWin(ov, k) {                  // c274: 고른 카드만 커지며 빛나고 나머지는 사라진다
     ov.dataset.done = '1';
     for (const c of ov.querySelectorAll('.card')) { c.classList.remove('on'); c.classList.add(c.dataset.k === k ? 'win' : 'gone'); }
@@ -6471,7 +6496,17 @@
       }
     }
   }
-  const chLvMax = (k) => k === 'bag' ? 3 : /* c198: 빠루도 5번 (+120%) */ ITEM[k] && !ITEM[k].passive ? 6 : 5;   /* c139: 무기는 6번까지 강화 */   // c21: 가방은 4개가 끝 (도구 칸 5개가 다 열린다)
+  const CH_BRANCH = {                          // c422: 무기 갈림길 — 흰 ★6 다음 강화에서 둘 중 하나 (빨간 별 r = 1~6)
+    bomb: [
+      { id: 'sticky', name: '끈적 산성', desc: '자폭 산성을 맞은 적이 느려집니다.', line: (r) => `산성 맞은 적 이동 속도 -${15 * r}%`, short: ['둔화', (r) => `-${15 * r}%`] },
+      { id: 'split', name: '분열 산성', desc: '자폭 산성을 뒤집어쓴 적이 그 상태로 쓰러지면, 감염시키지 않아도 그 즉시 새끼 좀비 2마리로 변합니다.', line: (r) => `새끼 좀비 2마리로 변할 확률 ${15 * r}%`, short: ['분열', (r) => `${15 * r}%`] },
+    ],
+  };
+  const chBr = {};                             // c422: 무기마다 고른 길 (id)
+  const chBrR = (k, id) => CHAPTER && chBr[k] === id ? Math.max(0, lv(k) - 6) : 0;   // 그 길의 빨간 별 수 (안 골랐으면 0)
+  const chLvB = (k) => Math.min(6, lv(k));     // c422: 원래 수치는 흰 ★6에서 멈춘다
+  const chStickyK = () => 1 - 0.15 * chBrR('bomb', 'sticky');   // 끈적 산성 — 15%씩 느리게 (90%까지)
+  const chLvMax = (k) => k === 'bag' ? 3 : /* c198: 빠루도 5번 (+120%) */ ITEM[k] && !ITEM[k].passive ? (CH_BRANCH[k] ? 12 : 6)   /* c422: 갈림길이 있는 무기는 빨간 ★6까지 */ : 5;   /* c139: 무기는 6번까지 강화 */   // c21: 가방은 4개가 끝 (도구 칸 5개가 다 열린다)
   const chHas = (k) => ITEM[k].passive ? !!owned[k] : items.some((x) => x.kind === k);
   const chToolCap = () => Math.min(SLOT_A.length, 1 + (owned.bag ? 1 + lv('bag') : 0));   // c21: 쓸 수 있는 도구는 처음 1개 — 가방 하나마다 +1, 최대 5
   const chAccMax = () => 5 + 3 * lv('awaken');   // c21: 각성 주사 — 모을 수 있는 시간(초). 가득 차는 데는 늘 40초
@@ -6513,6 +6548,7 @@
     catalyst: (n) => `변이 좀비 공격력·최대 체력 +${5 * (1 + n)}%`,   /* c420 */
     blood: (n) => `내 최대 체력 +${12 * (1 + n)}%`,
   };
+  for (const k of Object.keys(CH_BRANCH)) { const f = CH_STAT[k]; CH_STAT[k] = (n) => { if (n <= 6) return f(n); const B = CH_BRANCH[k].find((b) => b.id === chBr[k]); return f(6) + ' · ' + (B ? `${B.name}: ${B.line(n - 6)}` : '갈림길 — 둘 중 하나 선택'); }; }   // c422
   const CH_BADGE = { rage: () => '+' + (10 + 10 * lv('rage')) + '%', absorb: () => '흡수 ' + (2 + 2.5 * lv('absorb')), crowbar: () => '+' + 15 * (1 + lv('crowbar')) + '%', shoes: () => '+' + 5 * (1 + lv('shoes')) + '%' };   // 배지 아래 짧은 수치
   Object.assign(ITEM_TEXT, {                  // c21: 바뀐 규칙에 맞춘 설명
     taser: ['대상을 감전시켜 멈춥니다.', '강화 시 감전 대상과 시간이 늘어납니다.'],
@@ -6526,7 +6562,8 @@
   });
   function chLingK() { return CHAPTER && owned.linger ? 1 + 0.05 * (1 + lv('linger')) : 1; }   // c420: 잔류제 — 적이 입은 부정적 효과(감전 · 산성 · 유혹) 시간 배율 (5%씩, 다 강화하면 30%)
   function chCatB() { return CHAPTER && owned.catalyst ? 0.05 * (1 + lv('catalyst')) : 0; }   // c420: 촉매제 — 변이 좀비(나 포함) 공격력·최대 체력 +5%씩
-  function chItemChanged(kind) {              // 얻었거나 강화한 바로 그때 적용할 것
+  function chItemChanged(kind) {
+    if (CHAPTER && CH_BRANCH[kind] && lv(kind) > 6 && !chBr[kind] && !pendingAward.includes('br:' + kind)) pendingAward.push('br:' + kind);   // c422: 갈림길 고르기              // 얻었거나 강화한 바로 그때 적용할 것
     if (kind === 'blood' && isZombie(me)) {   // 혈액팩: 나만 최대 체력 +10% (기본 체력 기준 — 얻을 때, 그리고 강화할 때마다)
       const d = MY_HP * (CHAPTER ? 0.12 : 0.10);   /* c198: 12%씩 */
       if (me.baseMaxHp) { me.baseMaxHp += d; me.maxHp += d * 3; me.hp = Math.min(me.maxHp, me.hp + d * 3); } else { me.maxHp += d; me.hp = Math.min(me.maxHp, me.hp + d); }
@@ -6570,6 +6607,7 @@
     book: ['쿨타임', (n) => `-${5 + 9 * n}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['공속', (n) => `+${10 + 10 * n}%`], crowbar: ['건물', (n) => `+${15 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`]   /* c278: 카드는 총격만 (밀림은 설명 칸에) */,
     shoes: ['이동', (n) => `+${5 * (1 + n)}%`], parasite: ['확률', (n) => `${20 + 5 * n}%`], teeth: ['감염', (n) => `${Math.round(100 + 80 / 6 * (1 + n))}%`], acid: ['확률', (n) => `${30 + 10 * n}%`], acidp: ['도트', (n) => `+${1 + n}`], linger: ['지속', (n) => `+${5 * (1 + n)}%`],   /* c420 */   /* c224 */ catalyst: ['변이', (n) => `+${5 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
+  for (const k of Object.keys(CH_BRANCH)) { const S = CH_SHORT[k], f = S[1]; S[1] = (n) => { if (n <= 6) return f(n); const B = CH_BRANCH[k].find((b) => b.id === chBr[k]); return B ? B.short[0] + ' ' + B.short[1](n - 6) : '갈림길'; }; }   // c422
   const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
     bomb: '동료 하나가 자폭', mutate: '동료 하나를 변이', taser: '적을 감전', awaken: '내가 변이', cash: '적을 유혹',
     parasite: '감염 시 작은 좀비 추가', book: '무기 쿨타임 단축', bag: '쓸 수 있는 무기 +1', rage: '동료들의 공격 속도 증가', crowbar: '나·동료 건물·사물 피해 증가', absorb: '충격 흡수', vest: '총격 피해·밀림 감소', shoes: '나와 동료들의 이동 속도 증가', teeth: '감염 속도·회복량 증가', acid: '동료가 죽으면 산성피', acidp: '산성 도트 데미지 증가', linger: '적의 부정적 효과 지속 증가',   /* c420 */ catalyst: '변이 좀비 공격력·체력 증가', blood: '내 최대 체력 증가', revive: '죽으면 되살아남',
@@ -7262,6 +7300,7 @@
   }
   function chDroneDie(d) {                     // 공중에서 펑 — 차가 터지듯
     if (d.dead) return; d.dead = true;
+    if (CHAPTER && isZombie(me)) gainXp();   // c422: 기계도 부수면 경험치 1
     const y = d.s.position.y;   // c391: 차와 같은 폭발 (그림이 있던 높이에서) · 먼지 · 새까만 잔해가 그 높이에서 바닥으로 떨어진다
     boom(d.x, d.z, Math.max(0, y - 0.6)); dust(d.x, d.z, 14, 2);
     debris(d.x, d.z, 16, [0x151515, 0x0b0b0b, 0x26292e, 0x3a414d], 0.4, 7, y);
@@ -7345,7 +7384,7 @@
       else if (dist < CH_DRONE_RANGE * 0.45) { vx = -(gx - d.x) / dist; vz = -(gz - d.z) / dist; }   // 너무 가까우면 물러선다
       else { vx = -(gz - d.z) / dist * d.side * 0.45; vz = (gx - d.x) / dist * d.side * 0.45; }   // 사거리 안 — 옆으로 천천히 돈다
       if (!t || dist > CH_DRONE_RANGE * 0.8) { const f = chDroneWay(d, gx, gz); if (f) { vx = f[0]; vz = f[1]; } }   // 다가갈 때 — 곧장 못 가면 건물을 돌아가는 길로
-      const sp = CH_DRONE_SPEED * dt, vl = Math.min(1, Math.hypot(vx, vz));
+      const sp = CH_DRONE_SPEED * dt * (d.goo > 0 ? chStickyK() : 1)   /* c422: 끈적 산성 */, vl = Math.min(1, Math.hypot(vx, vz));
       if (vl > 1e-6) { const l = Math.hypot(vx, vz), nx = d.x + vx / l * sp * vl, nz = d.z + vz / l * sp * vl;
         if (chDroneFree(nx, nz)) { d.x = nx; d.z = nz; } else if (chDroneFree(nx, d.z)) d.x = nx; else if (chDroneFree(d.x, nz)) d.z = nz; else d.side = -d.side; }
       if (d.stunT <= 0) {                       // c375: 벌처럼 둥둥 — 바닥 평면에서 좌우로 작은 8자 선회 (진짜 자리 = 그림자도 같이)
@@ -7363,7 +7402,7 @@
     for (const d of chDrones.slice()) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || (blk && blocked(x, z, d.x, d.z))) continue; if (d.goo <= 0) { d.acid = Math.max(d.acid, T); } chDotPop(d.x + 0.6, d.z, chAcidHit()); chDroneDmg(d, chAcidHit()); }
   }
   function chDroneGooAt(x, z, R) {             // 산성 자폭 원기둥 — 그림자 점이 원 안이면 자폭 산성 (산성 폭발은 이걸로 바뀐다)
-    for (const d of chDrones) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || blocked(x, z, d.x, d.z)) continue; d.goo = Math.max(d.goo, (4 + 2 * lv('bomb')) * chLingK());   /* c420 */ d.acid = 0; }
+    for (const d of chDrones) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || blocked(x, z, d.x, d.z)) continue; d.goo = Math.max(d.goo, (4 + 2 * chLvB('bomb')) * chLingK());   /* c420 */ d.acid = 0; }
   }
   function chDroneSeen() {                     // 내 시야 안 드론 (거리 · 벽에 안 가림)
     return chDrones.filter((d) => !d.dead && Math.hypot(d.x - me.foot.x, d.z - me.foot.z) <= me.sense && !fireBlocked(me.foot.x, me.foot.z, d.x, d.z));
@@ -7819,7 +7858,7 @@
     if (o.obj.hp <= 0) { o.obj.hp = 0; breakObj(o.obj); }
   }
   function chTankGoo(car) {                    // 산성 — 이동·공격 20% 느리게 + 초당 2 데미지 (사람과 같다)
-    car.gooLeft = Math.max(car.goo ? car.gooLeft : 0, (4 + 2 * lv('bomb')) * chLingK());   /* c420 */   // c286   // c123
+    car.gooLeft = Math.max(car.goo ? car.gooLeft : 0, (4 + 2 * chLvB('bomb')) * chLingK());   /* c420 */   // c286   // c123
     if (car.acid) car.acid.length = 0;   // c287
     if (car.goo) return;
     car.goo = true; car.gooT = 0; car.gooS = [];
@@ -7862,7 +7901,7 @@
       K0.material.color.setHex(car.stunT > 0 && Math.floor(clock * 14) % 2 ? 0xc8f0ff : 0x3c4a2a);
       return;
     }
-    const spd = (car.tkSeen ? CAR_SPEED * CH_TR_SPD.sedan * CH_TR_SLOW / 2 * 1.2 :   /* c183: 20% 빠르게 */ CAR_SPEED * 0.9) /* c421: 산성 둔화 없음 */;   /* c179: 눈에 띄기 전 = 경찰차의 90% */   /* c168: 보인 뒤 속도 2배 (보통 차의 절반) */   /* c137: 눈에 띄기 전엔 보통 차 속도 */   // 보통 차(승용차)의 4분의 1
+    const spd = (car.tkSeen ? CAR_SPEED * CH_TR_SPD.sedan * CH_TR_SLOW / 2 * 1.2 :   /* c183: 20% 빠르게 */ CAR_SPEED * 0.9) /* c421: 산성 둔화 없음 */ * (car.goo ? chStickyK() : 1)   /* c422: 끈적 산성 */;   /* c179: 눈에 띄기 전 = 경찰차의 90% */   /* c168: 보인 뒤 속도 2배 (보통 차의 절반) */   /* c137: 눈에 띄기 전엔 보통 차 속도 */   // 보통 차(승용차)의 4분의 1
     if (car.goo && (car.gooLeft -= dt) <= 0) { car.goo = false; for (const s of car.gooS) car.g.remove(s); }   // c123
     if (car.goo && (car.gooT += dt) >= CH_DOT_T) { car.gooT -= CH_DOT_T; const gd = 2 + chAcidB(); if (o && o.hp > gd) { o.hp -= gd; chDotPop(car.x + 0.9, car.z, gd, 2.2); } }   // c259 · c265
     // 벽
@@ -10048,7 +10087,7 @@
       let t = el.querySelector(':scope > .upn');
       if (!n) { if (t) t.remove(); continue; }
       if (!t) { t = document.createElement('span'); t.className = 'upn'; el.appendChild(t); }
-      if (CHAPTER) t.style.fontSize = el.classList.contains('pbadge') ? '9px' : '';   /* c26: 배지는 작아서 별도 작게 (5개가 한 줄에 들어가게) */ const st = CHAPTER ? (n >= chLvMax(kd[els.indexOf(el)]) ? '<span style="color:#ffd34d;font-weight:900;letter-spacing:0">MAX</span>' : chStars(n)) :   /* c283 */ Array.from({ length: Math.ceil(n / 3) }, (_, i) => '★'.repeat(Math.min(3, n - i * 3))).reverse().join('<br>');   /* c26: 강화 단계만큼 별 (최대 5개, 한 줄) */ if (t.innerHTML !== st) t.innerHTML = st;   // v535: 별 3개씩 줄 — 넘치면 위로 한 줄 더
+      if (CHAPTER) t.style.fontSize = el.classList.contains('pbadge') ? '9px' : '';   /* c26: 배지는 작아서 별도 작게 (5개가 한 줄에 들어가게) */ const st = CHAPTER ? (n >= chLvMax(kd[els.indexOf(el)]) ? '<span style="color:#ffd34d;font-weight:900;letter-spacing:0">MAX</span>' : chStarsK(kd[els.indexOf(el)], n)) :   /* c422 */   /* c283 */ Array.from({ length: Math.ceil(n / 3) }, (_, i) => '★'.repeat(Math.min(3, n - i * 3))).reverse().join('<br>');   /* c26: 강화 단계만큼 별 (최대 5개, 한 줄) */ if (t.innerHTML !== st) t.innerHTML = st;   // v535: 별 3개씩 줄 — 넘치면 위로 한 줄 더
     }
   }
   function uiTick() {
@@ -10064,7 +10103,7 @@
     if (ai >= 0 && !acqOpen && !lvOpen && !tutOpen && !menuOv && !victoryOn && goalShown) {   // v428 · v429: 아이템을 먹으면 획득창은 바로 — 나오던 연출은 멈췄다가 확인 뒤 이어짐, 밀린 연출은 그 뒤로
       const e = fxQueue.splice(ai, 1)[0];
       pauseFx();                              // v429: 나오던 연출은 그 자리에 멈춤
-      if (e.k === 'mut:hydra' || e.k === 'mut:armor' || e.k === 'mut:zombie') chShowMut(e.k.slice(4)); else if (e.k === 'dud') showDud(); else if (CHAPTER && chHas(e.k)) chUpgrade(e.k); else showAward(e.k);
+      if (e.k.startsWith('br:')) chBranchPick(e.k.slice(3)); else if (e.k === 'mut:hydra' || e.k === 'mut:armor' || e.k === 'mut:zombie') chShowMut(e.k.slice(4)); else if (e.k === 'dud') showDud(); else if (CHAPTER && chHas(e.k)) chUpgrade(e.k); else showAward(e.k);
       return;
     }
     if (curFx && curFx.paused && !acqOpen && !lvOpen && !tutOpen && !menuOv) resumeFx();   // v429: 획득창을 확인하면 멈췄던 연출이 그대로 이어진다
@@ -10082,7 +10121,7 @@
     else if (e.t === 'squad') showSquad();
     else if (e.t === 'rank') showRank(e.r);
     else if (e.t === 'lv') { if (CHAPTER) chLevelUp(); else showLevelUp(); }   // c25
-    else if (e.k === 'mut:hydra' || e.k === 'mut:armor' || e.k === 'mut:zombie') chShowMut(e.k.slice(4)); else if (e.k === 'dud') showDud(); else if (CHAPTER && chHas(e.k)) chUpgrade(e.k); else showAward(e.k);   // v288: 꽝
+    else if (e.k.startsWith('br:')) chBranchPick(e.k.slice(3)); else if (e.k === 'mut:hydra' || e.k === 'mut:armor' || e.k === 'mut:zombie') chShowMut(e.k.slice(4)); else if (e.k === 'dud') showDud(); else if (CHAPTER && chHas(e.k)) chUpgrade(e.k); else showAward(e.k);   // v288: 꽝
   }
   // v278: 동료 수 칭호 — 판마다 처음 도달할 때 딱 한 번. 게임은 멈추지 않고 화면 위쪽에 큰 글씨가 팡 떴다 사라진다
   const RANKS = [   // v284: 단계마다 간격이 4마리씩 더 벌어진다 (간격 5·10·15·10… → 9·14·19·14…)

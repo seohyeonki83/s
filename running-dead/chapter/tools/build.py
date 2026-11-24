@@ -1392,6 +1392,8 @@ from c420_patch import C420_R   # c420: 장비 개편
 R += C420_R
 from c421_patch import C421_R   # c421: 자폭 산성 둔화 없앰
 R += C421_R
+from c422_patch import C422_R   # c422: 무기 갈림길 · 드론 경험치
+R += C422_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
