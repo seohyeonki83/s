@@ -15,6 +15,7 @@ else:
     assert prof.count(M0) == 1; prof = prof.replace(M0, "{ (window.__onMelee && window.__onMelee(b, b.lungeVictim, 0)), landHit(b, b.lungeVictim, ")
 M2 = "landHit(a, c, (a === me ? ALLY_DAMAGE * (1 + 0.07 * up.arm) * 1.3 * 1.3 * 2 : dmg) * 0.3);"
 if prof.count(M2) != 1: M2 = "landHit(a, c, (a === me ? ALLY_DAMAGE * (1 + 0.07 * up.arm) * (CHAPTER ? 3 : 1.3 * 1.3 * 2) : dmg) * (CHAPTER ? 0.5 : 0.3));"   # c378
+if prof.count(M2) != 1: M2 = "landHit(a, c, (a === me ? ALLY_DAMAGE * (1 + 0.07 * up.arm) * (CHAPTER ? 3 : 1.3 * 1.3 * 2) : v.kind === 'citizen' ? dmg : zDamage(a)) * (CHAPTER ? (chMonster(a) ? 1 : 0.5) : 0.3));"   # c430
 assert prof.count(M2) == 1; prof = prof.replace(M2, "(window.__onMelee && window.__onMelee(a, c, 1)), " + M2)
 CAMA = "addScaledVector(BACK, camDist);"
 if prof.count(CAMA) == 1: prof = prof.replace(CAMA, "addScaledVector(BACK, camDist * (window.__camK || 1));")   # 화면 캡처용: 카메라를 멀리

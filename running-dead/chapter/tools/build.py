@@ -1408,6 +1408,8 @@ from c428_patch import C428_R   # c428: 자폭 기본 아이콘 · 현금 거리
 R += C428_R
 from c429_patch import C429_R   # c429: 현금 사거리 · 다이아몬드 싸울 확률
 R += C429_R
+from c430_patch import C430_R   # c430: 변이·각성 갈림길
+R += C430_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
