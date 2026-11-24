@@ -1380,6 +1380,8 @@ from c414_patch import C414_R   # c414: 본 맵 건널목·작은 단락 줄이�
 R += C414_R
 from c415_patch import C415_R   # c415: 마주 보는 면마다 건널목 하나
 R += C415_R
+from c416_patch import C416_R   # c416: 건널목 25% 길게
+R += C416_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

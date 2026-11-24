@@ -3,7 +3,7 @@
   //   그룹과 단락을 가운데 쪽으로 밀어 붙이고 (단락 사이 틈 13칸), 마주 보는 면마다 건널목을 놓는다 (작은 단락 한 면에 하나 · 큰 단락 한 면에 하나나 둘 · 면마다 적어도 하나).
   //   단락 사이는 물과 산이 반반 (c409) — 물 위 건널목은 다리, 산 사이 건널목은 산길. 맵 데이터 모양은 다른 맵과 같아서 나머지 코드는 그대로 돈다
   function chWorldGen(M, seed0) {
-    const GAP = M.gap, RH = M.ring / 2, PW = M.passW / 2;
+    const GAP = M.gap * 1.25, RH = M.ring / 2, PW = M.passW / 2;   // c416: 단락 사이 틈(건널목 길이) 25% 길게 — 13 → 16.25칸 (가장 긴 것도 25 → 31.25칸)
     const SRC = M.zones.map(([x0, z0, x1, z1], zi) => ({ zi, x0, z0, w: x1 - x0, h: z1 - z0, big: z1 - z0 > 60 }));
     for (let seed = seed0 >>> 0, tries = 0; ; seed = (seed + 1000003) >>> 0, tries++) {
       let st = seed; const rnd = () => { st = (st + 0x6D2B79F5) >>> 0; let t = st; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -48,7 +48,7 @@
         for (const a of zones) { a.x0 -= sx; a.x1 -= sx; a.z0 -= sz; a.z1 -= sz; } }   // 월드 한가운데를 (0, 0)쯤으로
       groups.forEach(box);
       // 3. 건널목 — 마주 보는 두 면 (틈 13~25칸, 사이에 다른 단락 없음, 겹치는 길이 14칸 넘게). 한 면에 작은 단락 1개 · 큰 단락 1~2개, 같은 면 건널목끼리는 24칸 넘게
-      const MAXG = 25, cap = {}, used = {}, key = (i, s) => i * 4 + s;   // 면: 0 = 북 · 1 = 동 · 2 = 남 · 3 = 서
+      const MAXG = 25 * 1.25, cap = {}, used = {}, key = (i, s) => i * 4 + s;   // 면: 0 = 북 · 1 = 동 · 2 = 남 · 3 = 서
       zones.forEach((z, i) => { for (let s = 0; s < 4; s++) { cap[key(i, s)] = SRC[z.si].big ? 1 + ri(2) : 1; used[key(i, s)] = []; } });
       let pairs = [];
       for (let i = 0; i < zones.length; i++) for (let j = i + 1; j < zones.length; j++) for (const [pi, qi, x] of [[i, j, 1], [j, i, 1], [i, j, 0], [j, i, 0]]) {
