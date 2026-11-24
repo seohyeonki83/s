@@ -1400,6 +1400,8 @@ from c424_patch import C424_R   # c424: 장비 배지 촘촘하게
 R += C424_R
 from c425_patch import C425_R   # c425: 장비 배지 위아래 간격만
 R += C425_R
+from c426_patch import C426_R   # c426: 배지 줄 원래대로
+R += C426_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

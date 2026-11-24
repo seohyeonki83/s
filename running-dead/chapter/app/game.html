@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c425</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c426</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6593,7 +6593,7 @@
   }
   function chBadgeGrid() {                    // c26: 장비 배지 — 왼쪽 아래 두 줄(3개씩)이 차면 오른쪽 아래에 이어서 (유전자 버튼이 있던 자리)
     Object.values(pBadges).forEach((el, i) => {
-      const row = i < 6 ? Math.floor(i / 3) : 2 + Math.floor((i - 6) / 2), col = i < 6 ? i % 3 : (i - 6) % 2;   // c425: 아래 두 줄은 3개씩, 그 위로 2개씩   // c37: 첫 줄 3개, 그 위로 2개씩
+      const row = i < 3 ? 0 : 1 + Math.floor((i - 3) / 2), col = i < 3 ? i : (i - 3) % 2;   // c426: 원래대로 — 첫 줄 3개, 그 위로 2개씩   // c37: 첫 줄 3개, 그 위로 2개씩
       el.style.right = 'auto';
       el.style.left = `calc(max(16px, env(safe-area-inset-left, 0px)) + ${col * 40}px)`;
       el.style.bottom = `calc(6px + env(safe-area-inset-bottom, 0px) + ${row * 42}px)`;   /* c425: 위아래 간격만 48 → 42px */
