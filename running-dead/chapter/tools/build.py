@@ -1398,6 +1398,8 @@ from c423_patch import C423_R   # c423: 드론 주기 1.5배
 R += C423_R
 from c424_patch import C424_R   # c424: 장비 배지 촘촘하게
 R += C424_R
+from c425_patch import C425_R   # c425: 장비 배지 위아래 간격만
+R += C425_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

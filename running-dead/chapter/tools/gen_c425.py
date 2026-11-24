@@ -1,0 +1,11 @@
+# c425: 장비 배지 — 크기·좌우 간격은 c423 그대로 (36px · 40px), 위아래 간격만 48 → 42px. 줄은 3 · 3 · 2 · 2 · 2 …
+src = open('c424.mjs').read()
+R = []
+def rep(a, b, n=1):
+    assert src.count(a) == n, (src.count(a), n, a[:90])
+    R.append((a, b, n) if n != 1 else (a, b))
+rep("      const row = Math.floor(i / 3), col = i % 3;   // c424: 모든 줄 3개씩",
+    "      const row = i < 6 ? Math.floor(i / 3) : 2 + Math.floor((i - 6) / 2), col = i < 6 ? i % 3 : (i - 6) % 2;   // c425: 아래 두 줄은 3개씩, 그 위로 2개씩")
+rep("      el.style.left = `calc(max(16px, env(safe-area-inset-left, 0px)) + ${col * 35}px)`;\n      el.style.bottom = `calc(6px + env(safe-area-inset-bottom, 0px) + ${row * 41}px)`;\n      el.style.width = el.style.height = '32px'; el.style.borderWidth = '2px';   /* c424: 촘촘하게 */\n      { const ic = el.querySelector('.ic'); if (ic) ic.style.transform = 'scale(0.88)'; const pc = el.querySelector('.pc'); if (pc) { pc.style.fontSize = '9px'; pc.style.marginTop = '0'; } }",
+    "      el.style.left = `calc(max(16px, env(safe-area-inset-left, 0px)) + ${col * 40}px)`;\n      el.style.bottom = `calc(6px + env(safe-area-inset-bottom, 0px) + ${row * 42}px)`;   /* c425: 위아래 간격만 48 → 42px */\n      el.style.width = el.style.height = '36px';")
+open('c425_patch.py', 'w').write("# c425: 장비 배지 위아래 간격만 줄이기\nC425_R = " + repr(R) + "\n")
