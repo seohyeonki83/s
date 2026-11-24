@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c426</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c427</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3643,7 +3643,7 @@
     for (let i = 0; i < 10; i++) { const g = i / 10 * Math.PI * 2; puff(x, 0.3, zz, 0x7ed321, 0.3, 0.8, 0.45, Math.cos(g) * 2, 0.3, Math.sin(g) * 2, 0.85); }
     gainXp(); callPolice(t.foot);
   }
-  function chMini(c) { c.mini = true; c.mesh.scale.setScalar(0.5); if (!c.mut) { c.mesh.material.color.setHex(0xdce4fc); c.force = 1 / 3;   /* c411: 미는 힘 = 보통 좀비의 3분의 1 */ } }   /* c384 · c386: 작은 좀비 색 — 동료(0x8aa4f5)보다 40% 밝게 */   // c370: 작은 좀비 그림 (변이가 풀려도 다시 이 크기) · c371: 그림만 반 — 몸(부딪힘 크기)·미는 힘은 보통 좀비와 같다
+  function chMini(c) { c.mini = true; c.mesh.scale.setScalar(0.5); if (!c.mut) { c.mesh.material.color.setHex(0xffb6d9);   /* c427: 연분홍 */ c.force = 1 / 3;   /* c411: 미는 힘 = 보통 좀비의 3분의 1 */ } }   /* c384 · c386: 작은 좀비 색 — 동료(0x8aa4f5)보다 40% 밝게 */   // c370: 작은 좀비 그림 (변이가 풀려도 다시 이 크기) · c371: 그림만 반 — 몸(부딪힘 크기)·미는 힘은 보통 좀비와 같다
   function makeZombie(b) {
     if (CHAPTER && b.home && b.home.x0 !== undefined) { const P = b.home.parent || b.home; if (P.called === 1) P.lost = true; }   // c54: 문이 부서진 건물 안 사람이 감염됐다 → 두 번째 출동
     if (b.mark) { scene.remove(b.mark); b.mark = null; }
@@ -4551,7 +4551,7 @@
     while (!itemOrder.includes(mustInj)) itemOrder = pickItems();
     { const i = itemOrder.indexOf(mustInj); itemOrder.splice(i, 1); itemOrder.splice(Math.random() < 0.5 ? 0 : 1, 0, mustInj); }   // v276: 9종 중 랜덤 4개 — 금고 4개 전부에서 하나씩 (사용 아이템은 2개까지)
     for (const k of Object.keys(owned)) delete owned[k];
-    for (const k of Object.keys(ilv)) delete ilv[k]; for (const k of Object.keys(chBr)) delete chBr[k];   /* c422 */   // c19
+    for (const k of Object.keys(ilv)) delete ilv[k]; for (const k of Object.keys(chBr)) delete chBr[k];   /* c422 */ for (const k of Object.keys(CH_BRANCH)) chBrLook(k);   /* c427 */   // c19
     for (const el of Object.values(pBadges)) el.remove();
     for (const k of Object.keys(pBadges)) delete pBadges[k];
     for (const el of Object.values(aBadges)) el.remove();
@@ -5221,14 +5221,14 @@
     tool: svgI('<path d="M20.6 6.2a5 5 0 0 1-6.5 6.3l-7 7a2 2 0 0 1-2.8-2.8l7-7a5 5 0 0 1 6.3-6.5l-3 3 .6 2.4 2.4.6z" fill="#9fb0c8"/><circle cx="5.7" cy="18.3" r="1.1" fill="#5d6b80"/>'),   // v273: 장비 강화 = 렌치
     awaken: svgI('<rect x="9" y="2" width="6" height="2" rx="1" fill="#cfd6e3"/><rect x="11" y="4" width="2" height="3" fill="#cfd6e3"/><rect x="7" y="7" width="10" height="13" rx="2" fill="#3a1a14" stroke="#ff7a5c" stroke-width="1.4"/><path d="M13 9 9.5 14h2.5l-1 4 4-5.5h-2.6z" fill="#ffd23a"/>'),   // v558: 각성 주사 — 번개 주사기
     mutate: svgI('<rect x="9" y="2" width="6" height="2" rx="1" fill="#cfd6e3"/><rect x="11" y="4" width="2" height="3" fill="#cfd6e3"/><rect x="8" y="7" width="8" height="11" rx="1.5" fill="#e9edf5"/><rect x="9.5" y="10" width="5" height="7" rx="1" fill="#b05cff"/><rect x="11.3" y="18" width="1.4" height="4" fill="#9aa4b5"/>'),
-    bomb: svgI('<rect x="4" y="9" width="16" height="11" rx="2" fill="#7a8396"/><rect x="11" y="3" width="2" height="6" fill="#9aa4b5"/><circle cx="12" cy="3.5" r="2" fill="#5fcf3a"/><circle cx="9" cy="14.5" r="2.4" fill="#e8455a"/><rect x="13" y="12.5" width="5" height="1.6" rx="0.8" fill="#8f97a6"/><rect x="13" y="15.5" width="5" height="1.6" rx="0.8" fill="#8f97a6"/>'),
+    bomb: svgI('<rect x="4" y="9" width="16" height="11" rx="2" fill="#7a8396"/><rect x="11" y="3" width="2" height="6" fill="#9aa4b5"/><path d="M12 1.5a2 2 0 0 0 0 4z" fill="#a764ff"/><path d="M12 1.5a2 2 0 0 1 0 4z" fill="#ff8fc8"/><circle cx="9" cy="14.5" r="2.4" fill="#e8455a"/><rect x="13" y="12.5" width="5" height="1.6" rx="0.8" fill="#8f97a6"/><rect x="13" y="15.5" width="5" height="1.6" rx="0.8" fill="#8f97a6"/>'),
     crowbar: svgI('<rect x="5" y="9" width="14.5" height="11.5" rx="3.2" fill="#c98a5a" stroke="#2a1a10" stroke-width="1.3"/><rect x="5" y="4.6" width="3.8" height="6.4" rx="1.9" fill="#d99a68" stroke="#2a1a10" stroke-width="1.3"/><rect x="8.6" y="4" width="3.8" height="7" rx="1.9" fill="#d99a68" stroke="#2a1a10" stroke-width="1.3"/><rect x="12.2" y="4.2" width="3.8" height="6.8" rx="1.9" fill="#d99a68" stroke="#2a1a10" stroke-width="1.3"/><rect x="15.8" y="5.2" width="3.7" height="5.8" rx="1.85" fill="#d99a68" stroke="#2a1a10" stroke-width="1.3"/><path d="M4.4 14.2h7.2c1.3 0 2.1 1.4 1.4 2.5" fill="none" stroke="#2a1a10" stroke-width="1.4" stroke-linecap="round"/><path d="M6.2 6.6v1.6M9.8 6v1.6M13.4 6.2v1.6M17 7v1.4" stroke="#f3c49a" stroke-width="1" stroke-linecap="round"/>'),   /* c367: 단단한 주먹 (빠루 → 주먹) */
     book: svgI('<rect x="6" y="4" width="14.5" height="18" rx="1.4" fill="#f2ead8"/><rect x="4" y="2" width="14.5" height="18" rx="1.6" fill="#9c5b2e"/><rect x="4" y="2" width="3" height="18" rx="1.2" fill="#7a431f"/><rect x="9" y="6" width="7" height="2.4" rx="0.6" fill="#f2c14e"/><rect x="9" y="10" width="7" height="1.2" rx="0.5" fill="#f2c14e"/>'),   // v286: 백과사전 (권총 대신)
     revive: svgI('<path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="#ff5a6e"/><rect x="11" y="8" width="2" height="8" fill="#fff"/><rect x="8" y="11" width="8" height="2" fill="#fff"/>'),   // v375: 부활
     stim: svgI('<rect x="3" y="10" width="13" height="5" rx="1.2" fill="#eef3fb"/><rect x="5" y="11" width="8" height="3" fill="#e8455a"/><rect x="16" y="11.5" width="5" height="2" fill="#9aa4b5"/><rect x="1" y="9" width="2" height="7" rx="0.6" fill="#9aa4b5"/>'),   // v369: 스팀팩
     flag: svgI('<rect x="5" y="2" width="2" height="20" rx="1" fill="#9aa4b5"/><path d="M7 3h12l-3 4 3 4H7z" fill="#e8455a"/>'),
     shoes: svgI('<path d="M2 17v-4c2 0 4-1 5-3l1.5-2 3 2.5c1.5 1 3 1.5 5 1.5h2.5a3 3 0 0 1 3 3V17z" fill="#4fa3f0"/><rect x="2" y="17" width="20" height="3" rx="1" fill="#e9edf5"/>'),
-    parasite: svgI('<path d="M12 7.2C10.6 5.2 8.6 4.4 7 4.4 3.9 4.4 1.8 7.6 1.8 12s2.1 7.6 5.2 7.6c1.6 0 3.6-.8 5-2.8 1.4 2 3.4 2.8 5 2.8 3.1 0 5.2-3.2 5.2-7.6S20.1 4.4 17 4.4c-1.6 0-3.6.8-5 2.8z" fill="#9be35a" fill-opacity="0.9" stroke="#1f4a14" stroke-width="1.3"/><path d="M12 7.6v8.8" stroke="#1f4a14" stroke-width="1" stroke-dasharray="1.6 1.2"/><circle cx="7.2" cy="12" r="2.4" fill="#3c8a24"/><circle cx="16.8" cy="12" r="2.4" fill="#3c8a24"/><circle cx="6.5" cy="11.3" r="0.8" fill="#d8ffb0"/><circle cx="16.1" cy="11.3" r="0.8" fill="#d8ffb0"/>'),   /* c372: 분열세포 — 둘로 갈라지는 세포 */
+    parasite: svgI('<path d="M12 7.2C10.6 5.2 8.6 4.4 7 4.4 3.9 4.4 1.8 7.6 1.8 12s2.1 7.6 5.2 7.6c1.6 0 3.6-.8 5-2.8 1.4 2 3.4 2.8 5 2.8 3.1 0 5.2-3.2 5.2-7.6S20.1 4.4 17 4.4c-1.6 0-3.6.8-5 2.8z" fill="#ffa6d2" fill-opacity="0.92" stroke="#7a2350" stroke-width="1.3"/><path d="M12 7.6v8.8" stroke="#7a2350" stroke-width="1" stroke-dasharray="1.6 1.2"/><circle cx="7.2" cy="12" r="2.4" fill="#d9478c"/><circle cx="16.8" cy="12" r="2.4" fill="#d9478c"/><circle cx="6.5" cy="11.3" r="0.8" fill="#ffe0ef"/><circle cx="16.1" cy="11.3" r="0.8" fill="#ffe0ef"/>'),   /* c372: 분열세포 — 둘로 갈라지는 세포 */
     teeth: svgI('<path d="M5 9h14v6.2H5z" fill="#241818"/><path d="M4.6 9.4 5.2 6.2C7 3.6 17 3.6 18.8 6.2l.6 3.2z" fill="#eee8d8" stroke="#6f6659" stroke-width="0.7" stroke-linejoin="round"/><path d="M12 4.9 13.3 7.6h-2.6z" fill="#3a2a28"/><path d="M3 10.2h2.2v4.6h13.6v-4.6H21v5.1c0 3.6-3.8 6-9 6s-9-2.4-9-6z" fill="#eee8d8" stroke="#6f6659" stroke-width="0.7" stroke-linejoin="round"/><path d="M5.35 9.3h1.97v1.9c0 .5-.4.8-.9.8h-0.17c-.5 0-.9-.3-.9-.8z" fill="#fffdf2" stroke="#6f6659" stroke-width="0.4"/><path d="M5.35 14.7h1.97v-1.9c0-.5-.4-.8-.9-.8h-0.17c-.5 0-.9.3-.9.8z" fill="#fffdf2" stroke="#6f6659" stroke-width="0.4"/><path d="M7.62 9.3h1.97v1.9c0 .5-.4.8-.9.8h-0.17c-.5 0-.9-.3-.9-.8z" fill="#fffdf2" stroke="#6f6659" stroke-width="0.4"/><path d="M7.62 14.7h1.97v-1.9c0-.5-.4-.8-.9-.8h-0.17c-.5 0-.9.3-.9.8z" fill="#fffdf2" stroke="#6f6659" stroke-width="0.4"/><path d="M9.88 9.3h1.97v1.9c0 .5-.4.8-.9.8h-0.17c-.5 0-.9-.3-.9-.8z" fill="#fffdf2" stroke="#6f6659" stroke-width="0.4"/><path d="M9.88 14.7h1.97v-1.9c0-.5-.4-.8-.9-.8h-0.17c-.5 0-.9.3-.9.8z" fill="#fffdf2" stroke="#6f6659" stroke-width="0.4"/><path d="M12.15 9.3h1.97v1.9c0 .5-.4.8-.9.8h-0.17c-.5 0-.9-.3-.9-.8z" fill="#fffdf2" stroke="#6f6659" stroke-width="0.4"/><path d="M12.15 14.7h1.97v-1.9c0-.5-.4-.8-.9-.8h-0.17c-.5 0-.9.3-.9.8z" fill="#fffdf2" stroke="#6f6659" stroke-width="0.4"/><path d="M14.42 9.3h1.97v1.9c0 .5-.4.8-.9.8h-0.17c-.5 0-.9-.3-.9-.8z" fill="#fffdf2" stroke="#6f6659" stroke-width="0.4"/><path d="M14.42 14.7h1.97v-1.9c0-.5-.4-.8-.9-.8h-0.17c-.5 0-.9.3-.9.8z" fill="#fffdf2" stroke="#6f6659" stroke-width="0.4"/><path d="M16.68 9.3h1.97v1.9c0 .5-.4.8-.9.8h-0.17c-.5 0-.9-.3-.9-.8z" fill="#fffdf2" stroke="#6f6659" stroke-width="0.4"/><path d="M16.68 14.7h1.97v-1.9c0-.5-.4-.8-.9-.8h-0.17c-.5 0-.9.3-.9.8z" fill="#fffdf2" stroke="#6f6659" stroke-width="0.4"/>'),   /* c224 */
     acidp: svgI('<path d="M10 3C7.5 7.2 4.5 10 4.5 13.5a5.5 5.5 0 0 0 11 0C15.5 10 12.5 7.2 10 3z" fill="#7ed321"/><rect x="17" y="5" width="2.6" height="9" rx="1" fill="#ff5a3c"/><rect x="13.8" y="8.2" width="9" height="2.6" rx="1" fill="#ff5a3c"/>'),   /* c259 */
     acid: svgI('<path d="M12 2C9 7 5 10.5 5 14.5a7 7 0 0 0 14 0C19 10.5 15 7 12 2z" fill="#7ed321"/><circle cx="9.5" cy="14" r="1.6" fill="#d8ff9a"/><circle cx="13.5" cy="17" r="1.1" fill="#d8ff9a"/><circle cx="20" cy="6" r="1.4" fill="#7ed321"/><circle cx="4" cy="7" r="1" fill="#7ed321"/>'),   /* c224 */
@@ -5244,6 +5244,10 @@
   IC.rage = svgI('<circle cx="12" cy="12" r="6" fill="#d8342c"/><g stroke="#d8342c" stroke-width="2.2" stroke-linecap="round"><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></g><circle cx="10" cy="11" r="1.5" fill="#ffd9d4"/><circle cx="14.2" cy="13.4" r="1.1" fill="#ffd9d4"/>');   // c19: 분노 바이러스
   IC.catalyst = svgI('<path d="M9.5 3h5v2h-1v5l5 8.5a1.7 1.7 0 0 1-1.5 2.5H7a1.7 1.7 0 0 1-1.5-2.5l5-8.5V5h-1z" fill="#dfe7f2"/><path d="M8.2 15h7.6l2 3.5a1 1 0 0 1-.9 1.5H7.1a1 1 0 0 1-.9-1.5z" fill="#4fd08a"/><circle cx="11" cy="17.5" r="0.9" fill="#d9ffe9"/><circle cx="14" cy="16.3" r="0.6" fill="#d9ffe9"/>');   // c19: 촉매제
   IC.linger = svgI('<path d="M6 2.5h12M6 21.5h12" stroke="#cfd6e3" stroke-width="2" stroke-linecap="round"/><path d="M7.5 3.5h9c0 4.2-3 5.8-3 8.5s3 4.3 3 8.5h-9c0-4.2 3-5.8 3-8.5s-3-4.3-3-8.5z" fill="#2d3a2a" stroke="#cfd6e3" stroke-width="1.3"/><path d="M9.6 6h4.8c-.4 1.6-1.5 2.6-2.4 3.6-.9-1-2-2-2.4-3.6zM8.9 19.5c.4-2.2 1.9-3.3 3.1-4.4 1.2 1.1 2.7 2.2 3.1 4.4z" fill="#9be35a"/>');   /* c420: 잔류제 (모래시계) */
+  IC.bombSticky = svgI('<rect x="4" y="9" width="16" height="11" rx="2" fill="#6c5a96"/><rect x="11" y="3" width="2" height="6" fill="#9aa4b5"/><circle cx="12" cy="3.5" r="2.2" fill="#a764ff"/><circle cx="9" cy="14.5" r="2.4" fill="#c79bff"/><path d="M4 17.5c2 0 2 2.5 4 2.5s2-2.5 4-2.5 2 2.5 4 2.5 2-2.5 4-2.5V20H4z" fill="#a764ff"/>');   /* c427: 끈적 스위치 (보라) */
+  IC.bombSplit = svgI('<rect x="4" y="9" width="16" height="11" rx="2" fill="#96637f"/><rect x="11" y="3" width="2" height="6" fill="#9aa4b5"/><circle cx="12" cy="3.5" r="2.2" fill="#ff8fc8"/><circle cx="8.6" cy="14.6" r="2.1" fill="#ffc2df"/><circle cx="12.4" cy="14.6" r="2.1" fill="#ffc2df"/><rect x="15" y="12.5" width="3.5" height="1.6" rx="0.8" fill="#e8b3cd"/><rect x="15" y="15.5" width="3.5" height="1.6" rx="0.8" fill="#e8b3cd"/>');   /* c427: 분열 스위치 (분홍) */
+  IC.diamond = svgI('<path d="M7 3.5h10l4.5 5.5L12 21 2.5 9z" fill="#7fe3ff"/><path d="M2.5 9h19M9.2 3.5 7.4 9 12 21l4.6-12-1.8-5.5" stroke="#e6fbff" stroke-width="1" fill="none"/><path d="M7.4 9 12 3.5 16.6 9z" fill="#c4f4ff"/><path d="M19.5 2.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" fill="#fff"/>');   /* c427: 다이아몬드 */
+  IC.gold = svgI('<path d="M3 20l2.2-6h13.6L21 20z" fill="#d49a1e"/><path d="M6.2 13l2.2-6h7.2l2.2 6z" fill="#f2c94c"/><path d="M8.6 7.6h6.8l1.6 4.4H7z" fill="#ffe28a"/><path d="M6 19l1.4-4h9.2L18 19z" fill="#f2c94c"/><path d="M19 3l.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5z" fill="#fff"/>');   /* c427: 금괴 */
   IC.blood = svgI('<rect x="10" y="2" width="4" height="3" rx="1" fill="#cfd6e3"/><path d="M7 5h10a2 2 0 0 1 2 2v10a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V7a2 2 0 0 1 2-2z" fill="#f4e9e9"/><path d="M6.5 11h11v6a3 3 0 0 1-3 3h-5a3 3 0 0 1-3-3z" fill="#d8342c"/><rect x="11" y="12.5" width="2" height="5.5" fill="#fff"/><rect x="9.25" y="14.25" width="5.5" height="2" fill="#fff"/>');   // c19: 혈액팩
   const ITEM = {
     taser: { max: 3, reload: 20, icon: IC.taser, name: '테이저건', col: '#ffd34d' },   // 3발, 1발 20초 — 내 인지거리 안 적 1명 (위험도 높은 순 → 가까운 순) 4초 감전 (v195), 감전 중인 적은 다시 안 쏨 (v196)
@@ -5298,6 +5302,16 @@
   const pendingAward = [];
   const cashes = [];                          // 바닥에 뿌려진 돈다발 {x, z, space, mesh}
   const zaps = [];                            // 테이저 번쩍 {from:[x,z], to: 몸, t}
+  const chDiaGeo = new THREE.CircleGeometry(0.42, 4).rotateX(-Math.PI / 2).scale(1, 1, 0.72), chDiaGeo2 = new THREE.CircleGeometry(0.24, 4).rotateX(-Math.PI / 2).scale(1, 1, 0.72);   // c427: 다이아몬드 (돈다발보다 살짝 크게)
+  const chDiaMat = new THREE.MeshBasicMaterial({ color: 0x6fdcff, transparent: true, depthWrite: false }), chDiaMat2 = new THREE.MeshBasicMaterial({ color: 0xd6f8ff, transparent: true, depthWrite: false });
+  const chGoldGeo = new THREE.PlaneGeometry(0.74, 0.4).rotateX(-Math.PI / 2), chGoldGeo2 = new THREE.PlaneGeometry(0.56, 0.24).rotateX(-Math.PI / 2);   // c427: 금괴 (돈다발보다 살짝 크게)
+  const chGoldMat = new THREE.MeshBasicMaterial({ color: 0xd49a1e, transparent: true, depthWrite: false }), chGoldMat2 = new THREE.MeshBasicMaterial({ color: 0xffd864, transparent: true, depthWrite: false });
+  function chCashMesh() {                      // c427: 고른 길에 맞는 뿌리는 것 (다이아몬드 · 금괴 · 돈다발) + 반짝임
+    const br = chBr.cash; if (br !== 'dia' && br !== 'gold') return null;
+    const g = new THREE.Mesh(br === 'dia' ? chDiaGeo : chGoldGeo, br === 'dia' ? chDiaMat : chGoldMat), top = new THREE.Mesh(br === 'dia' ? chDiaGeo2 : chGoldGeo2, br === 'dia' ? chDiaMat2 : chGoldMat2); top.position.y = 0.003; g.add(top);
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: flashTex, color: 0xffffff, transparent: true, depthTest: false, depthWrite: false })); s.position.set(0.12, 0.15, -0.05); s.scale.setScalar(0.3); s.renderOrder = -0.5; g.add(s); g.glint = s; g.ph = Math.random() * 6.28;
+    return g;
+  }
   const cashGeo = new THREE.PlaneGeometry(0.62, 0.36).rotateX(-Math.PI / 2), cashMat = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, depthWrite: false });
   const cashRingMat = new THREE.MeshBasicMaterial({ color: 0x43d17a, transparent: true, opacity: 0.45, depthWrite: false });
   const cashBandMat = new THREE.MeshBasicMaterial({ color: 0x1b7a43, transparent: true, depthWrite: false });
@@ -5448,7 +5462,7 @@
   }
   const CASH_LIFE = 5;   /* v333: 10 → 5초 */                       // v235: 돈다발은 10초 뒤 사라진다
   function tickItems(dt) {
-    for (const k of cashes.slice()) if ((k.t -= dt) <= 0) removeCash(k);
+    for (const k of cashes.slice()) { if ((k.t -= dt) <= 0) { removeCash(k); continue; } const gl = k.mesh.glint; if (gl) { const p = Math.max(0, Math.sin(clock * 5 + k.mesh.ph)); gl.material.opacity = p * p; gl.scale.setScalar(0.18 + 0.32 * p); } }   // c427: 반짝임
     for (let i = zaps.length - 1; i >= 0; i--) if ((zaps[i].t -= dt) <= 0) zaps.splice(i, 1);
     for (const it of items) {
       const d = ITEM[it.kind];
@@ -5503,11 +5517,11 @@
           const x = me.foot.x + Math.cos(a) * r, z = me.foot.z + Math.sin(a) * r;
           if (!me.space && (x < MM.x0 + 1 || x > MM.x1 - 1 || z < MM.z0 + 1 || z > MM.z1 - 1)) continue;   /* c330: 지도 경계는 바깥(길)에서만 — 건물 안은 그 건물 안이면 된다 (지도 밖 튜토리얼 건물에서 현금이 안 뿌려졌다) */
           if (spaceOf(x, z) !== me.space || !freeSpot(x, z, me.space) || blocked(me.foot.x, me.foot.z, x, z)) continue;
-          const mesh = new THREE.Mesh(cashGeo, cashMat);
-          const band = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.38).rotateX(-Math.PI / 2), cashBandMat); band.position.y = 0.002; mesh.add(band);
+          let mesh = CHAPTER ? chCashMesh() : null;   // c427: 다이아몬드 · 금괴
+          if (!mesh) { mesh = new THREE.Mesh(cashGeo, cashMat); const band = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.38).rotateX(-Math.PI / 2), cashBandMat); band.position.y = 0.002; mesh.add(band); }
           mesh.position.set(x, 0.03, z); mesh.rotation.y = Math.random() * Math.PI; mesh.renderOrder = -0.55;
           scene.add(mesh);
-          cashes.push({ x, z, space: me.space, mesh, t: CHAPTER ? CH_WV('cashT', lv('cash')) * chLingK() : Math.max(CASH_LIFE, CH_WV('cashT', lv('cash')) + 1.5), who: new Set() });   /* c420: 돈다발 = 유혹 시간(하양 기준)만큼만 있다가 바로 사라진다 */
+          cashes.push({ x, z, space: me.space, mesh, t: CHAPTER ? CH_WV('cashT', lv('cash')) * chLingK() * chDiaK() : Math.max(CASH_LIFE, CH_WV('cashT', lv('cash')) + 1.5), who: new Set() });   /* c420: 돈다발 = 유혹 시간(하양 기준)만큼만 있다가 바로 사라진다 */
           fresh.push(cashes[cashes.length - 1]);
           break;
         }
@@ -5522,8 +5536,10 @@
           k.who.add(c); bd = Math.min(bd, d);
         }
         if (bd === Infinity) continue;
-        if (bd <= SENSE * cashK()) enterLured(c);   /* c138: 바로 홀리는 거리도 기준 인지거리(3.6칸)로 통일 */ else { enterAlert(c); c.lureAlert = true; c.timer *= 0.5 / (c.soft ? CH_SOFT_ALERT : 1); }   /* c84: 돈을 보고 서 있는 시간은 그대로 */   // v275: 돈 보고 경계하는 시간 절반
+        if (bd <= SENSE * cashK()) enterLured(c);   // (c427: 아래 줄 다음에 차 · 기계)   /* c138: 바로 홀리는 거리도 기준 인지거리(3.6칸)로 통일 */ else { enterAlert(c); c.lureAlert = true; c.timer *= 0.5 / (c.soft ? CH_SOFT_ALERT : 1); }   /* c84: 돈을 보고 서 있는 시간은 그대로 */   // v275: 돈 보고 경계하는 시간 절반
       }
+      if (CHAPTER && chBr.cash === 'dia') chDiaCars(fresh);   // c427
+      if (CHAPTER && chBr.cash === 'gold') chGoldMachines(fresh);   // c427
     }
     refreshItems();
   }
@@ -5538,9 +5554,35 @@
     return best ? { k: best, d: bd } : null;
   }
   const CASH_PICK = 1.5;
+  const chDiaK = () => 1 + 0.05 * chBrR('cash', 'dia');   // c427: 다이아몬드 — 유혹(싸우는) 시간 별마다 +5%
+  const chNearFresh = (fresh, x, z, R, sp) => { let best = null, bd = R; for (const k of fresh) { if (k.space !== sp) continue; const d = Math.hypot(k.x - x, k.z - z); if (d < bd && !blocked(x, z, k.x, k.z)) { bd = d; best = k; } } return best; };
+  function chDiaCars(fresh) {                  // c427: 다이아몬드 — 본 민간 차는 서고 사람이 내려 뛰어온다 (유혹이 끝나도 다시 안 탄다)
+    for (const car of chTr.cars.slice()) { const T = car.tr; if (!T || T.mode === 'left' || T.mode === 'gone' || car.wreck) continue;
+      if (!chNearFresh(fresh, car.x, car.z, SIGHT * cashK(), null)) continue;
+      const n0 = bodies.length; chTrExit(car);
+      for (const c of bodies.slice(n0)) if (c.kind === 'citizen') { for (const k of fresh) k.who.add(c); enterLured(c); } }
+  }
+  function chGoldMachines(fresh) {             // c427: 금 — 기계도 홀린다 (날아와 내려앉는 시간까지 유혹 시간)
+    const r = chBrR('cash', 'gold'); if (!r) return; const T0 = CH_WV('cashT', 6) * chLingK();
+    for (const d of chDrones) { if (d.dead) continue; const k = chNearFresh(fresh, d.x, d.z, SIGHT * cashK() + 4, null); if (!k) continue; d.lureT = T0 * (0.2 + 0.05 * (r - 1)); d.lureK = k; d.tg = null; }
+    const tk = chTank; if (tk && !tk.wreck) { const k = chNearFresh(fresh, tk.x, tk.z, SIGHT * cashK() + 4, null); if (k) { tk.lureT = T0 * 0.05 * r; tk.lureX = k.x; tk.lureZ = k.z; } }
+  }
+  const chDiaBuf = [];
+  function chDiaFight(c, dt) {                 // c427: 다이아몬드 — 공격할 수 있는 인간은 유혹 시간 동안 가장 가까운 인간을 친다 (근접 = 다가가 때림 · 원거리 = 쏘면서 다이아몬드로)
+    if (c.atkT > 0) c.atkT -= dt * chDownK(c);
+    const rng = c.police || c.soldier || c.sniper, R = rng ? c.sight : c.sense;
+    let t = null, bd = R;
+    for (const o of nearIn(cCells, c.foot.x, c.foot.z, R, chDiaBuf)) { if (o === c || o.kind !== 'citizen' || o.state === 'held' || o.space !== c.space || o.sleep) continue; const d = Math.hypot(o.foot.x - c.foot.x, o.foot.z - c.foot.z); if (d < bd && !(rng ? fireBlocked : blocked)(c.foot.x, c.foot.z, o.foot.x, o.foot.z)) { bd = d; t = o; } }
+    if (!t) return false;
+    if (rng) { if (c.atkT <= 0) { shoot(c, t); c.atkT = HIT_EVERY * (c.sniper ? 4 : 1); if (c.sniper) c.shotStop = 0.3; } return false; }   // 쏘고 다이아몬드 쪽으로 (저격수는 쏠 때 잠깐 선다)
+    if (bd > MELEE) { const sp = PANIC_SPEED * (c.police ? POLICE_PACE : 1) * (c.guard ? GUARD_PACE : 1) * (c.soft ? CH_SOFT_MOVE : 1); steer(c.vel, toward(c, t.foot.x, t.foot.z, sp), ACCEL * dt); return true; }
+    c.vel.set(0, 0); if (c.atkT <= 0) { strike(c, t); c.atkT = HIT_EVERY; }
+    return true;
+  }
   function enterLured(c) { c.state = 'lured'; c.lureAlert = false; c.foe = null; c.locked = false; c.lureHit = 0; c.pickT = 0; c.lureT = 0; }
   function luredStep(c, dt) {                 // 유혹: 좀비는 안 보고 가장 가까운 돈다발로 달려간다. 닿으면 돈다발이 사라진다
-    if ((c.lureT = (c.lureT || 0) + dt) >= CH_WV('cashT', lv('cash')) * chLingK() * (c.military ? 0.2 : c.police ? 0.5 : 1)) {   /* c139: 유혹 시간 — 저격수·군인 80% · 경찰 50% 짧다 */   /* v516: 군인·저격수 0.7초, 경찰 1.5초 */ c.state = 'normal'; c.ignoreCash = new Set(cashes); enterNormal(c); return; }   // v456: 군인·저격수는 최대 1.5초만 홀린다
+    if ((c.lureT = (c.lureT || 0) + dt) >= CH_WV('cashT', lv('cash')) * chLingK() * chDiaK() * (c.military ? 0.2 : c.police ? 0.5 : 1)) {   /* c139: 유혹 시간 — 저격수·군인 80% · 경찰 50% 짧다 */   /* v516: 군인·저격수 0.7초, 경찰 1.5초 */ c.state = 'normal'; c.ignoreCash = new Set(cashes); enterNormal(c); return; }   // v456: 군인·저격수는 최대 1.5초만 홀린다
+    if (CHAPTER && chBr.cash === 'dia' && c.maxHp > 0 && c.hp > 0 && chDiaFight(c, dt)) return;   // c427: 다이아몬드 — 근접형은 싸우는 중 (원거리는 쏘고 아래로 — 다이아몬드 쪽으로)
     const s = seeCash(c, SIGHT * cashK());
     if (!s) { enterNormal(c); return; }      // 볼 수 있는 돈다발이 없으면 유혹 끝
     if (s.d < CASH_GET) {                    // v237: 돈다발에 닿으면 1.5초 동안 가만히 서서 줍고, 그다음 돈다발이 사라진다
@@ -6372,14 +6414,14 @@
     const ov = document.createElement('div'); ov.id = 'pick';
     ov.innerHTML = `<div class="hd">${ITEM[k].name} 갈림길</div><div class="sub">둘 중 하나를 선택하세요</div><div class="cards" style="flex-wrap:wrap;justify-content:center">` +
       CH_BRANCH[k].map((B) => `<div class="card" data-k="${B.id}" style="min-height:178px;padding-top:8px"><div style="height:14px;font:900 12px/14px var(--font);color:#ff3b30">★</div>` +
-        `<div class="ic" style="margin-top:4px">${ITEM[k].icon}</div><div class="nm" style="margin-top:8px">${B.name}</div><div class="ds" style="margin-top:8px">${B.desc}</div><div class="vl">${B.line(1)}</div></div>`).join('') + `</div>`;
+        `<div class="ic" style="margin-top:4px">${B.icon || ITEM[k].icon}</div><div class="nm" style="margin-top:8px">${B.name}</div><div class="ds" style="margin-top:8px">${B.desc}</div><div class="vl">${B.line(1)}</div></div>`).join('') + `</div>`;
     stage.appendChild(ov); chFitNames(ov);
     const block = (e) => { e.stopPropagation(); e.preventDefault(); };
     ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
     ov.addEventListener('pointerdown', (e) => {
       block(e); if (ov.dataset.done) return;
       const card = e.target.closest('.card'); if (!card) return;
-      chPickWin(ov, card.dataset.k); chBr[k] = card.dataset.k; chItemChanged(k); chPopBtn(k);
+      chPickWin(ov, card.dataset.k); chBr[k] = card.dataset.k; chBrLook(k); chItemChanged(k); chPopBtn(k);
       chPickClose(ov, () => { acqOpen = false; });
     });
   }
@@ -6498,11 +6540,22 @@
   }
   const CH_BRANCH = {                          // c422: 무기 갈림길 — 흰 ★6 다음 강화에서 둘 중 하나 (빨간 별 r = 1~6)
     bomb: [
-      { id: 'sticky', name: '끈적 산성', desc: '자폭 산성을 맞은 적이 느려집니다.', line: (r) => `산성 맞은 적 이동 속도 -${15 * r}%`, short: ['둔화', (r) => `-${15 * r}%`] },
-      { id: 'split', name: '분열 산성', desc: '자폭 산성을 뒤집어쓴 적이 그 상태로 쓰러지면, 감염시키지 않아도 그 즉시 새끼 좀비 2마리로 변합니다.', line: (r) => `새끼 좀비 2마리로 변할 확률 ${15 * r}%`, short: ['분열', (r) => `${15 * r}%`] },
+      { id: 'sticky', nm: '끈적 스위치', icon: IC.bombSticky, col: '#a764ff', goo: 0x9b59ff, name: '끈적 산성', desc: '자폭 산성을 맞은 적이 느려집니다.', line: (r) => `산성 맞은 적 이동 속도 -${15 * r}%`, short: ['둔화', (r) => `-${15 * r}%`] },
+      { id: 'split', nm: '분열 스위치', icon: IC.bombSplit, col: '#ff8fc8', goo: 0xff7fbf, name: '분열 산성', desc: '자폭 산성을 뒤집어쓴 적이 그 상태로 쓰러지면, 감염시키지 않아도 그 즉시 새끼 좀비 2마리로 변합니다.', line: (r) => `새끼 좀비 2마리로 변할 확률 ${15 * r}%`, short: ['분열', (r) => `${15 * r}%`] },
+    ],
+    cash: [   // c427
+      { id: 'dia', nm: '다이아몬드', icon: IC.diamond, col: '#7fe3ff', name: '다이아몬드', desc: '인간들이 다이아몬드를 두고 서로 싸웁니다. 자동차도 반응합니다.', line: (r) => `유혹(싸우는) 시간 +${5 * r}%`, short: ['싸움', (r) => `+${5 * r}%`] },
+      { id: 'gold', nm: '금', icon: IC.gold, col: '#f2c94c', name: '금', desc: '기계들도 정신을 못 차립니다.', line: (r) => `기계 유혹 — 드론 ${20 + 5 * (r - 1)}% · 보스 ${5 * r}% (유혹 시간의)`, short: ['기계', (r) => `${20 + 5 * (r - 1)}%`] },
     ],
   };
-  const chBr = {};                             // c422: 무기마다 고른 길 (id)
+  const chBr = {};
+  const chItem0 = {};                          // c427: 갈림길 전 이름 · 아이콘 · 색
+  function chBrLook(k) {                       // c427: 고른 길에 맞춰 무기 이름 · 아이콘 · 색 (안 골랐으면 원래대로)
+    const B = CH_BRANCH[k] && CH_BRANCH[k].find((b) => b.id === chBr[k]), O = chItem0[k] || (chItem0[k] = { name: ITEM[k].name, icon: ITEM[k].icon, col: ITEM[k].col });
+    ITEM[k].name = B ? B.nm : O.name; ITEM[k].icon = B ? B.icon : O.icon; ITEM[k].col = B ? B.col : O.col;
+    if (k === 'bomb') gooMat.color.setHex(B ? B.goo : 0x5fcf3a);
+    const it = items.find((x) => x.kind === k); if (it && it.el) { const ic = it.el.querySelector('.ic'); if (ic) ic.innerHTML = ITEM[k].icon; it.el.style.setProperty('--c', ITEM[k].col); }
+  }                             // c422: 무기마다 고른 길 (id)
   const chBrR = (k, id) => CHAPTER && chBr[k] === id ? Math.max(0, lv(k) - 6) : 0;   // 그 길의 빨간 별 수 (안 골랐으면 0)
   const chLvB = (k) => Math.min(6, lv(k));     // c422: 원래 수치는 흰 ★6에서 멈춘다
   const chStickyK = () => 1 - 0.15 * chBrR('bomb', 'sticky');   // 끈적 산성 — 15%씩 느리게 (90%까지)
@@ -7372,7 +7425,13 @@
       // 산성 (폭발 = 1 + 산성 강도 · 자폭 = 2 + 산성 강도, 0.5초마다)
       if (d.goo > 0) { d.goo -= dt; if ((d.gooT += dt) >= CH_DOT_T) { d.gooT -= CH_DOT_T; const n = 2 + chAcidB(); chDotPop(d.x + 0.6, d.z, n); chDroneDmg(d, n); if (d.dead) continue; } }
       else if (d.acid > 0) { d.acid -= dt; if ((d.acidT += dt) >= CH_DOT_T) { d.acidT -= CH_DOT_T; const n = 1 + chAcidB(); chDotPop(d.x + 0.6, d.z, n); chDroneDmg(d, n); if (d.dead) continue; } }
-      if (d.stunT > 0) { if ((d.air ?? 0) <= 0.45) d.stunT -= dt; chDroneDraw(d, dt); continue; }   // 감전 — 땅에 떨어져서 가만히 · c390: 감전 시간은 땅에 닿은 뒤부터 센다
+      if (d.stunT > 0) { if ((d.air ?? 0) <= 0.45) d.stunT -= dt; chDroneDraw(d, dt); continue; }
+      if (d.lureT > 0) {                        // c427: 금 — 금까지 날아가 내려앉는다 (남은 유혹 시간만큼 앉아 있다)
+        d.lureT -= dt; const k = d.lureK, dx = k.x - d.x, dz = k.z - d.z, q = Math.hypot(dx, dz);
+        if (q < 0.6 || d.lureT <= 0) { if (d.lureT > 0) d.stunT = d.lureT; d.lureT = 0; d.lureLand = true; chDroneDraw(d, dt); continue; }
+        const f = chDroneWay(d, k.x, k.z) || [dx / q, dz / q], l = Math.hypot(f[0], f[1]) || 1, sp = CH_DRONE_SPEED * dt * (d.goo > 0 ? chStickyK() : 1), nx = d.x + f[0] / l * Math.min(sp, q), nz = d.z + f[1] / l * Math.min(sp, q);
+        if (chDroneFree(nx, nz)) { d.x = nx; d.z = nz; } d.foot.set(d.x, 0, d.z); chDroneDraw(d, dt); continue;
+      }   // 감전 — 땅에 떨어져서 가만히 · c390: 감전 시간은 땅에 닿은 뒤부터 센다
       // 노릴 좀비 — 시야 안 가장 가까운 (나 포함, 건물 안 좀비는 벽에 가려 못 본다)
       if (!d.tg || !isZombie(d.tg) || !chDroneSees(d.tg.foot.x, d.tg.foot.z, d, CH_DRONE_SIGHT)) {
         d.tg = null; let bd = CH_DRONE_SIGHT;
@@ -7916,6 +7975,11 @@
       const fx = Math.cos(car.h), fz = Math.sin(car.h), hl = CAR_L * CH_TK_KL / 2 + 0.5, hw = CAR_W * CH_TK_K / 2 + 0.5, L = [];
       for (const q of objs) if (q.type === 'table' && !q.dead && q.t) { const dx = q.t.x - car.x, dz = q.t.z - car.z; if (Math.abs(dx * fx + dz * fz) < hl && Math.abs(-dx * fz + dz * fx) < hw) L.push(q); }
       for (const q of L) breakObj(q);
+    }
+    if (CHAPTER && car.lureT > 0) {             // c427: 금 — 보스도 금 쪽으로 가서 선다 (안 쏘고 · 돌진 안 함)
+      car.lureT -= dt; car.burstN = 0; car.tkPh = null; car.dashT = 0; car.spOn = false; const dx = car.lureX - car.x, dz = car.lureZ - car.z, q = Math.hypot(dx, dz);
+      if (q > CAR_L * CH_TK_KL / 2 + 0.6) { car.vx = dx / q * spd; car.vz = dz / q * spd; car.tkV = spd; } else { car.vx = car.vz = 0; car.tkV = 0; }
+      return;
     }
     // 기관포
     car.atkT -= dt;   /* c421: 산성 둔화 없음 */
