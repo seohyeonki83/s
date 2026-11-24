@@ -1384,6 +1384,8 @@ from c416_patch import C416_R   # c416: 건널목 25% 길게
 R += C416_R
 from c417_patch import C417_R   # c417: 건널목 50% 더 길게
 R += C417_R
+from c418_patch import C418_R   # c418: 체력이 다한 적 공격·이동 속도 반
+R += C418_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
