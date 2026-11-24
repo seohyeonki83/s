@@ -1396,6 +1396,8 @@ from c422_patch import C422_R   # c422: 무기 갈림길 · 드론 경험치
 R += C422_R
 from c423_patch import C423_R   # c423: 드론 주기 1.5배
 R += C423_R
+from c424_patch import C424_R   # c424: 장비 배지 촘촘하게
+R += C424_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
