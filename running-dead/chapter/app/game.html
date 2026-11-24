@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c420</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c421</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2427,7 +2427,7 @@
   //   쫓지는 않고 그 자리에 서서, 상대가 근접 거리에 들어오면 1초마다 때린다.
   function guardFight(c, dt) {
     steer(c.vel, wantV.set(0, 0), ACCEL * dt);
-    if (c.atkT > 0) c.atkT -= dt * (c.goo ? 0.56 : 1) * chDownK(c);   /* c418 */   // v275: 산성 덩어리 묻으면 공격 속도 20% 느리게
+    if (c.atkT > 0) c.atkT -= dt * (c.goo && !CHAPTER ? 0.56 : 1) * chDownK(c);   /* c421: 챕터 — 산성 둔화 없음 */   /* c418 */   // v275: 산성 덩어리 묻으면 공격 속도 20% 느리게
     const gap = (z) => Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
     const holds = (z) => z && isZombie(z) && z.engaging === c && gap(z) <= GUARD_CLOSE;   // 아직 상대가 될 수 있나
     if (!holds(c.foe)) {
@@ -2449,7 +2449,7 @@
   //   그 상대가 도망가거나 멀어지면(1.5칸 밖) 또는 죽으면 다시 쫓는 중 → 가장 가까운 좀비. 시야 안에 좀비가 없으면 일반으로 돌아간다.
   //   HP가 0이 되면 놀람 없이 도망간다 (landHit) — 그 뒤로는 좀비를 봐도 일반 시민처럼 도망간다.
   function attackerFight(c, dt) {
-    if (c.atkT > 0) c.atkT -= dt * (c.goo ? 0.56 : 1) * chDownK(c);   /* c418 */   // v275: 산성 덩어리 묻으면 공격 속도 20% 느리게
+    if (c.atkT > 0) c.atkT -= dt * (c.goo && !CHAPTER ? 0.56 : 1) * chDownK(c);   /* c421: 챕터 — 산성 둔화 없음 */   /* c418 */   // v275: 산성 덩어리 묻으면 공격 속도 20% 느리게
     if (c.notice > 0) c.notice -= dt;
     const tick = (c.tick -= dt) <= 0;
     if (tick) c.tick += TICK;
@@ -2481,7 +2481,7 @@
   const evBuf = [];
   function sniperEvade(c, dt) {
     if (CHAPTER && c.hold && Math.hypot(c.foot.x - c.hold.x, c.foot.z - c.hold.z) > CH_HOLD_DOM + 1.5) { c.isolated = true; enterFight(c, null, true); return; }   // c59: 사수지역 저격수 — 자리에서 너무 멀리는 안 물러난다 (그 자리에서 쏜다)               // v396: 도망 중 시야 = 시민 시야(7.2칸) — 그 안에 좀비가 없으면 바로 다시 저격
-    if (c.atkT > 0) c.atkT -= dt * (c.goo ? 0.56 : 1) * chDownK(c);   /* c418 */   // 도망치는 동안에도 쿨타임은 흐른다
+    if (c.atkT > 0) c.atkT -= dt * (c.goo && !CHAPTER ? 0.56 : 1) * chDownK(c);   /* c421: 챕터 — 산성 둔화 없음 */   /* c418 */   // 도망치는 동안에도 쿨타임은 흐른다
     if ((c.spAvg || 0) < SNIPER_EVADE * 0.3) c.stuckT = (c.stuckT || 0) + dt; else c.stuckT = 0;   // v411: 회피 속도의 30%도 못 내면 막힘
     if (c.stuckT >= 2) { c.stuckT = 0; c.isolated = true; enterFight(c, null, true); return; }   // 2초 넘게 막힘 → 고립: 회피를 버리고 제자리에서 공격
     const list = [];
@@ -2645,7 +2645,7 @@
     giveKnock(z, z.foot.x - c.foot.x, z.foot.z - c.foot.z, v, T);
   }
   function policeFight(c, dt) {
-    if (c.atkT > 0) c.atkT -= dt * (c.goo ? 0.56 : 1) * chDownK(c);   /* c418 */   // v275: 산성 덩어리 묻으면 공격 속도 20% 느리게
+    if (c.atkT > 0) c.atkT -= dt * (c.goo && !CHAPTER ? 0.56 : 1) * chDownK(c);   /* c421: 챕터 — 산성 둔화 없음 */   /* c418 */   // v275: 산성 덩어리 묻으면 공격 속도 20% 느리게
     if (c.notice > 0) c.notice -= dt;
     const tick = (c.tick -= dt) <= 0;
     if (tick) c.tick += TICK;
@@ -2677,7 +2677,7 @@
 
   function moveShoot(c, dt, own) {                // v443: 군인·저격수는 움직이면서도 쏜다 — 움직이는 동안은 쿨타임이 절반 속도로 흐른다 (공격 속도 절반)
     if (!c.military) return;
-    if (c.atkT > 0) { c.atkT += own ? -dt * (c.goo ? 0.56 : 1) * chDownK(c) : 0;   /* c418 */ return; }   /* v540: 이동 중에도 공격 속도 그대로 */   // own: 쿨타임을 여기서 직접 흘린다 (평소 이동 중)
+    if (c.atkT > 0) { c.atkT += own ? -dt * (c.goo && !CHAPTER ? 0.56 : 1) * chDownK(c) : 0;   /* c421 */   /* c418 */ return; }   /* v540: 이동 중에도 공격 속도 그대로 */   // own: 쿨타임을 여기서 직접 흘린다 (평소 이동 중)
     if (c.burstN > 0) return;
     const z = nearestZombie(c, c.boostT > 0 ? c.boostSight : c.fb ? c.sight0 : c.sight, true);
     if (!z) return;
@@ -5145,7 +5145,7 @@
     }
     if (CHAPTER) chBoardTick(dt);   // c47: 싸움이 끝난 사람은 차로 돌아간다
     for (const b of bodies) {
-      if (!b.fixed && !b.sleep) { const gk = (b.goo ? 0.56 : 1) * (b.rage && !CHAPTER ? 1 + rageK() : 1) * chDownK(b);   /* c420: 분노 — 챕터는 이동 속도 없음 */   /* c418: 체력이 다한 적은 반 */   /* c19 · c22: 분노 바이러스 — 이동 속도 +5~15% */   /* v344: 20% → 44% 느리게 (0.8 × 0.7) */ b.foot.x += b.vel.x * dt * gk; b.foot.z += b.vel.y * dt * gk; }   // v275: 산성 덩어리 묻으면 이동 20% 느리게
+      if (!b.fixed && !b.sleep) { const gk = (b.goo && !CHAPTER ? 0.56 : 1)   /* c421 */ * (b.rage && !CHAPTER ? 1 + rageK() : 1) * chDownK(b);   /* c420: 분노 — 챕터는 이동 속도 없음 */   /* c418: 체력이 다한 적은 반 */   /* c19 · c22: 분노 바이러스 — 이동 속도 +5~15% */   /* v344: 20% → 44% 느리게 (0.8 × 0.7) */ b.foot.x += b.vel.x * dt * gk; b.foot.z += b.vel.y * dt * gk; }   // v275: 산성 덩어리 묻으면 이동 20% 느리게
       if (b.split && (b.splitT -= dt) <= 0) b.split = null;
       if (b.stick) { const L = LUNGE_IN + LUNGE_OUT, u = b.lungeT >= 0 ? Math.min(1, b.lungeT / L) : -1; b.stick.rotation.z = u < 0 ? -0.5 : -0.5 + 2.6 * Math.sin(Math.PI * u); }   // c40
       if (b.lungeT >= 0) {                    // 때리는 모션 시간 — 붙는 순간 데미지
@@ -7579,7 +7579,7 @@
     car.spOn = true;
     const ta = car.h - car.tkAim; let dd = ta - car.spAng; dd = Math.atan2(Math.sin(dd), Math.cos(dd));
     if (Math.abs(dd) > 0.2) return;           // 포탑이 아직 그쪽을 안 봤다
-    car.spAcc += dt * CH_SP_RATE * (car.goo ? 0.56 : 1);
+    car.spAcc += dt * CH_SP_RATE;   /* c421: 산성 둔화 없음 */
     if (car.spAcc < 1) return;
     const rim = CAR_L * CH_TK_KL / 2, R = SIGHT + rim, tip = 0.63 * CH_TK_K, mx = car.x + Math.cos(ta) * tip, mz = car.z + Math.sin(ta) * tip;
     car.tipX = mx; car.tipZ = mz;
@@ -7862,7 +7862,7 @@
       K0.material.color.setHex(car.stunT > 0 && Math.floor(clock * 14) % 2 ? 0xc8f0ff : 0x3c4a2a);
       return;
     }
-    const spd = (car.tkSeen ? CAR_SPEED * CH_TR_SPD.sedan * CH_TR_SLOW / 2 * 1.2 :   /* c183: 20% 빠르게 */ CAR_SPEED * 0.9) * (car.goo ? 0.8 : 1);   /* c179: 눈에 띄기 전 = 경찰차의 90% */   /* c168: 보인 뒤 속도 2배 (보통 차의 절반) */   /* c137: 눈에 띄기 전엔 보통 차 속도 */   // 보통 차(승용차)의 4분의 1
+    const spd = (car.tkSeen ? CAR_SPEED * CH_TR_SPD.sedan * CH_TR_SLOW / 2 * 1.2 :   /* c183: 20% 빠르게 */ CAR_SPEED * 0.9) /* c421: 산성 둔화 없음 */;   /* c179: 눈에 띄기 전 = 경찰차의 90% */   /* c168: 보인 뒤 속도 2배 (보통 차의 절반) */   /* c137: 눈에 띄기 전엔 보통 차 속도 */   // 보통 차(승용차)의 4분의 1
     if (car.goo && (car.gooLeft -= dt) <= 0) { car.goo = false; for (const s of car.gooS) car.g.remove(s); }   // c123
     if (car.goo && (car.gooT += dt) >= CH_DOT_T) { car.gooT -= CH_DOT_T; const gd = 2 + chAcidB(); if (o && o.hp > gd) { o.hp -= gd; chDotPop(car.x + 0.9, car.z, gd, 2.2); } }   // c259 · c265
     // 벽
@@ -7879,7 +7879,7 @@
       for (const q of L) breakObj(q);
     }
     // 기관포
-    car.atkT -= dt * (car.goo ? 0.56 : 1);
+    car.atkT -= dt;   /* c421: 산성 둔화 없음 */
     if ((car.scanT -= dt) <= 0) { car.scanT = 0.2; car.foe = chTankFoe(car); if (!car.tkSeen) chTankSeen(car); }
     car.burstN = 0; chTankSpray(car, dt);   // c201: 난사
     // 돌진

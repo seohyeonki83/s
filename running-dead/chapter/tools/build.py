@@ -1390,6 +1390,8 @@ from c419_patch import C419_R   # c419: 드론 주기 2배 · 한 번에 2배
 R += C419_R
 from c420_patch import C420_R   # c420: 장비 개편
 R += C420_R
+from c421_patch import C421_R   # c421: 자폭 산성 둔화 없앰
+R += C421_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
