@@ -1404,6 +1404,8 @@ from c426_patch import C426_R   # c426: 배지 줄 원래대로
 R += C426_R
 from c427_patch import C427_R   # c427: 갈림길 모양 + 현금 갈림길
 R += C427_R
+from c428_patch import C428_R   # c428: 자폭 기본 아이콘 · 현금 거리
+R += C428_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
