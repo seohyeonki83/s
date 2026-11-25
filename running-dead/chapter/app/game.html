@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c435</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c436</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1263,6 +1263,42 @@
     enterNormal(c);
     return c;
   }
+  const chGunMat = new THREE.MeshBasicMaterial({ color: 0x1d2024, transparent: true, depthTest: false, depthWrite: false }), chSqGeo = new THREE.PlaneGeometry(RADIUS * 1.8, RADIUS * 1.8);
+  function chAddGun(c, L, W, col) { const g = new THREE.Mesh(new THREE.PlaneGeometry(L, W).translate(L / 2 + 0.05, 0, 0), col ? new THREE.MeshBasicMaterial({ color: col, transparent: true, depthTest: false, depthWrite: false }) : chGunMat); g.position.z = 0.012; g.renderOrder = 1; c.mesh.add(g); c.aimGun = g; }
+  function chMakeSg(c) {                       // c436: 샷건 경찰 — 경찰 + 늘 앞을 향한 샷건 · 체력 150% · 경찰 사거리 0.4배까지 다가가 쏜다
+    c.sg = true; c.hp = c.maxHp = c.maxHp * 1.5; chAddGun(c, 0.62, 0.15);
+  }
+  function chMakeRobot(c) {                    // c436: 사각 로봇 — 군인 바탕 · 체력 2배 · 몸 1.5배 · 감염 안 됨(체력 0이면 터짐) · 현금 · 다이아몬드에 반응 안 함
+    c.robot = true; c.noLure = true; c.hp = c.maxHp = c.maxHp * 2; c.r = BODY * 1.5; c.halfH = RADIUS * 1.5; c.mesh.scale.setScalar(1.5);
+    c.mesh.geometry = chSqGeo; c.mesh.material.color.setHex(0x6f7a86); chAddGun(c, 0.55, 0.17, 0x2a2f35);
+  }
+  function chRobotDie(c) {                     // c436: 로봇 — 차처럼 터지고 사라진다 (경험치 1)
+    boom(c.foot.x, c.foot.z); dust(c.foot.x, c.foot.z, 12, 1.6); debris(c.foot.x, c.foot.z, 12, [0x6f7a86, 0x2a2f35, 0x151515], 0.35, 6);
+    for (const z of bodies) { if (z.target === c) { z.target = null; if (z.mode === 'pounce' || z.mode === 'bite') z.mode = 'free'; } if (z.foe === c) z.foe = null; if (z.engaging === c) z.engaging = null; }
+    chBTgone(c); if (isZombie(me)) gainXp();
+  }
+  const chSgBuf = [];
+  function chShotgun(c, z) {                   // c436: 샷건 — 앞쪽 60° 부채꼴, 경찰 사거리 0.5배 안 좀비 모두 (경찰 공격력 1/5) · 넉백 가까우면 저격수의 40% → 끝에서 0
+    const R = c.sight * 0.5, dx = z.foot.x - c.foot.x, dz = z.foot.z - c.foot.z, d0 = Math.hypot(dx, dz) || 1, ux = dx / d0, uz = dz / d0, cs = Math.cos(Math.PI / 6);
+    c.shotT = 0; c.shotAt = z; c.recoilT = 0; c.recoilX = -ux; c.recoilZ = -uz; c.recoilK = 2;
+    { const f = puff(c.foot.x + ux * RADIUS, 0, c.foot.z + uz * RADIUS, 0xfff23a, 1.4, 1.6, 0.09, 0, 0, 0, 0.8); f.s.material.map = flashTex; f.s.position.addScaledVector(UP, RADIUS); f.s.renderOrder = UI - 0.5; f.peak = true; }
+    for (let i = 0; i < 7; i++) { const a = Math.atan2(uz, ux) + rand(-0.5, 0.5), sp = rand(8, 14); const f = puff(c.foot.x + ux * 0.6, 0.6, c.foot.z + uz * 0.6, 0xffe9a0, 0.18, 0.08, 0.18, Math.cos(a) * sp, 0, Math.sin(a) * sp, 0.9); f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true; }
+    const dmg = CH_DMG_PO / 5;
+    for (const t of nearIn(zCells, c.foot.x, c.foot.z, R + 1, chSgBuf)) {
+      if (!isZombie(t) || t.space !== c.space) continue;
+      const ex = t.foot.x - c.foot.x, ez = t.foot.z - c.foot.z, e = Math.hypot(ex, ez);
+      if (e > R + (t.r || BODY) || e < 1e-3 || (ex * ux + ez * uz) / e < cs || fireBlocked(c.foot.x, c.foot.z, t.foot.x, t.foot.z)) continue;
+      landHit(c, t, t === me && hasVest ? dmg * vestK(lv('vest')) : dmg);
+      const D = SNIPER_KD * 0.4 * Math.max(0, 1 - e / R);
+      if (D > 0.001 && t.hp > 0 && t.mode !== 'bite' && chKbAbs(t) < D - 0.001) { const T = ARMOR_KT * D / SNIPER_KD, V = D * 4 / (1 - Math.exp(-4 * T)); if (t.mode === 'pounce') stopPounce(t); giveKnock(t, ex, ez, V, T); }
+    }
+  }
+  const chGunQ = new THREE.Quaternion(), chGunV = new THREE.Vector3();
+  function chGunAim(b) {                       // c436: 샷건 · 로봇 총이 늘 앞(노리는 쪽, 없으면 가는 쪽)을 향한다 (화면에서)
+    const t = b.foe || b.shotAt; let dx, dz; if (t && t.foot) { dx = t.foot.x - b.foot.x; dz = t.foot.z - b.foot.z; } else { dx = b.vel.x; dz = b.vel.y; }
+    if (Math.abs(dx) + Math.abs(dz) < 1e-4) return;
+    chGunQ.copy(camera.quaternion).invert(); chGunV.set(dx, 0, dz).applyQuaternion(chGunQ); b.aimGun.rotation.z = Math.atan2(chGunV.y, chGunV.x);
+  }
   function chVig(c) {                         // 자경단 = 공격형과 같은 수치 + 근접 넉백 1, 빨강, 몽둥이
     c.vig = true; c.mesh.material.color.setHex(0xc62828); chSoftOff(c);   /* c84 */
     const s = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.95), new THREE.MeshBasicMaterial({ color: 0x8a5a30, transparent: true, depthTest: false, depthWrite: false }));
@@ -2079,6 +2115,7 @@
     if (CHAPTER && !c.police) { c.soft = true; c.sight *= CH_SOFT_SIGHT; }   // c84: 하양·노랑·주황 (빨강·분홍은 chVig·chBoss에서 되돌린다)
     if (c.soldier) c.sense = c.sight;    // v410: 군인은 경계 없이 시야 안이면 바로 싸움
     if (c.sniper) { c.evadeR = sniperEvadeR(); c.sight = SIGHT * 1.1; c.sense = c.sight;   /* v432: 시야(사거리) = 경찰의 1.1배 → 7.92칸 */   /* v404: 경찰과 차이를 절반으로 (1.5 → 1.25배, 9칸) */ c.mark = new THREE.Sprite(diamondMat); c.mark.scale.set(1.3, 1.3, 1); /* v482: 테두리 + 십자 */ c.mark.renderOrder = UI; c.mark.visible = false; scene.add(c.mark); }   // v396: 저격수 시야 10.8칸 — 시야 안이면 경계 없이 바로 싸움
+    if (CHAPTER && chAL >= 6) { if (type === 'police' && ++chPolN % 5 === 0) chMakeSg(c); else if (type === 'soldier' && ++chSolN % 5 === 0) chMakeRobot(c); }   // c436
     c.flee = new THREE.Vector2();
     c.lastSeen = new THREE.Vector3();
     c.lastSeenSpeed = SPEED;
@@ -2595,6 +2632,11 @@
   const knockDist = (v, T) => v * (1 - Math.exp(-4 * T)) / 4;   // knockStep 감속(e^-4t)으로 밀리는 거리
   const SNIPER_KD = knockDist(2.3 * 2 * 1.3, 0.4);   /* v547: 저격 넉백 1.3배에 맞춰 — 흡수복 4단계에 완전 무효 그대로 */   /* = ARMOR_KB × 2, ARMOR_KT (아래에서 선언) */            // 저격수 넉백 거리 (약 0.92칸)
   const absorbAmt = () => (CHAPTER ? owned.vest : owned.absorb) ? SNIPER_KD / 12 * (2 + 2.5 * lv(CHAPTER ? 'vest' : 'absorb'))   /* c273: 방탄복에 합침 */   /* c198: 2씩 */ : 0;   /* c163: 처음부터 흡수 2 */   /* c21: 충격 흡수 1 = 저격수 넉백의 12분의 1 (근접 무기 1 · 권총 2 · 군인 3 · 저격수 12). 강화마다 +1, 6까지 */
+  function chKbAbs(z) {                        // c436: 넉백 이기는 힘 = 방탄복 개수 (덩치는 2개를 타고난다 · 괴물 덩치는 빨간 별마다 +1 · 나는 내 방탄복에 더한다)
+    let n = z === me && owned.vest ? 1 + lv('vest') : 0;
+    if (z.mut === 'armor') { n += 2; const B = chMB(z); if (B && B.id === 'monster') n += B.r; }
+    return n ? SNIPER_KD / 12 * (2 + 2.5 * (n - 1)) : 0;
+  }
   function giveKnock(z, kx, kz, v, T) {       // 방향(kx, kz), 처음 속도 v, 시간 T — 내가 흡수복을 입었으면 깎는다. 밀렸으면 true
     const kl = Math.hypot(kx, kz) || 1;
     if (z === me && owned.absorb) {
@@ -2623,17 +2665,17 @@
   function sniperHit(c, z) {
     sniperFx(c, z);                  // v396: 저격 — 죽으면 피가 팍 터지고, 살면 뒤로 쭉 밀린다 (약 0.9칸, 0.4초)
     if (z.hp <= 0) { bloodBurst(z.foot.x, z.foot.z, 30, 2, 5); bloodBurst(z.foot.x, z.foot.z, 14, 0.5, 1.5); return; }
-    if (z.mut === 'armor' || z.mode === 'bite') return;   // 덩치 · 무는(감염 중) 좀비는 안 밀린다
-    if (z === me && absorbAmt() >= SNIPER_KD - 0.001) return;   // v505: 흡수복이 다 막으면 덮치기도 안 끊긴다
+    if ((!CHAPTER && z.mut === 'armor') || z.mode === 'bite') return;   // 덩치 · 무는(감염 중) 좀비는 안 밀린다 (c436: 챕터 덩치는 방탄복으로)
+    if (CHAPTER ? chKbAbs(z) >= SNIPER_KD - 0.001 : z === me && absorbAmt() >= SNIPER_KD - 0.001) return;   // v505: 흡수복이 다 막으면 덮치기도 안 끊긴다
     if (z.mode === 'pounce') stopPounce(z);
     giveKnock(z, z.foot.x - c.foot.x, z.foot.z - c.foot.z, ARMOR_KB * 2 * 1.3, ARMOR_KT);   // v547: 넉백 거리 1.3배
   }
   function soldierHit(c, z) {                 // v478 · v498: 군인 총알 — 저격수와 같은 방식, 약 0.09칸 · 0.04초
-    if (z.hp <= 0 || z.mut === 'armor' || z.mode === 'bite') return;
+    if (z.hp <= 0 || (!CHAPTER && z.mut === 'armor') || z.mode === 'bite') return;   /* c436 */
     if (CHAPTER) {                            // c59: 첫 발만 밀린다 — 넉백 3
       if (c.burstN !== 3) return;
       const T = ARMOR_KT * 3 / 12, D = SNIPER_KD * 3 / 12, V = D * 4 / (1 - Math.exp(-4 * T));
-      if (z === me && absorbAmt() >= D - 0.001) return;
+      if (chKbAbs(z) >= D - 0.001) return;   /* c436 */
       if (z.mode === 'pounce') stopPounce(z);
       giveKnock(z, z.foot.x - c.foot.x, z.foot.z - c.foot.z, V, T);
       return;
@@ -2649,7 +2691,7 @@
     if (c.notice > 0) c.notice -= dt;
     const tick = (c.tick -= dt) <= 0;
     if (tick) c.tick += TICK;
-    const range = c.boostT > 0 ? c.boostSight : c.fb ? c.sight0 : c.sight;   // 사거리 = 원래(1배) 시야 (v159 · c54: 늘어난 시야는 사거리가 아니다)
+    const range = (c.boostT > 0 ? c.boostSight : c.fb ? c.sight0 : c.sight) * (c.sg ? 0.4 : 1);   /* c436: 샷건 경찰은 경찰 사거리 0.4배까지 다가가 쏜다 */   // 사거리 = 원래(1배) 시야 (v159 · c54: 늘어난 시야는 사거리가 아니다)
     if ((c.soldier || c.tkE) && soldierLeash(c, dt)) { moveShoot(c, dt); return; }
     if (CHAPTER && c.gar && !(c.soldier && c.master) && chHoldLeash(c, dt)) { moveShoot(c, dt); return; }   // c59: 사수지역 — 자리에서 지배 거리 밖이면 돌아온다   // v442: 복귀하면서도 쏜다   // v410: 주인 저격수에게서 지배 거리 밖에 1~2초 → 복귀
     if (c.sniper && !c.isolated) {   // v510: 건물 안에서도 회피 (벽은 그냥 막히는 것 — 막히면 고립 규칙)   // v396: 저격수 — 좀비가 회피거리 안이면 바로 도망 (건물 안 · 고립 중엔 안 함)
@@ -2672,7 +2714,7 @@
     if (d > range || fireBlocked(c.foot.x, c.foot.z, z.foot.x, z.foot.z)) { c.inRange = false; steer(c.vel, CHAPTER && c.gar ? wantV.set(0, 0) : toward(c, z.foot.x, z.foot.z, copSpeed(c)), accelOf(c) * dt); moveShoot(c, dt); return; }   /* c60: 수비대는 안 다가간다 */   // 사거리 밖이거나 벽에 막힘 → 다가간다 (v297: 열린 문 틈으로는 쏜다)
     c.inRange = true;
     steer(c.vel, wantV.set(0, 0), accelOf(c) * dt);
-    if (c.atkT <= 0) { if (c.soldier) { c.burstN = 4; c.burstT = 0; c.burstZ = z; c.burstX = z.foot.x; c.burstZz = z.foot.z; } else shoot(c, z); c.atkT = HIT_EVERY * (c.sniper ? 4 : 1); }   // v410: 군인은 4발 연사   // v401: 저격수는 경찰 공격 속도의 1/4 (3.1초마다)
+    if (c.atkT <= 0) { if (c.soldier) { c.burstN = 4; c.burstT = 0; c.burstZ = z; c.burstX = z.foot.x; c.burstZz = z.foot.z; } else if (c.sg) chShotgun(c, z); else shoot(c, z); c.atkT = HIT_EVERY * (c.sniper ? 4 : c.sg ? 1.6 : 1); }   /* c436: 샷건 공속 = 저격수의 2.5배 */   // v410: 군인은 4발 연사   // v401: 저격수는 경찰 공격 속도의 1/4 (3.1초마다)
   }
 
   function moveShoot(c, dt, own) {                // v443: 군인·저격수는 움직이면서도 쏜다 — 움직이는 동안은 쿨타임이 절반 속도로 흐른다 (공격 속도 절반)
@@ -2720,7 +2762,7 @@
     landHit(c, z, z === me && hasVest ? base * vestK(lv('vest')) : base);   // 방탄복 — 내 총알 피해 감소 (v201)
     if (c.sniper && isZombie(z)) sniperHit(c, z);
     else if (c.soldier && isZombie(z)) soldierHit(c, z);   // v478
-    else if (CHAPTER && c.police && !c.military && isZombie(z) && z.hp > 0 && z.mode !== 'bite' && z.mut !== 'armor' && !(z === me && absorbAmt() >= SNIPER_KD * 3 / 12 - 0.001)) {   // c41
+    else if (CHAPTER && c.police && !c.military && isZombie(z) && z.hp > 0 && z.mode !== 'bite' && !(chKbAbs(z) >= SNIPER_KD * 3 / 12 - 0.001)   /* c436 */) {   // c41
       const T = ARMOR_KT * 3 / 12, D = SNIPER_KD * 3 / 12, V = D * 4 / (1 - Math.exp(-4 * T));   // c45: 2 → 3
       if (z.mode === 'pounce') stopPounce(z);
       giveKnock(z, z.foot.x - c.foot.x, z.foot.z - c.foot.z, V, T);
@@ -2731,6 +2773,7 @@
   //   첫 출동이 끝난 경찰(도착했거나 싸움을 시작한)은 사건이 날 때마다 그 자리를 목록에 넣고 다 같이 출발한다 — 가장 가까운 곳부터 차례로 들른다.
   //   새 경찰은 북쪽 경찰서에서 나온다 — 감염마다 수배 별이 오르고, 별이 있으면 출동 간격마다 걸어서 1~2명 또는 경찰차 (v113, 위 STAR·CAR 값).
   //   경찰서 안 상주 경찰이 전부 감염되면 경찰서 파괴 → 더는 안 나온다.
+  let chAL = 0, chSkullMode = false;   // c436: 경보 단계 (1~10) · 해골 표시로 넘어가는 중
   let deaths = 0, stars = 0, dispatchT = 0, stationDown = false, lastIncident = null;   // 감염 수, 수배 별, 출동 시계, 경찰서 전부 파괴, 마지막 사건 자리
   const stations = buildings.filter((B) => B.station);   // 경찰서 다섯 곳 (v121) — B.residents = 안에 상주하는 경찰, B.down = 파괴됨
   function callPolice(spot) {                 // 사람이 감염될 때마다 (경찰도) — 출동 끝낸 경찰에게 사건 알림, 별 올리기
@@ -2739,7 +2782,7 @@
     lastIncident = new THREE.Vector2(spot.x, spot.z);
     deaths++; if (CHAPTER) chGeneAdd(1);   // c108: 시민 한 명마다 유전자 1
     if (!CHAPTER) { const EV = CHAPTER ? CH_TEAM_EVENTS : TEAM_EVENTS; while (teamIdx < EV.length && deaths >= EV[teamIdx].at) teamQueue.push(EV[teamIdx++].tier); }   // c59: 챕터도 군인팀 출동 — 경보 3단계(감염 75명)에 처음, 그 뒤로 감염 60명마다 (c50에서 뺐던 것)   // v410: 군인팀 출동 차례
-    stars = Math.min(STAR_MAX, STAR_AT.filter((n) => deaths >= n).length);
+    stars = Math.min(STAR_MAX, STAR_AT.filter((n) => deaths >= n).length); if (CHAPTER) chAL = CH_AL_AT.filter((n) => deaths >= n).length;   // c436
   }
   const DISPATCH_MORE = 1.3;   // 별 출동 인원 배율 (v170)
   let dispatchN = 0;                          // v390: 이번 판 출동 횟수 — 첫 출동은 무조건 걸어서, 처음 두 번은 1~2명
@@ -3311,12 +3354,17 @@
   }
 
   function updateStars() {}                   // v190: 별은 연출이 끝난 만큼만 채운다 (drawStars)
-  const LEVEL_NAME = ['수상함', '난리남', '개판', '계엄', '데프콘'];   // 수배 단계 이름 (v194) — 느낌표 아래 작게
+  const CH_AL_AT = [5, 30, 164, 432, 711, 1021, 1384, 1821, 2353, 3000];   // c436: 경보 10단계 — 누적 감염 수 (팬데믹 = 앞 간격 2배, 그 뒤는 268 × (1 + 0.039 n²), 종말 3000)
+  if (CHAPTER) { STAR_AT[3] = CH_AL_AT[3]; STAR_AT[4] = CH_AL_AT[4]; }   // c436: 1~5단계는 지금 5단계와 같은 내용 (기준 수만 새 표)
+  const chALv = () => CHAPTER ? Math.max(stars, chAL) : stars;   // 보이는 경보 단계
+  let chPolN = 0, chSolN = 0;                  // c436: 계엄부터 새로 나오는 경찰 · 군인 수 (5명마다 1명 = 샷건 경찰 · 사각 로봇)
+  const LEVEL_NAME = CHAPTER ? ['수상함', '경계', '비상', '팬데믹', '총동원령', '계엄', '데프콘', '전면전', '대재앙', '종말'] : ['수상함', '난리남', '개판', '계엄', '데프콘'];   // c436   // 수배 단계 이름 (v194) — 느낌표 아래 작게
   const starSlots = () => starsEl.querySelectorAll('.s');
   function drawStars() {                      // 위 가운데: 수배 느낌표 — 하나씩 따로 (연출이 박히는 자리) + 아래에 지금 단계 이름
-    if (starSlots().length !== STAR_MAX) starsEl.innerHTML = '<b class="cap">경보단계</b>' + '<span class="s">!</span>'.repeat(STAR_MAX) + '<i class="lv"></i>';   // v307: 이름표   // v193: 별 → 느낌표
+    const sk = CHAPTER && (shownStars > 5 || chSkullMode);   // c436: 계엄부터 빨간 해골
+    if (starSlots().length !== STAR_MAX || starsEl.dataset.m !== (sk ? 'k' : 'e')) { starsEl.dataset.m = sk ? 'k' : 'e'; starsEl.innerHTML = '<b class="cap">경보단계</b>' + (sk ? '<span class="s" style="color:#ff2a2a;width:0.9em">☠</span>' : '<span class="s">!</span>').repeat(STAR_MAX) + '<i class="lv"></i>'; }   // v307: 이름표   // v193: 별 → 느낌표
     const sl = starSlots();
-    for (let i = 0; i < STAR_MAX; i++) sl[i].classList.toggle('off', i >= shownStars);
+    for (let i = 0; i < STAR_MAX; i++) sl[i].classList.toggle('off', i >= (sk ? shownStars - 5 : shownStars));
     starsEl.querySelector('.lv').textContent = shownStars ? LEVEL_NAME[shownStars - 1] : '';
   }
   const starsEl = document.getElementById('stars');
@@ -3339,7 +3387,7 @@
     if (CHAPTER && a && a.mini) dmg /= 3;   // c370: 작은 좀비 공격력 1/3
     if (CHAPTER && a && (a.kind === 'citizen' || a.kind === 'tank')) dmg *= 1.15 * 1.2 * 0.95 * 0.93 * 0.93;   /* c164: 7% 더 줄임 → 원래의 1.134배 */   /* c159: 7% 줄임 → 원래의 1.219배 */   /* c150: 장갑차도 군인과 같은 배율 */   /* c149: 전부 5% 줄임 → 사람·경찰·군인·저격수 1.311배 · 장갑차 1.0925배 */   /* c146: 사람·경찰·군인·저격수 20% 더 (합쳐서 1.38배) — 장갑차는 1.15배 그대로 */   // c143: 적(사람·경찰·군인·저격수·장갑차)의 공격력 15% 올림
     if (TEST_MAP && !CHAPTER && v === me) dmg = 0;   // v396: 시험 맵 — 나는 무적 (c42: 챕터는 빼고)
-    if (CHAPTER && a && a.vig && isZombie(v) && v.mode !== 'bite' && v.mut !== 'armor' && !(v === me && absorbAmt() >= SNIPER_KD * 2 / 12 - 0.001)) {   // c39: 자경단 몽둥이 — 밀림 1
+    if (CHAPTER && a && a.vig && isZombie(v) && v.mode !== 'bite' && !(chKbAbs(v) >= SNIPER_KD * 2 / 12 - 0.001)   /* c436 */) {   // c39: 자경단 몽둥이 — 밀림 1
       const T = ARMOR_KT * 2 / 12, D = SNIPER_KD * 2 / 12, V = D * 4 / (1 - Math.exp(-4 * T));   // c45: 1 → 2
       if (v.mode === 'pounce') stopPounce(v);
       giveKnock(v, v.foot.x - a.foot.x, v.foot.z - a.foot.z, V, T);
@@ -3543,7 +3591,7 @@
     }
     return false;
   }
-  const chDown = (b) => b.hp <= 0;   // c288: 틀니 덮치기 기준 없앰 — 체력 0일 때만
+  const chDown = (b) => b.hp <= 0 && !b.robot;   /* c436: 로봇은 쓰러지지 않는다 */   // c288: 틀니 덮치기 기준 없앰 — 체력 0일 때만
   function pounceable(z) {
     if (CHAPTER && z.mini) return null;   // c393: 작은 좀비는 덮치지 못한다 — 공격만
     let best = null, bd = z.attack;
@@ -4251,9 +4299,10 @@
       if (b.mode === 'bite' || b.state === 'held') { b.mesh.position.x += rand(-0.09, 0.09); b.mesh.position.z += rand(-0.09, 0.09); }   // v321: 감염 중엔 둘 다 미친 듯이 떨린다 (그림만)   // 원 아랫끝이 바닥에 닿는다 (금고는 더 크다, v195)
       if (b.recoilT >= 0) {                   // 총 반동 (v252): 0.04초에 뒤로 0.2칸 팍 → 0.3초에 걸쳐 천천히 제자리 (그림만, 실제 자리는 그대로)
         const t = b.recoilT, k = t < 0.04 ? t / 0.04 : Math.pow(Math.max(0, 1 - (t - 0.04) / 0.3), 2);
-        b.mesh.position.x += b.recoilX * 0.2 * k; b.mesh.position.z += b.recoilZ * 0.2 * k;
+        b.mesh.position.x += b.recoilX * 0.2 * k * (b.recoilK || 1); b.mesh.position.z += b.recoilZ * 0.2 * k * (b.recoilK || 1);   /* c436: 샷건 반동 2배 */
         if ((b.recoilT += dt) > 0.34) b.recoilT = -1;
       }
+      if (b.aimGun) chGunAim(b);   // c436
       if (b.knockT > 0 && !b.knockSlide) b.mesh.position.y += Math.sin(Math.PI * (1 - b.knockT / KNOCK_T)) * 0.9;   // 치여 날아갈 때 살짝 떠오른다
       if (b.lungeT >= 0) {                    // 때리는 모션: 상대 쪽으로 빠르게 붙었다가 돌아온다 (그림만)
         const k = b.lungeT < LUNGE_IN ? b.lungeT / LUNGE_IN : Math.max(0, 1 - (b.lungeT - LUNGE_IN) / LUNGE_OUT);
@@ -4582,7 +4631,7 @@
     visDirty = true;
     mmDirty = true;
     mmT = 0;
-    deaths = stars = dispatchT = 0; teamIdx = 0; teamQueue.length = 0; teamWait.length = 0; if (CHAPTER) chSfReset();
+    deaths = stars = dispatchT = 0; chAL = 0; chSkullMode = false; chPolN = chSolN = 0;   /* c436 */ teamIdx = 0; teamQueue.length = 0; teamWait.length = 0; if (CHAPTER) chSfReset();
     stationDown = false;
     lastIncident = null;
     for (const car of cars) scene.remove(car.g);
@@ -5571,6 +5620,7 @@
   function chGoldMachines(fresh) {             // c427: 금 — 기계도 홀린다 (날아와 내려앉는 시간까지 유혹 시간)
     const r = chBrR('cash', 'gold'); if (!r) return; const T0 = CH_WV('cashT', 6) * chLingK();
     for (const d of chDrones) { if (d.dead) continue; const k = chNearFresh(fresh, d.x, d.z, SIGHT * cashK() + 4, null); if (!k) continue; d.lureT = T0 * (0.2 + 0.05 * (r - 1)); d.lureK = k; d.tg = null; }
+    for (const c of bodies) { if (!c.robot || c.state === 'held' || c.state === 'lured') continue; const k = chNearFresh(fresh, c.foot.x, c.foot.z, SIGHT * cashK() + 4, c.space); if (!k) continue; c.robotLure = T0 * (0.2 + 0.05 * (r - 1)); for (const q of fresh) q.who.add(c); enterLured(c); }   // c436: 로봇도 금에 홀린다 (드론과 같은 비율)
     const tk = chTank; if (tk && !tk.wreck) { const k = chNearFresh(fresh, tk.x, tk.z, SIGHT * cashK() + 4, null); if (k) { tk.lureT = T0 * 0.05 * r; tk.lureX = k.x; tk.lureZ = k.z; } }
   }
   const chDiaBuf = [];
@@ -5587,7 +5637,7 @@
   }
   function enterLured(c) { c.diaF = CHAPTER && chBr.cash === 'dia' && c.maxHp > 0 && Math.random() < chBrR('cash', 'dia') / 6;   /* c429: 다이아몬드 — 싸우는 쪽으로 바뀔 확률 */ c.state = 'lured'; c.lureAlert = false; c.foe = null; c.locked = false; c.lureHit = 0; c.pickT = 0; c.lureT = 0; }
   function luredStep(c, dt) {                 // 유혹: 좀비는 안 보고 가장 가까운 돈다발로 달려간다. 닿으면 돈다발이 사라진다
-    if ((c.lureT = (c.lureT || 0) + dt) >= CH_WV('cashT', lv('cash')) * chLingK() * chDiaK() * (c.military ? 0.2 : c.police ? 0.5 : 1)) {   /* c139: 유혹 시간 — 저격수·군인 80% · 경찰 50% 짧다 */   /* v516: 군인·저격수 0.7초, 경찰 1.5초 */ c.state = 'normal'; c.ignoreCash = new Set(cashes); enterNormal(c); return; }   // v456: 군인·저격수는 최대 1.5초만 홀린다
+    if ((c.lureT = (c.lureT || 0) + dt) >= (c.robot ? (c.robotLure || 0) : 1) * (c.robot ? 1 : CH_WV('cashT', lv('cash')) * chLingK() * chDiaK()) * (c.robot ? 1 : 1) * (c.robot ? 1 / 0.2 : 1) * (c.military ? 0.2 : c.police ? 0.5 : 1)) {   /* c139: 유혹 시간 — 저격수·군인 80% · 경찰 50% 짧다 */   /* v516: 군인·저격수 0.7초, 경찰 1.5초 */ c.state = 'normal'; c.ignoreCash = new Set(cashes); enterNormal(c); return; }   // v456: 군인·저격수는 최대 1.5초만 홀린다
     if (CHAPTER && chBr.cash === 'dia' && c.diaF && c.maxHp > 0 && c.hp > 0 && chDiaFight(c, dt)) return;   // c427: 다이아몬드 — 근접형은 싸우는 중 (원거리는 쏘고 아래로 — 다이아몬드 쪽으로)
     const s = seeCash(c, SIGHT * cashK());
     if (!s) { enterNormal(c); return; }      // 볼 수 있는 돈다발이 없으면 유혹 끝
@@ -6295,7 +6345,7 @@
   function gooTick(dt) {
     for (const c of bodies) {
       if (!c.goo || c.kind !== 'citizen') continue;
-      if (CHAPTER && c.maxHp > 0 && c.hp <= 0 && !c.brSplitT && c.state !== 'held') { c.brSplitT = 1; const p = 0.15 * chBrR('bomb', 'split'); if (p && Math.random() < p) { chSplitAcid(c); continue; } }   // c422: 분열 산성 (쓰러진 순간 한 번만 굴린다)
+      if (CHAPTER && c.maxHp > 0 && c.hp <= 0 && !c.robot && !c.brSplitT && c.state !== 'held') { c.brSplitT = 1; const p = 0.15 * chBrR('bomb', 'split'); if (p && Math.random() < p) { chSplitAcid(c); continue; } }   // c422: 분열 산성 (쓰러진 순간 한 번만 굴린다)
       if ((c.gooLeft -= dt) <= 0) { if (c.gooS) { c.mesh.remove(c.gooS); c.gooS = null; } c.goo = false; continue; }   // c123: 시간이 다 되면 사라진다
       if ((c.smokeT -= dt) <= 0 && c.mesh.visible) {   // 묻은 데서 작은 연기
         c.smokeT = rand(0.25, 0.45);
@@ -6346,6 +6396,7 @@
   let reviveT = 0;
   function itemsTick(dt) {
     if (CHAPTER && chChainL.length) chChainTick(dt);   // c431
+    if (CHAPTER && chSolN) for (let i = bodies.length - 1; i >= 0; i--) { const c = bodies[i]; if (c && c.robot && c.hp <= 0) chRobotDie(c); }   // c436: 로봇은 체력 0이면 터진다
     if (reviveT > 0) { const p = Math.ceil(reviveT); reviveT = Math.max(0, reviveT - dt); if (Math.ceil(reviveT) !== p) refreshBadges(); }
     stimTick(dt);
     if (CHAPTER) rageTick(dt);
@@ -7369,7 +7420,7 @@
   //   기관총 (경찰 공격력의 1/3 · 경찰과 같은 공격 간격, 한 번에 세 발) · 체력 7 · 건물·산 위로는 못 간다 · 몸끼리 안 부딪힌다
   //   히드라(동료·각성한 나)만 맞힐 수 있다 · 테이저 = 땅에 떨어져 감전, 풀리면 다시 뜬다 · 산성 폭발·산성 자폭(원기둥) 안이면 산성이 묻는다 · 좀비가 안 되고 공중에서 터진다
   var chDrones = [], chDroneT = 0, chDroneOn = false;
-  const CH_DRONE_HP = 8,   /* c434: 9 → 8 */   /* c433: 30 → 9 */   /* c387: 7 → 30 */ CH_DRONE_MAX = 8, CH_DRONE_EVERY = 144,   /* c433: 120 → 144초 (1.2배) */   /* c423: 80 → 120초 (1.5배) */   /* c419: 40 → 80초 (주기 2배) */   /* c393: 60 → 40초 (3분의 1 빠르게) */   /* c388: 30 → 60초 (첫 출동은 그대로 개판 1분 뒤) */ CH_DRONE_N = 2, CH_DRONE_H = 1.9, CH_DRONE_SIGHT = 12, CH_DRONE_RANGE = 6.5, CH_DRONE_SPEED = SPEED * 0.85;
+  const CH_DRONE_HP = 8,   /* c434: 9 → 8 */   /* c433: 30 → 9 */   /* c387: 7 → 30 */ CH_DRONE_MAX = 8, CH_DRONE_EVERY = 187.2,   /* c436: 144 → 187.2초 (1.3배) */   /* c433: 120 → 144초 (1.2배) */   /* c423: 80 → 120초 (1.5배) */   /* c419: 40 → 80초 (주기 2배) */   /* c393: 60 → 40초 (3분의 1 빠르게) */   /* c388: 30 → 60초 (첫 출동은 그대로 개판 1분 뒤) */ CH_DRONE_N = 2, CH_DRONE_H = 1.9, CH_DRONE_SIGHT = 12, CH_DRONE_RANGE = 6.5, CH_DRONE_SPEED = SPEED * 0.85;
   const CH_DRONE_DMG = CH_DMG_PO / 3 * 1.15 * 1.2 * 0.95 * 0.93 * 0.93;   // 경찰 한 발의 1/3 (적 공격 배율 그대로)
   const chDroneTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
     g.lineCap = 'round'; g.strokeStyle = '#1d2128'; g.lineWidth = 12; g.beginPath(); g.moveTo(30, 34); g.lineTo(98, 94); g.moveTo(98, 34); g.lineTo(30, 94); g.stroke();
@@ -7660,7 +7711,7 @@
     const p = teamSpot(seg), h = Math.atan2(me.foot.z - p.z, me.foot.x - p.x);
     addCar(p.x, p.z, h, null, 0, ['tank']);
     const car = cars[cars.length - 1], K = car.g.children;
-    car.squad = null; car.tank = true; car.state = 'tank'; car.kw = CH_TK_K; car.kl = CH_TK_KL; car.massK = 4; car.hpK = 10 * 0.95 * 3 * 0.9 * 1.5 * 0.9 * 1.1 * 0.95 * 0.75;   /* c255: 4분의 1 줄임 */   /* c245 */   /* c230: 10% 줄임 · c232: 10% 올림 */   /* c222: 50% 올림 */   /* c185: 10% 줄임 */   /* c183: 3배 */   /* c153 */
+    car.squad = null; car.tank = true; car.state = 'tank'; car.kw = CH_TK_K; car.kl = CH_TK_KL; car.massK = 4; car.hpK = 10 * 0.95 * 3 * 0.9 * 1.5 * 0.9 * 1.1 * 0.95 * 0.75; if (CHAPTER) { car.dozer = true; car.hpK *= 0.8; }   /* c436: 첫 보스 = 불도저 (체력 80%) */   /* c255: 4분의 1 줄임 */   /* c245 */   /* c230: 10% 줄임 · c232: 10% 올림 */   /* c222: 50% 올림 */   /* c185: 10% 줄임 */   /* c183: 3배 */   /* c153 */
     car.g.scale.set(CH_TK_K, 1, CH_TK_K);
     K[0].material.color.setHex(0x3c4a2a); K[0].geometry = (() => { const L = CAR_L * 0.78 * 0.85, W = CAR_W, c = 0.16, s = new THREE.Shape(); s.moveTo(-L / 2 + c, -W / 2); s.lineTo(L / 2 - c, -W / 2); s.lineTo(L / 2, -W / 2 + c); s.lineTo(L / 2, W / 2 - c); s.lineTo(L / 2 - c, W / 2); s.lineTo(-L / 2 + c, W / 2); s.lineTo(-L / 2, W / 2 - c); s.lineTo(-L / 2, -W / 2 + c); s.closePath(); return new THREE.ShapeGeometry(s).rotateX(-Math.PI / 2); })();   /* c179: 모서리를 깎은 팔각형 */ K[1].visible = K[2].visible = K[3].visible = false;
     const tur = new THREE.Mesh(new THREE.CircleGeometry(0.27, 20).rotateX(-Math.PI / 2), carMat(0x222b16)); tur.position.y = 0.002; tur.renderOrder = -0.44;
@@ -7669,9 +7720,14 @@
     brl.visible = false;   // c178: 긴 총신 대신 기관총
     const mg = (w, h, x, z, col, o) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h).rotateX(-Math.PI / 2), carMat(col)); m.position.set(x, 0.004 + o * 0.0005, z); m.renderOrder = -0.435 + o * 0.001; return m; };
     const mgs = [mg(0.2, 0.17, 0.33, 0, 0x2a3218, 0), mg(0.2, 0.035, 0.5, -0.035, 0x0b0d07, 1), mg(0.2, 0.035, 0.5, 0.035, 0x0b0d07, 1), mg(0.06, 0.13, 0.6, 0, 0x050604, 2)   /* c182: 총열 3분의 1 짧게 */];   // 냉각 덮개 · 총열 둘 · 소염기
-    const tg = new THREE.Group(); tg.add(tur, brl, ...mgs); car.g.add(tg); car.tkTur = tg; car.tkAim = 0;   // c170: 포탑 — 돌아간다
+    const tg = new THREE.Group(); tg.add(tur, brl, ...mgs); car.g.add(tg); car.tkTur = tg; car.tkAim = 0;
+    if (car.dozer) {                           // c436: 불도저 — 노란 몸 · 앞에 큰 삽날 · 운전석 (포탑 · 기관포 없음)
+      tg.visible = false; K[0].material.color.setHex(0xd9a21b);
+      const Lb = CAR_L * 0.78 * 0.85;
+      car.g.add(mg(0.16, CAR_W * 1.18, Lb / 2 + 0.1, 0, 0x6d7279, 0), mg(0.05, CAR_W * 1.18, Lb / 2 + 0.19, 0, 0xb9bfc6, 1), mg(0.36, 0.42, -0.12, 0, 0x2b2f33, 2), mg(0.22, 0.3, -0.1, 0, 0x7fb4d6, 3));   // 삽날 · 날 끝 · 운전석 · 창
+    }   // c170: 포탑 — 돌아간다
     chCarObj(car, false); car.obj.oneBar = true; car.obj.hpBar.scale.y = 3 * 0.7; for (const m of car.obj.hpBar.children) m.renderOrder += UI_ME + 60 - UI;   // c185: 내 체력바만큼 굵게 · 내 것보다 위
-    Object.assign(car, { tkV: 1, atkT: 1, burstN: 0, burstT: 0, burstZ: null, dashAt: rand(10 * 2 / 3, 15 * 2 / 3), dashT: 0, tkPh: null, tkPhT: 0, tkSegs: [], scanT: 0, foe: null, shotT: -1, shotX: 0, shotZ: 0, rubBack: 0, rubCool: 0, crT: 0, goo: false, gooT: 0 });
+    Object.assign(car, { tkV: 1, atkT: 1, burstN: 0, burstT: 0, burstZ: null, dashAt: rand(10 * 2 / 3, 15 * 2 / 3), dashT: 0, tkPh: null, tkPhT: 0, tkSegs: [], scanT: 0, foe: null, shotT: -1, shotX: 0, shotZ: 0, rubBack: 0, rubCool: 0, crT: 0, goo: false, gooT: 0 }); if (car.dozer) car.dashAt /= 1.5;   /* c436: 불도저는 돌진 1.5배 자주 */
     car.gun = { kind: 'tank', foot: car.foot };
     car.tracer = new THREE.Mesh(tracerGeo, new THREE.MeshBasicMaterial({ color: 0xffb84d, transparent: true, depthTest: false, depthWrite: false }));
     car.tracer.renderOrder = -0.5; car.tracer.visible = false; scene.add(car.tracer);
@@ -7702,9 +7758,9 @@
     return best;
   }
   function chTankKnock(car, v) {               // 넉백 = 군인의 2배 (6)
-    if (v.hp <= 0 || v.mut === 'armor' || v.mode === 'bite') return;
+    if (v.hp <= 0 || v.mode === 'bite') return;
     const T = ARMOR_KT * 6 / 12, D = SNIPER_KD * 6 / 12, V = D * 4 / (1 - Math.exp(-4 * T));
-    if (v === me && absorbAmt() >= D - 0.001) return;
+    if (chKbAbs(v) >= D - 0.001) return;   /* c436 */
     if (v.mode === 'pounce') stopPounce(v);
     giveKnock(v, v.foot.x - car.x, v.foot.z - car.z, V, T);
   }
@@ -7757,10 +7813,10 @@
       if (!hit) { const da = Math.hypot(car.spAim.x - mx, car.spAim.z - mz) + 1.5; if (da < ht) { ex = mx + ux * da; ez = mz + uz * da; } ends.push([ex, ez, false, ux, uz]); continue; }
       ends.push([ex, ez, true, ux, uz]);
       landHit(car.gun, hit, hit === me && hasVest ? CH_SP_DMG * vestK(lv('vest')) : CH_SP_DMG);
-      if (isZombie(hit) && hit.hp > 0 && hit.mut !== 'armor' && hit.mode !== 'bite' && !(clock - (hit.tkKn ?? -9) < HIT_EVERY)) {   // 군인 넉백 (3)
+      if (isZombie(hit) && hit.hp > 0 && hit.mode !== 'bite' &&   /* c436 */ !(clock - (hit.tkKn ?? -9) < HIT_EVERY)) {   // 군인 넉백 (3)
         hit.tkKn = clock;
         const T = ARMOR_KT * 3 / 12, D = SNIPER_KD * 3 / 12, V = D * 4 / (1 - Math.exp(-4 * T));
-        if (!(hit === me && absorbAmt() >= D - 0.001)) { if (hit.mode === 'pounce') stopPounce(hit); giveKnock(hit, hit.foot.x - car.x, hit.foot.z - car.z, V, T); }
+        if (!(chKbAbs(hit) >= D - 0.001)) {   /* c436 */ if (hit.mode === 'pounce') stopPounce(hit); giveKnock(hit, hit.foot.x - car.x, hit.foot.z - car.z, V, T); }
       }
     }
     if (ends.length) chSpImpact(...ends[ends.length - 1]); if (ends.length > 1) chSpImpact(...ends[0]);   // c202
@@ -7993,6 +8049,7 @@
     car.vx = car.vz = 0; car.tkV = 0; car.tkPh = null; car.dashT = 0; car.spOn = false;   // c211
     for (let i = 0; i < 3; i++) boom(car.x + rand(-1.6, 1.6), car.z + rand(-1, 1));
     if (!CHAPTER || car !== chTank) return;
+    if (car.dozer) { const pool = CH_ITEMS.filter((k) => !chFull(k)); if (pool.length) dropPickup(pool[Math.floor(Math.random() * pool.length)], car.x, car.z, null); chSf.chk = 1; return; }   // c436: 불도저 — 군인 · 특공대 없이 무기나 장비 하나
     for (let i = 0; i < 5; i++) {               // c200: 타고 있던 군인 5
       const a = i / 5 * Math.PI * 2, r = rand(0.4, 1.2); let x = car.x + Math.cos(a) * r, z = car.z + Math.sin(a) * r;
       if (!freeSpot(x, z, null)) { x = car.x; z = car.z; }
@@ -8022,7 +8079,7 @@
     if (car.wreck) { car.vx = car.vz = 0; car.tkV = 0; car.tkPh = null; car.dashT = 0; car.spOn = false; return; }   // c211: 잔해는 멈춘다
     if (car.stunT > 0) {                       // c191: 감전 — 서고 · 안 쏘고 · 돌진 순서도 멈춘다 · 몸이 번쩍인다
       car.stunT -= dt; car.vx = car.vz = 0; car.burstN = 0; const K0 = car.g.children[0];
-      K0.material.color.setHex(car.stunT > 0 && Math.floor(clock * 14) % 2 ? 0xc8f0ff : 0x3c4a2a);
+      K0.material.color.setHex(car.stunT > 0 && Math.floor(clock * 14) % 2 ? 0xc8f0ff : car.dozer ? 0xd9a21b : 0x3c4a2a);   /* c436: 불도저 노랑 */
       return;
     }
     const spd = (car.tkSeen ? CAR_SPEED * CH_TR_SPD.sedan * CH_TR_SLOW / 2 * 1.2 :   /* c183: 20% 빠르게 */ CAR_SPEED * 0.9) /* c421: 산성 둔화 없음 */ * (car.goo ? chStickyK() : 1)   /* c422: 끈적 산성 */;   /* c179: 눈에 띄기 전 = 경찰차의 90% */   /* c168: 보인 뒤 속도 2배 (보통 차의 절반) */   /* c137: 눈에 띄기 전엔 보통 차 속도 */   // 보통 차(승용차)의 4분의 1
@@ -8049,24 +8106,24 @@
     // 기관포
     car.atkT -= dt;   /* c421: 산성 둔화 없음 */
     if ((car.scanT -= dt) <= 0) { car.scanT = 0.2; car.foe = chTankFoe(car); if (!car.tkSeen) chTankSeen(car); }
-    car.burstN = 0; chTankSpray(car, dt);   // c201: 난사
+    car.burstN = 0; if (!car.dozer) chTankSpray(car, dt);   // c201: 난사 (c436: 불도저는 직접 공격 없음)
     // 돌진
     car.dashAt -= dt;
     if (car.tkPh) chTankSmoke(car, dt);   // c175
     if (car.tkPh === 'back') {                 // c171 ① 후진 (방향 고정)
-      const v = MELEE * 3 / 2; car.tkPhT -= dt; car.rev = true; car.h = car.tkDh; car.vx = -car.tkDx * v; car.vz = -car.tkDz * v; car.tkV = v;
+      const v = MELEE * 3 / 2 * (car.dozer ? 1.5 : 1); car.tkPhT -= dt;   /* c436: 불도저 후진 1.5배 빠르게 */ car.rev = true; car.h = car.tkDh; car.vx = -car.tkDx * v; car.vz = -car.tkDz * v; car.tkV = v;
       if (car.tkPhT <= 0) { car.tkPh = 'dash'; car.tkPhT = 1.05;   /* c174 */ }
       return;
     }
     if (car.tkPh === 'dash') {                 // c171 ② 돌진 (방향 고정 · 무리에 안 느려진다 — 걸음마다 속도를 다시 준다)
       car.tkM -= dt * (car.load || 0) / (CH_PUSH * chCarM(car)) * 0.5;   // c172: 앞을 막은 몸 무게만큼 기세가 깎인다
       const V = CAR_SPEED * 1.56 * Math.max(0, car.tkM);   /* c174: 30% 빠르게 */ car.tkPhT -= dt; if (car.tkLX !== undefined) car.tkLeft -= Math.hypot(car.x - car.tkLX, car.z - car.tkLZ); car.tkLX = car.x; car.tkLZ = car.z; car.rev = false; car.h = car.tkDh; car.vx = car.tkDx * V; car.vz = car.tkDz * V; car.tkV = V; car.dashT = Math.max(0, car.tkPhT);
-      if (car.tkLeft <= 0 || car.tkPhT <= -1.05 || car.tkM < 0.08) {   /* c172: 정한 거리(11.3칸)를 다 가거나 기세가 다하면 끝 (막혀 있던 시간은 안 센다 · 최대 3초) */ car.tkPh = null; car.dashT = 0; car.dashAt = rand(10 * 2 / 3, 15 * 2 / 3); }
+      if (car.tkLeft <= 0 || car.tkPhT <= -1.05 || car.tkM < 0.08) {   /* c172: 정한 거리(11.3칸)를 다 가거나 기세가 다하면 끝 (막혀 있던 시간은 안 센다 · 최대 3초) */ car.tkPh = null; car.dashT = 0; car.dashAt = rand(10 * 2 / 3, 15 * 2 / 3) / (car.dozer ? 1.5 : 1); }
       return;
     }
     if (car.dashAt <= 0 && car.rubBack <= 0) {
       const d = chTankDense(car);
-      if (d) { car.tkM = 1; car.tkLeft = CAR_SPEED * 1.56 * 1.05;   /* c174 */ car.tkLX = undefined; car.tkPh = 'back'; car.tkPhT = 2; car.tkDx = d[0]; car.tkDz = d[1]; car.tkDh = Math.atan2(d[1], d[0]); car.rubBack = 0; return; }
+      if (d) { car.tkM = 1; car.tkLeft = CAR_SPEED * 1.56 * 1.05;   /* c174 */ car.tkLX = undefined; car.tkPh = 'back'; car.tkPhT = car.dozer ? 2 / 1.5 : 2; car.tkDx = d[0]; car.tkDz = d[1]; car.tkDh = Math.atan2(d[1], d[0]); car.rubBack = 0; return; }
     }
     car.tkV = spd;
     // 벽에 걸렸다 → 물러났다가 다시 민다
@@ -9851,8 +9908,9 @@
     starAnim = true;
     const idx = shownStars, sr = stage.getBoundingClientRect();
     const fly = document.createElement('div');
-    fly.className = 'fly'; fly.textContent = '!'; fly.style.fontWeight = '900';
-    Object.assign(fly.style, { left: '50%', top: '16%', fontSize: '10px', color: '#b44ee6', textShadow: '0 2px 8px rgba(0,0,0,0.7)', transition: 'font-size 0.15s ease-out' });
+    const skl = CHAPTER && idx >= 5;   // c436: 계엄부터 해골
+    fly.className = 'fly'; fly.textContent = skl ? '☠' : '!'; fly.style.fontWeight = '900';
+    Object.assign(fly.style, { left: '50%', top: '16%', fontSize: '10px', color: skl ? '#ff2a2a' : '#b44ee6', textShadow: '0 2px 8px rgba(0,0,0,0.7)', transition: 'font-size 0.15s ease-out' });
     stage.appendChild(fly);
     const tag = document.createElement('div');   // 단계 이름 — 느낌표 아래에 같이 크게 떴다가, 위쪽 느낌표 아래 자리로 작게 박힌다 (v194)
     tag.className = 'fly'; tag.textContent = LEVEL_NAME[idx];
@@ -9866,7 +9924,8 @@
     const fx = curFx = { ev: { t: 'star' }, els: [fly, tag, head], timers: [] };   // v428: 아이템 획득이 끼어들면 멈추고 다시 줄 앞으로
     fxTimer(fx, () => {
       head.style.opacity = '0'; fxTimer(fx, () => head.remove(), 160);
-      const slot = starSlots()[idx], r = slot.getBoundingClientRect();
+      if (skl) { chSkullMode = true; drawStars(); }   // c436
+      const slot = starSlots()[skl ? idx - 5 : idx], r = slot.getBoundingClientRect();
       const lvEl = starsEl.querySelector('.lv'); lvEl.style.visibility = 'hidden'; lvEl.textContent = LEVEL_NAME[idx];   // 이름이 박힐 자리
       const lr = lvEl.getBoundingClientRect();
       tag.style.transition = 'left 0.18s ease-in, top 0.18s ease-in, font-size 0.18s ease-in';
@@ -9876,7 +9935,7 @@
       fxTimer(fx, () => {
         fly.remove();
         tag.remove(); starsEl.querySelector('.lv').style.visibility = '';
-        shownStars = idx + 1; drawStars(); const el = starSlots()[idx]; el.classList.remove('hit'); el.getBoundingClientRect(); el.classList.add('hit');
+        shownStars = idx + 1; drawStars(); const el = starSlots()[skl ? idx - 5 : idx]; el.classList.remove('hit'); el.getBoundingClientRect(); el.classList.add('hit');
         starAnim = false; if (curFx === fx) curFx = null;
       }, 190);
     }, 960);                                  // 크게 떠 있는 시간 0.32 → 0.96초 (v197에 3배)
@@ -10223,7 +10282,7 @@
     upNums();
     dangerTick();                         // 매 프레임 (멈춰 있어도): 줄 서 있는 연출을 하나씩
     stage.classList.toggle('okOn', !!stage.querySelector('.okBtn'));   // v244: 확인 버튼이 떠 있으면 조이스틱 숨김
-    while (starsQueued < stars) { fxQueue.push({ t: 'star' }); starsQueued++; }   // v420: 새 연출을 생긴 순서대로 줄 세운다 (같은 순간이면 경보 → 특수부대 → 칭호 → 레벨업 → 아이템)
+    while (starsQueued < chALv()) {   /* c436 */ fxQueue.push({ t: 'star' }); starsQueued++; }   // v420: 새 연출을 생긴 순서대로 줄 세운다 (같은 순간이면 경보 → 특수부대 → 칭호 → 레벨업 → 아이템)
     while (teamsAnnounced < teamsSpawned) { fxQueue.push({ t: 'squad' }); teamsAnnounced++; }
     while (rankNext < RANKS.length && armyN >= RANKS[rankNext].n) fxQueue.push({ t: 'rank', r: RANKS[rankNext++] });   // v278: 동료 수 칭호 (판마다 처음 한 번씩만)
     while (lvQueued < pendingLv && (!CHAPTER || chUpPool().length)) { fxQueue.push({ t: 'lv' }); lvQueued++; }   // c25: 강화할 아이템이 있을 때만 줄을 세운다 (없으면 모아 둔다)
