@@ -1416,6 +1416,8 @@ from c432_patch import C432_R   # c432: 자폭 지정 동료
 R += C432_R
 from c433_patch import C433_R   # c433: 드론
 R += C433_R
+from c434_patch import C434_R   # c434: 드론 체력 8
+R += C434_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
