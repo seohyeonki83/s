@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c457</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c458</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6834,7 +6834,7 @@
     chFitNames(ov);
   }
   function chFitNames(ov) { for (const e of ov.querySelectorAll('.card .nm')) { e.style.whiteSpace = 'nowrap'; let f = 15; while (e.scrollWidth > e.clientWidth + 1 && f > 11) e.style.fontSize = (--f) + 'px'; } }   // c278: 긴 이름은 글자를 줄여 한 줄로
-  const chSfAt = (n) => { let t = 0; for (let i = 0; i < n; i++) t += 120 - 5 * i; return t; };   /* c126: 120초부터 5초씩 → 120 · 235 · 345 · 450 · 550(보스) */
+  const chSfAt = (n) => [0, 120, 265, 405, 550][Math.min(n, 4)] + Math.max(0, n - 4) * 100;   /* c458: 보스 550초 그대로 · 특공대 3차례를 그 안에 — 120 · 265 · 405 (간격 120 · 145 · 140 · 145) */   /* c126: 120초부터 5초씩 → 120 · 235 · 345 · 450 · 550(보스) */
   { const st = document.createElement('style'); st.textContent = '@keyframes bosscd { 0% { transform: scale(1.22); text-shadow: 0 0 18px #ff2a00, 0 0 40px #ff2a00, 0 2px 4px #000; color: #fff; } 35% { transform: scale(1); color: #ff3a2a; text-shadow: 0 0 8px rgba(255,40,0,0.8), 0 2px 4px #000; } 100% { transform: scale(1); color: #ff3a2a; text-shadow: 0 0 8px rgba(255,40,0,0.8), 0 2px 4px #000; } } .bosscd { display: inline-block; font: 900 19px/1 system-ui, sans-serif; letter-spacing: 0.5px; color: #ff3a2a; animation: bosscd 1s ease-out both; } .bosscd i { font-style: normal; display: inline-block; margin: 0 6px; padding: 1px 7px 2px; border-radius: 5px; background: #ff3a2a; color: #1a0500; text-shadow: none; }'; document.head.appendChild(st); }   // n번째 출동 시각: 100 · 195 · 285 · 370 · 450(보스)
   { const st = document.createElement('style'); st.textContent = '@keyframes sfpop { 0% { transform: translateY(30vh) scale(1.9); opacity: 0; } 10% { transform: translateY(30vh) scale(1.9); opacity: 1; } 60% { transform: translateY(30vh) scale(1.9); opacity: 1; } 100% { transform: none; opacity: 1; } }' +
       ' @keyframes sfplate { 0% { background: rgba(0,0,0,0.85); } 62% { background: rgba(0,0,0,0.85); } 100% { background: rgba(0,0,0,0); } } @keyframes sfpopb { 0% { transform: translateY(30vh) scale(1.5); opacity: 0; } 10% { transform: translateY(30vh) scale(1.5); opacity: 1; } 60% { transform: translateY(30vh) scale(1.5); opacity: 1; } 100% { transform: none; opacity: 1; } } @keyframes wpnpop { 0% { transform: scale(3); opacity: 0; } 60% { transform: scale(0.92); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }'; document.head.appendChild(st); }
