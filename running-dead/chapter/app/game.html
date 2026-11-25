@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c451</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c452</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3640,7 +3640,7 @@
   function startBite(z, t) {
     bloodBurst(t.foot.x, t.foot.z, 10, 1.5, 3.5);   // v317: 덮치는 순간 확 터진다
     z.mode = 'bite';
-    z.biteT = z.biteLen = (z === me ? INFECT / MY_INFECT : INFECT) * biteK() * (z.mut ? 0.5 : 1);   // v421: 특수(변이) 좀비는 감염 속도 2배   // 나는 더 빨리 감염시킨다. 물어뜯기로 짧아진다 (v201)
+    z.biteT = z.biteLen = (z === me ? INFECT / MY_INFECT : INFECT) * biteK() * (z.mut ? 0.5 : 1) * (CHAPTER ? (z === me ? 0.9 : 0.85) : 1);   /* c452: 나 10% · 동료 15% 짧게 */   // v421: 특수(변이) 좀비는 감염 속도 2배   // 나는 더 빨리 감염시킨다. 물어뜯기로 짧아진다 (v201)
     z.biteT = z.biteLen * (1 - Math.min(0.999, t.infect || 0));   // 저장된 감염 게이지에서 이어서 (v213)
     if (z.biteLen <= 0.02) {                  // 물어뜯기를 많이 찍어 감염 시간이 0 → 즉시 감염, 회복 총량은 한 번에 (v201)
       z.hp = Math.min(z.maxHp, z.hp + z.maxHp * zHeal(z) * (z === me ? INFECT / MY_INFECT : INFECT));
@@ -5403,7 +5403,7 @@
   const vestPct = (n) => Math.round((1 - vestK(n)) * 100);   // v580: 다시 강화마다 +10%
   const bitePct = (n = up.bite) => 12 * Math.max(0, n);
   const biteK = (n = up.bite) => Math.max(0, 1 - bitePct(n) / 100) * (CHAPTER && owned.teeth ? 1 / (1 + 0.8 / 6 * (1 + lv('teeth'))) : 1);   /* c288: 틀니 — 감염 속도 113 · 127 · 140 · 153 · 167 · 180% */   // 감염 시간 배율 — 0이면 즉시 감염
-  const myBiteLen = (n = up.bite) => INFECT / MY_INFECT * biteK(n);
+  const myBiteLen = (n = up.bite) => INFECT / MY_INFECT * biteK(n) * (CHAPTER ? 0.9 : 1);   /* c452 */
   const zDamage = (z) => (z === me ? MY_DAMAGE : ALLY_DAMAGE) * (1 + 0.07 * up.arm) * (z.mut === 'armor' && z !== me ? (CHAPTER ? 3 : 1.3 * 1.3 * 2) : 1)   /* c378: 동료 덩치 = 일반 좀비의 3배 */ * (CHAPTER && z.mut ? 1 + chCatB() : 1   /* c420: 촉매제 — 변이 좀비(나 포함) 공격력 +5%씩 */   /* c282: 10%씩 */);   /* c19: 촉매제 */   /* v558: 각성한 나는 내 공격력 그대로 */   /* v551: 덩치 기본 데미지 2배 */   // v275: 갑옷좀비 공격력 1.3배
   const zHeal = (z) => ((z === me ? MY_BITE_HEAL : BITE_HEAL) + 0.04 * up.meat) * (CHAPTER && owned.teeth ? 1 + 0.05 * (1 + lv('teeth')) : 1);   /* c288: 틀니 — 회복량 +5%씩 (나·동료 전부) */   // 감염 시간 1배 기준 초당 회복 (최대 체력 대비)
   const allyMaxHp = () => ALLY_HP * 0.9 * 0.9 * (1 + 0.07 * up.skin);   /* c230: 10% 줄임 */   /* c164: c163의 7%를 되돌림 (85.05) */   /* c163: 동료 7% 올림 (85.05 → 91.0) */   /* c136: 동료 10% 깎음 (94.5 → 85.05) — 체력바 한 겹 기준(ALLY_HP)은 그대로 */   // v267: 단단한 피부 3% → 5%

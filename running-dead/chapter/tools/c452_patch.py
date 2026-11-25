@@ -1,0 +1,2 @@
+# c452: 감염 시간
+C452_R = [('    z.biteT = z.biteLen = (z === me ? INFECT / MY_INFECT : INFECT) * biteK() * (z.mut ? 0.5 : 1);', '    z.biteT = z.biteLen = (z === me ? INFECT / MY_INFECT : INFECT) * biteK() * (z.mut ? 0.5 : 1) * (CHAPTER ? (z === me ? 0.9 : 0.85) : 1);   /* c452: 나 10% · 동료 15% 짧게 */'), ('  const myBiteLen = (n = up.bite) => INFECT / MY_INFECT * biteK(n);', '  const myBiteLen = (n = up.bite) => INFECT / MY_INFECT * biteK(n) * (CHAPTER ? 0.9 : 1);   /* c452 */')]
