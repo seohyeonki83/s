@@ -1440,6 +1440,8 @@ from c444_patch import C444_R   # c444: 차 콜라이더 10%
 R += C444_R
 from c445_patch import C445_R   # c445: 미는 힘 5
 R += C445_R
+from c446_patch import C446_R   # c446: 내 미는 힘 4
+R += C446_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

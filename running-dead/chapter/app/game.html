@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c445</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c446</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -691,7 +691,7 @@
   const BODY = 0.4 * 2 / 3 * 1.5;   // 부딪힘 반지름 (원보다 작게 — 붙어 서면 겹쳐 보인다). v51에 1/3 줄임, v88에 1.5배 (0.4). 나도 같다 (미는 힘 MY_FORCE는 그대로)
   const WEIGHT = 3;       // 무게 — 밀고 들어간 쪽은 막히고, 밀린 쪽은 1일 때(예전)의 1/WEIGHT만큼만 밀려난다
   const MY_BODY = BODY;       // 내 부딪힘 반지름 (v52에 절반 → v61에 다른 몸과 같게 되돌림)
-  const CH_MY_FORCE = 5;   /* c445: 7 → 5 */   // c376: 챕터 — 평소 내 미는 힘 (히드라 동료·유혹당한 사람은 MY_FORCE 기준 그대로)
+  const CH_MY_FORCE = 4;   /* c446: 5 → 4 (덩치가 되면 5) */   /* c445: 7 → 5 */   // c376: 챕터 — 평소 내 미는 힘 (히드라 동료·유혹당한 사람은 MY_FORCE 기준 그대로)
   const MY_FORCE = 8;         // 내 미는 힘 = 다른 몸의 8배 (v52 2배 → v61 2배 더 → v90 2배 더) — 내가 밀면 상대가 그만큼 더 비켜나고, 남이 밀면 나는 그만큼 덜 밀린다
   const BITE_GAP = RADIUS;   // 물 때 두 원 중심 거리 = 반지름 → 반쯤 겹친다
   const SPLIT = 1.5;      // 물기가 끝나고 둘이 떨어지는 속도 (유닛/초)
