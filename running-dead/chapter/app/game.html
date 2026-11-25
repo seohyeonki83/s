@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c431</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c432</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3349,6 +3349,7 @@
     if ((v.kind === 'obj' || v.kind === 'safe') && a.mut === 'armor') dmg *= 2;   /* c241: 3 → 2배 */   // v550: 덩치만 사물(문·차·금고)에 3배   // v378: 금고도   // v344: 2 → 4배   // v295: 덩치 — 문·경찰차 피해 2배
     if ((v.kind === 'obj' || v.kind === 'safe') && (a === me || (CHAPTER && a.kind === 'ally')) && owned.crowbar) dmg *= 1 + (CHAPTER ? 0.15 : 0.5) * (1 + lv('crowbar'));   /* c420: 15%씩 */   /* c367: 단단한 주먹 — 동료도 · 20%씩 */   /* c281: 50%씩 */   /* c197: 20%씩 */   /* c163: 빠루 +15%, 강화마다 +15%p */   /* c21: 빠루 +10%, 강화마다 +10%p (60%까지) */   /* v563: 빠루 처음 +40%, 강화마다 +10% */
     // v549: 금고도 나·동료 배율 없음 — 공격력 그대로   // v391: 금고 — 나한테는 3배, 동료(덩치·히드라 포함)한테는 2/3   // v275: 빠루 — 내가 건물·사물에 입히는 피해
+    if (CHAPTER && isZombie(v) && v.bombing) dmg *= 0.5;   // c432: 자폭하러 가는 동료는 받는 피해 절반
     if (isZombie(v) && v.mut) dmg *= v.mut === 'armor' ? (v === me ? 0.5 /* v581: 덩치로 각성한 나 받는 피해 −50% */ : TEST_ARMOR ? 0 : 0.2) : 0.9;   /* v558: 각성한 나는 덩치여도 −80% 없음 */   // v275: 갑옷좀비 받는 피해 80% 줄임, 히드라 10% 줄임
     if (a.mut === 'armor' && (v.kind === 'citizen' || (CHAPTER && v.kind === 'obj' && v.type === 'car' && !v.dead && chMonster(a))) && !a.splashing) {   /* c430: 괴물 덩치는 차·바리케이트를 쳐도 */   // v275: 갑옷좀비 — 앞쪽 80° 부채꼴, 근접 거리 1.2배 안 다른 적도 30%
       const R = (MELEE + (a.r - BODY)) * 1.2 * 2 * (CHAPTER ? chSplK(a) : 1), fx = v.foot.x - a.foot.x,   /* c378: 범위 = 촉매제 없으면 지금의 80%, 다 강화하면 1.5배 */ fz = v.foot.z - a.foot.z, fl = Math.hypot(fx, fz) || 1;
@@ -6126,6 +6127,7 @@
     if (z.bombing) return;
     if (z.mode === 'pounce') stopPounce(z); if (z.mode === 'bite') endBite(z, false);
     z.bombing = { R, t: 0, tg: null };
+    if (CHAPTER) { z.hp = z.maxHp; if (z.hpBar) z.hpDisp = z.hp; }   // c432: 지정되는 순간 체력 가득
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: chBombTex, transparent: true, depthTest: false, depthWrite: false })); s.scale.set(1.1, 1.1, 1); s.renderOrder = UI + 3; scene.add(s); z.bombS = s;
     chBombIcon(z);
   }
