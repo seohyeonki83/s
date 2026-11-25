@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c459</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c460</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2635,6 +2635,7 @@
   function chKbAbs(z) {                        // c436: 넉백 이기는 힘 = 방탄복 개수 (덩치는 2개를 타고난다 · 괴물 덩치는 빨간 별마다 +1 · 나는 내 방탄복에 더한다)
     let n = z === me && owned.vest ? 1 + lv('vest') : 0;
     if (z.mut === 'armor') { n += 2; const B = chMB(z); if (B && B.id === 'monster') n += B.r; }
+    if (z.bombing) n += 2;   // c460: 자폭하러 가는 동료 = 방탄복 2개
     return n ? SNIPER_KD / 12 * (2 + 2.5 * (n - 1)) : 0;
   }
   function giveKnock(z, kx, kz, v, T) {       // 방향(kx, kz), 처음 속도 v, 시간 T — 내가 흡수복을 입었으면 깎는다. 밀렸으면 true
@@ -5994,7 +5995,7 @@
   function chCatT() { return CHAPTER && owned.catalyst ? (1 + lv('catalyst')) / 6 : 0; }   // c373: 촉매제 진행 (획득 1/6 … 다 강화 6/6)
   function chMB(z) { if (!CHAPTER || !z) return null; const k = z === me ? 'awaken' : 'mutate', id = chBr[k]; return id ? { id, r: Math.max(0, lv(k) - 6) } : null; }   // c430: 그 좀비의 갈림길 (나 = 각성 주사 · 동료 = 변이 주사)
   const chMonster = (z) => { const B = chMB(z); return !!B && B.id === 'monster'; };
-  function chArmF(z) { const B = chMB(z); return 7 + (B && B.id === 'monster' ? 7 * B.r / 6 : 0); }   /* c447: 기본 7 (괴물 ★6 = 14) */   /* c445: 기본 5 (괴물 ★6 = 9) */   // c430: 덩치 미는 힘 (괴물 10 → 14)
+  function chArmF(z) { const B = chMB(z); return (7 + (B && B.id === 'monster' ? 7 * B.r / 6 : 0)) * (z.bombing ? 3 : 1); }   /* c460: 자폭 중 3배 */   /* c447: 기본 7 (괴물 ★6 = 14) */   /* c445: 기본 5 (괴물 ★6 = 9) */   // c430: 덩치 미는 힘 (괴물 10 → 14)
   function chHydK(z) { const B = chMB(z); return B && B.id === 'monster' ? 1 + B.r / 6 : 1; }   // c420: 히드라 사거리 1배 고정 (촉매제와 상관없다)   // c373: 히드라 사거리 — 원래의 2/3, 촉매제 다 올리면 1.3배
   function chSplK(z) { const B = chMB(z); return B && B.id === 'monster' ? 0.5 + B.r / 6 : 0.5; }   // c430: 덩치 범위 공격 거리 — 0.5배 (괴물이면 1.5배까지)   // c420: 덩치 범위 공격 크기 1배 고정   // c378: 덩치 범위 공격 크기 — 촉매제 없으면 0.8배, 다 강화하면 1.5배
   function chArmK() { return 10 / 11; }   // c420: 덩치 미는 힘 10 고정 (11 기준)   /* c377: 다 강화하면 미는 힘 13 (11 기준) */   // c373: 덩치 미는 힘 — 원래의 2/3, 촉매제 다 올리면 1.2배
@@ -6186,7 +6187,7 @@
     if (z.bombing) return;
     if (z.mode === 'pounce') stopPounce(z); if (z.mode === 'bite') endBite(z, false);
     z.bombing = { R, t: 0, tg: null };
-    if (CHAPTER) { z.hp = z.maxHp; if (z.hpBar) z.hpDisp = z.hp; }   // c432: 지정되는 순간 체력 가득
+    if (CHAPTER) { z.hp = z.maxHp; if (z.hpBar) z.hpDisp = z.hp; z.force = (z.force || 1) * 3; }   // c460: 미는 힘 3배 · c432: 지정되는 순간 체력 가득
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: chBombTex, transparent: true, depthTest: false, depthWrite: false })); s.scale.set(1.1, 1.1, 1); s.renderOrder = UI + 3; scene.add(s); z.bombS = s;
     chBombIcon(z);
   }
