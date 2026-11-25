@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c448</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c449</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -7242,7 +7242,7 @@
     const t = b.boss; b.boss = null; b.dmgK = 0;
     // c104: 다이아몬드 표시는 떼지 않는다 (얻은 변이 좀비 표시)
     b.r = BODY; delete b.halfH; b.mesh.scale.setScalar(1);
-    mutate(b, t); pendingAward.push('mut:' + t);   /* c316: 동료 획득창 */   // c56: 검은 테두리는 뺐다 (테두리는 변이한 나만)
+    mutate(b, t); pendingAward.push('mut:' + t); chMutFoc.push(b);   /* c449 */   /* c316: 동료 획득창 */   // c56: 검은 테두리는 뺐다 (테두리는 변이한 나만)
     if (t === 'armor') b.maxHp = 380 * 0.9; else b.maxHp *= 1.0;   /* c164: 얻은 덩치 342로 되돌림 */   /* c163: 얻은 덩치 365.9 */   /* c136: 얻은 덩치 342 (히드라는 동료 체력에서 따라 내려간다) */   /* c115: 3분의 2로 (570 → 380 · 히드라 142 → 95) */   /* c106: 얻은 덩치 체력 570 */ b.hp = b.maxHp;   // c100 · c104: 얻은 덩치는 체력 2.4배 · 얻은 히드라는 1.5배
   }
   function chSafeInRoom(s, R) {                // c54: 금고를 방 안에 — 방문에서 가장 먼 자리. 작은 방이면 그 방 사람은 복도로 옮긴다
@@ -8906,7 +8906,7 @@
     const x = b.foot.x, z = b.foot.z + 0.3, A = { x0: x - 1, z0: z - 1, x1: x + 1, z1: z + 1 }, c = addCitizen(x, z, A, ''); c.space = b.space; c.disc = true; c.fromVat = true; makeZombie(c);
     if (b.prop === 'avat') mutate(c, 'armor');   // c301: 덩치 수조 = 영구 덩치 동료
     if (b.prop === 'hvat') mutate(c, 'hydra');
-    if (b.prop === 'hvat' || b.prop === 'avat') pendingAward.push(b.prop === 'avat' ? 'mut:armor' : 'mut:hydra');   // c316: 동료 획득창
+    if (b.prop === 'hvat' || b.prop === 'avat') { pendingAward.push(b.prop === 'avat' ? 'mut:armor' : 'mut:hydra'); chMutFoc.push(c); }   // c449: 카메라가 비출 동료   // c316: 동료 획득창
     if (b.prop === 'hvat' || b.prop === 'avat') { const gq = new THREE.Group(), mk = (sz, col, zz) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(sz, sz), new THREE.MeshBasicMaterial({ color: col, transparent: true, depthTest: false, depthWrite: false })); m.rotation.z = Math.PI / 4; m.position.z = zz; m.renderOrder = 1; return m; }; gq.add(mk(0.38, 0x1c1c1e, 0), mk(0.27, 0xb05cff, 0.002)); gq.position.set(0, 0.5, 0.02); c.mesh.add(gq); c.gem = gq; }   // c300: 히드라 수조 = 영구 히드라 동료 (보석 표시) · c315: 덩치 수조 동료도 큰 맵에서 얻은 덩치처럼 다이아몬드
     for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; puff(x, 0.6, z, i % 2 ? 0x7ed3a0 : 0x8aa4f5, 0.4, 1.3, 0.55, Math.cos(a) * 3, 0.5, Math.sin(a) * 3, 0.9); }
   }
@@ -9882,8 +9882,13 @@
     const dia = (s, c) => `<path d="M${cx} ${gy - s}L${cx + s} ${gy}L${cx} ${gy + s}L${cx - s} ${gy}Z" fill="${c}"/>`;
     return `<svg viewBox="0 0 120 120" width="1.5em" height="1.5em" style="display:block;margin:0 auto"><circle cx="${cx}" cy="${cy}" r="${r}" fill="${col}"/>${type === 'zombie' ? '' : dia(r * 0.375, '#1c1c1e') + dia(r * 0.27, '#b05cff')}</svg>`;
   }
+  const chMutFoc = [];                         // c449: 동료 획득창마다 비출 동료 (덩치 · 히드라)
   function chShowMut(type) {                  // c316: 덩치·히드라 동료를 얻었다 — 무기 획득창과 같은 창 (사용자 문구 그대로)
     acqOpen = true; paused = true; stopInput();
+    if (CHAPTER && type !== 'zombie') { const b = chMutFoc.shift(); if (b && bodies.includes(b) && !chMutPanned) {   // c449: 먼저 카메라가 그 동료로 가서 비춘다
+      const P = new THREE.Vector3(b.foot.x, 0, b.foot.z).addScaledVector(UP, b.halfH || RADIUS), [sx, sy] = viewCenter(), o = centerOn(P.x, P.y, P.z, sx, sy);
+      chMutPanned = true; panCam(o.x, o.z, () => { hiOn(b.mesh); setTimeout(() => { hiOff(); chShowMut(type); }, 1100); }); return; } }
+    const back = chMutPanned; chMutPanned = false;
     const ov = document.createElement('div');
     ov.id = 'acq'; ov.dataset.kind = 'mut:' + type;
     const name = chBr.mutate && type !== 'zombie' ? (chBr.mutate === 'monster' ? '괴물 ' : '흡수 ') + (type === 'armor' ? '덩치' : '히드라') : type === 'armor' ? '덩치 변이 좀비' : type === 'zombie' ? '좀비' : '히드라 변이 좀비',   /* c350: 변이 동료는 이름에 "변이" */ ds = type === 'zombie' ? '동료를 획득했습니다. 더 많은 동료를 모으세요.' : type === 'armor' ? '덩치 큰 동료를 얻었습니다. 밀어붙이세요' : '토사물을 내뿜는 동료를 얻었습니다. 원거리 공격이 가능합니다.';
@@ -9893,9 +9898,10 @@
       if (ov.dataset.done) return;
       ov.dataset.done = '1';
       ov.style.transition = 'opacity 0.25s'; ov.style.opacity = '0';
-      setTimeout(() => { ov.remove(); acqOpen = false; paused = false; last = 0; }, 260);
+      setTimeout(() => { ov.remove(); if (back) panCam(0, 0, () => { acqOpen = false; paused = false; last = 0; }); else { acqOpen = false; paused = false; last = 0; } }, 260);   // c449: 확인 → 카메라가 나에게 돌아온 뒤 다시 움직인다
     });
   }
+  let chMutPanned = false;
   function showAward(kind) {
     acqOpen = true; paused = true; stopInput();
     const d = ITEM[kind], ov = document.createElement('div');
