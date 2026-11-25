@@ -1424,6 +1424,8 @@ from c436_patch import C436_R   # c436: 경보 10단계 · 불도저 · 샷건 �
 R += C436_R
 from c437_patch import C437_R   # c437: 총동원령 — 터렛 · 샷건
 R += C437_R
+from c438_patch import C438_R   # c438: 드론 정리 · 불도저 노랑
+R += C438_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
