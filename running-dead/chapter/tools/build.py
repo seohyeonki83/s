@@ -1418,6 +1418,8 @@ from c433_patch import C433_R   # c433: 드론
 R += C433_R
 from c434_patch import C434_R   # c434: 드론 체력 8
 R += C434_R
+from c435_patch import C435_R   # c435: 자폭 — 적 먼저
+R += C435_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
