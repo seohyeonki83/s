@@ -1,0 +1,13 @@
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const p = await (await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 })).newPage(); const errs = []; p.on('pageerror', (e) => errs.push(e.message));
+await p.route('**/three.module.min.js', (r) => r.fulfill({ path: __dirname + '/../node_modules/three/build/three.module.min.js', contentType: 'application/javascript' }));
+await p.goto('file://' + __dirname + '/var/c453z.html'); await p.waitForFunction(() => window.__rdReady && window.__rd && window.__rd.me, null, { timeout: 60000 }); await p.waitForTimeout(1500);
+await p.evaluate(() => document.querySelectorAll('.okBtn').forEach((x) => x.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })))); await p.waitForTimeout(400);
+const o = await p.evaluate(() => { const R = window.__rd, me = R.me; me.hp = me.maxHp = 1e9; const o = {};
+  const cs = R.bodies.filter((b) => b.kind === 'citizen' && !b.space && !b.police).slice(0, 1); const a = R.bodies.find((b) => b.kind === 'citizen' && b.sleep && !b.space && !cs.includes(b)); a.sleep = false; R.zombify(a); R.SB(a, cs[0]); o.allyBite = +a.biteLen.toFixed(3);
+  R.setLv('mutate', 12); R.BR.mutate = 'absorb'; R.setAbs('taser');
+  const mk = (type, dx) => { const c = R.bodies.find((b) => b.kind === 'citizen' && b.sleep && !b.space && Math.hypot(b.foot.x - me.foot.x, b.foot.z - me.foot.z) > 30); c.sleep = false; R.zombify(c); let t = 0; do { window.__mut(c); } while (c.mut !== type && t++ < 30); c.mutT = 999; c.foot.x = me.foot.x + dx; c.foot.z = me.foot.z + 0.5; c.space = null; c.fixed = true; return c; };
+  mk('armor', -2); mk('hydra', 2); R.SF().won = true; return o; });
+await p.waitForTimeout(2500); o.victory = await p.evaluate(() => !!document.querySelector('.victory, #victory') || document.body.innerText.includes('VICTORY'));
+await p.screenshot({ path: __dirname + '/perf/c453_absorb.png', clip: { x: 60, y: 260, width: 270, height: 200 } });
+console.log(JSON.stringify(o), JSON.stringify(errs.slice(0, 3))); await b.close(); })();

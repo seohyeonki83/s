@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c452</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c453</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3640,7 +3640,7 @@
   function startBite(z, t) {
     bloodBurst(t.foot.x, t.foot.z, 10, 1.5, 3.5);   // v317: 덮치는 순간 확 터진다
     z.mode = 'bite';
-    z.biteT = z.biteLen = (z === me ? INFECT / MY_INFECT : INFECT) * biteK() * (z.mut ? 0.5 : 1) * (CHAPTER ? (z === me ? 0.9 : 0.85) : 1);   /* c452: 나 10% · 동료 15% 짧게 */   // v421: 특수(변이) 좀비는 감염 속도 2배   // 나는 더 빨리 감염시킨다. 물어뜯기로 짧아진다 (v201)
+    z.biteT = z.biteLen = (z === me ? INFECT / MY_INFECT : INFECT) * biteK() * (z.mut ? 0.5 : 1) * (CHAPTER ? (z === me ? 0.9 : 0.94) : 1);   /* c453: 동료 6% · c452: 나 10% 짧게 */   // v421: 특수(변이) 좀비는 감염 속도 2배   // 나는 더 빨리 감염시킨다. 물어뜯기로 짧아진다 (v201)
     z.biteT = z.biteLen * (1 - Math.min(0.999, t.infect || 0));   // 저장된 감염 게이지에서 이어서 (v213)
     if (z.biteLen <= 0.02) {                  // 물어뜯기를 많이 찍어 감염 시간이 0 → 즉시 감염, 회복 총량은 한 번에 (v201)
       z.hp = Math.min(z.maxHp, z.hp + z.maxHp * zHeal(z) * (z === me ? INFECT / MY_INFECT : INFECT));
@@ -6278,12 +6278,12 @@
   function chMutLook(z) {                      // c430: 괴물 = 빨간 후광 · 흡수 = 흡수한 무기 색 후광 (깜빡)
     const B = z.mut ? chMB(z) : null, bc = chBr.bomb === 'sticky' ? 0x9b59ff : chBr.bomb === 'split' ? 0xff7fbf : 0x5fcf3a;
     const want = !B ? null : B.id === 'monster' ? 0xff2a2a : chAbsK === 'taser' ? 0xffe14a : chAbsK === 'bomb' ? bc : 0xdfe6f0;
-    const horn = !!B && B.id === 'monster';   // c448: 괴물 = 뿔
+    const horn = !!B;   // c448: 괴물 = 뿔 · c453: 흡수도
     if (horn && !z.brHorn) { const g = new THREE.Group(); for (const sd of [-1, 1]) { const sh = new THREE.Shape(); sh.moveTo(sd * 0.12, 0.36); sh.lineTo(sd * 0.32, 0.38); sh.lineTo(sd * 0.36, 0.78); sh.lineTo(sd * 0.27, 0.6); sh.closePath(); const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), chHornMat); m.renderOrder = 1; g.add(m); } g.position.z = 0.015; z.mesh.add(g); z.brHorn = g; }
     else if (!horn && z.brHorn) { z.mesh.remove(z.brHorn); z.brHorn = null; }
     if (want === null) { if (z.brHalo) { z.mesh.remove(z.brHalo); z.brHalo.material.dispose(); z.brHalo = null; } return; }
     if (!z.brHalo) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: flashTex, transparent: true, depthTest: false, depthWrite: false })); s.position.set(0, 0, -0.05); s.scale.setScalar(1.9); s.renderOrder = (z.mesh.renderOrder || 0) - 0.05; z.mesh.add(s); z.brHalo = s; }
-    z.brHalo.material.color.setHex(want); z.brHalo.scale.setScalar(B.id === 'monster' ? 1.45 : 1.9);   /* c439: 괴물 테두리 두께 반 */ z.brHalo.material.opacity = B.id === 'monster' ? 0.75 : 0.45 + 0.35 * Math.sin(clock * 6);
+    z.brHalo.material.color.setHex(want); z.brHalo.scale.setScalar(1.45);   /* c453: 흡수도 괴물처럼 얇게 */   /* c439: 괴물 테두리 두께 반 */ z.brHalo.material.opacity = B.id === 'monster' ? 0.75 : 0.45 + 0.35 * Math.sin(clock * 6);
   }
   function chAbsorbHit(a, v) {                 // c430: 흡수 좀비에게 맞은 적 — 흡수한 무기 효과 (그 무기 지속 시간 × 빨간 별 ÷ 6)
     const B = chMB(a); if (!B || B.id !== 'absorb' || !B.r) return; const k = B.r / 6;
@@ -10342,7 +10342,7 @@
     if (!goalShown) { if (CH_TUT ? now - chGoalAt >= 500 : spawnFrames >= 3) showGoal(); return; }   /* c346: 튜토리얼 — 시작 0.5초 뒤 목표 창 */   // 판 시작 → 첫 장면을 몇 프레임 그린 뒤 목표 (v202)
     if (now < fxGapUntil) return;
     if (tutQueue.length) { showTut(tutQueue.shift()); return; }
-    if ((stationDown || (CHAPTER && chSf.won) || (CH_TUT && chTutGate && chTutGate.dead && me.foot.z < chTutGateZ - 0.5)) && !victoryOn) { showVictory(); return; }   /* c333: 튜토리얼 — 철망 문을 부수고 나가면 클리어 */   // 경찰서 다 파괴 → 승리 (v201)
+    if ((((stationDown || (CHAPTER && chSf.won)) && !(CHAPTER && !CH_TUT))   /* c453: 챕터는 승리 없음 — 계속 한다 */ || (CH_TUT && chTutGate && chTutGate.dead && me.foot.z < chTutGateZ - 0.5)) && !victoryOn) { showVictory(); return; }   /* c333: 튜토리얼 — 철망 문을 부수고 나가면 클리어 */   // 경찰서 다 파괴 → 승리 (v201)
     const e = fxQueue.shift();
     if (!e) return;
     if (e.t === 'star') playStar();

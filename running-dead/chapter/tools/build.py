@@ -1454,6 +1454,8 @@ from c451_patch import C451_R   # c451: 덩치 사물 1.5배
 R += C451_R
 from c452_patch import C452_R   # c452: 감염 시간
 R += C452_R
+from c453_patch import C453_R   # c453
+R += C453_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
