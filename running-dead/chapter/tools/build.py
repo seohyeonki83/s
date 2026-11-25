@@ -1444,6 +1444,8 @@ from c446_patch import C446_R   # c446: 내 미는 힘 4
 R += C446_R
 from c447_patch import C447_R   # c447: 미는 힘
 R += C447_R
+from c448_patch import C448_R   # c448: 괴물 뿔 · 빨간 토사물
+R += C448_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

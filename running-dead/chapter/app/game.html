@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c447</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c448</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6094,7 +6094,8 @@
     s.scale.set(1.5, 0.75, 1); s.renderOrder = UI_ME - 1;   /* c325: 토사물 1.5배 */
     s.position.copy(z.foot).addScaledVector(UP, RADIUS);
     scene.add(s);
-    spits.push({ s, z, t, dmg: z === me ? zDamage(z) : zDamage(z) * 4, dT: 0 });   // v558: 각성한 나는 내 데미지 그대로   // v301: 2배 더 (일반 데미지의 2 → 4배)
+    let rs = null; if (CHAPTER && chMonster(z)) { rs = new THREE.Sprite(new THREE.SpriteMaterial({ map: flashTex, color: 0xff2a2a, transparent: true, depthTest: false, depthWrite: false })); rs.scale.setScalar(0.62); rs.renderOrder = UI_ME - 0.9; rs.position.copy(s.position); scene.add(rs); }   // c448: 괴물 히드라 — 빨간 덩어리가 섞인다
+    spits.push({ s, z, t, dmg: z === me ? zDamage(z) : zDamage(z) * 4, dT: 0, rs });   // v558: 각성한 나는 내 데미지 그대로   // v301: 2배 더 (일반 데미지의 2 → 4배)
   }
   function chSpitHit(x, z, fx, fz) {          // c324: 맞으면 녹색 액체가 탁 — 터진 자국 + 사방으로 튀는 방울 (날아온 쪽으로 더 많이)
     const f = puff(x, 0.45, z, 0xffffff, 0.45, 1.3, 0.45, 0, 0, 0, 1); f.s.material.map = splatTex; f.s.material.rotation = Math.random() * 6.28; f.s.renderOrder = UI_ME - 1;   /* 맞은 몸 위에 보이게 */
@@ -6109,12 +6110,13 @@
       const live = p.t.drone ? !p.t.dead : p.t.kind === 'citizen' ? bodies.includes(p.t) : (p.t.kind === 'obj' || p.t.kind === 'safe') && !p.t.dead;   // v380: 사물·금고도 맞힌다
       if (d <= step || !live) {
         if (live) { landHit(p.z, p.t, p.dmg); chSpitHit(p.s.position.x, p.s.position.z, sV2.x, sV2.z); }   // c324: 녹색 액체가 탁 터진다
+        if (p.rs) { if (live) for (let k = 0; k < 6; k++) { const a = Math.random() * 6.28, sp = rand(1.4, 3); puff(p.s.position.x, 0.5, p.s.position.z, k % 2 ? 0xff3a3a : 0xb3121b, rand(0.12, 0.2), rand(0.05, 0.1), rand(0.25, 0.4), Math.cos(a) * sp, rand(0.5, 1.2), Math.sin(a) * sp, 0.9); } scene.remove(p.rs); p.rs.material.dispose(); }   // c448
         scene.remove(p.s); p.s.material.dispose(); spits.splice(i, 1);
         continue;
       }
-      p.s.position.addScaledVector(sV2, step / d);
+      p.s.position.addScaledVector(sV2, step / d); if (p.rs) p.rs.position.copy(p.s.position);   // c448
       spV.copy(p.s.position).project(camera); spW.copy(p.s.position).add(sV2).project(camera); p.s.material.rotation = Math.atan2(spW.y - spV.y, (spW.x - spV.x) * camera.aspect);   // c324: 화면에서 날아가는 방향으로 머리를 돌린다
-      if ((p.dT -= dt) <= 0) { p.dT = 0.06; puff(p.s.position.x, p.s.position.y, p.s.position.z, 0x8fe84a, 0.16, 0.06, 0.22, rand(-0.3, 0.3), -0.8, rand(-0.3, 0.3), 0.9); }   // 뒤로 떨어지는 방울
+      if ((p.dT -= dt) <= 0) { p.dT = 0.06; puff(p.s.position.x, p.s.position.y, p.s.position.z, p.rs && Math.random() < 0.5 ? 0xff3a3a : 0x8fe84a, 0.16, 0.06, 0.22, rand(-0.3, 0.3), -0.8, rand(-0.3, 0.3), 0.9); }   // 뒤로 떨어지는 방울
     }
   }
 
@@ -6272,9 +6274,13 @@
     for (const d of chDrones) { if (d.dead || Math.hypot(d.x - x, d.z - z) > Rr + d.r) continue; d.stunT = Math.max(d.stunT || 0, T); zaps.push({ to: d, t: 0.3 }); }
     const tk = chTank; if (tk && !tk.wreck && Math.hypot(tk.x - x, tk.z - z) - CAR_L * CH_TK_KL / 2 <= Rr) { tk.stunT = Math.max(tk.stunT || 0, T); tk.vx = tk.vz = 0; zaps.push({ to: tk, t: 0.3 }); }
   }
+  const chHornMat = new THREE.MeshBasicMaterial({ color: 0xb3121b, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide });   // c448: 괴물 뿔
   function chMutLook(z) {                      // c430: 괴물 = 빨간 후광 · 흡수 = 흡수한 무기 색 후광 (깜빡)
     const B = z.mut ? chMB(z) : null, bc = chBr.bomb === 'sticky' ? 0x9b59ff : chBr.bomb === 'split' ? 0xff7fbf : 0x5fcf3a;
     const want = !B ? null : B.id === 'monster' ? 0xff2a2a : chAbsK === 'taser' ? 0xffe14a : chAbsK === 'bomb' ? bc : 0xdfe6f0;
+    const horn = !!B && B.id === 'monster';   // c448: 괴물 = 뿔
+    if (horn && !z.brHorn) { const g = new THREE.Group(); for (const sd of [-1, 1]) { const sh = new THREE.Shape(); sh.moveTo(sd * 0.12, 0.36); sh.lineTo(sd * 0.32, 0.38); sh.lineTo(sd * 0.36, 0.78); sh.lineTo(sd * 0.27, 0.6); sh.closePath(); const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), chHornMat); m.renderOrder = 1; g.add(m); } g.position.z = 0.015; z.mesh.add(g); z.brHorn = g; }
+    else if (!horn && z.brHorn) { z.mesh.remove(z.brHorn); z.brHorn = null; }
     if (want === null) { if (z.brHalo) { z.mesh.remove(z.brHalo); z.brHalo.material.dispose(); z.brHalo = null; } return; }
     if (!z.brHalo) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: flashTex, transparent: true, depthTest: false, depthWrite: false })); s.position.set(0, 0, -0.05); s.scale.setScalar(1.9); s.renderOrder = (z.mesh.renderOrder || 0) - 0.05; z.mesh.add(s); z.brHalo = s; }
     z.brHalo.material.color.setHex(want); z.brHalo.scale.setScalar(B.id === 'monster' ? 1.45 : 1.9);   /* c439: 괴물 테두리 두께 반 */ z.brHalo.material.opacity = B.id === 'monster' ? 0.75 : 0.45 + 0.35 * Math.sin(clock * 6);
