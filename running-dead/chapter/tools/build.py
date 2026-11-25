@@ -1426,6 +1426,8 @@ from c437_patch import C437_R   # c437: 총동원령 — 터렛 · 샷건
 R += C437_R
 from c438_patch import C438_R   # c438: 드론 정리 · 불도저 노랑
 R += C438_R
+from c439_patch import C439_R   # c439: 괴물 테두리 · 드론 끼임
+R += C439_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

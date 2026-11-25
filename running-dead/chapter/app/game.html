@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c438</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c439</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6272,7 +6272,7 @@
     const want = !B ? null : B.id === 'monster' ? 0xff2a2a : chAbsK === 'taser' ? 0xffe14a : chAbsK === 'bomb' ? bc : 0xdfe6f0;
     if (want === null) { if (z.brHalo) { z.mesh.remove(z.brHalo); z.brHalo.material.dispose(); z.brHalo = null; } return; }
     if (!z.brHalo) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: flashTex, transparent: true, depthTest: false, depthWrite: false })); s.position.set(0, 0, -0.05); s.scale.setScalar(1.9); s.renderOrder = (z.mesh.renderOrder || 0) - 0.05; z.mesh.add(s); z.brHalo = s; }
-    z.brHalo.material.color.setHex(want); z.brHalo.material.opacity = B.id === 'monster' ? 0.75 : 0.45 + 0.35 * Math.sin(clock * 6);
+    z.brHalo.material.color.setHex(want); z.brHalo.scale.setScalar(B.id === 'monster' ? 1.45 : 1.9);   /* c439: 괴물 테두리 두께 반 */ z.brHalo.material.opacity = B.id === 'monster' ? 0.75 : 0.45 + 0.35 * Math.sin(clock * 6);
   }
   function chAbsorbHit(a, v) {                 // c430: 흡수 좀비에게 맞은 적 — 흡수한 무기 효과 (그 무기 지속 시간 × 빨간 별 ÷ 6)
     const B = chMB(a); if (!B || B.id !== 'absorb' || !B.r) return; const k = B.r / 6;
@@ -7576,6 +7576,15 @@
         const wx = Math.sin(d.bob * 1.1) * 0.32, wz = Math.sin(d.bob * 2.2) * 0.16, ox = d.wx || 0, oz = d.wz || 0;
         if (chDroneFree(d.x + wx - ox, d.z + wz - oz)) { d.x += wx - ox; d.z += wz - oz; d.wx = wx; d.wz = wz; }
       }
+      if (!t || dist > CH_DRONE_RANGE * 0.8) {   // c439: 다가가는 중인데 3초 동안 1칸도 못 갔다 → 갈 쪽으로 8칸 순간이동 (그 둘레에서 또 막히면 16칸 …) — 차가 끼었을 때와 같다
+        if (d.sx === undefined || Math.hypot(d.x - d.sx, d.z - d.sz) > 1) { d.sx = d.x; d.sz = d.z; d.stT = 0; }
+        else if ((d.stT = (d.stT || 0) + dt) >= 3) {
+          d.jn = d.jx !== undefined && Math.hypot(d.x - d.jx, d.z - d.jz) < 8 ? (d.jn || 1) + 1 : 1;
+          const st = Math.min(8 * d.jn, dist - CH_DRONE_RANGE * 0.6);
+          for (let k = st; k > 1; k -= 0.5) { const nx = d.x + (gx - d.x) / dist * k, nz = d.z + (gz - d.z) / dist * k; if (chDroneFree(nx, nz)) { d.x = nx; d.z = nz; break; } }
+          d.sx = d.x; d.sz = d.z; d.stT = 0; d.jx = d.x; d.jz = d.z;
+        }
+      } else d.stT = 0;
       d.foot.set(d.x, 0, d.z);
       // 기관총 — 경찰과 같은 간격, 한 번에 세 발 (탕탕탕)
       if (d.burst > 0) { if ((d.burstT -= dt) <= 0) { d.burstT = 0.09; d.burst--; if (t && isZombie(t)) chDroneShot(d, t); } }
