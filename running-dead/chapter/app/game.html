@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c436</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c437</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1269,7 +1269,7 @@
     c.sg = true; c.hp = c.maxHp = c.maxHp * 1.5; chAddGun(c, 0.62, 0.15);
   }
   function chMakeRobot(c) {                    // c436: 사각 로봇 — 군인 바탕 · 체력 2배 · 몸 1.5배 · 감염 안 됨(체력 0이면 터짐) · 현금 · 다이아몬드에 반응 안 함
-    c.robot = true; c.noLure = true; c.hp = c.maxHp = c.maxHp * 2; c.r = BODY * 1.5; c.halfH = RADIUS * 1.5; c.mesh.scale.setScalar(1.5);
+    chRobotAny = true; c.robot = true; c.noLure = true; c.hp = c.maxHp = c.maxHp * 2; c.r = BODY * 1.5; c.halfH = RADIUS * 1.5; c.mesh.scale.setScalar(1.5);
     c.mesh.geometry = chSqGeo; c.mesh.material.color.setHex(0x6f7a86); chAddGun(c, 0.55, 0.17, 0x2a2f35);
   }
   function chRobotDie(c) {                     // c436: 로봇 — 차처럼 터지고 사라진다 (경험치 1)
@@ -2115,7 +2115,7 @@
     if (CHAPTER && !c.police) { c.soft = true; c.sight *= CH_SOFT_SIGHT; }   // c84: 하양·노랑·주황 (빨강·분홍은 chVig·chBoss에서 되돌린다)
     if (c.soldier) c.sense = c.sight;    // v410: 군인은 경계 없이 시야 안이면 바로 싸움
     if (c.sniper) { c.evadeR = sniperEvadeR(); c.sight = SIGHT * 1.1; c.sense = c.sight;   /* v432: 시야(사거리) = 경찰의 1.1배 → 7.92칸 */   /* v404: 경찰과 차이를 절반으로 (1.5 → 1.25배, 9칸) */ c.mark = new THREE.Sprite(diamondMat); c.mark.scale.set(1.3, 1.3, 1); /* v482: 테두리 + 십자 */ c.mark.renderOrder = UI; c.mark.visible = false; scene.add(c.mark); }   // v396: 저격수 시야 10.8칸 — 시야 안이면 경계 없이 바로 싸움
-    if (CHAPTER && chAL >= 6) { if (type === 'police' && ++chPolN % 5 === 0) chMakeSg(c); else if (type === 'soldier' && ++chSolN % 5 === 0) chMakeRobot(c); }   // c436
+    if (CHAPTER && chAL >= 5 && !chNoMix) { if (type === 'police' && ++chPolN % 5 === 0) chMakeSg(c);   /* c437: 총동원령부터 */ else if (type === 'soldier' && ++chSolN % 5 === 0) chMakeRobot(c); }   // c436
     c.flee = new THREE.Vector2();
     c.lastSeen = new THREE.Vector3();
     c.lastSeenSpeed = SPEED;
@@ -2714,7 +2714,7 @@
     if (d > range || fireBlocked(c.foot.x, c.foot.z, z.foot.x, z.foot.z)) { c.inRange = false; steer(c.vel, CHAPTER && c.gar ? wantV.set(0, 0) : toward(c, z.foot.x, z.foot.z, copSpeed(c)), accelOf(c) * dt); moveShoot(c, dt); return; }   /* c60: 수비대는 안 다가간다 */   // 사거리 밖이거나 벽에 막힘 → 다가간다 (v297: 열린 문 틈으로는 쏜다)
     c.inRange = true;
     steer(c.vel, wantV.set(0, 0), accelOf(c) * dt);
-    if (c.atkT <= 0) { if (c.soldier) { c.burstN = 4; c.burstT = 0; c.burstZ = z; c.burstX = z.foot.x; c.burstZz = z.foot.z; } else if (c.sg) chShotgun(c, z); else shoot(c, z); c.atkT = HIT_EVERY * (c.sniper ? 4 : c.sg ? 1.6 : 1); }   /* c436: 샷건 공속 = 저격수의 2.5배 */   // v410: 군인은 4발 연사   // v401: 저격수는 경찰 공격 속도의 1/4 (3.1초마다)
+    if (c.atkT <= 0) { if (c.soldier) { c.burstN = c.turret ? 8 : 4; c.burstT = 0; c.burstZ = z;   /* c437: 터렛 8발 */ c.burstX = z.foot.x; c.burstZz = z.foot.z; } else if (c.sg) chShotgun(c, z); else shoot(c, z); c.atkT = HIT_EVERY * (c.sniper ? 4 : c.sg ? 1.6 : 1); }   /* c436: 샷건 공속 = 저격수의 2.5배 */   // v410: 군인은 4발 연사   // v401: 저격수는 경찰 공격 속도의 1/4 (3.1초마다)
   }
 
   function moveShoot(c, dt, own) {                // v443: 군인·저격수는 움직이면서도 쏜다 — 움직이는 동안은 쿨타임이 절반 속도로 흐른다 (공격 속도 절반)
@@ -2723,7 +2723,7 @@
     if (c.burstN > 0) return;
     const z = nearestZombie(c, c.boostT > 0 ? c.boostSight : c.fb ? c.sight0 : c.sight, true);
     if (!z) return;
-    if (c.soldier) { c.burstN = 4; c.burstT = 0; c.burstZ = z; c.burstX = z.foot.x; c.burstZz = z.foot.z; } else shoot(c, z);
+    if (c.soldier) { c.burstN = c.turret ? 8 : 4; c.burstT = 0; c.burstZ = z;   /* c437: 터렛 8발 */ c.burstX = z.foot.x; c.burstZz = z.foot.z; } else shoot(c, z);
     c.atkT = HIT_EVERY * (c.sniper ? 4 : 1);
     if (c.sniper) c.shotStop = 0.3;   /* v554: 0.2 → 0.3초 */   // v459: 저격수는 이동 중에 쏘면 0.2초 멈췄다가 다시 달린다
   }
@@ -3357,7 +3357,7 @@
   const CH_AL_AT = [5, 30, 164, 432, 711, 1021, 1384, 1821, 2353, 3000];   // c436: 경보 10단계 — 누적 감염 수 (팬데믹 = 앞 간격 2배, 그 뒤는 268 × (1 + 0.039 n²), 종말 3000)
   if (CHAPTER) { STAR_AT[3] = CH_AL_AT[3]; STAR_AT[4] = CH_AL_AT[4]; }   // c436: 1~5단계는 지금 5단계와 같은 내용 (기준 수만 새 표)
   const chALv = () => CHAPTER ? Math.max(stars, chAL) : stars;   // 보이는 경보 단계
-  let chPolN = 0, chSolN = 0;                  // c436: 계엄부터 새로 나오는 경찰 · 군인 수 (5명마다 1명 = 샷건 경찰 · 사각 로봇)
+  let chPolN = 0, chSolN = 0, chNoMix = false, chRobotAny = false;   // c437: chNoMix = 건널목 터렛 · 샷건을 직접 만들 때                  // c436: 계엄부터 새로 나오는 경찰 · 군인 수 (5명마다 1명 = 샷건 경찰 · 사각 로봇)
   const LEVEL_NAME = CHAPTER ? ['수상함', '경계', '비상', '팬데믹', '총동원령', '계엄', '데프콘', '전면전', '대재앙', '종말'] : ['수상함', '난리남', '개판', '계엄', '데프콘'];   // c436   // 수배 단계 이름 (v194) — 느낌표 아래 작게
   const starSlots = () => starsEl.querySelectorAll('.s');
   function drawStars() {                      // 위 가운데: 수배 느낌표 — 하나씩 따로 (연출이 박히는 자리) + 아래에 지금 단계 이름
@@ -5620,7 +5620,7 @@
   function chGoldMachines(fresh) {             // c427: 금 — 기계도 홀린다 (날아와 내려앉는 시간까지 유혹 시간)
     const r = chBrR('cash', 'gold'); if (!r) return; const T0 = CH_WV('cashT', 6) * chLingK();
     for (const d of chDrones) { if (d.dead) continue; const k = chNearFresh(fresh, d.x, d.z, SIGHT * cashK() + 4, null); if (!k) continue; d.lureT = T0 * (0.2 + 0.05 * (r - 1)); d.lureK = k; d.tg = null; }
-    for (const c of bodies) { if (!c.robot || c.state === 'held' || c.state === 'lured') continue; const k = chNearFresh(fresh, c.foot.x, c.foot.z, SIGHT * cashK() + 4, c.space); if (!k) continue; c.robotLure = T0 * (0.2 + 0.05 * (r - 1)); for (const q of fresh) q.who.add(c); enterLured(c); }   // c436: 로봇도 금에 홀린다 (드론과 같은 비율)
+    for (const c of bodies) { if (!c.robot || c.turret || c.state === 'held' || c.state === 'lured') continue; const k = chNearFresh(fresh, c.foot.x, c.foot.z, SIGHT * cashK() + 4, c.space); if (!k) continue; c.robotLure = T0 * (0.2 + 0.05 * (r - 1)); for (const q of fresh) q.who.add(c); enterLured(c); }   // c436: 로봇도 금에 홀린다 (드론과 같은 비율)
     const tk = chTank; if (tk && !tk.wreck) { const k = chNearFresh(fresh, tk.x, tk.z, SIGHT * cashK() + 4, null); if (k) { tk.lureT = T0 * 0.05 * r; tk.lureX = k.x; tk.lureZ = k.z; } }
   }
   const chDiaBuf = [];
@@ -6396,7 +6396,7 @@
   let reviveT = 0;
   function itemsTick(dt) {
     if (CHAPTER && chChainL.length) chChainTick(dt);   // c431
-    if (CHAPTER && chSolN) for (let i = bodies.length - 1; i >= 0; i--) { const c = bodies[i]; if (c && c.robot && c.hp <= 0) chRobotDie(c); }   // c436: 로봇은 체력 0이면 터진다
+    if (CHAPTER && chRobotAny) for (let i = bodies.length - 1; i >= 0; i--) { const c = bodies[i]; if (c && c.robot && c.hp <= 0) chRobotDie(c); }   // c436: 로봇은 체력 0이면 터진다
     if (reviveT > 0) { const p = Math.ceil(reviveT); reviveT = Math.max(0, reviveT - dt); if (Math.ceil(reviveT) !== p) refreshBadges(); }
     stimTick(dt);
     if (CHAPTER) rageTick(dt);
@@ -7413,8 +7413,17 @@
       const r2 = Math.random();                // 수비대: 말한 수에서 한두 명씩 다르게 — 1단계 경찰 4 · 2단계 경찰 +2 · 3단계 군인 +3 저격수 +1 · 4단계 군인 +2 저격수 +1 · 그 뒤로 군인 +3씩
       const add = s === 1 ? { police: N(2, 4) } : s === 2 ? { police: N(2, 4) } : s === 3 ? { soldier: N(2, 3), sniper: N(1, 2) } : s === 4 ? { soldier: N(2, 3), sniper: N(2, 3) } : { soldier: N(3, 4), sniper: N(2, 3) };   // c88: 수상함 경찰 2~4 · 난리남 경찰 +2~4 · 개판 군인 2~3 저격수 1~2 · 계엄 군인 2~3 저격수 2~3 · 데프콘 군인 3~4 저격수 2~3 (절반으로 안 자른다)
       for (const type of ['police', 'soldier', 'sniper']) for (let i = 0, n = add[type] || 0; i < n; i++) {   /* c72: 인원 절반 */ const c = addCitizen(X.cx, X.cz, square(X.cx, X.cz), type); c.gar = X; c.fresh = true; X.units.push(c); }
+      if (CHAPTER && s === 5) chBarTurret(X);   // c437: 총동원령 — 터렛 1기 · 샷건 경찰 2명
       chBarForm(X);
     }
+  }
+  function chBarTurret(X) {                    // c437: 건널목 통로 한가운데 한쪽 벽에 고정 터렛 (군인 바탕 · 체력 3배 · 한 번에 8발 · 감염 안 됨 · 부서지면 터짐) + 샷건 경찰 2명
+    chNoMix = true;
+    const [x, z] = chBarXZ(X, 0, CH_BAR_HALF - 0.75), t = addCitizen(x, z, square(x, z), 'soldier');
+    t.robot = t.turret = true; chRobotAny = true; t.noLure = true; t.fixed = true; t.met = true; t.sleep = false; t.tick = 0; t.hp = t.maxHp = t.maxHp * 3;
+    t.r = BODY * 1.35; t.halfH = RADIUS * 1.35; t.mesh.scale.setScalar(1.35); t.mesh.geometry = chSqGeo; t.mesh.material.color.setHex(0x4d5560); chAddGun(t, 0.6, 0.2, 0x1a1d21);
+    for (let i = 0; i < 2; i++) { const c = addCitizen(X.cx, X.cz, square(X.cx, X.cz), 'police'); chMakeSg(c); c.gar = X; c.fresh = true; X.units.push(c); }
+    chNoMix = false;
   }
   // ── c374: 드론 — 경보 '난리남'부터 30초마다 2대 (동시에 8대까지). 진짜 자리 = 땅 위 그림자 한 점 (이동·시야·사거리·맞기는 전부 이 점), 그림은 그 점에서 수직 위로 띄운다 ──
   //   기관총 (경찰 공격력의 1/3 · 경찰과 같은 공격 간격, 한 번에 세 발) · 체력 7 · 건물·산 위로는 못 간다 · 몸끼리 안 부딪힌다
