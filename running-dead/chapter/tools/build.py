@@ -1450,6 +1450,8 @@ from c449_patch import C449_R   # c449: 변이 동료 카메라
 R += C449_R
 from c450_patch import C450_R   # c450: 덩치 사물 피해
 R += C450_R
+from c451_patch import C451_R   # c451: 덩치 사물 1.5배
+R += C451_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
