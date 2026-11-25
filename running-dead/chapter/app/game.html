@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c454</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c455</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -8083,7 +8083,7 @@
     car.vx = car.vz = 0; car.tkV = 0; car.tkPh = null; car.dashT = 0; car.spOn = false;   // c211
     for (let i = 0; i < 3; i++) boom(car.x + rand(-1.6, 1.6), car.z + rand(-1, 1));
     if (!CHAPTER || !chTanks.includes(car)) return;   // c454
-    if (car.dozer) { const pool = CH_ITEMS.filter((k) => !chFull(k)); if (pool.length) dropPickup(pool[Math.floor(Math.random() * pool.length)], car.x, car.z, null); chSf.chk = 1; return; }   // c436: 불도저 — 군인 · 특공대 없이 무기나 장비 하나
+    if (car.dozer) { const pool = CH_ITEMS.filter((k) => !chFull(k)); if (pool.length && chTanks.every((t) => t.wreck || t === car)) dropPickup(pool[Math.floor(Math.random() * pool.length)], car.x, car.z, null); chSf.chk = 1; return; }   // c436: 불도저 — 군인 · 특공대 없이 무기나 장비 하나
     for (let i = 0; i < 5; i++) {               // c200: 타고 있던 군인 5
       const a = i / 5 * Math.PI * 2, r = rand(0.4, 1.2); let x = car.x + Math.cos(a) * r, z = car.z + Math.sin(a) * r;
       if (!freeSpot(x, z, null)) { x = car.x; z = car.z; }

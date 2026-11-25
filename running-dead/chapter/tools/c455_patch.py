@@ -1,0 +1,1 @@
+C455_R = [('if (car.dozer) { const pool = CH_ITEMS.filter((k) => !chFull(k)); if (pool.length) dropPickup(', 'if (car.dozer) { const pool = CH_ITEMS.filter((k) => !chFull(k)); if (pool.length && chTanks.every((t) => t.wreck || t === car)) dropPickup(')]
