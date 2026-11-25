@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c456</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c457</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6843,7 +6843,7 @@
     chSf.hide = false;
     if (!chSf.on || chSf.boss) return;
     chSfHud();
-    chSfEl.style.animation = 'none'; chSfEl.offsetWidth; chSfEl.style.animation = (chSf.n >= 4 ? 'sfpopb' : 'sfpop') + ' 1.9s ease-in-out, sfplate 1.9s ease-in-out';   /* c126: 보스 글자는 커서 덜 키운다 */
+    chSfEl.style.animation = 'none'; chSfEl.offsetWidth; chSfEl.style.animation = (chSf.n >= 3 ? 'sfpopb' : 'sfpop') + ' 1.9s ease-in-out, sfplate 1.9s ease-in-out';   /* c126: 보스 글자는 커서 덜 키운다 */
   }
   function chLevelUp() {
     let pool = chUpPool().concat(Array(chWupW()).fill('__w')   /* c224: 25% 더 줄임 */   /* c189: 25% 줄임 (몫 2배 → 1.5배) */);   /* c161: 2배 */ const keys = [];   // c125
@@ -7669,7 +7669,7 @@
     let s = '';
     if (chSf.on && !chSf.boss && !chSf.hide) {
       const left = Math.max(0, Math.ceil(chSfAt(chSf.n + 1) - chSf.T));
-      s = chSf.n < 4 ? (chSf.n === 0 ? '특공대 도착까지 ' : '다음 특공대 출동까지 ') + left + '초' : '<span class="bosscd"><i>!</i>보스 출동까지 ' + left + '초<i>!</i></span>';   /* c126 */
+      s = chSf.n < 3 ? (chSf.n === 0 ? '특공대 도착까지 ' : '다음 특공대 출동까지 ') + left + '초' : '<span class="bosscd"><i>!</i>보스 출동까지 ' + left + '초<i>!</i></span>';   /* c126 */
     }
     if (s !== chSf.shown) { chSf.shown = s; chSfEl.innerHTML = s; chSfEl.style.display = s ? 'block' : 'none'; }
   }
@@ -7720,7 +7720,7 @@
       chSf.T += dt; if (chSf.hide && (chSf.hideT -= dt) <= 0) chSfPop();
       while (!chSf.boss && chSf.T >= chSfAt(chSf.n + 1)) {
         chSf.n++; chSf.hide = true; chSf.hideT = 8;   // c125: 다음 카운트다운은 출동 알림이 끝나면 크게 뜬다
-        if (chSf.n <= 4) chQueueTeam(chSf.n - 1);
+        if (chSf.n <= 3) chQueueTeam(chSf.n - 1);   /* c457: 특공대 3차례 → 4번째가 보스 */
         else { chSf.boss = true; teamsSpawned++; chBanner.push('boss'); teamWait.push({ boss: true, t: 0, seg: teamSeg(), hold: true }); }
       }
     } else {
@@ -8215,7 +8215,7 @@
         const c = addCitizen(x, z, { x0: x - 1, z0: z - 1, x1: x + 1, z1: z + 1 }, ''); c.met = true; makeZombie(c); i++;
       }
       deaths = Math.max(deaths, STAR_AT[1]); stars = Math.max(stars, 2);   // 난리남
-      chSf.on = true; chSf.n = 4; chSf.T = chSfAt(5) - 0.05;   // 다음 걸음에 보스 출동
+      chSf.on = true; chSf.n = 3; chSf.T = chSfAt(4) - 0.05;   // 다음 걸음에 보스 출동
       while (rankNext < RANKS.length && 70 >= RANKS[rankNext].n) rankNext++;   // c191: 보스 테스트 — 동료 수 칭호 알림은 건너뛴다 (보스 알림이 늦게 뜨던 것)
     }
     if ((chBTt -= dt) <= 0) { chBTt = 0.5; for (const c of bodies.slice()) if (c.kind === 'citizen' && !c.police && !c.military) chBTgone(c); }   // 새로 생기는 사람(시작 하양 등)도 치운다
@@ -8223,8 +8223,8 @@
   function chQueueTeam(i) {
     teamsSpawned++; chBanner.push('sf');                            // '특공대 출동' 알림 한 번 — 알림이 사라지고 2초 뒤부터 나온다
     const seg = teamSeg();
-    if (i < 4) {   // c250: 차례마다 [걸어서 'W' | 군인차 'C', 구성]
-      const P = [[['W', [S_, G_, G_, G_]]], [['W', [S_, G_, G_]], ['C', [S_, G_, G_]]], [['W', [S_, G_, G_]], ['C', [S_, G_, G_]], ['C', [G_, G_]]], [['W', [S_, G_, G_]], ['C', [S_, G_, G_, G_]], ['C', [S_, G_, G_, G_]]]][i];
+    if (i < 3) {   // c457: 3차례 · c250: 차례마다 [걸어서 'W' | 군인차 'C', 구성]
+      const P = [[['W', [S_, G_, G_, G_]]], [['W', [S_, G_, G_, G_]], ['C', [S_, G_, G_, G_]], ['C', [S_, G_, G_]]], [['W', [S_, G_, G_, G_]], ['C', [S_, G_, G_, G_]], ['C', [S_, S_, G_, G_, G_, G_]]]][i];   /* c457: 4번째를 2 · 3번째에 나눔 — 저1군3 · 저3군8 · 저4군10 */
       P.forEach(([m, c], k) => teamWait.push(m === 'W' ? { comp: c, t: k * 3, first: false, seg, hold: true } : { car: c, t: k * 3, seg: k ? chTeamSeg2(seg) : seg, hold: true }));
       return;
     }   /* c223: 2대 · 차마다 군인 1명 빼고 */
