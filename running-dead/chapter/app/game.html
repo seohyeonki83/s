@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c464</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c465</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2212,7 +2212,7 @@
     b.zsT = clock; b.zsV = seen(b, zombies);
     return b.zsV;
   }
-  const sees = (c, z) => z && isZombie(z) && !(CH_TOUR && z === me) && (z.space === c.space || (linked(c.space, z.space) && (CHAPTER || hSeen(z))));   /* c58 */   // v296: 같은 공간이거나, 사람 편 누가 보고 있고 문으로 이어져 있다   // 살아 있는 좀비이고 같은 공간(같은 건물 안, 또는 둘 다 밖)에 있다
+  const sees = (c, z) => z && isZombie(z) && !(CH_TOUR && z === me) && !CH_ET   /* c465: 적 테스트 — 서로 안 싸운다 */ && (z.space === c.space || (linked(c.space, z.space) && (CHAPTER || hSeen(z))));   /* c58 */   // v296: 같은 공간이거나, 사람 편 누가 보고 있고 문으로 이어져 있다   // 살아 있는 좀비이고 같은 공간(같은 건물 안, 또는 둘 다 밖)에 있다
 
   // 틱마다 주변을 본다. 좀비 = 나 + 동료 좀비 전부. 같은 공간(같은 건물 안, 또는 둘 다 밖)에 있는 좀비만 보인다
   // ── 근처 찾기 칸 (v177) — 걸음마다 좀비·시민을 4칸 네모 칸에 나눠 담는다. 근처를 찾을 땐 둘레 칸만 본다 (지도 전체 330명을 매번 훑지 않게) ──
@@ -2249,7 +2249,7 @@
     const seen = [];
     let near = Infinity, nearZ = null;
     for (const z of nearIn(zCells, c.foot.x, c.foot.z, c.sight, seBuf)) {   // 둘레 칸의 좀비만 (v177)
-      if (!isZombie(z) || (CH_TOUR && z === me)) continue;   /* c407: 본 맵 테스트 — 나를 못 본다 */
+      if (!isZombie(z) || (CH_TOUR && z === me) || CH_ET) continue;   /* c465 · c407: 본 맵 테스트 — 나를 못 본다 */
       if (z.space !== c.space && !(linked(c.space, z.space) && (CHAPTER || hSeen(z)))) continue;   /* c58: 챕터 — 문이 뚫려 이어진 공간은 한 공간으로 본다 */   // v296: 다른 공간 — 사람 편 누가 보고 있고 문으로 이어져 있으면 반응
       const d = Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
       if (d > c.sight) continue;
@@ -2524,7 +2524,7 @@
     if (c.stuckT >= 2) { c.stuckT = 0; c.isolated = true; enterFight(c, null, true); return; }   // 2초 넘게 막힘 → 고립: 회피를 버리고 제자리에서 공격
     const list = [];
     const ER = c.evadeR * 1.2 * 0.9;   // v503: 회피거리의 1.08배 (v538: 회피거리가 30% 줄어 같이 30% 줄어든다)   // v441: 회피 중 인지거리 = 회피거리의 1.2배 (전엔 7.2칸)
-    for (const z of nearIn(zCells, c.foot.x, c.foot.z, ER, evBuf)) if (isZombie(z) && !(CH_TOUR && z === me) && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= ER) list.push(z);
+    for (const z of nearIn(zCells, c.foot.x, c.foot.z, ER, evBuf)) if (isZombie(z) && !(CH_TOUR && z === me) && !CH_ET && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= ER) list.push(z);
     if (!list.length) { c.evadeR = sniperEvadeR(); enterFight(c, null, true); return; }   // v406: 다음 회피거리는 새로 뽑는다
     if ((c.tick -= dt) <= 0) { c.tick += TICK; c.flee.copy(fleeDir(c, list)); }
     steer(c.vel, wantV.copy(c.flee).multiplyScalar(copSpeed(c)), accelOf(c) * dt);   /* v508: 회피도 2.91 */   /* v483: 회피도 평소(군인)와 같은 속도 (3.06) */   /* v442: 회피 = 동료 속도와 같음 (v441: 1.05배) */
@@ -2700,7 +2700,7 @@
     if (CHAPTER && c.gar && !(c.soldier && c.master) && chHoldLeash(c, dt)) { moveShoot(c, dt); return; }   // c59: 사수지역 — 자리에서 지배 거리 밖이면 돌아온다   // v442: 복귀하면서도 쏜다   // v410: 주인 저격수에게서 지배 거리 밖에 1~2초 → 복귀
     if (c.sniper && !c.isolated) {   // v510: 건물 안에서도 회피 (벽은 그냥 막히는 것 — 막히면 고립 규칙)   // v396: 저격수 — 좀비가 회피거리 안이면 바로 도망 (건물 안 · 고립 중엔 안 함)
       const er = c.evadeR;                    // v406: 회피거리 = 내 덮침 거리(3.24칸)의 1.1배 = 3.56칸 ±10% (회피할 때마다 새로 뽑는다)
-      for (const z of nearIn(zCells, c.foot.x, c.foot.z, er, evBuf)) if (isZombie(z) && !(CH_TOUR && z === me) && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= er) { c.state = 'evade'; c.foe = null; c.tick = 0; c.stuckT = 0; return; }
+      for (const z of nearIn(zCells, c.foot.x, c.foot.z, er, evBuf)) if (isZombie(z) && !(CH_TOUR && z === me) && !CH_ET && z.space === c.space && Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z) <= er) { c.state = 'evade'; c.foe = null; c.tick = 0; c.stuckT = 0; return; }
     }
     const far = (z) => Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
     if (tick || !sees(c, c.foe)) {          // 틱마다 다시 뽑는다 (상대가 죽었거나 아직 없거나 안 보이면 바로)
@@ -3391,7 +3391,7 @@
     if (CHAPTER && a && (a === me || a.kind === 'ally') && (!a.splashing || a === me)) dmg *= a === me ? 1.15 * 0.9 * 0.8 * 1.1 * 1.03 : 1.15 * 1.1 * 1.07 * 1.03;   /* c243 → c244: 나·동료 3% 올림 */   /* c231: 나 10% 줄임 · c233: 20% 더 · c240: 나 10% 올림 (c242: 동료는 되돌림) */   /* c162: 동료 7% 더 */   /* c160: 동료만 10% 더 */   // c135: 나와 동료 공격력 15% 올림 (덩치의 범위 공격은 본 공격에서 이미 올랐다)
     if (CHAPTER && a && a.mini) dmg /= 3;   // c370: 작은 좀비 공격력 1/3
     if (CHAPTER && a && (a.kind === 'citizen' || a.kind === 'tank')) dmg *= 1.15 * 1.2 * 0.95 * 0.93 * 0.93;   /* c164: 7% 더 줄임 → 원래의 1.134배 */   /* c159: 7% 줄임 → 원래의 1.219배 */   /* c150: 장갑차도 군인과 같은 배율 */   /* c149: 전부 5% 줄임 → 사람·경찰·군인·저격수 1.311배 · 장갑차 1.0925배 */   /* c146: 사람·경찰·군인·저격수 20% 더 (합쳐서 1.38배) — 장갑차는 1.15배 그대로 */   // c143: 적(사람·경찰·군인·저격수·장갑차)의 공격력 15% 올림
-    if (((TEST_MAP && !CHAPTER) || CH_ET) && v === me) dmg = 0;   /* c463: 적 테스트도 */   // v396: 시험 맵 — 나는 무적 (c42: 챕터는 빼고)
+    if (((TEST_MAP && !CHAPTER) && v === me) || (CH_ET && (isZombie(v) || (a && isZombie(a))))) dmg = 0;   /* c465: 적 테스트 — 우리 편은 안 다치고, 우리 편 공격도 안 들어간다 */   /* c463: 적 테스트도 */   // v396: 시험 맵 — 나는 무적 (c42: 챕터는 빼고)
     if (CHAPTER && a && a.vig && isZombie(v) && v.mode !== 'bite' && !(chKbAbs(v) >= SNIPER_KD * 2 / 12 - 0.001)   /* c436 */) {   // c39: 자경단 몽둥이 — 밀림 1
       const T = ARMOR_KT * 2 / 12, D = SNIPER_KD * 2 / 12, V = D * 4 / (1 - Math.exp(-4 * T));   // c45: 1 → 2
       if (v.mode === 'pounce') stopPounce(v);
@@ -3910,6 +3910,8 @@
   function updateZombie(z, dt) {
     if (z.knockT > 0) { if (z.bombing) chBombIcon(z); knockStep(z, dt); return; }
     if (CHAPTER && z.bombing) { chBombStep(z, dt); return; }   // c272: 자폭 돌진 중
+    if (CH_ET) { z.pick = null; z.aim = null; z.engaging = null; if (z === me) { const on = pid !== null; steer(z.vel, wantV.set(on ? move.x * z.speed : 0, on ? move.y * z.speed : 0), ACCEL * 3 * dt); return; }   // c465: 적 테스트 — 공격 안 함
+      const dx = me.foot.x - z.foot.x, dz = me.foot.z - z.foot.z, d = Math.hypot(dx, dz) || 1, w = d > 2.4 ? Math.min(1, (d - 2.4) / 1.5) * z.speed : 0; steer(z.vel, wantV.set(dx / d * w, dz / d * w), ACCEL * dt); return; }   // 동료 — 나를 따라다니기만
     if (CH_TOUR && z === me) { const on = pid !== null; steer(z.vel, wantV.set(on ? move.x * z.speed : 0, on ? move.y * z.speed : 0), ACCEL * 3 * dt); z.pick = null; z.aim = null; z.engaging = null; return; }   // c407: 본 맵 테스트 — 나는 이동만 한다 (공격·덮치기·물기 없음)
     const commanding = z === me && cmdPid !== null;   // 명령키를 누르고 있는 동안 주인공은 가만히 선다 — 이동·사냥 안 함 (v107. 하던 습격·감염은 마저 한다)
     const touching = z === me && pid !== null && !commanding;   // 손가락을 대고 있다 (조종하는 나만)
@@ -8254,6 +8256,11 @@
       i++;
     }
     chNoMix = false;
+    for (let k = 0, n = zombies.filter((q) => q !== me).length; n < 10 && k < 3000; k++) {   // c465: 나를 따라다니는 동료 10
+      const a = Math.random() * Math.PI * 2, r = rand(1.2, 3.5), x = me.foot.x + Math.cos(a) * r, z = me.foot.z + Math.sin(a) * r;
+      if (spaceOf(x, z) || !freeSpot(x, z, null) || bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < 0.85)) continue;
+      const c = addCitizen(x, z, { x0: x - 1, z0: z - 1, x1: x + 1, z1: z + 1 }, ''); c.met = true; c.disc = true; makeZombie(c); n++;
+    }
   }
   function chETSet(k, n, br) {                 // 무기 k를 n단계로 (n > 6이면 갈림길 br의 빨간 별 n - 6)
     if (!chHas(k)) chGain(k);
@@ -8302,6 +8309,7 @@
   }
   function chETTick(dt) {
     if (!me || !isZombie(me)) return;
+    for (const z of zombies) if (!z.bombing) { z.hp = z.maxHp; z.stunT = 0; }   // c465: 동료도 무적
     me.hp = me.maxHp; me.stunT = 0; me.knockT = 0;   // 무적 · 아무 영향 없음
     if (!chETdone) { chETdone = true; chETSpawn(); chETSet('taser', 6, null); }
   }
