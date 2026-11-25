@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c458</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c459</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -7671,6 +7671,7 @@
       const left = Math.max(0, Math.ceil(chSfAt(chSf.n + 1) - chSf.T));
       s = chSf.n < 3 ? (chSf.n === 0 ? '특공대 도착까지 ' : '다음 특공대 출동까지 ') + left + '초' : '<span class="bosscd"><i>!</i>보스 출동까지 ' + left + '초<i>!</i></span>';   /* c126 */
     }
+    if (chSf.on && chSf.boss) s = '다음 특공대 출동까지 ' + Math.max(0, Math.ceil(chSfAt(chSf.n + 1) - chSf.T)) + '초';   // c459
     if (s !== chSf.shown) { chSf.shown = s; chSfEl.innerHTML = s; chSfEl.style.display = s ? 'block' : 'none'; }
   }
   function chSfReset() {
@@ -7724,6 +7725,7 @@
         else { chSf.boss = true; teamsSpawned++; chBanner.push('boss'); teamWait.push({ boss: true, t: 0, seg: teamSeg(), hold: true }); }
       }
     } else {
+      chSf.T += dt; while (chSf.T >= chSfAt(chSf.n + 1)) { chSf.n++; chQueueTeam(3); }   // c459: 보스 뒤 100초마다 (650 · 750 · …) — 보스전 중에도 · 끝난 뒤에도
       const T = chTanks.find((t) => !t.wreck) || chTanks[0];   // c454: 하나라도 살아 있으면 특공대 · 다 부서져야 끝
       if (T && !T.wreck && (chSf.waveT += dt) >= CH_SF_WAVE) { chSf.waveT -= CH_SF_WAVE; chSf.wn = (chSf.wn || 0) + 1; teamWait.push({ comp: [G_, G_]   /* c176: 군인만 */, t: 0, first: false, seg: teamSeg(), tk: true });   /* c168: 군인 2 · 세 번에 한 번 저격수 1 + 군인 1 */   /* c128: 1팀 (가장 약한 팀) */ }
       if (T && T.wreck && !chSf.won && (chSf.chk -= dt) <= 0) {
@@ -8223,8 +8225,8 @@
   function chQueueTeam(i) {
     teamsSpawned++; chBanner.push('sf');                            // '특공대 출동' 알림 한 번 — 알림이 사라지고 2초 뒤부터 나온다
     const seg = teamSeg();
-    if (i < 3) {   // c457: 3차례 · c250: 차례마다 [걸어서 'W' | 군인차 'C', 구성]
-      const P = [[['W', [S_, G_, G_, G_]]], [['W', [S_, G_, G_, G_]], ['C', [S_, G_, G_, G_]], ['C', [S_, G_, G_]]], [['W', [S_, G_, G_, G_]], ['C', [S_, G_, G_, G_]], ['C', [S_, S_, G_, G_, G_, G_]]]][i];   /* c457: 4번째를 2 · 3번째에 나눔 — 저1군3 · 저3군8 · 저4군10 */
+    if (i < 4) {   // c459: 3 = 보스 뒤 100초마다 오는 팀 · c457: 3차례 · c250: 차례마다 [걸어서 'W' | 군인차 'C', 구성]
+      const P = [[['W', [S_, G_, G_, G_]]], [['W', [S_, G_, G_, G_]], ['C', [S_, G_, G_, G_]], ['C', [S_, G_, G_]]], [['W', [S_, G_, G_, G_]], ['C', [S_, G_, G_, G_]], ['C', [S_, S_, G_, G_, G_, G_]]], [['W', [S_, G_, G_]], ['C', [S_, G_, G_]], ['C', [G_, G_]]]][i];   /* c459: 보스 뒤 반복 팀 저2군6 */   /* c457: 4번째를 2 · 3번째에 나눔 — 저1군3 · 저3군8 · 저4군10 */
       P.forEach(([m, c], k) => teamWait.push(m === 'W' ? { comp: c, t: k * 3, first: false, seg, hold: true } : { car: c, t: k * 3, seg: k ? chTeamSeg2(seg) : seg, hold: true }));
       return;
     }   /* c223: 2대 · 차마다 군인 1명 빼고 */
