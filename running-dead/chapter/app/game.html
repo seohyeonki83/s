@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c465</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c466</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -445,15 +445,16 @@
   // ── c120: 맵 선택 — 시작하면 먼저 고른다 (큰 맵: 구역 4개 · 작은 맵: 구역 하나). 고른 뒤에 나머지가 만들어진다 ──
   const CH_PICK = (window.__map || (() => { try { if (window.name === 'rd-map:m') { window.name = ''; return 'm'; } } catch (e) {} return null; })() || await new Promise((res) => {   /* c406: 본 맵 '다시 하기'로 다시 불러온 화면은 바로 본 맵 */
     const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:1000;background:#0e1014;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:system-ui,-apple-system,sans-serif;color:#fff;padding:24px;box-sizing:border-box';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:1000;background:#0e1014;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;font-family:system-ui,-apple-system,sans-serif;color:#fff;padding:16px 24px;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch'   /* c466: 간격 18 → 8 · 넘치면 스크롤 */;
     ov.innerHTML = '<div style="font-size:26px;font-weight:900;letter-spacing:1px">맵 선택</div>';
     for (const [k, name, sub] of [['t', '튜토리얼 1', '실험실 · 박스 안에서 시작'], ['b', '큰 맵', '구역 4개 · 다리와 산길 · 랜드마크 9'], ['m', '본 맵', '그룹 9개 · 단락 36개 · 시작할 때마다 새로'], ['w', '본 맵 테스트', '둘러보기 · 속도 3배 · 이동만 · 적이 나를 못 봄'], ['s', '작은 맵', '구역 1개 · 사방이 산 · 랜드마크 2'], ['p', '거점 맵', '경찰서 거점 · 세로 · 8자 순환도로 · 랜드마크 5'], ['k', '보스 테스트', '큰 맵 · 동료 70 · 무적 · 바로 보스 출동'], ['e', '적 테스트', '작은 맵 · 무적 · 적을 섞어 뿌림 · 무기 단계 고르기']]) {
       const bt = document.createElement('button');
-      bt.style.cssText = 'width:min(300px,80vw);padding:18px 16px;border-radius:16px;border:2px solid #3a4250;background:#1b2028;color:#fff;font:inherit;text-align:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent';
-      bt.innerHTML = '<div style="font-size:22px;font-weight:900">' + name + '</div><div style="margin-top:6px;font-size:13px;color:#9aa6b8">' + sub + '</div>';
+      bt.style.cssText = 'flex:none;width:min(300px,80vw);padding:9px 16px;border-radius:16px;border:2px solid #3a4250;background:#1b2028;color:#fff;font:inherit;text-align:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent';
+      bt.innerHTML = '<div style="font-size:19px;font-weight:900">' + name + '</div><div style="margin-top:3px;font-size:12px;color:#9aa6b8">' + sub + '</div>';
       bt.addEventListener('click', () => { ov.remove(); res(k); });
       ov.appendChild(bt);
     }
+    ov.firstChild.style.marginTop = 'auto'; ov.lastChild.style.marginBottom = 'auto';   // c466: 가운데 정렬하되 넘치면 위부터
     document.body.appendChild(ov);
   }));
   const CH_TOUR = CH_PICK === 'w', CH_MAIN = CH_PICK === 'm' || CH_TOUR, CH_BASE = CH_PICK === 'p',   /* c407: 본 맵 테스트 = 본 맵 + 둘러보기 */ CH_NOHUM = false, CH_ET = CH_PICK === 'e', CH_SMALL = CH_PICK === 's' || CH_BASE || CH_ET, CH_BT = CH_PICK === 'k',   /* c463: 적 테스트 = 작은 맵 위 */ CH_TUT = CH_PICK === 't';   /* c354: 거점 맵 (사람 수는 작은 맵 몫) */   // c289: 튜토리얼 1   // c166: 보스 테스트
@@ -2443,7 +2444,7 @@
       } else toward(c, s.x, s.y, Math.min(copSpeed(c), d * 3));   // 건물 안이면 문으로 들어간다
     } else if ((c.soldier || c.tkE) && masterOf(c)) {             // v410: 군인 — 주인 저격수 둘레 자기 자리로
       soldierFollow(c);
-    } else if (c.police && !c.station && !c.post && isZombie(me)) {     // 들를 사건 자리가 더 없는 경찰은 주인공(나)을 쫓는다 — 보이면 경계 → 싸움 (v89). 경찰서 경찰은 제자리 배회
+    } else if (c.police && !c.station && !c.post && isZombie(me) && !CH_ET) {   /* c466: 적 테스트는 안 쫓는다 */     // 들를 사건 자리가 더 없는 경찰은 주인공(나)을 쫓는다 — 보이면 경계 → 싸움 (v89). 경찰서 경찰은 제자리 배회
       toward(c, me.foot.x, me.foot.z, copSpeed(c));   // v459: 저격수는 동료 속도 — v410: 추적은 늘 경찰·군인 속도 (저격수도 타겟이 없을 땐 군인 속도)
     } else if (c.goal) {                                     // 일반: 영역 안 한 곳으로 걷기
       const d = Math.hypot(c.goal.x - c.foot.x, c.goal.y - c.foot.z);
