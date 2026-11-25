@@ -1414,6 +1414,8 @@ from c431_patch import C431_R   # c431: 테이저건 갈림길
 R += C431_R
 from c432_patch import C432_R   # c432: 자폭 지정 동료
 R += C432_R
+from c433_patch import C433_R   # c433: 드론
+R += C433_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

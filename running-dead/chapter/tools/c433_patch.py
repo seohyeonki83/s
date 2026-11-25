@@ -1,0 +1,2 @@
+# c433: 드론 체력 9 · 주기 144초 · 다 죽어야 다음 주기
+C433_R = [('const CH_DRONE_HP = 30,', 'const CH_DRONE_HP = 9,   /* c433: 30 → 9 */'), ('CH_DRONE_EVERY = 120,   /* c423: 80 → 120초 (1.5배) */', 'CH_DRONE_EVERY = 144,   /* c433: 120 → 144초 (1.2배) */   /* c423: 80 → 120초 (1.5배) */'), ('    if (chDroneOn && (chDroneT += dt) >= CH_DRONE_EVERY) {', '    if (chDroneOn && !chDrones.some((d) => !d.dead) && (chDroneT += dt) >= CH_DRONE_EVERY) {   // c433: 살아 있는 드론이 있으면 주기가 안 흐른다 (다 죽어야 다음 주기 시작)')]
