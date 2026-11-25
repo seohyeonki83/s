@@ -1432,6 +1432,8 @@ from c440_patch import C440_R   # c440: 갈림길 카드 색
 R += C440_R
 from c441_patch import C441_R   # c441: 잔류제 변이 시간
 R += C441_R
+from c442_patch import C442_R   # c442: c441 되돌림
+R += C442_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
