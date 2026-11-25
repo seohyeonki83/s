@@ -1,0 +1,94 @@
+import pathlib
+s = pathlib.Path('c462.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:60], s.count(a)); R.append((a, b))
+rep("['k', '적 테스트', '큰 맵 · 동료 70 · 무적 · 바로 보스 출동']",
+    "['k', '보스 테스트', '큰 맵 · 동료 70 · 무적 · 바로 보스 출동'], ['e', '적 테스트', '작은 맵 · 무적 · 적을 섞어 뿌림 · 무기 단계 고르기']")   # c463
+rep("CH_SMALL = CH_PICK === 's' || CH_BASE, CH_BT = CH_PICK === 'k',",
+    "CH_ET = CH_PICK === 'e', CH_SMALL = CH_PICK === 's' || CH_BASE || CH_ET, CH_BT = CH_PICK === 'k',   /* c463: 적 테스트 = 작은 맵 위 */")
+rep("CH_SMALL ? '작은 맵' : CH_BT ? '적 테스트'", "CH_ET ? '적 테스트' : CH_SMALL ? '작은 맵' : CH_BT ? '보스 테스트'")
+rep("if ((CH_BT || CH_TOUR) && z === me) { me.hp = me.maxHp; return; }", "if ((CH_BT || CH_TOUR || CH_ET) && z === me) { me.hp = me.maxHp; return; }   /* c463 */")
+rep("    const kl = Math.hypot(kx, kz) || 1;\n    if (z === me && owned.absorb) {",
+    "    if (CH_ET && z === me) return false;   // c463: 적 테스트 — 나는 넉백 안 당함\n    const kl = Math.hypot(kx, kz) || 1;\n    if (z === me && owned.absorb) {")
+rep("    let n = z === me && owned.vest ? 1 + lv('vest') : 0;",
+    "    if (CH_ET && z === me) return 1e9;   // c463\n    let n = z === me && owned.vest ? 1 + lv('vest') : 0;")
+rep("    if (xp >= needXp(level + pendingLv)) {", "    if (!CH_ET && xp >= needXp(level + pendingLv)) {   /* c463: 적 테스트는 레벨업 없음 */")
+rep("if (CHAPTER && !CH_TUT) chDroneTick(dt);", "if (CHAPTER && !CH_TUT && !CH_ET) chDroneTick(dt);")
+rep("    if (CHAPTER) chSfTick(dt);   // c122", "    if (CHAPTER && !CH_ET) chSfTick(dt);   // c463 · c122")
+rep("const chToolCap = () => ", "const chToolCap = () => CH_ET ? SLOT_A.length : ")
+rep("    if (CHAPTER && CH_BT) chBossTest(dt);   // c166", "    if (CHAPTER && CH_BT) chBossTest(dt);   // c166\n    if (CHAPTER && CH_ET) chETTick(dt);   // c463")
+rep("  function chBossTest(dt) {                    // c166: 보스 테스트 맵", r"""  // ── c463: 적 테스트 맵 — 무적 · 넉백 없음 · 적을 섞어 뿌림 · 위쪽 무기 5종 단계 고르기 ──
+  let chETdone = false, chETbar = null;
+  const CH_ET_W = ['taser', 'bomb', 'cash', 'mutate', 'awaken'];
+  function chETSpawn() {
+    for (const c of bodies.slice()) if (c.kind === 'citizen') chBTgone(c);
+    const Z = CH_MAP.zones[0], T = ['', 'guard', 'attacker', 'red', 'police', 'sg', 'sniper', 'soldier', 'robot'];
+    chNoMix = true;
+    for (const t of T) for (let i = 0, k = 0; i < 7 && k < 3000; k++) {
+      const x = rand(Z[0] + 2, Z[2] - 2), z = rand(Z[1] + 2, Z[3] - 2);
+      if (Math.hypot(x - me.foot.x, z - me.foot.z) < 6 || spaceOf(x, z) || !freeSpot(x, z, null) || bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < 0.9)) continue;
+      const ty = t === 'red' ? 'attacker' : t === 'sg' ? 'police' : t === 'robot' ? 'soldier' : t;
+      const c = addCitizen(x, z, { x0: x - 4, z0: z - 4, x1: x + 4, z1: z + 4 }, ty); c.met = true; c.disc = true;
+      if (t === 'red') chVig(c); else if (t === 'sg') chMakeSg(c); else if (t === 'robot') chMakeRobot(c);
+      i++;
+    }
+    chNoMix = false;
+  }
+  function chETSet(k, n, br) {                 // 무기 k를 n단계로 (n > 6이면 갈림길 br의 빨간 별 n - 6)
+    if (!chHas(k)) chGain(k);
+    ilv[k] = n; if (n > 6 && br) chBr[k] = br; else delete chBr[k];
+    chBrLook(k); chItemChanged(k);
+    const it = items.find((x) => x.kind === k); if (it) { it.ammo = itemMax(k); it.t = 0; it.off = false; if (k === 'awaken') it.acc = chAccMax(); }
+    refreshItems(); chETBar();
+  }
+  function chETLabel(k) {
+    if (!chHas(k)) return '없음';
+    const n = lv(k); if (n <= 6) return '★' + n;
+    const B = CH_BRANCH[k] && CH_BRANCH[k].find((b) => b.id === chBr[k]);
+    return (B ? B.name.slice(0, 2) : '') + ' 빨★' + (n - 6);
+  }
+  function chETBar() {
+    if (!chETbar) {
+      const st = document.createElement('style');
+      st.textContent = '#minimap,#stars,#lvbox,#gene,#sfcd,#goal,#legend,#danger,#statBtn,#note{display:none!important}' +
+        '#etbar{position:absolute;left:0;right:0;top:calc(8px + env(safe-area-inset-top, 0px));z-index:30;display:flex;justify-content:center;gap:6px;padding:0 8px;pointer-events:none}' +
+        '#etbar .b{pointer-events:auto;width:56px;padding:5px 0 4px;border-radius:12px;background:rgba(20,22,30,0.85);border:2px solid #3a4250;color:#fff;text-align:center;font:800 10px/1.15 system-ui,sans-serif;touch-action:manipulation}' +
+        '#etbar .b svg{width:28px;height:28px;display:block;margin:0 auto 3px}' +
+        '#etpick{position:absolute;inset:0;z-index:40;background:rgba(0,0,0,0.78);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font:800 14px system-ui,sans-serif;padding:16px}' +
+        '#etpick .row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center}#etpick .lb{width:100%;text-align:center;font-size:13px;margin-top:6px}' +
+        '#etpick .n{min-width:40px;padding:10px 6px;border-radius:10px;border:2px solid #fff;background:#222;color:#fff;font:900 14px system-ui,sans-serif;text-align:center}#etpick .n.on{background:#fff;color:#000}';
+      document.head.appendChild(st);
+      chETbar = document.createElement('div'); chETbar.id = 'etbar'; stage.appendChild(chETbar);
+      chETbar.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); const b = e.target.closest('.b'); if (!b) return; if (b.dataset.k === '__re') chETSpawn(); else chETPick(b.dataset.k); });
+    }
+    chETbar.innerHTML = CH_ET_W.map((k) => `<div class="b" data-k="${k}" style="border-color:${ITEM[k].col || '#3a4250'}">${ITEM[k].icon}${chETLabel(k)}</div>`).join('') + `<div class="b" data-k="__re">적<br>다시</div>`;
+  }
+  function chETPick(k) {
+    paused = true; acqOpen = true; stopInput();
+    const ov = document.createElement('div'); ov.id = 'etpick';
+    const cur = chHas(k) ? lv(k) : -1, btn = (n, br, col, tx) => `<div class="n${cur === n && (n <= 6 || chBr[k] === br) ? ' on' : ''}" data-n="${n}" data-b="${br || ''}" style="${col ? 'border-color:' + col : ''}">${tx}</div>`;
+    let h = `<div style="font-size:20px">${ITEM[k].name}</div><div class="lb">흰 별</div><div class="row">` + [0, 1, 2, 3, 4, 5, 6].map((n) => btn(n, '', '', '★' + n)).join('') + '</div>';
+    for (const B of CH_BRANCH[k] || []) h += `<div class="lb" style="color:${B.col || '#fff'}">${B.name}</div><div class="row">` + [1, 2, 3, 4, 5, 6].map((r) => btn(6 + r, B.id, B.col, '빨★' + r)).join('') + '</div>';
+    h += `<div class="row" style="margin-top:12px"><div class="n" data-x="1" style="min-width:100px">닫기</div></div>`;
+    ov.innerHTML = h; stage.appendChild(ov);
+    const block = (e) => { e.stopPropagation(); e.preventDefault(); };
+    ov.addEventListener('pointermove', block); ov.addEventListener('pointerup', block);
+    ov.addEventListener('pointerdown', (e) => {
+      block(e); const b = e.target.closest('.n'); if (!b) return;
+      if (!b.dataset.x) chETSet(k, +b.dataset.n, b.dataset.b || null);
+      ov.remove(); acqOpen = false; paused = false; last = 0;
+    });
+  }
+  function chETTick(dt) {
+    if (!me || !isZombie(me)) return;
+    me.hp = me.maxHp; me.stunT = 0; me.knockT = 0;   // 무적 · 아무 영향 없음
+    if (!chETdone) { chETdone = true; chETSpawn(); chETSet('taser', 6, null); }
+  }
+  function chBossTest(dt) {                    // c166: 보스 테스트 맵""")
+pathlib.Path('c463_patch.py').write_text('C463_R = ' + repr(R) + '\n')
+s2 = s
+rep("chBTdone = false; chSf.wn = 0;", "chBTdone = false; chETdone = false; chSf.wn = 0;")
+pathlib.Path('c463_patch.py').write_text('C463_R = ' + repr(R) + '\n')
+rep("    if (TEST_MAP && !CHAPTER && v === me) dmg = 0;", "    if (((TEST_MAP && !CHAPTER) || CH_ET) && v === me) dmg = 0;   /* c463: 적 테스트도 */")
+pathlib.Path('c463_patch.py').write_text('C463_R = ' + repr(R) + '\n')
