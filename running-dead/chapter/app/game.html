@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c440</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c441</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5945,7 +5945,7 @@
     return out;
   }
   const MUT_SPEED = 1.25 * 1.15;   /* v347: 15% 더 */                     // v304: 변이 좀비 이동 속도 배율
-  const MUT_T = () => 6 + 3 * chLvB('mutate');   /* c430 */   /* c21: 변이 10초, 강화마다 +3초 (주사 개수 +1은 테스트맵 그대로) */                            // 변이 유지 시간 — v299: 기본 20 → 23초, 도구 다루기마다 +2 → +4초
+  const MUT_T = () => (6 + 3 * chLvB('mutate')) * (CHAPTER ? chLingK() : 1);   /* c441: 잔류제 */   /* c430 */   /* c21: 변이 10초, 강화마다 +3초 (주사 개수 +1은 테스트맵 그대로) */                            // 변이 유지 시간 — v299: 기본 20 → 23초, 도구 다루기마다 +2 → +4초
   const itemMax = (k) => k === 'mutate' ? CH_WV('mutN', lv('mutate')) : CHAPTER && k === 'taser' ? 3   /* c420: 장탄 3 고정 */ : ITEM[k].max;   // 변이 주사 장탄 +1씩
   const bookCut = () => owned.book ? (CHAPTER ? 0.05 + 0.09 * lv('book') : 0.07 * (1 + lv('book'))) : 0;   /* c373: 5% · 14 · 23 · 32 · 41 · 50% */   /* c198: 7%씩 */   /* c21: 백과사전 5%, 강화마다 +5%p (30%까지) */   /* v582: 7%, 강화마다 남은 쿨타임에서 7%씩 */   // v286: 백과사전 — 사용 도구 쿨타임 7% 줄임, 도구 다루기마다 3%p씩 더
   const itemReload = (k) => (k === 'bomb' ? 40 * 1.15 * 1.1 * 0.75   /* c279: 25% 줄임 (상수끼리라 미리 계산됨) */   /* c21: 자폭 쿨타임은 고정 — 강화는 범위로 간다 */ /* v559: +10% 더 */ : ITEM[k].reload * (k === 'taser' ? 1.1 * (CHAPTER ? 1.3 : 1) : 1) * (CHAPTER && k === 'mutate' ? 1.15 : 1))   /* c371: 변이 주사 쿨타임 15% 늘림 */   /* c251: 테이저 쿨타임 30% 늘림 */   /* v556: 자폭 +15% · 테이저 +10% */ * (1 - bookCut());   // 자폭 쿨타임 −3초씩 → 그 위에 백과사전
@@ -6560,7 +6560,7 @@
     parasite: '인간을 감염시킬 때 20% 확률로 작은 좀비 하나가 더 만들어집니다. 능력치는 3분의 1입니다. 강화하면 확률이 높아집니다.',   /* c370 */
     teeth: '나와 동료들이 인간을 덮칠 때 감염시키는 시간이 줄어들고, 물어뜯으며 회복하는 체력이 늘어납니다. 강화하면 더 빨라지고 더 많이 회복합니다.',
     acid: '동료가 죽는 자리에 산성피가 터져 그 안의 적에게 바로 3의 피해(강화하면 10까지)를 주고, 계속 피해를 줍니다. 확률로 터지고, 겹쳐도 피해는 쌓이지 않습니다. 강화하면 터질 확률과 터질 때 피해가 오릅니다. 산성은 3초 동안 남습니다.',
-    linger: '적이 입은 부정적 효과가 더 오래 갑니다. 감전, 산성(산성 자폭 스위치 · 산성 폭발), 유혹 시간이 늘어납니다. 강화하면 더 오래 갑니다.',   /* c420 */
+    linger: '적이 입은 부정적 효과가 더 오래 갑니다. 감전, 산성(산성 자폭 스위치 · 산성 폭발), 유혹 시간과 변이 주사의 변이 시간이 늘어납니다. 강화하면 더 오래 갑니다.',   /* c420 */
     acidp: '산성 폭발과 산성 자폭 스위치의 산성 피해가 늘어납니다. 산성 무기나 장비가 없으면 효과가 없습니다. 강화하면 더 늘어납니다.',
     catalyst: '변이 좀비의 공격력과 최대 체력이 늘어납니다. 변이한 동료, 변이한 나 모두에게 적용됩니다. 강화하면 더 늘어납니다.',   /* c420 */
     blood: '나의 최대 체력이 늘어나고, 늘어난 만큼 체력도 함께 찹니다. 강화할 때마다 더 늘어납니다.',
@@ -6719,7 +6719,7 @@
     parasite: (n) => `확률 ${20 + 5 * n}%`,   /* c370 */
     teeth: (n) => `감염 속도 ${Math.round(100 + 80 / 6 * (1 + n))}% · 체력 회복량 +${5 * (1 + n)}%`,   /* c224 */
     acidp: (n) => `산성 도트 +${1 + n} (1초마다)`,   /* c259 */
-    linger: (n) => `감전·산성·유혹 시간 +${5 * (1 + n)}%`,   /* c420 */
+    linger: (n) => `감전·산성·유혹 · 변이 시간 +${5 * (1 + n)}%`,   /* c441 */   /* c420 */
     acid: (n) => `터질 확률 ${30 + 10 * n}% · 터질 때 ${Math.round(3 + 7 * n / 5)} · 3초 · 1초마다 1 · 범위 = 근접 거리 x1.2`,   /* c280 */   /* c261: 겹치지 않음 */
     revive: (n) => `체력 가득으로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,
     catalyst: (n) => `변이 좀비 공격력·최대 체력 +${5 * (1 + n)}%`,   /* c420 */
