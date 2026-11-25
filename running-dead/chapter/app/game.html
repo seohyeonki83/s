@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c444</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c445</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -691,7 +691,7 @@
   const BODY = 0.4 * 2 / 3 * 1.5;   // 부딪힘 반지름 (원보다 작게 — 붙어 서면 겹쳐 보인다). v51에 1/3 줄임, v88에 1.5배 (0.4). 나도 같다 (미는 힘 MY_FORCE는 그대로)
   const WEIGHT = 3;       // 무게 — 밀고 들어간 쪽은 막히고, 밀린 쪽은 1일 때(예전)의 1/WEIGHT만큼만 밀려난다
   const MY_BODY = BODY;       // 내 부딪힘 반지름 (v52에 절반 → v61에 다른 몸과 같게 되돌림)
-  const CH_MY_FORCE = 7;   // c376: 챕터 — 평소 내 미는 힘 (히드라 동료·유혹당한 사람은 MY_FORCE 기준 그대로)
+  const CH_MY_FORCE = 5;   /* c445: 7 → 5 */   // c376: 챕터 — 평소 내 미는 힘 (히드라 동료·유혹당한 사람은 MY_FORCE 기준 그대로)
   const MY_FORCE = 8;         // 내 미는 힘 = 다른 몸의 8배 (v52 2배 → v61 2배 더 → v90 2배 더) — 내가 밀면 상대가 그만큼 더 비켜나고, 남이 밀면 나는 그만큼 덜 밀린다
   const BITE_GAP = RADIUS;   // 물 때 두 원 중심 거리 = 반지름 → 반쯤 겹친다
   const SPLIT = 1.5;      // 물기가 끝나고 둘이 떨어지는 속도 (유닛/초)
@@ -5994,7 +5994,7 @@
   function chCatT() { return CHAPTER && owned.catalyst ? (1 + lv('catalyst')) / 6 : 0; }   // c373: 촉매제 진행 (획득 1/6 … 다 강화 6/6)
   function chMB(z) { if (!CHAPTER || !z) return null; const k = z === me ? 'awaken' : 'mutate', id = chBr[k]; return id ? { id, r: Math.max(0, lv(k) - 6) } : null; }   // c430: 그 좀비의 갈림길 (나 = 각성 주사 · 동료 = 변이 주사)
   const chMonster = (z) => { const B = chMB(z); return !!B && B.id === 'monster'; };
-  function chArmF(z) { const B = chMB(z); return 10 + (B && B.id === 'monster' ? 4 * B.r / 6 : 0); }   // c430: 덩치 미는 힘 (괴물 10 → 14)
+  function chArmF(z) { const B = chMB(z); return 5 + (B && B.id === 'monster' ? 4 * B.r / 6 : 0); }   /* c445: 기본 5 (괴물 ★6 = 9) */   // c430: 덩치 미는 힘 (괴물 10 → 14)
   function chHydK(z) { const B = chMB(z); return B && B.id === 'monster' ? 1 + B.r / 6 : 1; }   // c420: 히드라 사거리 1배 고정 (촉매제와 상관없다)   // c373: 히드라 사거리 — 원래의 2/3, 촉매제 다 올리면 1.3배
   function chSplK(z) { const B = chMB(z); return B && B.id === 'monster' ? 0.5 + B.r / 6 : 0.5; }   // c430: 덩치 범위 공격 거리 — 0.5배 (괴물이면 1.5배까지)   // c420: 덩치 범위 공격 크기 1배 고정   // c378: 덩치 범위 공격 크기 — 촉매제 없으면 0.8배, 다 강화하면 1.5배
   function chArmK() { return 10 / 11; }   // c420: 덩치 미는 힘 10 고정 (11 기준)   /* c377: 다 강화하면 미는 힘 13 (11 기준) */   // c373: 덩치 미는 힘 — 원래의 2/3, 촉매제 다 올리면 1.2배
@@ -6660,11 +6660,11 @@
       { id: 'bomb', nm: '전기폭탄', col: '#fff27a', name: '전기폭탄', desc: '나를 중심으로 전기 파장이 퍼져, 범위 안의 모든 적(드론 · 보스 포함)을 3.5초 동안 감전시킵니다.', line: (r) => `범위 ${(SIGHT * r / 6).toFixed(1)}칸 · 감전 3.5초`, short: ['범위', (r) => `${(SIGHT * r / 6).toFixed(1)}칸`] },
     ],
     mutate: [   // c430: 동료 변이 좀비
-      { id: 'monster', icon: IC.mutMon, col: '#ff3b3b', name: '괴물 좀비', desc: '변이한 동료가 괴물이 됩니다. 히드라는 사거리가, 덩치는 미는 힘과 범위 공격이 커지고 범위 공격 피해가 줄지 않습니다. 덩치는 차와 바리케이트도 밀어냅니다.', line: (r) => `히드라 사거리 ×${(1 + r / 6).toFixed(2)} · 덩치 미는 힘 ${(10 + 4 * r / 6).toFixed(1)} · 범위 ×${(0.5 + r / 6).toFixed(2)}`, short: ['괴물', (r) => `×${(1 + r / 6).toFixed(1)}`] },
+      { id: 'monster', icon: IC.mutMon, col: '#ff3b3b', name: '괴물 좀비', desc: '변이한 동료가 괴물이 됩니다. 히드라는 사거리가, 덩치는 미는 힘과 범위 공격이 커지고 범위 공격 피해가 줄지 않습니다. 덩치는 차와 바리케이트도 밀어냅니다.', line: (r) => `히드라 사거리 ×${(1 + r / 6).toFixed(2)} · 덩치 미는 힘 ${(5 + 4 * r / 6).toFixed(1)} · 범위 ×${(0.5 + r / 6).toFixed(2)}`, short: ['괴물', (r) => `×${(1 + r / 6).toFixed(1)}`] },
       { id: 'absorb', icon: IC.mutAbs, col: '#3ad6ff', name: '흡수 좀비', desc: '변이한 동료가 내가 마지막으로 쓴 무기(테이저건 · 산성 자폭)의 효과를 흡수해, 공격에 맞은 적에게 겁니다.', line: (r) => `흡수한 효과 지속 시간 ${Math.round(100 * r / 6)}%`, short: ['흡수', (r) => `${Math.round(100 * r / 6)}%`] },
     ],
     awaken: [   // c430: 각성한 나
-      { id: 'monster', icon: IC.awkMon, col: '#ff3b3b', name: '괴물 좀비', desc: '각성한 내가 괴물이 됩니다. 히드라는 사거리가, 덩치는 미는 힘과 범위 공격이 커지고 범위 공격 피해가 줄지 않습니다. 덩치는 차와 바리케이트도 밀어냅니다.', line: (r) => `히드라 사거리 ×${(1 + r / 6).toFixed(2)} · 덩치 미는 힘 ${(10 + 4 * r / 6).toFixed(1)} · 범위 ×${(0.5 + r / 6).toFixed(2)}`, short: ['괴물', (r) => `×${(1 + r / 6).toFixed(1)}`] },
+      { id: 'monster', icon: IC.awkMon, col: '#ff3b3b', name: '괴물 좀비', desc: '각성한 내가 괴물이 됩니다. 히드라는 사거리가, 덩치는 미는 힘과 범위 공격이 커지고 범위 공격 피해가 줄지 않습니다. 덩치는 차와 바리케이트도 밀어냅니다.', line: (r) => `히드라 사거리 ×${(1 + r / 6).toFixed(2)} · 덩치 미는 힘 ${(5 + 4 * r / 6).toFixed(1)} · 범위 ×${(0.5 + r / 6).toFixed(2)}`, short: ['괴물', (r) => `×${(1 + r / 6).toFixed(1)}`] },
       { id: 'absorb', icon: IC.awkAbs, col: '#3ad6ff', name: '흡수 좀비', desc: '각성한 내가 마지막으로 쓴 무기(테이저건 · 산성 자폭)의 효과를 흡수해, 공격에 맞은 적에게 겁니다.', line: (r) => `흡수한 효과 지속 시간 ${Math.round(100 * r / 6)}%`, short: ['흡수', (r) => `${Math.round(100 * r / 6)}%`] },
     ],
   };

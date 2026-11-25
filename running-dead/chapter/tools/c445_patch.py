@@ -1,0 +1,2 @@
+# c445: 미는 힘 — 나 5 · 덩치 5
+C445_R = [('const CH_MY_FORCE = 7;', 'const CH_MY_FORCE = 5;   /* c445: 7 → 5 */'), ("function chArmF(z) { const B = chMB(z); return 10 + (B && B.id === 'monster' ? 4 * B.r / 6 : 0); }", "function chArmF(z) { const B = chMB(z); return 5 + (B && B.id === 'monster' ? 4 * B.r / 6 : 0); }   /* c445: 기본 5 (괴물 ★6 = 9) */"), ('(10 + 4 * r / 6).toFixed(1)', '(5 + 4 * r / 6).toFixed(1)', 2)]
