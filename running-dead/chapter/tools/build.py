@@ -1442,6 +1442,8 @@ from c445_patch import C445_R   # c445: 미는 힘 5
 R += C445_R
 from c446_patch import C446_R   # c446: 내 미는 힘 4
 R += C446_R
+from c447_patch import C447_R   # c447: 미는 힘
+R += C447_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

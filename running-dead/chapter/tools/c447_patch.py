@@ -1,0 +1,2 @@
+# c447: 미는 힘 — 나 5 · 덩치 7 → 14
+C447_R = [('const CH_MY_FORCE = 4;   /* c446: 5 → 4 (덩치가 되면 5) */', 'const CH_MY_FORCE = 5;   /* c447: 4 → 5 (덩치가 되면 7) */   /* c446: 5 → 4 (덩치가 되면 5) */'), ("function chArmF(z) { const B = chMB(z); return 5 + (B && B.id === 'monster' ? 4 * B.r / 6 : 0); }", "function chArmF(z) { const B = chMB(z); return 7 + (B && B.id === 'monster' ? 7 * B.r / 6 : 0); }   /* c447: 기본 7 (괴물 ★6 = 14) */"), ('(5 + 4 * r / 6).toFixed(1)', '(7 + 7 * r / 6).toFixed(1)', 2)]
