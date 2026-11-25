@@ -1456,6 +1456,8 @@ from c452_patch import C452_R   # c452: 감염 시간
 R += C452_R
 from c453_patch import C453_R   # c453
 R += C453_R
+from c454_patch import C454_R   # c454: 불도저 2대
+R += C454_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])

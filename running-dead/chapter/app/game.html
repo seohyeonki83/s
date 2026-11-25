@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c453</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c454</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3039,7 +3039,7 @@
       }
       if (best <= 0) continue;
       if (A.state === 'parked' || B.state === 'parked') obsDirty = true;
-      { const wA = A.tank ? 0 : B.tank ? 1 : 0.5; A.x -= nx * best * wA; A.z -= nz * best * wA; B.x += nx * best * (1 - wA); B.z += nz * best * (1 - wA); } A.pushT = B.pushT = clock; if (A.tank || B.tank) chTankCar(A.tank ? B : A);   /* c122: 장갑차는 안 밀린다 · 닿은 차는 부서진다 */
+      { const wA = A.tank ? 0 : B.tank ? 1 : 0.5; A.x -= nx * best * wA; A.z -= nz * best * wA; B.x += nx * best * (1 - wA); B.z += nz * best * (1 - wA); } A.pushT = B.pushT = clock; if ((A.tank || B.tank) && !(A.tank && B.tank)) chTankCar(A.tank ? B : A, A.tank ? A : B);   /* c454: 보스끼리는 안 부순다 */   /* c122: 장갑차는 안 밀린다 · 닿은 차는 부서진다 */
       const va = A.vx * nx + A.vz * nz, vb = B.vx * nx + B.vz * nz;
       if (va > vb) {                           // 서로 다가오던 속도 → 둘이 똑같이 나눈다 (무게 같음)
         const m = (va + vb) / 2;
@@ -5170,7 +5170,7 @@
     }
     if (CHAPTER) chSfTick(dt);   // c122
     while (teamQueue.length) queueSquads(teamQueue.shift());
-    for (let i = teamWait.length - 1; i >= 0; i--) if (!teamWait[i].hold && (teamWait[i].t -= dt) <= 0) { const w = teamWait.splice(i, 1)[0]; if (w.boss) chBossSpawn(w.seg); else if (w.car) { const p = teamSpot(w.seg); addCar(p.x, p.z, Math.atan2(me.foot.z - p.z, me.foot.x - p.x), null, 0, w.car); if (w.tk) cars[cars.length - 1].tkWave = true; } else { chTkMark = !!w.tk; spawnTeam(w.comp, w.first, w.seg); chTkMark = false; } }   // v444: 분대 10초 간격   // v410: 군인팀 출동 (이번 걸음 좀비 목록을 만든 뒤)
+    for (let i = teamWait.length - 1; i >= 0; i--) if (!teamWait[i].hold && (teamWait[i].t -= dt) <= 0) { const w = teamWait.splice(i, 1)[0]; if (w.boss) { chBossSpawn(w.seg); chBossSpawn(w.seg); }   /* c454: 불도저 2대 */ else if (w.car) { const p = teamSpot(w.seg); addCar(p.x, p.z, Math.atan2(me.foot.z - p.z, me.foot.x - p.x), null, 0, w.car); if (w.tk) cars[cars.length - 1].tkWave = true; } else { chTkMark = !!w.tk; spawnTeam(w.comp, w.first, w.seg); chTkMark = false; } }   // v444: 분대 10초 간격   // v410: 군인팀 출동 (이번 걸음 좀비 목록을 만든 뒤)
     crowd.clear();                            // 시민마다 지금 노리는 좀비 수 (v148) — 타겟을 새로 뽑을 때마다 바로 고쳐서, 같은 순간에 뽑는 좀비끼리도 겹치지 않는다
     for (const z of zombies) if (z.pick && z.pick.kind === 'citizen' && z.pick.hp > 0) crowd.set(z.pick, (crowd.get(z.pick) || 0) + 1);
     objFrame++; objCrowd.clear();             // 경찰차에 붙은 좀비 수 (v243) — 지난 걸음에 때리던 좀비
@@ -5563,7 +5563,7 @@
         if (d > me.sense || fireBlocked(me.foot.x, me.foot.z, c.foot.x, c.foot.z)) continue;   // 사거리 = 내 시야 원 전체 (인지거리 = 시야 반지름)   // v297: 공격선이 벽에 막히면 안 쏜다 (열린 문 틈으로는 OK)
         cand.push({ c, k: CHAPTER && c.boss ? 99 : DANGER(c), d });   /* c120: 변이 좀비가 될 사람(분홍)이 맨 먼저 — 저격수보다 위 */
       }
-      if (CHAPTER && chTank && !chTank.wreck && !(chTank.stunT > 0)) {   /* c194: 건물 안이어도 (공격선만 본다) */ const T = chTank, d = Math.max(0, Math.hypot(T.x - me.foot.x, T.z - me.foot.z) - CAR_L * CH_TK_KL / 2);   /* c195: 몸 둘레부터 */ if (d <= me.sense && !fireBlocked(me.foot.x, me.foot.z, T.x, T.z)) cand.push({ c: T, k: 98, d }); }   // c191: 보스도 감전
+      if (CHAPTER) for (const T of chTanks) if (!T.wreck && !(T.stunT > 0)) {   /* c454 */   /* c194: 건물 안이어도 (공격선만 본다) */ const d = Math.max(0, Math.hypot(T.x - me.foot.x, T.z - me.foot.z) - CAR_L * CH_TK_KL / 2);   /* c195: 몸 둘레부터 */ if (d <= me.sense && !fireBlocked(me.foot.x, me.foot.z, T.x, T.z)) cand.push({ c: T, k: 98, d }); }   // c191: 보스도 감전
       if (CHAPTER) for (const d of chDrones) { if (d.dead || d.stunT > 0) continue; const q = Math.hypot(d.x - me.foot.x, d.z - me.foot.z); if (q <= me.sense && !fireBlocked(me.foot.x, me.foot.z, d.x, d.z)) cand.push({ c: d, k: 999, d: q }); }   // c374 · c379: 드론은 무조건 1순위 (변이될 사람보다도 먼저)
       cand.sort((a, b) => b.k - a.k || a.d - b.d);
       const hit = cand.slice(0, CH_WV('taserN', lv('taser')));   /* c21: 대상만 늘어난다 (1 → 6명) */  // 한 번에 맞히는 수 = 1 + 똑똑한 두뇌 (v201)
@@ -5626,7 +5626,7 @@
     const r = chBrR('cash', 'gold'); if (!r) return; const T0 = CH_WV('cashT', 6) * chLingK();
     for (const d of chDrones) { if (d.dead) continue; const k = chNearFresh(fresh, d.x, d.z, SIGHT * cashK() + 4, null); if (!k) continue; d.lureT = T0 * (0.2 + 0.05 * (r - 1)); d.lureK = k; d.tg = null; }
     for (const c of bodies) { if (!c.robot || c.turret || c.state === 'held' || c.state === 'lured') continue; const k = chNearFresh(fresh, c.foot.x, c.foot.z, SIGHT * cashK() + 4, c.space); if (!k) continue; c.robotLure = T0 * (0.2 + 0.05 * (r - 1)); for (const q of fresh) q.who.add(c); enterLured(c); }   // c436: 로봇도 금에 홀린다 (드론과 같은 비율)
-    const tk = chTank; if (tk && !tk.wreck) { const k = chNearFresh(fresh, tk.x, tk.z, SIGHT * cashK() + 4, null); if (k) { tk.lureT = T0 * 0.05 * r; tk.lureX = k.x; tk.lureZ = k.z; } }
+    for (const tk of chTanks) if (!tk.wreck) { const k = chNearFresh(fresh, tk.x, tk.z, SIGHT * cashK() + 4, null);   /* c454 */ if (k) { tk.lureT = T0 * 0.05 * r; tk.lureX = k.x; tk.lureZ = k.z; } }
   }
   const chDiaBuf = [];
   function chDiaFight(c, dt) {                 // c427: 다이아몬드 — 공격할 수 있는 인간은 유혹 시간 동안 가장 가까운 인간을 친다 (근접 = 다가가 때림 · 원거리 = 쏘면서 다이아몬드로)
@@ -6124,22 +6124,22 @@
   function chBombPick(al, R) {               // c435: 적을 먼저 고른다 — 내 시야 안 적마다 그 자리에서 터졌을 때 점수 합 (드론 · 보스 = 저격수의 2배 80점), 가장 높은 적 (같으면 나와 가까운 적) → 그 적과 가장 가까운 내 시야 안 동료가 달려든다
     const cand = al.filter((z) => Math.hypot(z.foot.x - me.foot.x, z.foot.z - me.foot.z) <= me.sense);
     if (!cand.length) return false;
-    const tk = chTank && !chTank.wreck ? chTank : null, drones = chDroneSeen();
+    const tks = chTanks.filter((t) => !t.wreck), drones = chDroneSeen();   /* c454 */
     const score = (x, z, sp) => { let sc = 0;
       for (const c of nearIn(cCells, x, z, R, mutBuf)) { if (c.kind !== 'citizen' || c.space !== sp || Math.hypot(c.foot.x - x, c.foot.z - z) > R) continue; sc += c.boss ? 40 : CH_BOMB_PT[chTier(c)]; }
-      if (!sp) { for (const d of chDrones) if (!d.dead && Math.hypot(d.x - x, d.z - z) <= R + d.r) sc += 80; if (tk && Math.hypot(tk.x - x, tk.z - z) <= R + 1.4) sc += 80; }
+      if (!sp) { for (const d of chDrones) if (!d.dead && Math.hypot(d.x - x, d.z - z) <= R + d.r) sc += 80; for (const tk of tks) if (Math.hypot(tk.x - x, tk.z - z) <= R + 1.4) sc += 80; }
       return sc; };
     const ts = [];   // 후보 적 {x, z, sp, c (사람) | d (드론) | tk}
     for (const c of bodies) { if (c.kind !== 'citizen' || c.state === 'held') continue; const q = Math.hypot(c.foot.x - me.foot.x, c.foot.z - me.foot.z); if (q > me.sense || (c.space !== me.space && !(CHAPTER && linked(c.space, me.space))) || blocked(me.foot.x, me.foot.z, c.foot.x, c.foot.z)) continue; ts.push({ x: c.foot.x, z: c.foot.z, sp: c.space, c, q }); }
     for (const d of drones) ts.push({ x: d.x, z: d.z, sp: null, d, q: Math.hypot(d.x - me.foot.x, d.z - me.foot.z) });
-    if (tk) { const q = Math.max(0, Math.hypot(tk.x - me.foot.x, tk.z - me.foot.z) - CAR_L * CH_TK_KL / 2); if (q <= me.sense && !fireBlocked(me.foot.x, me.foot.z, tk.x, tk.z)) ts.push({ x: tk.x, z: tk.z, sp: null, tk, q }); }
+    for (const tk of tks) { const q = Math.max(0, Math.hypot(tk.x - me.foot.x, tk.z - me.foot.z) - CAR_L * CH_TK_KL / 2); if (q <= me.sense && !fireBlocked(me.foot.x, me.foot.z, tk.x, tk.z)) ts.push({ x: tk.x, z: tk.z, sp: null, tk, q }); }
     let T = null, bS = -1;
     for (const t of ts) { const sc = score(t.x, t.z, t.sp); if (sc > bS || (sc === bS && t.q < T.q)) { bS = sc; T = t; } }
     if (!T) { const best = cand.reduce((a, z) => Math.hypot(z.foot.x - me.foot.x, z.foot.z - me.foot.z) < Math.hypot(a.foot.x - me.foot.x, a.foot.z - me.foot.z) ? z : a); chBombCharge(best, R); return true; }   // 적이 없으면 나와 가장 가까운 동료
     const pool = cand.filter((z) => T.d || T.tk ? !z.space : z.space === T.sp), use = pool.length ? pool : cand;
     const best = use.reduce((a, z) => Math.hypot(z.foot.x - T.x, z.foot.z - T.z) < Math.hypot(a.foot.x - T.x, a.foot.z - T.z) ? z : a);
     chBombCharge(best, R); const B = best.bombing; if (!B) return true;
-    if (T.c) B.tg = T.c; else if (T.d) B.drone = T.d; else B.drone = { get x() { return tk.x; }, get z() { return tk.z; }, get dead() { return tk.wreck; } };   // 보스 — 드론처럼 그 자리로 뛰어들어 터진다
+    if (T.c) B.tg = T.c; else if (T.d) B.drone = T.d; else { const tk = T.tk; B.drone = { get x() { return tk.x; }, get z() { return tk.z; }, get dead() { return tk.wreck; } }; }   // 보스 — 드론처럼 그 자리로 뛰어들어 터진다
     return true;
   }
   function useBomb() {                        // v520: 맵 전체 동료 중 — 터지는 범위 안에 있는 가장 높은 티어(저격수 > 군인 > 경찰 > 빨강 > 주황 > 노랑)를 맞힐 수 있는 동료들 가운데, 범위 안 적이 가장 많은 동료가 터진다
@@ -6242,7 +6242,7 @@
       if (Math.hypot(c.foot.x - x, c.foot.z - zz) > R || blocked(x, zz, c.foot.x, c.foot.z)) continue;
       gooOn(c);
     }
-    if (CHAPTER && chTank && !chTank.wreck && Math.hypot(chTank.x - x, chTank.z - zz) <= R + 1.4) chTankGoo(chTank);   // c122
+    if (CHAPTER) for (const T of chTanks) if (!T.wreck && Math.hypot(T.x - x, T.z - zz) <= R + 1.4) chTankGoo(T);   /* c454 */   // c122
     if (CHAPTER && !z.space) chDroneGooAt(x, zz, R);   // c374: 드론 — 그림자 점이 원기둥 안이면 자폭 산성
     killZombie(z);                            // 자폭한 동료는 죽는다 (우리 편은 안 다친다)
   }
@@ -6263,7 +6263,7 @@
       zap(x, z);
       for (const c of nearIn(cCells, x, z, Rr, chChBuf)) { if (c === e || c.kind !== 'citizen' || c.space !== (e.space ?? null) || Math.hypot(c.foot.x - x, c.foot.z - z) > Rr) continue; c.stunT = Math.max(c.stunT || 0, 0.2); c.vel.set(0, 0); c.lungeT = -1; zap(c.foot.x, c.foot.z); }
       for (const d of chDrones) { if (d === e || d.dead || Math.hypot(d.x - x, d.z - z) > Rr + d.r) continue; d.stunT = Math.max(d.stunT || 0, 0.2); zap(d.x, d.z); }
-      const T = chTank; if (T && T !== e && !T.wreck && Math.hypot(T.x - x, T.z - z) - CAR_L * CH_TK_KL / 2 <= Rr) { T.stunT = Math.max(T.stunT || 0, 0.2); T.vx = T.vz = 0; zap(T.x, T.z); }
+      for (const T of chTanks) if (T !== e && !T.wreck && Math.hypot(T.x - x, T.z - z) - CAR_L * CH_TK_KL / 2 <= Rr) {   /* c454 */ T.stunT = Math.max(T.stunT || 0, 0.2); T.vx = T.vz = 0; zap(T.x, T.z); }
     }
   }
   function chEBomb() {                         // c431: 전기폭탄 — 나를 중심으로 360° 파장, 범위 안 모든 적 3.5초 감전 (잔류제 영향)
@@ -6272,7 +6272,7 @@
     const g = puff(x, 0.5, z, 0xffffff, 0.4, Rr * 1.2, 0.18, 0, 0, 0, 0.8); g.s.material.map = flashTex; g.s.renderOrder = UI - 0.55; g.peak = true;
     for (const c of bodies) { if (c.kind !== 'citizen' || c.state === 'held') continue; if ((c.space !== me.space && !linked(c.space, me.space)) || Math.hypot(c.foot.x - x, c.foot.z - z) > Rr || fireBlocked(x, z, c.foot.x, c.foot.z)) continue; c.stunT = Math.max(c.stunT || 0, T); c.vel.set(0, 0); zaps.push({ to: c, t: 0.3 }); }
     for (const d of chDrones) { if (d.dead || Math.hypot(d.x - x, d.z - z) > Rr + d.r) continue; d.stunT = Math.max(d.stunT || 0, T); zaps.push({ to: d, t: 0.3 }); }
-    const tk = chTank; if (tk && !tk.wreck && Math.hypot(tk.x - x, tk.z - z) - CAR_L * CH_TK_KL / 2 <= Rr) { tk.stunT = Math.max(tk.stunT || 0, T); tk.vx = tk.vz = 0; zaps.push({ to: tk, t: 0.3 }); }
+    for (const tk of chTanks) if (!tk.wreck && Math.hypot(tk.x - x, tk.z - z) - CAR_L * CH_TK_KL / 2 <= Rr) {   /* c454 */ tk.stunT = Math.max(tk.stunT || 0, T); tk.vx = tk.vz = 0; zaps.push({ to: tk, t: 0.3 }); }
   }
   const chHornMat = new THREE.MeshBasicMaterial({ color: 0xb3121b, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide });   // c448: 괴물 뿔
   function chMutLook(z) {                      // c430: 괴물 = 빨간 후광 · 흡수 = 흡수한 무기 색 후광 (깜빡)
@@ -6324,7 +6324,7 @@
       if (c.hp > 0) { c.hp = Math.max(0, c.hp - chAcidHit()); if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, chAcidHit()); if (c.hp <= 0 && !c.police && c.state !== 'held') enterPanic(c, null, true); }   // c371: 터질 때 10 (고정 · 강화와 상관없다)
     }
     if (!z.space) chDroneAcid(x, zz, R, T, true);   // c374: 드론 — 그림자 점이 원기둥 안이면
-    const tk = chTank; if (tk && !tk.wreck && !z.space && Math.hypot(tk.x - x, tk.z - zz) - CAR_L * CH_TK_KL / 2 <= R) { chAcidOn(tk, T); const o = tk.obj; if (o && o.hp > chAcidHit()) { o.hp -= chAcidHit(); chDotPop(tk.x + 0.9, tk.z, chAcidHit(), 2.2); } }   /* c371 */   // 보스도
+    for (const tk of chTanks) if (!tk.wreck && !z.space && Math.hypot(tk.x - x, tk.z - zz) - CAR_L * CH_TK_KL / 2 <= R) {   /* c454 */ chAcidOn(tk, T); const o = tk.obj; if (o && o.hp > chAcidHit()) { o.hp -= chAcidHit(); chDotPop(tk.x + 0.9, tk.z, chAcidHit(), 2.2); } }   /* c371 */   // 보스도
   }
   window.__kz = (z) => killZombie(z);   // 테스트용
   window.__goo = (c) => gooOn(c); window.__acidOn = (c, T) => chAcidOn(c, T);   // 테스트용
@@ -7660,7 +7660,7 @@
   const CH_SF_GAP = 120, CH_SF_FORCE = 180, CH_SF_WAVE = 15, CH_TK_K = MIL_K * 2 * 0.8 * 1.2,   /* c184: 20% 크게 */ CH_TK_KL = MIL_K * 2 * 0.8 * 0.78 * 0.85 * 1.2,   /* c182: 15% 더 */   /* c179: 78% */   /* c177: 길이만 15% 짧게 */   /* c168: 20% 작게 */ CH_TK_ESC = 2.6, CH_TK_DASH_EVERY = 20, CH_TK_DASH_T = 0.3, CH_TK_SPLASH = 1.2, CH_TK_WALL_T = 2.4 / 1.3,   /* c168: 벽 부수는 힘 30% 더 */ CH_TK_HOLE = 2.3;
   const chSf = { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, shown: '' };
   const chBanner = [], chCuts = [], chTkBuf = [], chTkBuf2 = [];
-  let chTank = null;
+  let chTank = null; const chTanks = [];   // c454: 보스 여럿 (불도저 2대)
   const chSfEl = document.createElement('div');
   chSfEl.id = 'sfcd';
   chSfEl.style.cssText = 'position:absolute;left:0;right:0;width:fit-content;margin:0 auto;padding:6px 12px;border-radius:9px;white-space:nowrap;top:calc(60px + env(safe-area-inset-top, 0px));z-index:4;pointer-events:none;text-align:center;font:800 13px/1 system-ui,sans-serif;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.9);display:none';
@@ -7674,10 +7674,10 @@
     if (s !== chSf.shown) { chSf.shown = s; chSfEl.innerHTML = s; chSfEl.style.display = s ? 'block' : 'none'; }
   }
   function chSfReset() {
-    if (chTank) chTank.tkPh = null; Object.assign(chSf, { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, hide: false, hideT: 0 }); chBTdone = false; chSf.wn = 0; for (const B of buildings) B.everOpen = false;   /* c166 · c168 · c193 */
+    for (const t of chTanks) t.tkPh = null; Object.assign(chSf, { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, hide: false, hideT: 0 }); chBTdone = false; chSf.wn = 0; for (const B of buildings) B.everOpen = false;   /* c166 · c168 · c193 */
     chBanner.length = 0; chDiscR = chDiscP = chDiscO = chDiscY = 0; chDiscT = 0;   // c220 · c262
-    if (chTank && chTank.tracer) scene.remove(chTank.tracer);
-    chTank = null;
+    for (const t of chTanks) if (t.tracer) scene.remove(t.tracer);
+    chTank = null; chTanks.length = 0;   // c454
     chWallRestore();
     chSfHud();
   }
@@ -7724,7 +7724,7 @@
         else { chSf.boss = true; teamsSpawned++; chBanner.push('boss'); teamWait.push({ boss: true, t: 0, seg: teamSeg(), hold: true }); }
       }
     } else {
-      const T = chTank;
+      const T = chTanks.find((t) => !t.wreck) || chTanks[0];   // c454: 하나라도 살아 있으면 특공대 · 다 부서져야 끝
       if (T && !T.wreck && (chSf.waveT += dt) >= CH_SF_WAVE) { chSf.waveT -= CH_SF_WAVE; chSf.wn = (chSf.wn || 0) + 1; teamWait.push({ comp: [G_, G_]   /* c176: 군인만 */, t: 0, first: false, seg: teamSeg(), tk: true });   /* c168: 군인 2 · 세 번에 한 번 저격수 1 + 군인 1 */   /* c128: 1팀 (가장 약한 팀) */ }
       if (T && T.wreck && !chSf.won && (chSf.chk -= dt) <= 0) {
         chSf.chk = 0.5;
@@ -7734,7 +7734,7 @@
     chSfHud();
   }
   function chTankMaster(c) {                   // 군부대 호위: 군인 → 제 저격수 (죽으면 장갑차) · 저격수 → 장갑차 · 장갑차가 죽으면 아무도 호위 안 한다
-    const T = chTank;
+    const T = chTanks.find((t) => !t.wreck) || null;   // c454
     if (!T || T.wreck) { c.master = null; return null; }
     const m = c.master;
     if (c.soldier && m && m.kind === 'citizen' && m.sniper && bodies.includes(m)) return m;
@@ -7745,7 +7745,7 @@
     const p = teamSpot(seg), h = Math.atan2(me.foot.z - p.z, me.foot.x - p.x);
     addCar(p.x, p.z, h, null, 0, ['tank']);
     const car = cars[cars.length - 1], K = car.g.children;
-    car.squad = null; car.tank = true; car.state = 'tank'; car.kw = CH_TK_K; car.kl = CH_TK_KL; car.massK = 4; car.hpK = 10 * 0.95 * 3 * 0.9 * 1.5 * 0.9 * 1.1 * 0.95 * 0.75; if (CHAPTER) { car.dozer = true; car.hpK *= 0.8; car.tint0 = 0xd9a21b; }   /* c438: 목표 표시가 풀려도 노랑 */   /* c436: 첫 보스 = 불도저 (체력 80%) */   /* c255: 4분의 1 줄임 */   /* c245 */   /* c230: 10% 줄임 · c232: 10% 올림 */   /* c222: 50% 올림 */   /* c185: 10% 줄임 */   /* c183: 3배 */   /* c153 */
+    car.squad = null; car.tank = true; car.state = 'tank'; car.kw = CH_TK_K; car.kl = CH_TK_KL; car.massK = 4; car.hpK = 10 * 0.95 * 3 * 0.9 * 1.5 * 0.9 * 1.1 * 0.95 * 0.75; if (CHAPTER) { car.dozer = true; car.hpK *= 0.8 * 0.8; car.tint0 = 0xd9a21b; }   /* c454: 체력 20% 더 깎음 */   /* c438: 목표 표시가 풀려도 노랑 */   /* c436: 첫 보스 = 불도저 (체력 80%) */   /* c255: 4분의 1 줄임 */   /* c245 */   /* c230: 10% 줄임 · c232: 10% 올림 */   /* c222: 50% 올림 */   /* c185: 10% 줄임 */   /* c183: 3배 */   /* c153 */
     car.g.scale.set(CH_TK_K, 1, CH_TK_K);
     K[0].material.color.setHex(0x3c4a2a); K[0].geometry = (() => { const L = CAR_L * 0.78 * 0.85, W = CAR_W, c = 0.16, s = new THREE.Shape(); s.moveTo(-L / 2 + c, -W / 2); s.lineTo(L / 2 - c, -W / 2); s.lineTo(L / 2, -W / 2 + c); s.lineTo(L / 2, W / 2 - c); s.lineTo(L / 2 - c, W / 2); s.lineTo(-L / 2 + c, W / 2); s.lineTo(-L / 2, W / 2 - c); s.lineTo(-L / 2, -W / 2 + c); s.closePath(); return new THREE.ShapeGeometry(s).rotateX(-Math.PI / 2); })();   /* c179: 모서리를 깎은 팔각형 */ K[1].visible = K[2].visible = K[3].visible = false;
     const tur = new THREE.Mesh(new THREE.CircleGeometry(0.27, 20).rotateX(-Math.PI / 2), carMat(0x222b16)); tur.position.y = 0.002; tur.renderOrder = -0.44;
@@ -7765,7 +7765,7 @@
     car.gun = { kind: 'tank', foot: car.foot };
     car.tracer = new THREE.Mesh(tracerGeo, new THREE.MeshBasicMaterial({ color: 0xffb84d, transparent: true, depthTest: false, depthWrite: false }));
     car.tracer.renderOrder = -0.5; car.tracer.visible = false; scene.add(car.tracer);
-    chTank = car;
+    chTank = car; chTanks.push(car);   // c454
     const mk = (type, x, z) => { if (!freeSpot(x, z, null)) { x = p.x; z = p.z; } const c = addCitizen(x, z, square(x, z), type); c.met = true; c.tkU = c.tkE = true; c.tick = 0; return c; };
     for (let i = 0; i < 0; i++) {   /* c128: 호위 없음 */
       const a = h + i / 5 * Math.PI * 2, R = GUARD_NEAR * CH_TK_ESC, sx = p.x + Math.cos(a) * R, sz = p.z + Math.sin(a) * R;
@@ -8064,9 +8064,9 @@
     if (b.hp <= 0) { breakSafe(b); return; }
     if (!b.fixed && u > -hl * 0.5) { const pen = Math.min(hl - u, 8 * chDt); b.foot.x += fx * pen; b.foot.z += fz * pen; }   // 앞으로 밀려간다
   }
-  function chTankCar(o) {                      // 장갑차에 닿은 차 — 1.5초면 부서진다
+  function chTankCar(o, T0) {                      // 장갑차에 닿은 차 — 1.5초면 부서진다
     if (!o.obj || o.obj.dead || o.wreck) return;
-    const T = chTank, ds = T && T.tkPh === 'dash';
+    const T = T0 || chTank, ds = T && T.tkPh === 'dash';   // c454: 닿은 그 보스
     o.obj.hp -= MY_DAMAGE * 9.5 / 1.5 * chDt * (ds ? 1 + 2 * T.tkM : 1);   // c172: 돌진 중엔 기세만큼 더 세게
     if (ds) T.tkM -= 0.6 * chDt;   // c172: 차에 막히면 기세가 깎인다
     if (o.obj.hp <= 0) { o.obj.hp = 0; breakObj(o.obj); }
@@ -8082,7 +8082,7 @@
     if (car.tracer) car.tracer.visible = false;
     car.vx = car.vz = 0; car.tkV = 0; car.tkPh = null; car.dashT = 0; car.spOn = false;   // c211
     for (let i = 0; i < 3; i++) boom(car.x + rand(-1.6, 1.6), car.z + rand(-1, 1));
-    if (!CHAPTER || car !== chTank) return;
+    if (!CHAPTER || !chTanks.includes(car)) return;   // c454
     if (car.dozer) { const pool = CH_ITEMS.filter((k) => !chFull(k)); if (pool.length) dropPickup(pool[Math.floor(Math.random() * pool.length)], car.x, car.z, null); chSf.chk = 1; return; }   // c436: 불도저 — 군인 · 특공대 없이 무기나 장비 하나
     for (let i = 0; i < 5; i++) {               // c200: 타고 있던 군인 5
       const a = i / 5 * Math.PI * 2, r = rand(0.4, 1.2); let x = car.x + Math.cos(a) * r, z = car.z + Math.sin(a) * r;
