@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c502</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c503</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6577,7 +6577,7 @@
     if (reviveT > 0) { const p = Math.ceil(reviveT); reviveT = Math.max(0, reviveT - dt); if (Math.ceil(reviveT) !== p) refreshBadges(); }
     stimTick(dt);
     if (CHAPTER) rageTick(dt);
-    if (CHAPTER) for (const z of zombies) { if (z.mut === 'armor') z.force = chArmF(z);   /* c430 */ if (z.mut || z.brHalo) chMutLook(z); }   // c373: 덩치 미는 힘 = 원래(11)의 2/3 · 촉매제로 1.2배까지
+    if (CHAPTER) for (const z of zombies) { if (z.mut === 'armor') z.force = chArmF(z);   /* c430 */ if (z.mut || z.brHalo || z.brHorn) chMutLook(z);   /* c503: 변이가 풀리면 뿔도 지운다 */ }   // c373: 덩치 미는 힘 = 원래(11)의 2/3 · 촉매제로 1.2배까지
     for (const z of zombies) if (z.mut && !(TEST_ARMOR && z.mut === 'armor') && (z.mutT -= dt) <= 0) unmutate(z);   // 변이 끝
     stepSpits(dt);
     gooTick(dt); if (CHAPTER) chAcidTick(dt);   // c224
