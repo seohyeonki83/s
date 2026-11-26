@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c507</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c508</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -446,7 +446,8 @@
   // ── c120: 맵 선택 — 시작하면 먼저 고른다 (큰 맵: 구역 4개 · 작은 맵: 구역 하나). 고른 뒤에 나머지가 만들어진다 ──
   // ── c505: 본편 — 저장 · 아웃게임 (스테이지 · 난이도 · 성장). 처음엔 튜토리얼부터 ──
   const CH_SV = (() => { let o = null; try { o = JSON.parse(localStorage.getItem('rd_save_v1') || 'null'); } catch (e) {} o = o || {}; o.genes = o.genes || 0; o.clr = o.clr || {}; o.sub = o.sub || {}; o.up = Object.assign({ hp: 0, ahp: 0, atk: 0 }, o.up || {}); o.tut = !!o.tut;
-    if (!o.mig) { o.mig = 1; try { o.genes += +localStorage.getItem('rd_genes') || 0; localStorage.removeItem('rd_genes'); } catch (e) {} } return o; })();
+    if (!o.v2) { o = { genes: 0, clr: {}, sub: {}, up: { hp: 0, ahp: 0, atk: 0 }, tut: false, mig: 1, v2: 1 }; }   // c508: 옛 버전에서 옮겨온 유전자까지 한 번 깨끗이
+    try { localStorage.removeItem('rd_genes'); } catch (e) {} return o; })();
   function chSave() { try { localStorage.setItem('rd_save_v1', JSON.stringify(CH_SV)); } catch (e) {} }
   chSave();
   const CH_UP_COST = 100;   // 성장 1포인트 = 유전자 100 · 기본값의 1%
@@ -482,7 +483,7 @@
       if (b.dataset.tut) { ov.remove(); tut(); return; }
       if (b.dataset.rst) {   // c507: 초기화 — 한 번 누르면 확인, 3초 안에 한 번 더 누르면 전부 지운다
         if (!b.classList.contains('on')) { b.classList.add('on'); b.textContent = '정말 초기화? 한 번 더 누르기'; setTimeout(() => { if (b.isConnected) { b.classList.remove('on'); b.textContent = '초기화'; } }, 3000); return; }
-        try { localStorage.removeItem('rd_genes'); localStorage.setItem('rd_save_v1', JSON.stringify({ genes: 0, clr: {}, sub: {}, up: { hp: 0, ahp: 0, atk: 0 }, tut: false, mig: 1 })); window.name = ''; } catch (e) {}
+        try { localStorage.removeItem('rd_genes'); localStorage.setItem('rd_save_v1', JSON.stringify({ genes: 0, clr: {}, sub: {}, up: { hp: 0, ahp: 0, atk: 0 }, tut: false, mig: 1, v2: 1 })); window.name = ''; } catch (e) {}
         location.reload(); return;
       }
       if (b.dataset.st) { CH_UPK.hp = 1 + 0.01 * CH_SV.up.hp; CH_UPK.ahp = 1 + 0.01 * CH_SV.up.ahp; CH_UPK.atk = 1 + 0.01 * CH_SV.up.atk; ov.remove(); go(+b.dataset.st, b.dataset.d); }
@@ -10217,9 +10218,9 @@
   const chGeneEl = document.createElement('div');
   chGeneEl.id = 'gene';
   chGeneEl.style.cssText = 'position:absolute;left:max(16px, env(safe-area-inset-left, 0px));top:calc(34px + env(safe-area-inset-top, 0px));z-index:4;pointer-events:none;display:flex;align-items:center;gap:3px;font:800 11px/1 system-ui,sans-serif;color:#d8f6ff;text-shadow:0 1px 3px rgba(0,0,0,0.85)';
-  chGeneEl.innerHTML = CH_GENE_SVG + '<span>' + chGenes + '</span>';
+  chGeneEl.innerHTML = CH_GENE_SVG + '<span>0</span>';   // c508: 이번 판에서 얻은 유전자
   stage.appendChild(chGeneEl);
-  function chGeneAdd(n) { if (chRunOver) return; chGenes += n; chRunGenes += n; CH_SV.genes += n; chSave(); chGeneEl.lastChild.textContent = chGenes; }   // c505
+  function chGeneAdd(n) { if (chRunOver) return; chGenes += n; chRunGenes += n; CH_SV.genes += n; chSave(); chGeneEl.lastChild.textContent = chRunGenes; }   // c505
   let chGeneTex = null;
   function chGeneDrop(x, z, space) {           // 1~4개가 사방으로 튀어나온다 — 하나씩 따로 줍는다
     if (!chGeneTex) chGeneTex = chTexOf(96, 96, (g) => {
