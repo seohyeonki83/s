@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c497</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c498</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5346,7 +5346,7 @@
     shoes: { icon: IC.shoes, name: '운동화', passive: true },
     teeth: { icon: IC.teeth, name: '틀니', passive: true }, parasite: { icon: IC.parasite, name: '분열세포', passive: true },   /* c370 */ linger: { icon: IC.linger, name: '잔류제', passive: true },   /* c420 */ acidp: { icon: IC.acidp, name: '산성 강도', passive: true },   /* c259 */ acid: { icon: IC.acid, name: '산성 폭발', passive: true },   // c224       // v275: 내 이동 속도 +10%                         // 패시브 (v201) — 총알 피해 30% 감소, 똑똑한 두뇌마다 10% 더
   };
-  const CH_W = { taserN: [1, 2, 2, 3, 4, 5], taserT: [1, 1.5, 2, 2.5, 3, 4]   /* c468: ★0~★5 */   /* c269: 처음 0.5초 · 0.5초씩 */, mutN: [1, 1, 2, 2, 3, 3, 4], cashT: [2, 3.3, 4.7, 6, 7.3, 8.7, 10], cashH: [1, 2, 4, 5, 6, 8, 9] }   /* c258 */, CH_WV = (k, n) => CH_W[k][Math.max(0, Math.min(CH_W[k].length - 1, n))];   // c139: 무기 수치표
+  const CH_W = { taserN: [1, 2, 2, 3, 4, 5], taserT: [1, 1.5, 2, 2.5, 3, 4]   /* c468: ★0~★5 */   /* c269: 처음 0.5초 · 0.5초씩 */, mutN: [1, 1, 2, 2, 3, 3, 4], cashT: [2, 2.8, 3.6, 4.4, 5.2, 6]   /* c498: ★5 = 6초 */, cashH: [1, 2, 4, 5, 6, 8, 9] }   /* c258 */, CH_WV = (k, n) => CH_W[k][Math.max(0, Math.min(CH_W[k].length - 1, n))];   // c139: 무기 수치표
   const taserN = (n) => 1 + Math.floor(n / 2), taserT = (n) => STUN_T + Math.ceil(n / 2);   // 테이저건 강화 n단계: 감전 대상 수 · 감전 시간(초) — 홀수 번째 강화는 시간 +1초, 짝수 번째는 대상 +1명
   const STUN_T = 3, CASH_N = 3,   /* 감전 기본 3초 (4.5 → 3.15 → 3초) */ CASH_R = [1, 2], CASH_GET = 0.7;   // v195: 감전 2 → 4초, 돈다발 뿌리는 거리 2~4 → 1~2칸
   const ITEM_TEXT = {                         // 장비·도구 설명 — [하는 일, 강화 시 달라지는 것, (덧붙임)]. 수치는 안 쓴다 (수치는 그 아래 '지금 · 다음 강화' 줄에 나온다)
@@ -5650,7 +5650,7 @@
   }
   const CASH_PICK = 1.5;
   const chDiaK = () => 1;   // c429: 다이아몬드도 유혹 시간은 그대로   // c427: 다이아몬드 — 유혹(싸우는) 시간 별마다 +5%
-  const chNearFresh = (fresh, x, z, R, sp) => { let best = null, bd = R; for (const k of fresh) { if (k.space !== sp) continue; const d = Math.hypot(k.x - x, k.z - z); if (d < bd && !blocked(x, z, k.x, k.z)) { bd = d; best = k; } } return best; };
+  const chNearFresh = (fresh, x, z, R, sp, fly) => { let best = null, bd = R; for (const k of fresh) { if (k.space !== sp) continue; const d = Math.hypot(k.x - x, k.z - z); if (d < bd && (fly || !blocked(x, z, k.x, k.z))) { bd = d; best = k; } } return best; };   /* c498: fly = 드론 (건물에 안 가린다) */
   function chDiaCars(fresh) {                  // c427: 다이아몬드 — 본 민간 차는 서고 사람이 내려 뛰어온다 (유혹이 끝나도 다시 안 탄다)
     for (const car of chTr.cars.slice()) { const T = car.tr; if (!T || T.mode === 'left' || T.mode === 'gone' || car.wreck) continue;
       if (!chNearFresh(fresh, car.x, car.z, SIGHT * cashK(), null)) continue;
@@ -5659,7 +5659,7 @@
   }
   function chGoldMachines(fresh) {             // c427: 금 — 기계도 홀린다 (날아와 내려앉는 시간까지 유혹 시간)
     const r = chRedR('cash'); if (!r) return; const TM = r * chLingK();   /* c496: 기계 1초 · 1초씩 (빨★5 = 5초) */   // c469: 기계 1초 · 빨간 별마다 +0.5초 (잔류제)
-    for (const d of chDrones) { if (d.dead) continue; const k = chNearFresh(fresh, d.x, d.z, SIGHT * cashK() + 4, null); if (!k) continue; d.lureT = TM; d.lureK = k; d.tg = null; }
+    for (const d of chDrones) { if (d.dead) continue; const k = chNearFresh(fresh, d.x, d.z, SIGHT * cashK() + 4, null, true);   /* c498 */ if (!k) continue; d.lureT = TM; d.lureK = k; d.tg = null; }
     for (const c of bodies) { if (!c.robot || c.turret || c.state === 'held' || c.state === 'lured') continue; const k = chNearFresh(fresh, c.foot.x, c.foot.z, SIGHT * cashK() + 4, c.space); if (!k) continue; c.robotLure = TM; for (const q of fresh) q.who.add(c); enterLured(c); }   // c436: 로봇도 금에 홀린다 (드론과 같은 비율)
     for (const tk of chTanks) if (!tk.wreck) { const k = chNearFresh(fresh, tk.x, tk.z, SIGHT * cashK() + 4, null);   /* c454 */ if (k) { tk.lureT = TM; tk.lureX = k.x; tk.lureZ = k.z; } }
   }

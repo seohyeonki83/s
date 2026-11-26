@@ -1,0 +1,10 @@
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const p = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage(); const errs = []; p.on('pageerror', (e) => errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]));
+await p.route('**/three.module.min.js', (r) => r.fulfill({ path: __dirname + '/../node_modules/three/build/three.module.min.js', contentType: 'application/javascript' }));
+await p.goto('file://' + __dirname + '/var/' + process.argv[2] + '.html'); await p.waitForFunction(() => window.__rdReady && window.__rd && window.__rd.me, null, { timeout: 60000 }); await p.waitForTimeout(1500);
+await p.evaluate(() => document.querySelectorAll('.okBtn').forEach((x) => x.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })))); await p.waitForTimeout(1500);
+await p.evaluate(() => { window.__rd.me.hp = window.__rd.me.maxHp = 1e9; return window.__rd.DR(); }); await p.waitForTimeout(1500);
+console.log('before', JSON.stringify(await p.evaluate(() => window.__rd.DS())), 'range', await p.evaluate(() => window.__rd.CR()));
+await p.evaluate(() => window.__rd.USE()); await p.waitForTimeout(200);
+console.log('after', JSON.stringify(await p.evaluate(() => window.__rd.DS())));
+console.log('errors', JSON.stringify(errs.slice(0, 3))); await b.close(); })();
