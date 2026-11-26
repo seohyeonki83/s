@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c475</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c477</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6368,7 +6368,8 @@
   }
   const minusTex = (() => { const cv = document.createElement('canvas'); cv.width = 128; cv.height = 64; const g = cv.getContext('2d'); g.font = '800 52px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,0.75)'; g.strokeText('-2', 64, 34); g.fillStyle = '#ff4a3d'; g.fillText('-2', 64, 34); return new THREE.CanvasTexture(cv); })();   // v294: 빨강 (연두였다), 2배 해상도
   const chAcidL = [], chAcBuf = [], chAcidMat = new THREE.SpriteMaterial({ map: flashTex, color: 0x9cff3a, transparent: true, depthTest: false, depthWrite: false });
-  const chAcidB = () => owned.acidp ? 1 + lv('acidp') : 0;   // c259: 산성 강도 — 도트에 더하는 값
+  const chAcidPB = (n) => Math.round(1 + 0.6 * n);   // c477: 산성 강도 +1 · 2 · 2 · 3 · 3 · 4 (★5 = +4)
+  const chAcidB = () => owned.acidp ? chAcidPB(lv('acidp')) : 0;   // c259: 산성 강도 — 도트에 더하는 값
   function chAcidOn(e, T) {                    // c224: 산성 한 겹 (겹마다 따로 시간이 간다)
     if (e.goo) return;   // c287: 자폭 산성이 묻어 있으면 산성 폭발은 안 묻는다
     if (!e.acid) e.acid = []; if (e.acid.length) e.acid[0] = Math.max(e.acid[0], T); else e.acid.push(T);   /* c261: 겹치지 않음 */ if (e.acidT === undefined) e.acidT = 0;
@@ -6377,7 +6378,7 @@
     else if (!e.acidS && e.tank && e.g) { const g = new THREE.Group(); for (const [ox, oz, sc] of [[0.3, 0.1, 0.5], [-0.35, -0.12, 0.4], [0, 0.2, 0.34]]) { const s = new THREE.Sprite(chAcidMat); s.position.set(ox, 0.3, oz); s.scale.setScalar(sc); s.renderOrder = 1; g.add(s); } e.g.add(g); e.acidS = g; }   // c394: 보스(장갑차)도 산성 폭발이 묻으면 연두 덩어리 (자폭 산성과 같은 자리)
   }
   let chAcidMiniF = false;   // c475: 새끼 좀비 산성 폭발 중
-  const chAcidHit = () => chAcidMiniF ? 3 : Math.round(3 + 7 * lv('acid') / 5);   /* c475: 새끼 좀비는 3 고정 */   /* c400: 터질 때 피해 — 처음 3, 다 강화하면 10 (3 · 4 · 6 · 7 · 9 · 10) */   /* c399: 5 */   // c371: 산성 폭발이 터지는 순간 주는 피해 (고정)
+  const chAcidHit = () => Math.round(3 + 7 * lv('acid') / 5);   /* c476: 새끼 좀비 3 고정 되돌림 (c475) */   /* c400: 터질 때 피해 — 처음 3, 다 강화하면 10 (3 · 4 · 6 · 7 · 9 · 10) */   /* c399: 5 */   // c371: 산성 폭발이 터지는 순간 주는 피해 (고정)
   function chAcidBurst(z) {                    // c224: 동료·변이가 죽으며 산성피 — 범위 = 그 몸의 근접 거리 × 1.2 (강화마다 +15%) · 3초 (강화마다 +1초)
     const n = lv('acid'); if (Math.random() >= 0.3 + 0.1 * n) return;
     chAcidMiniF = !!z.mini;   // c475   /* c400: 처음 30% · 강화마다 +10% */   /* c399: 20% */   // c280: 50 · 60 · 70 · 80 · 90 · 100%
@@ -6798,7 +6799,7 @@
     shoes: (n) => `나·동료 이동 속도 +${5 * (1 + n)}%`,
     parasite: (n) => `확률 ${20 + 5 * n}%`,   /* c370 */
     teeth: (n) => `감염 속도 ${Math.round(100 + 80 / 6 * (1 + n))}% · 체력 회복량 +${5 * (1 + n)}%`,   /* c224 */
-    acidp: (n) => `산성 도트 +${1 + n} (1초마다)`,   /* c259 */
+    acidp: (n) => `산성 도트 +${chAcidPB(n)} (1초마다)`,   /* c477 */   /* c259 */
     linger: (n) => `감전·산성·유혹 시간 +${5 * (1 + n)}%`,   /* c420 */
     acid: (n) => `터질 확률 ${30 + 10 * n}% · 터질 때 ${Math.round(3 + 7 * n / 5)} · 3초 · 1초마다 1 · 범위 = 근접 거리 x1.2`,   /* c280 */   /* c261: 겹치지 않음 */
     revive: (n) => `체력 가득으로 부활 · 쿨타임 ${Math.round(120 * Math.pow(0.9, n))}초`,
@@ -6864,7 +6865,7 @@
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
     bomb: ['', (n) => `${1.5 + n}칸·${+(4 + 0.6 * Math.min(5, n)).toFixed(1)}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['유혹', (n) => `${CH_WV('cashT', n)}초`]   /* c420 */   /* c226 */,
     book: ['쿨타임', (n) => `-${5 + 9 * n}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['공속', (n) => `+${10 + 10 * n}%`], crowbar: ['건물', (n) => `+${15 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`]   /* c278: 카드는 총격만 (밀림은 설명 칸에) */,
-    shoes: ['이동', (n) => `+${5 * (1 + n)}%`], parasite: ['확률', (n) => `${20 + 5 * n}%`], teeth: ['감염', (n) => `${Math.round(100 + 80 / 6 * (1 + n))}%`], acid: ['확률', (n) => `${30 + 10 * n}%`], acidp: ['도트', (n) => `+${1 + n}`], linger: ['지속', (n) => `+${5 * (1 + n)}%`],   /* c420 */   /* c224 */ catalyst: ['변이', (n) => `+${5 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
+    shoes: ['이동', (n) => `+${5 * (1 + n)}%`], parasite: ['확률', (n) => `${20 + 5 * n}%`], teeth: ['감염', (n) => `${Math.round(100 + 80 / 6 * (1 + n))}%`], acid: ['확률', (n) => `${30 + 10 * n}%`], acidp: ['도트', (n) => `+${chAcidPB(n)}`], linger: ['지속', (n) => `+${5 * (1 + n)}%`],   /* c420 */   /* c224 */ catalyst: ['변이', (n) => `+${5 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
   for (const k of Object.keys(CH_BRANCH)) { const S = CH_SHORT[k], f = S[1]; S[1] = (n) => { if (n <= 6) return f(n); const B = CH_BRANCH[k].find((b) => b.id === chBr[k]); return B ? B.short[0] + ' ' + B.short[1](n - 6) : '갈림길'; }; }   // c422
   const CH_BRIEF = {                          // 카드에 쓰는 한 줄 설명
