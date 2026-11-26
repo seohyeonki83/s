@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c468</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c469</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5372,7 +5372,19 @@
   const chDiaMat = new THREE.MeshBasicMaterial({ color: 0x6fdcff, transparent: true, depthWrite: false }), chDiaMat2 = new THREE.MeshBasicMaterial({ color: 0xd6f8ff, transparent: true, depthWrite: false });
   const chGoldGeo = new THREE.PlaneGeometry(0.74, 0.4).rotateX(-Math.PI / 2), chGoldGeo2 = new THREE.PlaneGeometry(0.56, 0.24).rotateX(-Math.PI / 2);   // c427: 금괴 (돈다발보다 살짝 크게)
   const chGoldMat = new THREE.MeshBasicMaterial({ color: 0xd49a1e, transparent: true, depthWrite: false }), chGoldMat2 = new THREE.MeshBasicMaterial({ color: 0xffd864, transparent: true, depthWrite: false });
-  function chCashMesh() {                      // c427: 고른 길에 맞는 뿌리는 것 (다이아몬드 · 금괴 · 돈다발) + 반짝임
+  const chBtcTex = (() => { const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
+    g.fillStyle = '#c96f05'; g.beginPath(); g.arc(64, 64, 62, 0, 6.283); g.fill(); g.fillStyle = '#f7931a'; g.beginPath(); g.arc(64, 64, 54, 0, 6.283); g.fill();
+    g.fillStyle = '#fff'; g.font = '900 78px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('₿', 66, 70);
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+  const chBtcGeo = new THREE.CircleGeometry(0.5, 28).rotateX(-Math.PI / 2), chBtcMat = new THREE.MeshBasicMaterial({ map: chBtcTex, transparent: true, depthWrite: false });   // c469: 비트코인 (돈다발의 2배 크기)
+  IC.btc = svgI('<circle cx="12" cy="12" r="10.5" fill="#c96f05"/><circle cx="12" cy="12" r="9" fill="#f7931a"/><text x="12.4" y="17" text-anchor="middle" font-size="14" font-weight="900" font-family="system-ui,sans-serif" fill="#fff">₿</text>');
+  function chCashLook() {                      // c469: 빨간 별부터 현금 → 비트코인 (버튼 아이콘 · 색)
+    const red = chRedR('cash') > 0, O = chItem0.cash || (chItem0.cash = { name: ITEM.cash.name, icon: ITEM.cash.icon, col: ITEM.cash.col });
+    ITEM.cash.icon = red ? IC.btc : O.icon; ITEM.cash.col = red ? '#f7931a' : O.col; ITEM.cash.name = red ? '비트코인' : O.name;
+    const it = items.find((x) => x.kind === 'cash'); if (it && it.el) { const ic = it.el.querySelector('.ic'); if (ic) ic.innerHTML = ITEM.cash.icon; it.el.style.setProperty('--c', ITEM.cash.col); }
+  }
+  function chCashMesh() {
+    if (chRedR('cash')) { const g = new THREE.Mesh(chBtcGeo, chBtcMat); const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: flashTex, color: 0xffffff, transparent: true, depthTest: false, depthWrite: false })); s.position.set(0.2, 0.15, -0.1); s.scale.setScalar(0.4); s.renderOrder = -0.5; g.add(s); g.glint = s; g.ph = Math.random() * 6.28; return g; }   // c469                      // c427: 고른 길에 맞는 뿌리는 것 (다이아몬드 · 금괴 · 돈다발) + 반짝임
     const br = chBr.cash; if (br !== 'dia' && br !== 'gold') return null;
     const g = new THREE.Mesh(br === 'dia' ? chDiaGeo : chGoldGeo, br === 'dia' ? chDiaMat : chGoldMat), top = new THREE.Mesh(br === 'dia' ? chDiaGeo2 : chGoldGeo2, br === 'dia' ? chDiaMat2 : chGoldMat2); top.position.y = 0.003; g.add(top);
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: flashTex, color: 0xffffff, transparent: true, depthTest: false, depthWrite: false })); s.position.set(0.12, 0.15, -0.05); s.scale.setScalar(0.3); s.renderOrder = -0.5; g.add(s); g.glint = s; g.ph = Math.random() * 6.28;
@@ -5420,7 +5432,7 @@
   const legK = () => 1 + 0.07 * up.leg + (CHAPTER && owned.shoes ? 0.05 * (1 + lv('shoes')) : 0);   /* c224: 운동화 = 나·동료·변이 · c257: 5%씩 */      // 빠른 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
   const meSpeed = () => MY_SPEED * (legK() + (!CHAPTER && owned.shoes ? 0.07 * (1 + lv('shoes')) : 0)   /* c198: 7%씩 */   /* v568: 운동화 처음 +15%, 강화마다 +10% */) * (me && me.mut === 'armor' ? MUT_SPEED : 1);   /* c313: 히드라는 일반 속도 */   // v558: 각성 중엔 변이 속도   // v275: 운동화 +10% (도구 다루기마다 +3%) — 빠른 다리와 더한다
   const chCashStep = (n) => 1 + 1.4 / 12 * n;   // c429: 현금 사거리 배율 (★0 = 1 · 흰 ★6 = 1.7 · 다이아몬드 빨간 ★6 = 2.4)
-  const cashK = () => CHAPTER ? 1.2 * 1.15   /* c443: 15% 늘림 */ * chCashStep(chBr.cash === 'dia' ? lv('cash') : Math.min(6, lv('cash'))) : 1.2 + lv('cash') * 1.56 / 7.2;   /* c429 */   /* c258: 8.64칸에서 1.56칸씩 → 최대 18칸 */   /* c140: 알아채는 거리 8.64칸 + 강화마다 1칸 (기준 시야 7.2칸에 곱하는 값) */   /* v339: 1.2 · 1.4 · 1.6 · 1.8배 */   /* v338: 20% 더 줄임 */   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
+  const cashK = () => CHAPTER ? 1.2 * 1.15   /* c443: 15% 늘림 */ * chCashStep(Math.min(5, lv('cash')))   /* c469 */ : 1.2 + lv('cash') * 1.56 / 7.2;   /* c429 */   /* c258: 8.64칸에서 1.56칸씩 → 최대 18칸 */   /* c140: 알아채는 거리 8.64칸 + 강화마다 1칸 (기준 시야 7.2칸에 곱하는 값) */   /* v339: 1.2 · 1.4 · 1.6 · 1.8배 */   /* v338: 20% 더 줄임 */   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
   const lureHits = () => CHAPTER ? CH_WV('cashH', lv('cash')) : 1 + lv('cash');   /* c258: 1 · 2 · 4 · 5 · 6 · 8 · 9대 */   /* v339: 2 · 4 · 6 · 8대 */   /* v333: 처음 4 → 3대 */    // v269: 유혹 중 4대째 맞으면 정신 차린다, 두뇌마다 +2 (4, 6, 8 …)
   function gainXp() {
     xp++;
@@ -5590,7 +5602,7 @@
           if (!mesh) { mesh = new THREE.Mesh(cashGeo, cashMat); const band = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.38).rotateX(-Math.PI / 2), cashBandMat); band.position.y = 0.002; mesh.add(band); }
           mesh.position.set(x, 0.03, z); mesh.rotation.y = Math.random() * Math.PI; mesh.renderOrder = -0.55;
           scene.add(mesh);
-          cashes.push({ x, z, space: me.space, mesh, t: CHAPTER ? CH_WV('cashT', lv('cash')) * chLingK() * chDiaK() : Math.max(CASH_LIFE, CH_WV('cashT', lv('cash')) + 1.5), who: new Set() });   /* c420: 돈다발 = 유혹 시간(하양 기준)만큼만 있다가 바로 사라진다 */
+          cashes.push({ x, z, space: me.space, mesh, t: CHAPTER ? CH_WV('cashT', chLvB('cash')) * chLingK() * chDiaK() : Math.max(CASH_LIFE, CH_WV('cashT', lv('cash')) + 1.5), who: new Set() });   /* c420: 돈다발 = 유혹 시간(하양 기준)만큼만 있다가 바로 사라진다 */
           fresh.push(cashes[cashes.length - 1]);
           break;
         }
@@ -5607,8 +5619,7 @@
         if (bd === Infinity) continue;
         if (bd <= SENSE * cashK()) enterLured(c);   // (c427: 아래 줄 다음에 차 · 기계)   /* c138: 바로 홀리는 거리도 기준 인지거리(3.6칸)로 통일 */ else { enterAlert(c); c.lureAlert = true; c.timer *= 0.5 / (c.soft ? CH_SOFT_ALERT : 1); }   /* c84: 돈을 보고 서 있는 시간은 그대로 */   // v275: 돈 보고 경계하는 시간 절반
       }
-      if (CHAPTER && chBr.cash === 'dia') chDiaCars(fresh);   // c427
-      if (CHAPTER && chBr.cash === 'gold') chGoldMachines(fresh);   // c427
+      if (CHAPTER && chRedR('cash')) { chDiaCars(fresh); chGoldMachines(fresh); }   // c469: 빨간 별 — 차에서 내려 뛰어오고 · 기계도 홀린다
     }
     refreshItems();
   }
@@ -5632,10 +5643,10 @@
       for (const c of bodies.slice(n0)) if (c.kind === 'citizen') { for (const k of fresh) k.who.add(c); enterLured(c); } }
   }
   function chGoldMachines(fresh) {             // c427: 금 — 기계도 홀린다 (날아와 내려앉는 시간까지 유혹 시간)
-    const r = chBrR('cash', 'gold'); if (!r) return; const T0 = CH_WV('cashT', 6) * chLingK();
-    for (const d of chDrones) { if (d.dead) continue; const k = chNearFresh(fresh, d.x, d.z, SIGHT * cashK() + 4, null); if (!k) continue; d.lureT = T0 * (0.2 + 0.05 * (r - 1)); d.lureK = k; d.tg = null; }
-    for (const c of bodies) { if (!c.robot || c.turret || c.state === 'held' || c.state === 'lured') continue; const k = chNearFresh(fresh, c.foot.x, c.foot.z, SIGHT * cashK() + 4, c.space); if (!k) continue; c.robotLure = T0 * (0.2 + 0.05 * (r - 1)); for (const q of fresh) q.who.add(c); enterLured(c); }   // c436: 로봇도 금에 홀린다 (드론과 같은 비율)
-    for (const tk of chTanks) if (!tk.wreck) { const k = chNearFresh(fresh, tk.x, tk.z, SIGHT * cashK() + 4, null);   /* c454 */ if (k) { tk.lureT = T0 * 0.05 * r; tk.lureX = k.x; tk.lureZ = k.z; } }
+    const r = chRedR('cash'); if (!r) return; const TM = (1 + 0.5 * (r - 1)) * chLingK();   // c469: 기계 1초 · 빨간 별마다 +0.5초 (잔류제)
+    for (const d of chDrones) { if (d.dead) continue; const k = chNearFresh(fresh, d.x, d.z, SIGHT * cashK() + 4, null); if (!k) continue; d.lureT = TM; d.lureK = k; d.tg = null; }
+    for (const c of bodies) { if (!c.robot || c.turret || c.state === 'held' || c.state === 'lured') continue; const k = chNearFresh(fresh, c.foot.x, c.foot.z, SIGHT * cashK() + 4, c.space); if (!k) continue; c.robotLure = TM; for (const q of fresh) q.who.add(c); enterLured(c); }   // c436: 로봇도 금에 홀린다 (드론과 같은 비율)
+    for (const tk of chTanks) if (!tk.wreck) { const k = chNearFresh(fresh, tk.x, tk.z, SIGHT * cashK() + 4, null);   /* c454 */ if (k) { tk.lureT = TM; tk.lureX = k.x; tk.lureZ = k.z; } }
   }
   const chDiaBuf = [];
   function chDiaFight(c, dt) {                 // c427: 다이아몬드 — 공격할 수 있는 인간은 유혹 시간 동안 가장 가까운 인간을 친다 (근접 = 다가가 때림 · 원거리 = 쏘면서 다이아몬드로)
@@ -5651,7 +5662,7 @@
   }
   function enterLured(c) { c.diaF = CHAPTER && chBr.cash === 'dia' && c.maxHp > 0 && Math.random() < chBrR('cash', 'dia') / 6;   /* c429: 다이아몬드 — 싸우는 쪽으로 바뀔 확률 */ c.state = 'lured'; c.lureAlert = false; c.foe = null; c.locked = false; c.lureHit = 0; c.pickT = 0; c.lureT = 0; }
   function luredStep(c, dt) {                 // 유혹: 좀비는 안 보고 가장 가까운 돈다발로 달려간다. 닿으면 돈다발이 사라진다
-    if ((c.lureT = (c.lureT || 0) + dt) >= (c.robot ? (c.robotLure || 0) : 1) * (c.robot ? 1 : CH_WV('cashT', lv('cash')) * chLingK() * chDiaK()) * (c.robot ? 1 : 1) * (c.robot ? 1 / 0.2 : 1) * (c.military ? 0.2 : c.police ? 0.5 : 1)) {   /* c139: 유혹 시간 — 저격수·군인 80% · 경찰 50% 짧다 */   /* v516: 군인·저격수 0.7초, 경찰 1.5초 */ c.state = 'normal'; c.ignoreCash = new Set(cashes); enterNormal(c); return; }   // v456: 군인·저격수는 최대 1.5초만 홀린다
+    if ((c.lureT = (c.lureT || 0) + dt) >= (c.robot ? (c.robotLure || 0) : 1) * (c.robot ? 1 : CH_WV('cashT', chLvB('cash')) * chLingK() * chDiaK()) * (c.robot ? 1 : 1) * (c.robot ? 1 / 0.2 : 1) * (c.military ? 0.2 : c.police ? 0.5 : 1)) {   /* c139: 유혹 시간 — 저격수·군인 80% · 경찰 50% 짧다 */   /* v516: 군인·저격수 0.7초, 경찰 1.5초 */ c.state = 'normal'; c.ignoreCash = new Set(cashes); enterNormal(c); return; }   // v456: 군인·저격수는 최대 1.5초만 홀린다
     if (CHAPTER && chBr.cash === 'dia' && c.diaF && c.maxHp > 0 && c.hp > 0 && chDiaFight(c, dt)) return;   // c427: 다이아몬드 — 근접형은 싸우는 중 (원거리는 쏘고 아래로 — 다이아몬드 쪽으로)
     const s = seeCash(c, SIGHT * cashK());
     if (!s) { enterNormal(c); return; }      // 볼 수 있는 돈다발이 없으면 유혹 끝
@@ -6749,7 +6760,7 @@
   const chLvB = (k) => Math.min(5, lv(k));   /* c468: 원래 수치는 흰 ★5에서 멈춘다 */
   const chRedR = (k) => CHAPTER ? Math.max(0, lv(k) - 5) : 0;   // c468: 빨간 별 수 (갈림길 없이 한 길)     // c422: 원래 수치는 흰 ★6에서 멈춘다
   const chStickyK = () => 1 - 0.15 * chBrR('bomb', 'sticky');   // 끈적 산성 — 15%씩 느리게 (90%까지)
-  const chLvMax = (k) => k === 'bag' ? 3 : /* c198: 빠루도 5번 (+120%) */ ITEM[k] && !ITEM[k].passive ? (k === 'taser' ? 10 : 5)   /* c468: 갈림길 없앰 — 테이저건 10단계 (흰 5 · 빨강 5), 나머지 무기는 정해질 때까지 ★5 */   /* c422: 갈림길이 있는 무기는 빨간 ★6까지 */ : 5;   /* c139: 무기는 6번까지 강화 */   // c21: 가방은 4개가 끝 (도구 칸 5개가 다 열린다)
+  const chLvMax = (k) => k === 'bag' ? 3 : /* c198: 빠루도 5번 (+120%) */ ITEM[k] && !ITEM[k].passive ? (k === 'taser' || k === 'cash' ? 10 : 5)   /* c469: 현금도 10단계 */   /* c468: 갈림길 없앰 — 테이저건 10단계 (흰 5 · 빨강 5), 나머지 무기는 정해질 때까지 ★5 */   /* c422: 갈림길이 있는 무기는 빨간 ★6까지 */ : 5;   /* c139: 무기는 6번까지 강화 */   // c21: 가방은 4개가 끝 (도구 칸 5개가 다 열린다)
   const chHas = (k) => ITEM[k].passive ? !!owned[k] : items.some((x) => x.kind === k);
   const chToolCap = () => CH_ET ? SLOT_A.length : Math.min(SLOT_A.length, 1 + (owned.bag ? 1 + lv('bag') : 0));   // c21: 쓸 수 있는 도구는 처음 1개 — 가방 하나마다 +1, 최대 5
   const chAccMax = () => 5 + 3 * chLvB('awaken');   /* c430 */   // c21: 각성 주사 — 모을 수 있는 시간(초). 가득 차는 데는 늘 40초
@@ -6774,7 +6785,7 @@
     mutate: (n) => `주사 ${CH_WV('mutN', n)}개 · 변이 ${6 + 3 * n}초`,
     taser: (n) => `한 번에 ${CH_WV('taserN', n)}명 · ${CH_WV('taserT', n)}초 감전 · 장탄 3` + (n > 5 ? ` · 정전기 ${(MELEE * chStatK(n - 5)).toFixed(1)}칸` : ''),   /* c468 */   /* c420 */   /* c251 */
     awaken: (n) => `최대 사용 시간 ${5 + 3 * n}초 · 가득 차는 데 35초`,
-    cash: (n) => `유혹 ${CH_WV('cashT', n)}초 · 알아채는 거리 ${(8.64 * 1.15 * chCashStep(Math.min(6, n))).toFixed(1)}칸`   /* c429 */,   /* c226 */
+    cash: (n) => `유혹 ${CH_WV('cashT', Math.min(5, n))}초 · 알아채는 거리 ${(8.64 * 1.15 * chCashStep(Math.min(5, n))).toFixed(1)}칸` + (n > 5 ? ` · 비트코인 — 기계 ${(1 + 0.5 * (n - 6)).toFixed(1)}초 · 차에서 내려 뛰어온다` : '')   /* c469 */   /* c429 */,   /* c226 */
     book: (n) => `무기 쿨타임 -${5 + 9 * n}%`,
     bag: (n) => `무기 ${Math.min(5, 2 + n)}칸`,
     rage: (n) => `30초마다 동료 1명 · 공격 속도 +${10 + 10 * n}%`,   /* c420 */
@@ -6807,6 +6818,7 @@
   function chCatB() { return CHAPTER && owned.catalyst ? 0.05 * (1 + lv('catalyst')) : 0; }   // c420: 촉매제 — 변이 좀비(나 포함) 공격력·최대 체력 +5%씩
   function chItemChanged(kind) {
     if (CHAPTER && kind === 'taser') chTaserLook();   // c468
+    if (CHAPTER && kind === 'cash') chCashLook();   // c469
     if (false && CHAPTER && CH_BRANCH[kind] && lv(kind) > 6 && !chBr[kind]   /* c468: 갈림길 없음 */ && !pendingAward.includes('br:' + kind)) pendingAward.push('br:' + kind);   // c422: 갈림길 고르기              // 얻었거나 강화한 바로 그때 적용할 것
     if (kind === 'blood' && isZombie(me)) {   // 혈액팩: 나만 최대 체력 +10% (기본 체력 기준 — 얻을 때, 그리고 강화할 때마다)
       const d = MY_HP * (CHAPTER ? 0.12 : 0.10);   /* c198: 12%씩 */
@@ -8337,7 +8349,7 @@
     if (!me || !isZombie(me)) return;
     for (const z of zombies) if (!z.bombing) { z.hp = z.maxHp; z.stunT = 0; }   // c465: 동료도 무적
     me.hp = me.maxHp; me.stunT = 0; me.knockT = 0;   // 무적 · 아무 영향 없음
-    if (!chETdone) { chETdone = true; chETSpawn(); chETSet('taser', 6, null); }
+    if (!chETdone) { chETdone = true; chETSpawn(); chETSet('taser', 5, null);   /* c469: 적 테스트 시작 = 흰 ★5 (10단계로 바뀌어 6은 빨★1) */ }
   }
   function chBossTest(dt) {                    // c166: 보스 테스트 맵
     if (!me) return;
