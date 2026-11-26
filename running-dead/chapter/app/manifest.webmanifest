@@ -1,6 +1,6 @@
 {
-  "name": "러닝데드 챕터",
-  "short_name": "러닝데드 챕터",
+  "name": "러닝데드",
+  "short_name": "러닝데드",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
