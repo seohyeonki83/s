@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c494</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c495</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5447,7 +5447,7 @@
   const legK = () => 1 + 0.07 * up.leg + (CHAPTER && owned.shoes ? 0.05 * (1 + lv('shoes')) : 0);   /* c224: 운동화 = 나·동료·변이 · c257: 5%씩 */      // 빠른 다리 — 나·동료 이동 속도 레벨당 +5% (v256)
   const meSpeed = () => MY_SPEED * (legK() + (!CHAPTER && owned.shoes ? 0.07 * (1 + lv('shoes')) : 0)   /* c198: 7%씩 */   /* v568: 운동화 처음 +15%, 강화마다 +10% */) * (me && me.mut === 'armor' ? MUT_SPEED : 1);   /* c313: 히드라는 일반 속도 */   // v558: 각성 중엔 변이 속도   // v275: 운동화 +10% (도구 다루기마다 +3%) — 빠른 다리와 더한다
   const chCashStep = (n) => 1 + 1.4 / 12 * n;   // c429: 현금 사거리 배율 (★0 = 1 · 흰 ★6 = 1.7 · 다이아몬드 빨간 ★6 = 2.4)
-  const cashK = () => CHAPTER ? 1.2 * 1.15   /* c443: 15% 늘림 */ * chCashStep(Math.min(5, lv('cash')))   /* c469 */ : 1.2 + lv('cash') * 1.56 / 7.2;   /* c429 */   /* c258: 8.64칸에서 1.56칸씩 → 최대 18칸 */   /* c140: 알아채는 거리 8.64칸 + 강화마다 1칸 (기준 시야 7.2칸에 곱하는 값) */   /* v339: 1.2 · 1.4 · 1.6 · 1.8배 */   /* v338: 20% 더 줄임 */   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
+  const cashK = () => CHAPTER ? 1.2 * 1.15 * 1.25   /* c495: 25% 늘림 · c443: 15% 늘림 */ * chCashStep(Math.min(5, lv('cash')))   /* c469 */ : 1.2 + lv('cash') * 1.56 / 7.2;   /* c429 */   /* c258: 8.64칸에서 1.56칸씩 → 최대 18칸 */   /* c140: 알아채는 거리 8.64칸 + 강화마다 1칸 (기준 시야 7.2칸에 곱하는 값) */   /* v339: 1.2 · 1.4 · 1.6 · 1.8배 */   /* v338: 20% 더 줄임 */   /* v333: 10% 줄임 */   // v275: 기본 10% 줄임 (1.94 → 1.74배)   // 사람들이 돈다발을 알아채는 거리 배율 — v238: 기본 1.936배 (v237 1.76배에서 10% 더), 똑똑한 두뇌마다 +20%
   const lureHits = () => CHAPTER ? CH_WV('cashH', lv('cash')) : 1 + lv('cash');   /* c258: 1 · 2 · 4 · 5 · 6 · 8 · 9대 */   /* v339: 2 · 4 · 6 · 8대 */   /* v333: 처음 4 → 3대 */    // v269: 유혹 중 4대째 맞으면 정신 차린다, 두뇌마다 +2 (4, 6, 8 …)
   function gainXp() {
     xp++;
@@ -6872,7 +6872,7 @@
     mutate: (n) => `주사 ${CH_WV('mutN', n)}개 · 변이 ${CH_MUT_TT[Math.min(5, n)]}초` + (n > 5 ? ` · 괴물 — 히드라 사거리 ×${(1 + (n - 5) / 5).toFixed(1)} · 덩치 힘 ${(7 + 7 * (n - 5) / 5).toFixed(1)} · 범위 공격 ×${(0.5 + 0.25 * (n - 6)).toFixed(2)}` : ''),   /* c484 */
     taser: (n) => `한 번에 ${CH_WV('taserN', n)}명 · ${CH_WV('taserT', n)}초 감전 · 장탄 3` + (n > 5 ? ` · 기계 오작동 ${25 + 5 * (n - 6)}%` : ''),   /* c481 */   /* c420 */   /* c251 */
     awaken: (n) => `최대 사용 시간 ${CH_MUT_TT[Math.min(5, n)]}초 · 가득 차는 데 40초` + (n > 5 ? ` · 괴물 — 히드라 사거리 ×${(1 + (n - 5) / 5).toFixed(1)} · 덩치 힘 ${(7 + 7 * (n - 5) / 5).toFixed(1)} · 범위 공격 ×${(0.5 + 0.25 * (n - 6)).toFixed(2)}` : ''),   /* c484 */
-    cash: (n) => `유혹 ${CH_WV('cashT', Math.min(5, n))}초 · 알아채는 거리 ${(8.64 * 1.15 * chCashStep(Math.min(5, n))).toFixed(1)}칸` + (n > 5 ? ` · 비트코인 — 기계 ${(1 + 0.5 * (n - 6)).toFixed(1)}초 · 차에서 내려 뛰어온다` : '')   /* c469 */   /* c429 */,   /* c226 */
+    cash: (n) => `유혹 ${CH_WV('cashT', Math.min(5, n))}초 · 알아채는 거리 ${(8.64 * 1.15 * 1.25 * chCashStep(Math.min(5, n))).toFixed(1)}칸` + (n > 5 ? ` · 비트코인 — 기계 ${(1 + 0.5 * (n - 6)).toFixed(1)}초 · 차에서 내려 뛰어온다` : '')   /* c469 */   /* c429 */,   /* c226 */
     book: (n) => `무기 쿨타임 -${5 + 9 * n}%`,
     bag: (n) => `무기 ${Math.min(5, 2 + n)}칸`,
     rage: (n) => `30초마다 동료 1명 · 공격 속도 +${10 + 10 * n}%`,   /* c420 */
