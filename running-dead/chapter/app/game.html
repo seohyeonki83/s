@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c498</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c499</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3277,7 +3277,7 @@
     g.fillStyle = '#ff3b30'; g.fill(); g.lineWidth = 1 * u; g.strokeStyle = 'rgba(255, 255, 255, 0.9)'; g.stroke();
   }
   // ── c18: 미니맵을 누르면 화면 한가운데에 크게, 다시 누르면 제자리로. 보여 주는 내용은 같다 (크게 볼 때는 그 크기로 새로 그려서 또렷하게) ──
-  let mmBig = false;
+  let mmBig = false, mmPaused = false;   // c499
   function mmLayout() {
     const S = mmEl.style;
     if (!mmBig) {
@@ -3292,7 +3292,9 @@
   }
   if (CHAPTER) {
     mmEl.style.pointerEvents = 'auto'; mmEl.style.touchAction = 'none'; mmEl.style.cursor = 'pointer';
-    mmEl.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); mmBig = !mmBig; mmLayout(); });   // 누른 손가락은 조이스틱으로 안 넘어간다
+    mmEl.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); mmBig = !mmBig;
+      if (mmBig && !paused) { paused = true; mmPaused = true; stopInput(); } else if (!mmBig && mmPaused) { mmPaused = false; paused = false; last = 0; }   // c499: 큰 지도를 연 동안 일시정지
+      mmLayout(); });   // 누른 손가락은 조이스틱으로 안 넘어간다
     window.addEventListener('resize', () => { if (mmBig) mmLayout(); });
   }
   function updateMinimap(dt) {                // 0.1초마다
