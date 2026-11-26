@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c484</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c485</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3418,7 +3418,7 @@
     if (v.madIn > 0) dmg = 0;   // c480: 오작동 연출 중 무적
     if (CHAPTER && isZombie(v) && v.bombing) dmg *= 0.5;   // c432: 자폭하러 가는 동료는 받는 피해 절반
     if (isZombie(v) && v.mut) dmg *= v.mut === 'armor' ? (v === me ? 0.5 /* v581: 덩치로 각성한 나 받는 피해 −50% */ : TEST_ARMOR ? 0 : 0.2) : 0.9;   /* v558: 각성한 나는 덩치여도 −80% 없음 */   // v275: 갑옷좀비 받는 피해 80% 줄임, 히드라 10% 줄임
-    if (a.mut === 'armor' && (v.kind === 'citizen' || (CHAPTER && v.kind === 'obj' && v.type === 'car' && !v.dead && chMonster(a))) && !a.splashing) {   /* c430: 괴물 덩치는 차·바리케이트를 쳐도 */   // v275: 갑옷좀비 — 앞쪽 80° 부채꼴, 근접 거리 1.2배 안 다른 적도 30%
+    if (a.mut === 'armor' && (!CHAPTER || chMonster(a)) && (v.kind === 'citizen' ||   /* c485: 덩치 범위 공격은 괴물(빨간 별)부터 */ (CHAPTER && v.kind === 'obj' && v.type === 'car' && !v.dead && chMonster(a))) && !a.splashing) {   /* c430: 괴물 덩치는 차·바리케이트를 쳐도 */   // v275: 갑옷좀비 — 앞쪽 80° 부채꼴, 근접 거리 1.2배 안 다른 적도 30%
       const R = (MELEE + (a.r - BODY)) * 1.2 * 2 * (CHAPTER ? chSplK(a) : 1), fx = v.foot.x - a.foot.x,   /* c378: 범위 = 촉매제 없으면 지금의 80%, 다 강화하면 1.5배 */ fz = v.foot.z - a.foot.z, fl = Math.hypot(fx, fz) || 1;
       a.splashing = true;
       for (const c of bodies) {
@@ -5563,7 +5563,7 @@
       if (it.off) continue;                   // c21: 꺼진 도구는 멈춰 있다
       if (it.kind === 'awaken') {
         if (it.drain) { if (me.mut) { it.acc = Math.max(0, me.mutT); continue; } it.drain = false; it.acc = 0; }   // c29: 변이하는 동안은 남은 시간만큼 게이지가 줄어든다 (모이지 않는다). 변이가 끝나면 0에서 다시 모인다
-        const m = chAccMax(); it.acc = Math.min(m, (it.acc || 0) + dt * m / (35 * 1.15 * (1 - bookCut())));   /* c371: 각성 주사 차는 시간 15% 늘림 (35 → 40.25초) */ continue;   // c21: 가득 차는 데 늘 40초 (백과사전이 줄여 준다)
+        const m = chAccMax(); it.acc = Math.min(m, (it.acc || 0) + dt * m / (40 * (1 - bookCut())));   /* c485: 가득 차는 데 40초 */   /* c371: 각성 주사 차는 시간 15% 늘림 (35 → 40.25초) */ continue;   // c21: 가득 차는 데 늘 40초 (백과사전이 줄여 준다)
       }
       if (it.ammo >= itemMax(it.kind)) { it.t = 0; continue; }
       if ((it.t += dt) >= itemReload(it.kind)) { it.t = 0; it.ammo++; }
@@ -5981,11 +5981,11 @@
     return out;
   }
   const MUT_SPEED = 1.25 * 1.15;   /* v347: 15% 더 */                     // v304: 변이 좀비 이동 속도 배율
-  const CH_MUT_TT = [6, 10, 14, 17, 21, 24];   // c484: 변이 · 각성 시간 (★0~★5, 둘이 같다 — 예전 ★6 끝값 24초를 ★5에, 소수점은 올림)
+  const CH_MUT_TT = [5, 9, 13, 17, 21, 25];   // c485: 5초 · 4초씩 (변이 · 각성 둘 다)   // c484: 변이 · 각성 시간 (★0~★5, 둘이 같다 — 예전 ★6 끝값 24초를 ★5에, 소수점은 올림)
   const MUT_T = () => CH_MUT_TT[chLvB('mutate')];   /* c442: 잔류제 안 걸림 (c441 되돌림) */   /* c430 */   /* c21: 변이 10초, 강화마다 +3초 (주사 개수 +1은 테스트맵 그대로) */                            // 변이 유지 시간 — v299: 기본 20 → 23초, 도구 다루기마다 +2 → +4초
   const itemMax = (k) => k === 'mutate' ? CH_WV('mutN', lv('mutate')) : CHAPTER && k === 'taser' ? 3   /* c420: 장탄 3 고정 */ : ITEM[k].max;   // 변이 주사 장탄 +1씩
   const bookCut = () => owned.book ? (CHAPTER ? 0.05 + 0.09 * lv('book') : 0.07 * (1 + lv('book'))) : 0;   /* c373: 5% · 14 · 23 · 32 · 41 · 50% */   /* c198: 7%씩 */   /* c21: 백과사전 5%, 강화마다 +5%p (30%까지) */   /* v582: 7%, 강화마다 남은 쿨타임에서 7%씩 */   // v286: 백과사전 — 사용 도구 쿨타임 7% 줄임, 도구 다루기마다 3%p씩 더
-  const itemReload = (k) => (k === 'bomb' ? 40 * 1.15 * 1.1 * 0.75   /* c279: 25% 줄임 (상수끼리라 미리 계산됨) */   /* c21: 자폭 쿨타임은 고정 — 강화는 범위로 간다 */ /* v559: +10% 더 */ : ITEM[k].reload * (k === 'taser' ? 1.1 * (CHAPTER ? 1.3 : 1) : 1) * (CHAPTER && k === 'mutate' ? 1.15 : 1))   /* c371: 변이 주사 쿨타임 15% 늘림 */   /* c251: 테이저 쿨타임 30% 늘림 */   /* v556: 자폭 +15% · 테이저 +10% */ * (1 - bookCut());   // 자폭 쿨타임 −3초씩 → 그 위에 백과사전
+  const itemReload = (k) => (k === 'bomb' ? 40 * 1.15 * 1.1 * 0.75   /* c279: 25% 줄임 (상수끼리라 미리 계산됨) */   /* c21: 자폭 쿨타임은 고정 — 강화는 범위로 간다 */ /* v559: +10% 더 */ : ITEM[k].reload * (k === 'taser' ? 1.1 * (CHAPTER ? 1.3 : 1) : 1) * (CHAPTER && k === 'mutate' ? 40 / 35 : 1)   /* c485: 한 발 40초 */)   /* c371: 변이 주사 쿨타임 15% 늘림 */   /* c251: 테이저 쿨타임 30% 늘림 */   /* v556: 자폭 +15% · 테이저 +10% */ * (1 - bookCut());   // 자폭 쿨타임 −3초씩 → 그 위에 백과사전
   function refreshBadges() {                  // 패시브 배지 아래 숫자
     const t = {
       vest: () => '-' + vestPct(lv('vest')) + '%',
@@ -6028,11 +6028,11 @@
   const MUT_COL = { armor: 0x1f3d99, hydra: 0x2fb84a };
   const TEST_ARMOR = false;   /* v351: 시험 끝 */                    // v348: 시험용 — 변이는 덩치만, 덩치는 안 죽고 안 풀린다 (false면 원래대로)
   function chCatT() { return CHAPTER && owned.catalyst ? (1 + lv('catalyst')) / 6 : 0; }   // c373: 촉매제 진행 (획득 1/6 … 다 강화 6/6)
-  function chMB(z) { if (!CHAPTER || !z) return null; const k = z === me ? 'awaken' : 'mutate', id = chBr[k]; return id ? { id, r: Math.max(0, lv(k) - 6) } : null; }   // c430: 그 좀비의 갈림길 (나 = 각성 주사 · 동료 = 변이 주사)
+  function chMB(z) { if (!CHAPTER || !z) return null; const k = z === me ? 'awaken' : 'mutate', r = chRedR(k); return r ? { id: 'monster', r } : null; }   /* c485: 빨간 별 = 괴물 좀비 (빨★1~5) */   // c430: 그 좀비의 갈림길 (나 = 각성 주사 · 동료 = 변이 주사)
   const chMonster = (z) => { const B = chMB(z); return !!B && B.id === 'monster'; };
-  function chArmF(z) { const B = chMB(z); return (7 + (B && B.id === 'monster' ? 7 * B.r / 6 : 0)) * (z.bombing ? 3 : 1); }   /* c460: 자폭 중 3배 */   /* c447: 기본 7 (괴물 ★6 = 14) */   /* c445: 기본 5 (괴물 ★6 = 9) */   // c430: 덩치 미는 힘 (괴물 10 → 14)
-  function chHydK(z) { const B = chMB(z); return B && B.id === 'monster' ? 1 + B.r / 6 : 1; }   // c420: 히드라 사거리 1배 고정 (촉매제와 상관없다)   // c373: 히드라 사거리 — 원래의 2/3, 촉매제 다 올리면 1.3배
-  function chSplK(z) { const B = chMB(z); return B && B.id === 'monster' ? 0.5 + B.r / 6 : 0.5; }   // c430: 덩치 범위 공격 거리 — 0.5배 (괴물이면 1.5배까지)   // c420: 덩치 범위 공격 크기 1배 고정   // c378: 덩치 범위 공격 크기 — 촉매제 없으면 0.8배, 다 강화하면 1.5배
+  function chArmF(z) { const B = chMB(z); return (7 + (B && B.id === 'monster' ? 7 * B.r / 5 : 0)) * (z.bombing ? 3 : 1); }   /* c485: 빨★5 = 14 */   /* c460: 자폭 중 3배 */   /* c447: 기본 7 (괴물 ★6 = 14) */   /* c445: 기본 5 (괴물 ★6 = 9) */   // c430: 덩치 미는 힘 (괴물 10 → 14)
+  function chHydK(z) { const B = chMB(z); return B && B.id === 'monster' ? 1 + B.r / 5 : 1; }   /* c485: 빨★5 = ×2 */   // c420: 히드라 사거리 1배 고정 (촉매제와 상관없다)   // c373: 히드라 사거리 — 원래의 2/3, 촉매제 다 올리면 1.3배
+  function chSplK(z) { const B = chMB(z); return B && B.id === 'monster' ? 0.5 + 0.25 * (B.r - 1) : 0; }   /* c485: 범위 공격은 괴물부터 — ×0.5 · 0.75 · 1 · 1.25 · 1.5 */   // c430: 덩치 범위 공격 거리 — 0.5배 (괴물이면 1.5배까지)   // c420: 덩치 범위 공격 크기 1배 고정   // c378: 덩치 범위 공격 크기 — 촉매제 없으면 0.8배, 다 강화하면 1.5배
   function chArmK() { return 10 / 11; }   // c420: 덩치 미는 힘 10 고정 (11 기준)   /* c377: 다 강화하면 미는 힘 13 (11 기준) */   // c373: 덩치 미는 힘 — 원래의 2/3, 촉매제 다 올리면 1.2배
   function mutate(z, force) {   /* c53: force = 정해진 변이를 영구로 (철창 수감자) */
     if (z.mut) unmutate(z);
@@ -6847,7 +6847,7 @@
   const chRedR = (k) => CHAPTER ? Math.max(0, lv(k) - 5) : 0;   // c468: 빨간 별 수 (갈림길 없이 한 길)     // c422: 원래 수치는 흰 ★6에서 멈춘다
   const chStickyK = () => 1 - 0.15 * chRedR('bomb');   // c479: 빨간 별마다 15%씩 느리게 (빨★5 = 75%)
   const chSlowK = (b) => Math.min(b.statT > 0 ? CH_STAT_SLOW : 1, CHAPTER && b.goo ? chStickyK() : 1);   // c479: 정전기 · 보라 산성 — 둘 중 더 느린 쪽, 모든 동작   // 끈적 산성 — 15%씩 느리게 (90%까지)
-  const chLvMax = (k) => k === 'bag' ? 3 : /* c198: 빠루도 5번 (+120%) */ ITEM[k] && !ITEM[k].passive ? (k === 'taser' || k === 'cash' || k === 'bomb' ? 10 : 5)   /* c479: 자폭 스위치도 10단계 */   /* c469: 현금도 10단계 */   /* c468: 갈림길 없앰 — 테이저건 10단계 (흰 5 · 빨강 5), 나머지 무기는 정해질 때까지 ★5 */   /* c422: 갈림길이 있는 무기는 빨간 ★6까지 */ : 5;   /* c139: 무기는 6번까지 강화 */   // c21: 가방은 4개가 끝 (도구 칸 5개가 다 열린다)
+  const chLvMax = (k) => k === 'bag' ? 3 : /* c198: 빠루도 5번 (+120%) */ ITEM[k] && !ITEM[k].passive ? (k === 'taser' || k === 'cash' || k === 'bomb' || k === 'mutate' || k === 'awaken' ? 10 : 5)   /* c485: 변이 · 각성도 10단계 */   /* c479: 자폭 스위치도 10단계 */   /* c469: 현금도 10단계 */   /* c468: 갈림길 없앰 — 테이저건 10단계 (흰 5 · 빨강 5), 나머지 무기는 정해질 때까지 ★5 */   /* c422: 갈림길이 있는 무기는 빨간 ★6까지 */ : 5;   /* c139: 무기는 6번까지 강화 */   // c21: 가방은 4개가 끝 (도구 칸 5개가 다 열린다)
   const chHas = (k) => ITEM[k].passive ? !!owned[k] : items.some((x) => x.kind === k);
   const chToolCap = () => CH_ET ? SLOT_A.length : Math.min(SLOT_A.length, 1 + (owned.bag ? 1 + lv('bag') : 0));   // c21: 쓸 수 있는 도구는 처음 1개 — 가방 하나마다 +1, 최대 5
   const chAccMax = () => CH_MUT_TT[chLvB('awaken')];   /* c484 */   /* c430 */   // c21: 각성 주사 — 모을 수 있는 시간(초). 가득 차는 데는 늘 40초
@@ -6869,9 +6869,9 @@
   }
   const CH_STAT = {                           // c21: 획득창·설명창에 나오는 수치 (n = 강화 단계)
     bomb: (n) => `터지는 범위 ${2 + Math.min(5, n)}칸 · 산성 ${+(4 + 0.6 * Math.min(5, n)).toFixed(1)}초` + (n > 5 ? ` · 보라 산성 — 맞은 적 ${15 * (n - 5)}% 느려짐` : ''),   /* c479 */   /* c474 */
-    mutate: (n) => `주사 ${CH_WV('mutN', n)}개 · 변이 ${CH_MUT_TT[Math.min(5, n)]}초`,   /* c484 */
+    mutate: (n) => `주사 ${CH_WV('mutN', n)}개 · 변이 ${CH_MUT_TT[Math.min(5, n)]}초` + (n > 5 ? ` · 괴물 — 히드라 사거리 ×${(1 + (n - 5) / 5).toFixed(1)} · 덩치 힘 ${(7 + 7 * (n - 5) / 5).toFixed(1)} · 범위 공격 ×${(0.5 + 0.25 * (n - 6)).toFixed(2)}` : ''),   /* c484 */
     taser: (n) => `한 번에 ${CH_WV('taserN', n)}명 · ${CH_WV('taserT', n)}초 감전 · 장탄 3` + (n > 5 ? ` · 기계 오작동 ${25 + 5 * (n - 6)}%` : ''),   /* c481 */   /* c420 */   /* c251 */
-    awaken: (n) => `최대 사용 시간 ${CH_MUT_TT[Math.min(5, n)]}초 · 가득 차는 데 40초`,   /* c484 */
+    awaken: (n) => `최대 사용 시간 ${CH_MUT_TT[Math.min(5, n)]}초 · 가득 차는 데 40초` + (n > 5 ? ` · 괴물 — 히드라 사거리 ×${(1 + (n - 5) / 5).toFixed(1)} · 덩치 힘 ${(7 + 7 * (n - 5) / 5).toFixed(1)} · 범위 공격 ×${(0.5 + 0.25 * (n - 6)).toFixed(2)}` : ''),   /* c484 */
     cash: (n) => `유혹 ${CH_WV('cashT', Math.min(5, n))}초 · 알아채는 거리 ${(8.64 * 1.15 * chCashStep(Math.min(5, n))).toFixed(1)}칸` + (n > 5 ? ` · 비트코인 — 기계 ${(1 + 0.5 * (n - 6)).toFixed(1)}초 · 차에서 내려 뛰어온다` : '')   /* c469 */   /* c429 */,   /* c226 */
     book: (n) => `무기 쿨타임 -${5 + 9 * n}%`,
     bag: (n) => `무기 ${Math.min(5, 2 + n)}칸`,
