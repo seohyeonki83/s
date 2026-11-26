@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c493</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c494</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5194,7 +5194,7 @@
     }
     if (CHAPTER && !CH_ET) chSfTick(dt);   // c463 · c122
     while (teamQueue.length) queueSquads(teamQueue.shift());
-    for (let i = teamWait.length - 1; i >= 0; i--) if (!teamWait[i].hold && (teamWait[i].t -= dt) <= 0) { const w = teamWait.splice(i, 1)[0]; if (w.boss) { chBossSpawn(w.seg); chBossSpawn(w.seg); }   /* c454: 불도저 2대 */ else if (w.car) { const p = teamSpot(w.seg); addCar(p.x, p.z, Math.atan2(me.foot.z - p.z, me.foot.x - p.x), null, 0, w.car); if (w.tk) cars[cars.length - 1].tkWave = true; } else { chTkMark = !!w.tk; spawnTeam(w.comp, w.first, w.seg); chTkMark = false; } }   // v444: 분대 10초 간격   // v410: 군인팀 출동 (이번 걸음 좀비 목록을 만든 뒤)
+    for (let i = teamWait.length - 1; i >= 0; i--) if (!teamWait[i].hold && (teamWait[i].t -= dt) <= 0) { const w = teamWait.splice(i, 1)[0]; if (w.boss) { if (w.tank) chBossSpawn(w.seg, 'tank'); else { chBossSpawn(w.seg); chBossSpawn(w.seg); } }   /* c494 */   /* c454: 불도저 2대 */ else if (w.car) { const p = teamSpot(w.seg); addCar(p.x, p.z, Math.atan2(me.foot.z - p.z, me.foot.x - p.x), null, 0, w.car); if (w.tk) cars[cars.length - 1].tkWave = true; } else { chTkMark = !!w.tk; spawnTeam(w.comp, w.first, w.seg); chTkMark = false; } }   // v444: 분대 10초 간격   // v410: 군인팀 출동 (이번 걸음 좀비 목록을 만든 뒤)
     crowd.clear();                            // 시민마다 지금 노리는 좀비 수 (v148) — 타겟을 새로 뽑을 때마다 바로 고쳐서, 같은 순간에 뽑는 좀비끼리도 겹치지 않는다
     for (const z of zombies) if (z.pick && z.pick.kind === 'citizen' && z.pick.hp > 0) crowd.set(z.pick, (crowd.get(z.pick) || 0) + 1);
     objFrame++; objCrowd.clear();             // 경찰차에 붙은 좀비 수 (v243) — 지난 걸음에 때리던 좀비
@@ -7819,7 +7819,8 @@
   //           기관포 = 군인처럼 4발 연사, 사거리는 저격수, 한 발이 군인의 2배 + 둘레 스플래시 + 넉백 2배. 20초마다 좀비가 가장 많은 쪽으로 0.3초 돌진.
   //           건물·사물을 피해 다니지 않는다 — 사물은 깔아뭉개고, 벽은 비비다가 부순다 (벽 조각 단위, 체력 표시 없음). 산·강만 못 넘는다.
   const CH_SF_GAP = 120, CH_SF_FORCE = 180, CH_SF_WAVE = 15, CH_TK_K = MIL_K * 2 * 0.8 * 1.2,   /* c184: 20% 크게 */ CH_TK_KL = MIL_K * 2 * 0.8 * 0.78 * 0.85 * 1.2,   /* c182: 15% 더 */   /* c179: 78% */   /* c177: 길이만 15% 짧게 */   /* c168: 20% 작게 */ CH_TK_ESC = 2.6, CH_TK_DASH_EVERY = 20, CH_TK_DASH_T = 0.3, CH_TK_SPLASH = 1.2, CH_TK_WALL_T = 2.4 / 1.3,   /* c168: 벽 부수는 힘 30% 더 */ CH_TK_HOLE = 2.3;
-  const chSf = { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, shown: '' };
+  const CH_C2_AT = [120, 265, 405, 550];   // c494: 두 번째 차례 (불도저를 다 부순 때부터)
+  const chSf = { c2: null, repNext: 650, on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, shown: '' };
   const chBanner = [], chCuts = [], chTkBuf = [], chTkBuf2 = [];
   let chTank = null; const chTanks = [];   // c454: 보스 여럿 (불도저 2대)
   const chSfEl = document.createElement('div');
@@ -7832,11 +7833,11 @@
       const left = Math.max(0, Math.ceil(chSfAt(chSf.n + 1) - chSf.T));
       s = chSf.n < 3 ? (chSf.n === 0 ? '특공대 도착까지 ' : '다음 특공대 출동까지 ') + left + '초' : '<span class="bosscd"><i>!</i>보스 출동까지 ' + left + '초<i>!</i></span>';   /* c126 */
     }
-    if (chSf.on && chSf.boss) s = '다음 특공대 출동까지 ' + Math.max(0, Math.ceil(chSfAt(chSf.n + 1) - chSf.T)) + '초';   // c459
+    if (chSf.on && chSf.boss) { const C2 = chSf.c2, w = C2 && !C2.boss ? C2.T0 + CH_C2_AT[C2.n] : chSf.repNext, left = Math.max(0, Math.ceil(w - chSf.T)); s = C2 && !C2.boss && C2.n >= 3 ? '<span class="bosscd"><i>!</i>보스 출동까지 ' + left + '초<i>!</i></span>' : '다음 특공대 출동까지 ' + left + '초'; }   // c494 · c459
     if (s !== chSf.shown) { chSf.shown = s; chSfEl.innerHTML = s; chSfEl.style.display = s ? 'block' : 'none'; }
   }
   function chSfReset() {
-    for (const t of chTanks) t.tkPh = null; Object.assign(chSf, { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, hide: false, hideT: 0 }); chBTdone = false; chETdone = false; chSf.wn = 0; for (const B of buildings) B.everOpen = false;   /* c166 · c168 · c193 */
+    for (const t of chTanks) t.tkPh = null; Object.assign(chSf, { on: false, susT: 0, T: 0, n: 0, boss: false, waveT: 0, won: false, chk: 0, hide: false, hideT: 0, c2: null, repNext: 650 })   /* c494 */; chBTdone = false; chETdone = false; chSf.wn = 0; for (const B of buildings) B.everOpen = false;   /* c166 · c168 · c193 */
     chBanner.length = 0; chDiscR = chDiscP = chDiscO = chDiscY = 0; chDiscT = 0;   // c220 · c262
     for (const t of chTanks) if (t.tracer) scene.remove(t.tracer);
     chTank = null; chTanks.length = 0;   // c454
@@ -7886,7 +7887,13 @@
         else { chSf.boss = true; teamsSpawned++; chBanner.push('boss'); teamWait.push({ boss: true, t: 0, seg: teamSeg(), hold: true }); }
       }
     } else {
-      chSf.T += dt; while (chSf.T >= chSfAt(chSf.n + 1)) { chSf.n++; chQueueTeam(3); }   // c459: 보스 뒤 100초마다 (650 · 750 · …) — 보스전 중에도 · 끝난 뒤에도
+      chSf.T += dt;
+      if (!chSf.c2 && chTanks.length && chTanks.every((t) => t.wreck)) { chSf.c2 = { T0: chSf.T, n: 0, boss: false }; }   // c494: 불도저 다 부숨 → 두 번째 차례 시작
+      const C2 = chSf.c2;
+      if (C2 && !C2.boss) {   // c494: 특공대 1 · 2 · 3팀 (120 · 265 · 405초) → 550초 장갑차 — 그동안 100초 반복 팀은 쉰다
+        while (!C2.boss && chSf.T - C2.T0 >= CH_C2_AT[C2.n]) { if (C2.n < 3) { chQueueTeam(C2.n); C2.n++; chSf.hide = true; chSf.hideT = 8; } else { C2.boss = true; teamsSpawned++; chBanner.push('boss'); teamWait.push({ boss: true, tank: true, t: 0, seg: teamSeg(), hold: true }); chSf.repNext = chSf.T + 100; } }
+      } else if (chSf.T >= chSf.repNext) { chSf.repNext += 100; chQueueTeam(3); }   // 보스 뒤 100초마다 3팀
+      // c459 (100초 반복은 repNext로): 보스 뒤 100초마다 (650 · 750 · …) — 보스전 중에도 · 끝난 뒤에도
       const T = chTanks.find((t) => !t.wreck) || chTanks[0];   // c454: 하나라도 살아 있으면 특공대 · 다 부서져야 끝
       if (T && !T.wreck && (chSf.waveT += dt) >= CH_SF_WAVE) { chSf.waveT -= CH_SF_WAVE; chSf.wn = (chSf.wn || 0) + 1; teamWait.push({ comp: [G_, G_]   /* c176: 군인만 */, t: 0, first: false, seg: teamSeg(), tk: true });   /* c168: 군인 2 · 세 번에 한 번 저격수 1 + 군인 1 */   /* c128: 1팀 (가장 약한 팀) */ }
       if (T && T.wreck && !chSf.won && (chSf.chk -= dt) <= 0) {
@@ -7904,11 +7911,11 @@
     if (m !== T) { c.master = T; c.slotA = Math.random() * Math.PI * 2; c.slotK = rand(0.5, 1); }   /* c176: 저격수 호위와 같은 자리 폭 */
     return T;
   }
-  function chBossSpawn(seg) {
+  function chBossSpawn(seg, kind) {   // c494: kind 'tank' = 두 번째 보스 장갑차 (원래 공격 · 체력 = 불도저 2배 · 무게 = 불도저 1.2배)
     const p = teamSpot(seg), h = Math.atan2(me.foot.z - p.z, me.foot.x - p.x);
     addCar(p.x, p.z, h, null, 0, ['tank']);
     const car = cars[cars.length - 1], K = car.g.children;
-    car.squad = null; car.tank = true; car.state = 'tank'; car.kw = CH_TK_K; car.kl = CH_TK_KL; car.massK = 4; car.hpK = 10 * 0.95 * 3 * 0.9 * 1.5 * 0.9 * 1.1 * 0.95 * 0.75; if (CHAPTER) { car.dozer = true; car.massK = 2;   /* c492: 불도저 무게 반 (40 → 20) */ car.hpK *= 0.8 * 0.8 * 0.75 * 0.85   /* c491: 15% 더 · c490: 25% 더 */; car.tint0 = 0xd9a21b; }   /* c454: 체력 20% 더 깎음 */   /* c438: 목표 표시가 풀려도 노랑 */   /* c436: 첫 보스 = 불도저 (체력 80%) */   /* c255: 4분의 1 줄임 */   /* c245 */   /* c230: 10% 줄임 · c232: 10% 올림 */   /* c222: 50% 올림 */   /* c185: 10% 줄임 */   /* c183: 3배 */   /* c153 */
+    car.squad = null; car.tank = true; car.state = 'tank'; car.kw = CH_TK_K; car.kl = CH_TK_KL; car.massK = 4; car.hpK = 10 * 0.95 * 3 * 0.9 * 1.5 * 0.9 * 1.1 * 0.95 * 0.75; if (CHAPTER && kind === 'tank') { car.massK = 2 * 1.2; car.hpK *= 0.8 * 0.8 * 0.75 * 0.85 * 2; }   /* c494 */ else if (CHAPTER) { car.dozer = true; car.massK = 2;   /* c492: 불도저 무게 반 (40 → 20) */ car.hpK *= 0.8 * 0.8 * 0.75 * 0.85   /* c491: 15% 더 · c490: 25% 더 */; car.tint0 = 0xd9a21b; }   /* c454: 체력 20% 더 깎음 */   /* c438: 목표 표시가 풀려도 노랑 */   /* c436: 첫 보스 = 불도저 (체력 80%) */   /* c255: 4분의 1 줄임 */   /* c245 */   /* c230: 10% 줄임 · c232: 10% 올림 */   /* c222: 50% 올림 */   /* c185: 10% 줄임 */   /* c183: 3배 */   /* c153 */
     car.g.scale.set(CH_TK_K, 1, CH_TK_K);
     K[0].material.color.setHex(0x3c4a2a); K[0].geometry = (() => { const L = CAR_L * 0.78 * 0.85, W = CAR_W, c = 0.16, s = new THREE.Shape(); s.moveTo(-L / 2 + c, -W / 2); s.lineTo(L / 2 - c, -W / 2); s.lineTo(L / 2, -W / 2 + c); s.lineTo(L / 2, W / 2 - c); s.lineTo(L / 2 - c, W / 2); s.lineTo(-L / 2 + c, W / 2); s.lineTo(-L / 2, W / 2 - c); s.lineTo(-L / 2, -W / 2 + c); s.closePath(); return new THREE.ShapeGeometry(s).rotateX(-Math.PI / 2); })();   /* c179: 모서리를 깎은 팔각형 */ K[1].visible = K[2].visible = K[3].visible = false;
     const tur = new THREE.Mesh(new THREE.CircleGeometry(0.27, 20).rotateX(-Math.PI / 2), carMat(0x222b16)); tur.position.y = 0.002; tur.renderOrder = -0.44;
@@ -9812,7 +9819,7 @@
     const kx = nX * vn * KNOCK * k2 + tX * 0.6 * k2, kz = nZ * vn * KNOCK * k2 + tZ * 0.6 * k2;   // 법선 쪽으로 튕기고, 스친 쪽으로는 조금 쓸려 간다
     b.hitT = clock + 1; if (car.tr) { b.trHit = car; b.trHitT = clock + 3; }
     const tkD = car.tank && car.tkPh === 'dash';
-    const dmg = CAR_HIT_DMG * ve / CAR_SPEED * (tkD ? (0.5 + Math.max(0, car.tkM)) * 0.9 * 0.85 * 0.98 : 1) * (CHAPTER && car.dozer ? 0.85 : 1);   /* c491: 불도저 밀어붙이는 피해 15% 줄임 */   /* c253 */   /* c221: 돌진 10% 줄임 · c222: 15% 더 */   // c172: 장갑차 돌진 = 기세만큼
+    const dmg = CAR_HIT_DMG * ve / CAR_SPEED * (tkD ? (0.5 + Math.max(0, car.tkM)) * 0.9 * 0.85 * 0.98 : 1) * (CHAPTER && car.tank ? 0.85 : 1)   /* c494: 장갑차도 불도저와 같다 */;   /* c491: 불도저 밀어붙이는 피해 15% 줄임 */   /* c253 */   /* c221: 돌진 10% 줄임 · c222: 15% 더 */   // c172: 장갑차 돌진 = 기세만큼
     if (tkD) car.tkM -= m / (CAR_MASS * chCarM(car)) * 0.25;
     if (isZombie(b)) { b.hp = Math.max(0, b.hp - dmg); if (b.hp <= 0) b.knockDie = true; }   // 좀비는 죽으면 밀려가서 멈춘 뒤에 사라진다
     else if (b.hp > 0) b.hp = Math.max(0, b.hp - dmg);             // 시민·경찰은 체력이 깎인다 (0이 되면 덮칠 수 있게 된다)
