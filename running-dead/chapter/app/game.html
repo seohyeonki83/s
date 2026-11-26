@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c508</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c509</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3435,16 +3435,23 @@
   const starSlots = () => starsEl.querySelectorAll('.s');
   function drawStars() {                      // 위 가운데: 수배 느낌표 — 하나씩 따로 (연출이 박히는 자리) + 아래에 지금 단계 이름
     const sk = CHAPTER && (shownStars > 5 || chSkullMode);   // c436: 계엄부터 빨간 해골
+    if (CHAPTER) {   // c509: 위 = 지금 단계 이름 · 가운데 = 느낌표 5개 (게이지 칸 끝마다 하나) · 아래 = 5칸 게이지 (6단계부터 새 게이지 · 해골)
+      if (starSlots().length !== STAR_MAX || starsEl.dataset.m !== (sk ? 'k' : 'e')) { starsEl.dataset.m = sk ? 'k' : 'e';
+        starsEl.innerHTML = '<i class="lv"></i><div class="alr">' + (sk ? '<span class="s sk">☠</span>' : '<span class="s">!</span>').repeat(STAR_MAX) + '</div><div class="ag">' + '<b><u></u></b>'.repeat(5) + '</div><div class="obj"></div>'; }
+    } else
     if (starSlots().length !== STAR_MAX || starsEl.dataset.m !== (sk ? 'k' : 'e')) { starsEl.dataset.m = sk ? 'k' : 'e'; starsEl.innerHTML = '<b class="cap">경보단계</b>' + (sk ? '<span class="s" style="color:#ff2a2a;width:0.9em">☠</span>' : '<span class="s">!</span>').repeat(STAR_MAX) + '<i class="lv"></i>'; }   // v307: 이름표   // v193: 별 → 느낌표
     const sl = starSlots();
     for (let i = 0; i < STAR_MAX; i++) sl[i].classList.toggle('off', i >= (sk ? shownStars - 5 : shownStars));
     starsEl.querySelector('.lv').textContent = shownStars ? LEVEL_NAME[shownStars - 1] : '';
-    if (CHAPTER && !starsEl.querySelector('.ag')) { const g = document.createElement('div'); g.className = 'ag'; g.innerHTML = '<i></i>'; starsEl.appendChild(g); const o = document.createElement('div'); o.className = 'obj'; starsEl.appendChild(o); }   // c505: 경보 게이지 · 목표
+    if (CHAPTER) chAlHud();   // c509
   }
   const starsEl = document.getElementById('stars');
   if (CHAPTER) {   // c505: 경보 게이지 — 느낌표(또는 해골) 5개 사이를 채운다 · 누르면 10단계 전체
     const st = document.createElement('style');
-    st.textContent = '#stars{pointer-events:auto!important;cursor:pointer}#stars .ag{width:150px;height:6px;margin:3px auto 0;border-radius:3px;background:rgba(255,255,255,0.18);overflow:hidden}#stars .ag i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffb84d,#ff4a3a)}#stars .obj{margin-top:26px;font:800 11px/1.2 system-ui,sans-serif;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.9);white-space:nowrap}' +
+    st.textContent = '#stars{pointer-events:auto!important;cursor:pointer}#stars .lv{display:block;margin:0 0 1px;min-height:13px;font:800 12px/13px system-ui,sans-serif;color:#e2c2fb}' +
+      '#stars .alr{display:flex;width:164px;margin:0 auto}#stars .alr .s{flex:1;width:auto;text-align:right;padding-right:1px;font-size:20px;line-height:20px;box-sizing:border-box}#stars .alr .s.sk{color:#ff2a2a;font-size:15px}' +
+      '#stars .ag{display:flex;gap:2px;width:164px;height:6px;margin:2px auto 0}#stars .ag b{flex:1;height:100%;border-radius:2px;background:rgba(255,255,255,0.18);overflow:hidden}#stars .ag u{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffb84d,#ff4a3a)}#stars[data-m="k"] .ag u{background:linear-gradient(90deg,#ff4a3a,#b00000)}' +
+      '#stars .obj{margin-top:26px;font:800 11px/1.2 system-ui,sans-serif;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.9);white-space:nowrap}' +
       '#alp{position:absolute;inset:0;z-index:60;background:rgba(0,0,0,0.82);color:#fff;font-family:system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}#alp .r{width:min(340px,90vw);display:flex;align-items:center;gap:8px;margin:3px 0;font:800 13px system-ui}#alp .r b{width:64px}#alp .r .g{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,0.15);overflow:hidden}#alp .r .g i{display:block;height:100%;background:linear-gradient(90deg,#ffb84d,#ff4a3a)}#alp .r span{width:44px;text-align:right;color:#9aa6b8}#alp .m{width:min(340px,90vw);margin-top:12px;font:700 13px/1.5 system-ui}';
     document.head.appendChild(st);
     starsEl.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); chAlPanel(); });
@@ -3468,10 +3475,13 @@
     const n = bodies.filter((b) => b.kind === 'citizen' && (b.tkU || b.cvy)).length + chDrones.filter((d) => d.cvy && !d.dead).length + chTanks.filter((t) => !t.wreck).length + chCvy.filter((c) => !c.wreck && !c.crewOut).length;
     return `보스 물리치기 · 남은 적 ${n}`;
   }
+  function chAlHud() {                         // c509: 5칸 게이지 — 칸마다 한 단계, 칸이 차면 그 끝 느낌표에 불
+    const U = starsEl.querySelectorAll('.ag u'); if (U.length !== 5) return;
+    const b0 = starsEl.dataset.m === 'k' ? 5 : 0;
+    for (let k = 0; k < 5; k++) { const w = Math.round(chAlFill(b0 + k) * 1000) / 10 + '%'; if (U[k].style.width !== w) U[k].style.width = w; }
+  }
   function chObjHud() {
-    const g = starsEl.querySelector('.ag i'), o = starsEl.querySelector('.obj'); if (!g || !o) return;
-    const b0 = chAL >= 5 ? 5 : 0; let f = 0; for (let L = b0; L < b0 + 5; L++) f += chAlFill(L); const w = Math.round(f / 5 * 1000) / 10 + '%';
-    if (g.style.width !== w) g.style.width = w;
+    const o = starsEl.querySelector('.obj'); if (!o) return;
     const t = chObjText(); if (o.textContent !== t) o.textContent = t;
   }
   if (CHAPTER) { const v = document.getElementById('ver'); v.style.setProperty('display', 'block', 'important'); v.style.top = 'auto'; v.style.bottom = 'calc(2px + env(safe-area-inset-bottom, 0px))'; v.style.left = '50%'; v.style.transform = 'translateX(-50%)';   /* c40: 레벨·경보는 테스트맵처럼 보이고, 버전 글자는 아래 가운데로 */ v.style.fontSize = '10px'; v.style.opacity = '0.55'; }   // c1: 맵만 보는 판 — 경보·레벨 표시는 가린다. c10: 왼쪽 위에 버전 글자 (새 버전이 떴는지 보려고)
@@ -8010,6 +8020,7 @@
     }
   }
   function chSfTick(dt) {
+    if (CHAPTER) chAlHud();   // c509
     if (CH_TUT) return;   // c293: 튜토리얼은 특공대·보스 없음
     chDiscTick(dt);   // c220
     if (CH_RUN) chRunTick(dt);
