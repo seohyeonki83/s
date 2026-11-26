@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c512</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c513</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3454,7 +3454,7 @@
     const sk = CHAPTER && (shownStars > 5 || chSkullMode);   // c436: 계엄부터 빨간 해골
     if (CHAPTER) {   // c509: 위 = 지금 단계 이름 · 가운데 = 느낌표 5개 (게이지 칸 끝마다 하나) · 아래 = 5칸 게이지 (6단계부터 새 게이지 · 해골)
       if (starSlots().length !== STAR_MAX || starsEl.dataset.m !== (sk ? 'k' : 'e')) { starsEl.dataset.m = sk ? 'k' : 'e';
-        starsEl.innerHTML = '<i class="lv"></i><div class="alr">' + (sk ? '<span class="s sk">☠</span>' : '<span class="s">!</span>').repeat(STAR_MAX) + '</div><div class="ag">' + '<b><u></u></b>'.repeat(sk ? 5 : 4) + '</div><div class="obj"></div>'; }
+        starsEl.innerHTML = '<i class="lv"></i><div class="alr">' + (sk ? '<span class="s sk"><b>☠</b><u>☠</u></span>' : '<span class="s"><b>!</b><u>!</u></span>').repeat(STAR_MAX) + '</div><div class="obj"></div>'; }   // c513: 게이지 없이 느낌표가 아래부터 차오른다
     } else
     if (starSlots().length !== STAR_MAX || starsEl.dataset.m !== (sk ? 'k' : 'e')) { starsEl.dataset.m = sk ? 'k' : 'e'; starsEl.innerHTML = '<b class="cap">경보단계</b>' + (sk ? '<span class="s" style="color:#ff2a2a;width:0.9em">☠</span>' : '<span class="s">!</span>').repeat(STAR_MAX) + '<i class="lv"></i>'; }   // v307: 이름표   // v193: 별 → 느낌표
     const sl = starSlots();
@@ -3466,7 +3466,7 @@
   if (CHAPTER) {   // c505: 경보 게이지 — 느낌표(또는 해골) 5개 사이를 채운다 · 누르면 10단계 전체
     const st = document.createElement('style');
     st.textContent = '#stars{pointer-events:auto!important;cursor:pointer}#stars .lv{display:block;margin:0 0 1px;min-height:13px;font:800 12px/13px system-ui,sans-serif;color:#e2c2fb}' +
-      '#stars .alr{display:flex;width:164px;margin:0 auto}#stars .alr .s{flex:1;width:auto;text-align:right;padding-right:1px;font-size:20px;line-height:20px;box-sizing:border-box}#stars .alr .s.sk{color:#ff2a2a;font-size:15px}' +
+      '#stars .alr{display:flex;justify-content:center;margin:0 auto}#stars .alr .s{position:relative;width:0.62em;font-size:22px;line-height:24px;text-align:center}#stars .alr .s.off{opacity:1}#stars .alr .s b{opacity:0.3}#stars .alr .s u{position:absolute;left:0;right:0;top:0;text-decoration:none;font-weight:900}#stars .alr .s.sk{color:#ff2a2a;width:0.9em;font-size:17px}' +   /* c513 */
       '#stars .ag{display:flex;gap:2px;width:164px;height:6px;margin:2px auto 0}#stars .ag b{flex:1;height:100%;border-radius:2px;background:rgba(255,255,255,0.18);overflow:hidden}#stars .ag u{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffb84d,#ff4a3a)}#stars[data-m="e"] .alr .s:first-child{flex:0 0 14px;text-align:center;padding-right:0}#stars[data-m="e"] .ag{padding-left:16px;box-sizing:border-box}#stars[data-m="k"] .ag u{background:linear-gradient(90deg,#ff4a3a,#b00000)}' +
       '#stars .obj{margin-top:26px;font:800 11px/1.2 system-ui,sans-serif;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.9);white-space:nowrap}' +
       '#alp{position:absolute;inset:0;z-index:60;background:rgba(0,0,0,0.82);color:#fff;font-family:system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}#alp .r{width:min(340px,90vw);display:flex;align-items:center;gap:8px;margin:3px 0;font:800 13px system-ui}#alp .r b{width:64px}#alp .r .g{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,0.15);overflow:hidden}#alp .r .g i{display:block;height:100%;background:linear-gradient(90deg,#ffb84d,#ff4a3a)}#alp .r span{width:44px;text-align:right;color:#9aa6b8}#alp .m{width:min(340px,90vw);margin-top:12px;font:700 13px/1.5 system-ui}';
@@ -3493,9 +3493,9 @@
     return `보스 물리치기 · 남은 적 ${n}`;
   }
   function chAlHud() {                         // c509: 5칸 게이지 — 칸마다 한 단계, 칸이 차면 그 끝 느낌표에 불
-    const U = starsEl.querySelectorAll('.ag u'); if (!U.length) return;
-    const b0 = starsEl.dataset.m === 'k' ? 5 : 1;   // c511: 느낌표 줄은 수상함 앞 칸 없이 4칸 (수상함은 5마리면 바로 불)
-    for (let k = 0; k < U.length; k++) { const w = Math.round(chAlFill(b0 + k) * 1000) / 10 + '%'; if (U[k].style.width !== w) U[k].style.width = w; }
+    const S = starsEl.querySelectorAll('.alr .s'); if (!S.length) return;   // c513: 느낌표(해골) 하나 = 한 단계 — 그 단계까지 얼마나 왔는지만큼 아래에서 위로 색이 찬다
+    const b0 = starsEl.dataset.m === 'k' ? 5 : 0;
+    for (let k = 0; k < S.length; k++) { const f = S[k].classList.contains('off') ? chAlFill(b0 + k) : 1, v = 'inset(' + Math.round((1 - f) * 1000) / 10 + '% 0 0 0)', u = S[k].lastChild; if (u.style.clipPath !== v) { u.style.clipPath = v; u.style.webkitClipPath = v; } }
   }
   function chObjHud() {
     const o = starsEl.querySelector('.obj'); if (!o) return;
