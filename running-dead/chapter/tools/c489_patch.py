@@ -1,0 +1,1 @@
+C489_R = [('    else z.force = MY_FORCE * 0.5;            // 히드라: 미는 힘 = 나의 50%', '    else { z.force = MY_FORCE * 0.5; if (CHAPTER) { z.baseMaxHp = z.maxHp; z.maxHp *= 2; z.hp = z.maxHp; } }   /* c489: 히드라 최대 체력 2배 (변이 동안) */            // 히드라: 미는 힘 = 나의 50%')]
