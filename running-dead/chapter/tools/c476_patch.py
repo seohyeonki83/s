@@ -1,0 +1,1 @@
+C476_R = [("  const chAcidHit = () => chAcidMiniF ? 3 : Math.round(3 + 7 * lv('acid') / 5);   /* c475: 새끼 좀비는 3 고정 */", "  const chAcidHit = () => Math.round(3 + 7 * lv('acid') / 5);   /* c476: 새끼 좀비 3 고정 되돌림 (c475) */")]
