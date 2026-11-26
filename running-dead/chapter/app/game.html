@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c491</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c492</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -7908,7 +7908,7 @@
     const p = teamSpot(seg), h = Math.atan2(me.foot.z - p.z, me.foot.x - p.x);
     addCar(p.x, p.z, h, null, 0, ['tank']);
     const car = cars[cars.length - 1], K = car.g.children;
-    car.squad = null; car.tank = true; car.state = 'tank'; car.kw = CH_TK_K; car.kl = CH_TK_KL; car.massK = 4; car.hpK = 10 * 0.95 * 3 * 0.9 * 1.5 * 0.9 * 1.1 * 0.95 * 0.75; if (CHAPTER) { car.dozer = true; car.hpK *= 0.8 * 0.8 * 0.75 * 0.85   /* c491: 15% 더 · c490: 25% 더 */; car.tint0 = 0xd9a21b; }   /* c454: 체력 20% 더 깎음 */   /* c438: 목표 표시가 풀려도 노랑 */   /* c436: 첫 보스 = 불도저 (체력 80%) */   /* c255: 4분의 1 줄임 */   /* c245 */   /* c230: 10% 줄임 · c232: 10% 올림 */   /* c222: 50% 올림 */   /* c185: 10% 줄임 */   /* c183: 3배 */   /* c153 */
+    car.squad = null; car.tank = true; car.state = 'tank'; car.kw = CH_TK_K; car.kl = CH_TK_KL; car.massK = 4; car.hpK = 10 * 0.95 * 3 * 0.9 * 1.5 * 0.9 * 1.1 * 0.95 * 0.75; if (CHAPTER) { car.dozer = true; car.massK = 2;   /* c492: 불도저 무게 반 (40 → 20) */ car.hpK *= 0.8 * 0.8 * 0.75 * 0.85   /* c491: 15% 더 · c490: 25% 더 */; car.tint0 = 0xd9a21b; }   /* c454: 체력 20% 더 깎음 */   /* c438: 목표 표시가 풀려도 노랑 */   /* c436: 첫 보스 = 불도저 (체력 80%) */   /* c255: 4분의 1 줄임 */   /* c245 */   /* c230: 10% 줄임 · c232: 10% 올림 */   /* c222: 50% 올림 */   /* c185: 10% 줄임 */   /* c183: 3배 */   /* c153 */
     car.g.scale.set(CH_TK_K, 1, CH_TK_K);
     K[0].material.color.setHex(0x3c4a2a); K[0].geometry = (() => { const L = CAR_L * 0.78 * 0.85, W = CAR_W, c = 0.16, s = new THREE.Shape(); s.moveTo(-L / 2 + c, -W / 2); s.lineTo(L / 2 - c, -W / 2); s.lineTo(L / 2, -W / 2 + c); s.lineTo(L / 2, W / 2 - c); s.lineTo(L / 2 - c, W / 2); s.lineTo(-L / 2 + c, W / 2); s.lineTo(-L / 2, W / 2 - c); s.lineTo(-L / 2, -W / 2 + c); s.closePath(); return new THREE.ShapeGeometry(s).rotateX(-Math.PI / 2); })();   /* c179: 모서리를 깎은 팔각형 */ K[1].visible = K[2].visible = K[3].visible = false;
     const tur = new THREE.Mesh(new THREE.CircleGeometry(0.27, 20).rotateX(-Math.PI / 2), carMat(0x222b16)); tur.position.y = 0.002; tur.renderOrder = -0.44;
