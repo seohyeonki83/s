@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c492</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c493</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -448,7 +448,7 @@
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:1000;background:#0e1014;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;font-family:system-ui,-apple-system,sans-serif;color:#fff;padding:16px 24px;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch'   /* c466: 간격 18 → 8 · 넘치면 스크롤 */;
     ov.innerHTML = '<div style="font-size:26px;font-weight:900;letter-spacing:1px">맵 선택</div>';
-    for (const [k, name, sub] of [['t', '튜토리얼 1', '실험실 · 박스 안에서 시작'], ['b', '큰 맵', '구역 4개 · 다리와 산길 · 랜드마크 9'], ['m', '본 맵', '그룹 9개 · 단락 36개 · 시작할 때마다 새로'], ['w', '본 맵 테스트', '둘러보기 · 속도 3배 · 이동만 · 적이 나를 못 봄'], ['s', '작은 맵', '구역 1개 · 사방이 산 · 랜드마크 2'], ['p', '거점 맵', '경찰서 거점 · 세로 · 8자 순환도로 · 랜드마크 5'], ['k', '보스 테스트', '큰 맵 · 동료 70 · 무적 · 바로 보스 출동'], ['e', '적 테스트', '작은 맵 · 무적 · 적을 섞어 뿌림 · 무기 단계 고르기']]) {
+    for (const [k, name, sub] of [['t', '튜토리얼 1', '실험실 · 박스 안에서 시작'], ['b', '큰 맵', '구역 4개 · 다리와 산길 · 랜드마크 9'], ['m', '본 맵', '그룹 9개 · 단락 36개 · 시작할 때마다 새로'], ['w', '본 맵 테스트', '둘러보기 · 속도 3배 · 이동만 · 적이 나를 못 봄'], ['s', '작은 맵', '구역 1개 · 사방이 산 · 랜드마크 2'], ['p', '거점 맵', '경찰서 거점 · 세로 · 8자 순환도로 · 랜드마크 5'], ['k', '보스 테스트', '큰 맵 · 동료 70 · 덩치 2 · 무적 · 바로 불도저 2대'], ['e', '적 테스트', '작은 맵 · 무적 · 적을 섞어 뿌림 · 무기 단계 고르기']]) {
       const bt = document.createElement('button');
       bt.style.cssText = 'flex:none;width:min(300px,80vw);padding:9px 16px;border-radius:16px;border:2px solid #3a4250;background:#1b2028;color:#fff;font:inherit;text-align:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent';
       bt.innerHTML = '<div style="font-size:19px;font-weight:900">' + name + '</div><div style="margin-top:3px;font-size:12px;color:#9aa6b8">' + sub + '</div>';
@@ -8450,6 +8450,7 @@
         if (spaceOf(x, z) || !freeSpot(x, z, null) || bodies.some((o) => Math.hypot(o.foot.x - x, o.foot.z - z) < 0.85)) continue;
         const c = addCitizen(x, z, { x0: x - 1, z0: z - 1, x1: x + 1, z1: z + 1 }, ''); c.met = true; makeZombie(c); i++;
       }
+      { const A = bodies.filter((q) => q.kind === 'ally'); for (const q of A.slice(0, 2)) mutate(q, 'armor'); }   // c493: 보스 테스트 — 덩치 2마리 (영구)
       deaths = Math.max(deaths, STAR_AT[1]); stars = Math.max(stars, 2);   // 난리남
       chSf.on = true; chSf.n = 3; chSf.T = chSfAt(4) - 0.05;   // 다음 걸음에 보스 출동
       while (rankNext < RANKS.length && 70 >= RANKS[rankNext].n) rankNext++;   // c191: 보스 테스트 — 동료 수 칭호 알림은 건너뛴다 (보스 알림이 늦게 뜨던 것)
