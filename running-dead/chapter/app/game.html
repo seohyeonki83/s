@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c501</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c502</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5329,7 +5329,9 @@
   IC.rage = svgI('<circle cx="12" cy="12" r="6" fill="#d8342c"/><g stroke="#d8342c" stroke-width="2.2" stroke-linecap="round"><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></g><circle cx="10" cy="11" r="1.5" fill="#ffd9d4"/><circle cx="14.2" cy="13.4" r="1.1" fill="#ffd9d4"/>');   // c19: 분노 바이러스
   IC.catalyst = svgI('<path d="M9.5 3h5v2h-1v5l5 8.5a1.7 1.7 0 0 1-1.5 2.5H7a1.7 1.7 0 0 1-1.5-2.5l5-8.5V5h-1z" fill="#dfe7f2"/><path d="M8.2 15h7.6l2 3.5a1 1 0 0 1-.9 1.5H7.1a1 1 0 0 1-.9-1.5z" fill="#4fd08a"/><circle cx="11" cy="17.5" r="0.9" fill="#d9ffe9"/><circle cx="14" cy="16.3" r="0.6" fill="#d9ffe9"/>');   // c19: 촉매제
   IC.linger = svgI('<path d="M6 2.5h12M6 21.5h12" stroke="#cfd6e3" stroke-width="2" stroke-linecap="round"/><path d="M7.5 3.5h9c0 4.2-3 5.8-3 8.5s3 4.3 3 8.5h-9c0-4.2 3-5.8 3-8.5s-3-4.3-3-8.5z" fill="#2d3a2a" stroke="#cfd6e3" stroke-width="1.3"/><path d="M9.6 6h4.8c-.4 1.6-1.5 2.6-2.4 3.6-.9-1-2-2-2.4-3.6zM8.9 19.5c.4-2.2 1.9-3.3 3.1-4.4 1.2 1.1 2.7 2.2 3.1 4.4z" fill="#9be35a"/>');   /* c420: 잔류제 (모래시계) */
+  IC.bombHot = null;   // c502: 밝은 보라 자폭 스위치 (아래에서 만든다)
   IC.bombSticky = svgI('<rect x="4" y="9" width="16" height="11" rx="2" fill="#6c5a96"/><rect x="11" y="3" width="2" height="6" fill="#9aa4b5"/><circle cx="12" cy="3.5" r="2.2" fill="#a764ff"/><circle cx="9" cy="14.5" r="2.4" fill="#c79bff"/><path d="M4 17.5c2 0 2 2.5 4 2.5s2-2.5 4-2.5 2 2.5 4 2.5 2-2.5 4-2.5V20H4z" fill="#a764ff"/>');   /* c427: 끈적 스위치 (보라) */
+  IC.bombHot = IC.bombSticky.replace(/#6c5a96/g, '#a678ea').replace(/#a764ff/g, '#dc97ff').replace(/#c79bff/g, '#f1d6ff');   // c502
   IC.bombSplit = svgI('<rect x="4" y="9" width="16" height="11" rx="2" fill="#96637f"/><rect x="11" y="3" width="2" height="6" fill="#9aa4b5"/><circle cx="12" cy="3.5" r="2.2" fill="#ff8fc8"/><circle cx="8.6" cy="14.6" r="2.1" fill="#ffc2df"/><circle cx="12.4" cy="14.6" r="2.1" fill="#ffc2df"/><rect x="15" y="12.5" width="3.5" height="1.6" rx="0.8" fill="#e8b3cd"/><rect x="15" y="15.5" width="3.5" height="1.6" rx="0.8" fill="#e8b3cd"/>');   /* c427: 분열 스위치 (분홍) */
   IC.diamond = svgI('<path d="M7 3.5h10l4.5 5.5L12 21 2.5 9z" fill="#7fe3ff"/><path d="M2.5 9h19M9.2 3.5 7.4 9 12 21l4.6-12-1.8-5.5" stroke="#e6fbff" stroke-width="1" fill="none"/><path d="M7.4 9 12 3.5 16.6 9z" fill="#c4f4ff"/><path d="M19.5 2.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" fill="#fff"/>');   /* c427: 다이아몬드 */
   IC.gold = svgI('<path d="M3 20l2.2-6h13.6L21 20z" fill="#d49a1e"/><path d="M6.2 13l2.2-6h7.2l2.2 6z" fill="#f2c94c"/><path d="M8.6 7.6h6.8l1.6 4.4H7z" fill="#ffe28a"/><path d="M6 19l1.4-4h9.2L18 19z" fill="#f2c94c"/><path d="M19 3l.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5z" fill="#fff"/>');   /* c427: 금괴 */
@@ -6270,17 +6272,18 @@
   function explode(z, R) {
     const x = z.foot.x, zz = z.foot.z;
     // v277: 터지는 순간 큰 섬광 — 짧고 과할 만큼 크게 (흰빛 + 연두빛 번짐, 화면도 번쩍)
-    for (const [col, s0, s1, life] of [[0xffffff, 3, 26, 0.26], [0xf2ffd0, 2, 16, 0.36], [0xd8ff9a, 1, 9, 0.45]]) {
+    const PU = CHAPTER && chRedR('bomb') > 0;   // c502: 빨간 별 — 터지는 산성도 밝은 보라
+    for (const [col, s0, s1, life] of PU ? [[0xffffff, 3, 26, 0.26], [0xf6e2ff, 2, 16, 0.36], [0xe2a6ff, 1, 9, 0.45]] : [[0xffffff, 3, 26, 0.26], [0xf2ffd0, 2, 16, 0.36], [0xd8ff9a, 1, 9, 0.45]]) {
       const f = puff(x, 0.8, zz, col, s0, s1, life, 0, 0, 0, 1);
       f.s.renderOrder = UI - 0.6; f.peak = true; f.s.material.opacity = 1;
     }
     screenFlash(x, zz);
     for (let i = 0; i < 16; i++) {           // 녹색 시체 덩어리가 사방으로 튀어 바닥에 남는다
       const a = Math.random() * Math.PI * 2, sp = rand(2.5, 6);
-      const f = puff(x, 0.3, zz, i % 2 ? 0x3f8f2a : 0x6fcf3f, rand(0.35, 0.6), rand(0.4, 0.7), rand(2.2, 3.2), Math.cos(a) * sp, 0, Math.sin(a) * sp, 0.95);
+      const f = puff(x, 0.3, zz, PU ? (i % 2 ? 0xb24dff : 0xd58cff) : i % 2 ? 0x3f8f2a : 0x6fcf3f, rand(0.35, 0.6), rand(0.4, 0.7), rand(2.2, 3.2), Math.cos(a) * sp, 0, Math.sin(a) * sp, 0.95);
       f.s.material.map = flashTex;
     }
-    for (let i = 0; i < 8; i++) { const a = Math.random() * 6.28; puff(x, 0.5, zz, 0x8fa36a, 0.8, 2.2, rand(0.8, 1.3), Math.cos(a) * 1.2, rand(0.4, 1), Math.sin(a) * 1.2, 0.55); }
+    for (let i = 0; i < 8; i++) { const a = Math.random() * 6.28; puff(x, 0.5, zz, PU ? 0xc9a3e6 : 0x8fa36a, 0.8, 2.2, rand(0.8, 1.3), Math.cos(a) * 1.2, rand(0.4, 1), Math.sin(a) * 1.2, 0.55); }
     for (const c of bodies) {                 // 둘레 인간에게 산성 덩어리
       if (c.kind !== 'citizen' || c.space !== z.space) continue;
       if (Math.hypot(c.foot.x - x, c.foot.z - zz) > R || blocked(x, zz, c.foot.x, c.foot.z)) continue;
@@ -6308,7 +6311,7 @@
   }
   function chBombLook() {                      // c479: 빨간 별부터 자폭 스위치 · 산성이 보라
     const red = chRedR('bomb') > 0, O = chItem0.bomb || (chItem0.bomb = { name: ITEM.bomb.name, icon: ITEM.bomb.icon, col: ITEM.bomb.col });
-    ITEM.bomb.icon = red ? IC.bombSticky : O.icon; ITEM.bomb.col = red ? '#a764ff' : O.col; gooMat.color.setHex(red ? 0x9b59ff : 0x5fcf3a);
+    ITEM.bomb.icon = red ? IC.bombHot : O.icon; ITEM.bomb.col = red ? '#d07bff' : O.col; gooMat.color.setHex(red ? 0xd58cff : 0x5fcf3a);   /* c502: 밝은 보라 */
     const it = items.find((x) => x.kind === 'bomb'); if (it && it.el) { const ic = it.el.querySelector('.ic'); if (ic) ic.innerHTML = ITEM.bomb.icon; it.el.style.setProperty('--c', ITEM.bomb.col); }
   }
   // ── c480: 기계 오작동 — 테이저 빨간 별. 로봇 · 터렛 · 드론 (보스 제외) 25% + 빨간 별마다 5%.
@@ -6520,7 +6523,7 @@
       if ((c.gooLeft -= dt) <= 0) { if (c.gooS) { c.mesh.remove(c.gooS); c.gooS = null; } c.goo = false; continue; }   // c123: 시간이 다 되면 사라진다
       if ((c.smokeT -= dt) <= 0 && c.mesh.visible) {   // 묻은 데서 작은 연기
         c.smokeT = rand(0.25, 0.45);
-        puff(c.foot.x + rand(-0.25, 0.25), 0.7, c.foot.z + rand(-0.15, 0.15), 0xa9c28a, 0.12, 0.42, 0.9, rand(-0.1, 0.1), 0.7, rand(-0.1, 0.1), 0.55);
+        puff(c.foot.x + rand(-0.25, 0.25), 0.7, c.foot.z + rand(-0.15, 0.15), CHAPTER && chRedR('bomb') ? 0xd9b3f2 : 0xa9c28a, 0.12, 0.42, 0.9,   /* c502: 묻은 산성 연기도 보라 */ rand(-0.1, 0.1), 0.7, rand(-0.1, 0.1), 0.55);
       }
       if ((c.gooT += dt) < CH_DOT_T) continue;   // c401: 1초마다   // v344: 1초 → 0.5초마다 1
       c.gooT -= CH_DOT_T;
