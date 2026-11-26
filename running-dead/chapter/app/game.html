@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c483</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c484</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5981,7 +5981,8 @@
     return out;
   }
   const MUT_SPEED = 1.25 * 1.15;   /* v347: 15% 더 */                     // v304: 변이 좀비 이동 속도 배율
-  const MUT_T = () => 6 + 3 * chLvB('mutate');   /* c442: 잔류제 안 걸림 (c441 되돌림) */   /* c430 */   /* c21: 변이 10초, 강화마다 +3초 (주사 개수 +1은 테스트맵 그대로) */                            // 변이 유지 시간 — v299: 기본 20 → 23초, 도구 다루기마다 +2 → +4초
+  const CH_MUT_TT = [6, 10, 14, 17, 21, 24];   // c484: 변이 · 각성 시간 (★0~★5, 둘이 같다 — 예전 ★6 끝값 24초를 ★5에, 소수점은 올림)
+  const MUT_T = () => CH_MUT_TT[chLvB('mutate')];   /* c442: 잔류제 안 걸림 (c441 되돌림) */   /* c430 */   /* c21: 변이 10초, 강화마다 +3초 (주사 개수 +1은 테스트맵 그대로) */                            // 변이 유지 시간 — v299: 기본 20 → 23초, 도구 다루기마다 +2 → +4초
   const itemMax = (k) => k === 'mutate' ? CH_WV('mutN', lv('mutate')) : CHAPTER && k === 'taser' ? 3   /* c420: 장탄 3 고정 */ : ITEM[k].max;   // 변이 주사 장탄 +1씩
   const bookCut = () => owned.book ? (CHAPTER ? 0.05 + 0.09 * lv('book') : 0.07 * (1 + lv('book'))) : 0;   /* c373: 5% · 14 · 23 · 32 · 41 · 50% */   /* c198: 7%씩 */   /* c21: 백과사전 5%, 강화마다 +5%p (30%까지) */   /* v582: 7%, 강화마다 남은 쿨타임에서 7%씩 */   // v286: 백과사전 — 사용 도구 쿨타임 7% 줄임, 도구 다루기마다 3%p씩 더
   const itemReload = (k) => (k === 'bomb' ? 40 * 1.15 * 1.1 * 0.75   /* c279: 25% 줄임 (상수끼리라 미리 계산됨) */   /* c21: 자폭 쿨타임은 고정 — 강화는 범위로 간다 */ /* v559: +10% 더 */ : ITEM[k].reload * (k === 'taser' ? 1.1 * (CHAPTER ? 1.3 : 1) : 1) * (CHAPTER && k === 'mutate' ? 1.15 : 1))   /* c371: 변이 주사 쿨타임 15% 늘림 */   /* c251: 테이저 쿨타임 30% 늘림 */   /* v556: 자폭 +15% · 테이저 +10% */ * (1 - bookCut());   // 자폭 쿨타임 −3초씩 → 그 위에 백과사전
@@ -6849,7 +6850,7 @@
   const chLvMax = (k) => k === 'bag' ? 3 : /* c198: 빠루도 5번 (+120%) */ ITEM[k] && !ITEM[k].passive ? (k === 'taser' || k === 'cash' || k === 'bomb' ? 10 : 5)   /* c479: 자폭 스위치도 10단계 */   /* c469: 현금도 10단계 */   /* c468: 갈림길 없앰 — 테이저건 10단계 (흰 5 · 빨강 5), 나머지 무기는 정해질 때까지 ★5 */   /* c422: 갈림길이 있는 무기는 빨간 ★6까지 */ : 5;   /* c139: 무기는 6번까지 강화 */   // c21: 가방은 4개가 끝 (도구 칸 5개가 다 열린다)
   const chHas = (k) => ITEM[k].passive ? !!owned[k] : items.some((x) => x.kind === k);
   const chToolCap = () => CH_ET ? SLOT_A.length : Math.min(SLOT_A.length, 1 + (owned.bag ? 1 + lv('bag') : 0));   // c21: 쓸 수 있는 도구는 처음 1개 — 가방 하나마다 +1, 최대 5
-  const chAccMax = () => 5 + 3 * chLvB('awaken');   /* c430 */   // c21: 각성 주사 — 모을 수 있는 시간(초). 가득 차는 데는 늘 40초
+  const chAccMax = () => CH_MUT_TT[chLvB('awaken')];   /* c484 */   /* c430 */   // c21: 각성 주사 — 모을 수 있는 시간(초). 가득 차는 데는 늘 40초
   function chSlots() {                        // c21: 도구는 얻은 순서대로 칸 수만큼만 켜진다 — 칸이 없으면 회색으로 붙어만 있다가, 가방을 얻으면 먼저 얻은 것부터 켜진다
     items.forEach((it, i) => {
       const off = i >= chToolCap();
@@ -6868,9 +6869,9 @@
   }
   const CH_STAT = {                           // c21: 획득창·설명창에 나오는 수치 (n = 강화 단계)
     bomb: (n) => `터지는 범위 ${2 + Math.min(5, n)}칸 · 산성 ${+(4 + 0.6 * Math.min(5, n)).toFixed(1)}초` + (n > 5 ? ` · 보라 산성 — 맞은 적 ${15 * (n - 5)}% 느려짐` : ''),   /* c479 */   /* c474 */
-    mutate: (n) => `주사 ${CH_WV('mutN', n)}개 · 변이 ${6 + 3 * n}초`,
+    mutate: (n) => `주사 ${CH_WV('mutN', n)}개 · 변이 ${CH_MUT_TT[Math.min(5, n)]}초`,   /* c484 */
     taser: (n) => `한 번에 ${CH_WV('taserN', n)}명 · ${CH_WV('taserT', n)}초 감전 · 장탄 3` + (n > 5 ? ` · 기계 오작동 ${25 + 5 * (n - 6)}%` : ''),   /* c481 */   /* c420 */   /* c251 */
-    awaken: (n) => `최대 사용 시간 ${5 + 3 * n}초 · 가득 차는 데 35초`,
+    awaken: (n) => `최대 사용 시간 ${CH_MUT_TT[Math.min(5, n)]}초 · 가득 차는 데 40초`,   /* c484 */
     cash: (n) => `유혹 ${CH_WV('cashT', Math.min(5, n))}초 · 알아채는 거리 ${(8.64 * 1.15 * chCashStep(Math.min(5, n))).toFixed(1)}칸` + (n > 5 ? ` · 비트코인 — 기계 ${(1 + 0.5 * (n - 6)).toFixed(1)}초 · 차에서 내려 뛰어온다` : '')   /* c469 */   /* c429 */,   /* c226 */
     book: (n) => `무기 쿨타임 -${5 + 9 * n}%`,
     bag: (n) => `무기 ${Math.min(5, 2 + n)}칸`,
@@ -6946,7 +6947,7 @@
   }
   // ── c25 · c27: 레벨업 = 도구·장비 14종 가운데 랜덤 3장 중 하나를 고른다 — 없는 것이면 새로 얻고, 가진 것이면 강화 +1 ──
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
-    bomb: ['', (n) => `${2 + Math.min(5, n)}칸·${+(4 + 0.6 * Math.min(5, n)).toFixed(1)}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['유혹', (n) => `${CH_WV('cashT', n)}초`]   /* c420 */   /* c226 */,
+    bomb: ['', (n) => `${2 + Math.min(5, n)}칸·${+(4 + 0.6 * Math.min(5, n)).toFixed(1)}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${CH_MUT_TT[Math.min(5, n)]}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${CH_MUT_TT[Math.min(5, n)]}초`], cash: ['유혹', (n) => `${CH_WV('cashT', n)}초`]   /* c420 */   /* c226 */,
     book: ['쿨타임', (n) => `-${5 + 9 * n}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['공속', (n) => `+${10 + 10 * n}%`], crowbar: ['건물', (n) => `+${15 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`]   /* c278: 카드는 총격만 (밀림은 설명 칸에) */,
     shoes: ['이동', (n) => `+${5 * (1 + n)}%`], parasite: ['확률', (n) => `${20 + 5 * n}%`], teeth: ['감염', (n) => `${Math.round(100 + 80 / 6 * (1 + n))}%`], acid: ['확률', (n) => `${30 + 10 * n}%`], acidp: ['도트', (n) => `+${1 + n}`], linger: ['지속', (n) => `+${5 * (1 + n)}%`],   /* c420 */   /* c224 */ catalyst: ['변이', (n) => `+${5 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
