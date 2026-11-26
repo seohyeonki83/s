@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c505</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c506</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1221,7 +1221,7 @@
   const CH_WAKE = 40;                         // 깨울 사람을 고를 때 쓰는 굵은 격자 한 칸 (칸)
   const CH_SLEEP = 20;                        // c54: 깨어 있던 사람은 좀비가 전부 이만큼 멀어지면 그 자리에 다시 선다 (깨어나는 거리 14보다 넉넉히)
   function chCanSleep(b) {                    // 지금 다시 서도 되나 — 나와 얽힌 중(싸움·도망·경계·추적·출동)이면 안 된다
-    return b.state === 'normal' && !(b.police && !b.post) && !b.guardOf && !b.fb && !(b.infect > 0) && !(b.stunT > 0) && !(b.knockT > 0) && !(b.pushT > 0) && !b.lureAlert && !b.goo && !b.marked && !(b.home && b.back && b.goal);   // c59: 자기 건물로 돌아가는 중이면 끝까지 걸어간다 (도중에 서 버리지 않게)
+    return b.state === 'normal' && !b.sfw && !b.tkU && !b.cvy && !(b.police && !b.post) && !b.guardOf && !b.fb && !(b.infect > 0) && !(b.stunT > 0) && !(b.knockT > 0) && !(b.pushT > 0) && !b.lureAlert && !b.goo && !b.marked && !(b.home && b.back && b.goal);   // c59: 자기 건물로 돌아가는 중이면 끝까지 걸어간다 (도중에 서 버리지 않게)
   }
   function chWakeUp(b) {                      // 깨어나는 순간 — 서 있지 않고 바로 돌아다니기 시작한다 (내 눈에 들어올 땐 이미 걷는 중)
     if (b.state !== 'normal' || b.goal || !b.area) return;
@@ -3486,7 +3486,7 @@
     if (CHAPTER && a && (a === me || a.kind === 'ally') && (!a.splashing || a === me)) dmg *= a === me ? 1.15 * 0.9 * 0.8 * 1.1 * 1.03 : 1.15 * 1.1 * 1.07 * 1.03;   /* c243 → c244: 나·동료 3% 올림 */   /* c231: 나 10% 줄임 · c233: 20% 더 · c240: 나 10% 올림 (c242: 동료는 되돌림) */   /* c162: 동료 7% 더 */   /* c160: 동료만 10% 더 */   // c135: 나와 동료 공격력 15% 올림 (덩치의 범위 공격은 본 공격에서 이미 올랐다)
     if (CHAPTER && a && a.mini) dmg /= 3;   // c370: 작은 좀비 공격력 1/3
     if (CHAPTER && a && (a.kind === 'citizen' || a.kind === 'tank')) dmg *= 1.15 * 1.2 * 0.95 * 0.93 * 0.93;
-    if (CHAPTER && CH_SK !== 1 && a && (a.kind === 'citizen' || a.kind === 'drone')) dmg *= CH_SK;   // c505: 스테이지 강화 — 적 공격력
+    if (CHAPTER && CH_SK !== 1 && a && (a.kind === 'citizen' || a.kind === 'drone' || a.kind === 'tank')) dmg *= CH_SK;   /* c506: 보스 공격도 */   // c505: 스테이지 강화 — 적 공격력
     if (CHAPTER && CH_SK !== 1 && (v.kind === 'obj' || v.kind === 'safe') && !(v.car && v.car.tank)) dmg /= CH_SK;   // c505: 벽 · 사물 체력   /* c164: 7% 더 줄임 → 원래의 1.134배 */   /* c159: 7% 줄임 → 원래의 1.219배 */   /* c150: 장갑차도 군인과 같은 배율 */   /* c149: 전부 5% 줄임 → 사람·경찰·군인·저격수 1.311배 · 장갑차 1.0925배 */   /* c146: 사람·경찰·군인·저격수 20% 더 (합쳐서 1.38배) — 장갑차는 1.15배 그대로 */   // c143: 적(사람·경찰·군인·저격수·장갑차)의 공격력 15% 올림
     if (((TEST_MAP && !CHAPTER) && v === me) || (CH_ET && ((isZombie(v) && !v.mad) || (a && isZombie(a) && !a.mad)))) dmg = 0;   /* c465: 적 테스트 — 우리 편은 안 다치고, 우리 편 공격도 안 들어간다 */   /* c463: 적 테스트도 */   // v396: 시험 맵 — 나는 무적 (c42: 챕터는 빼고)
     if (CHAPTER && a && a.vig && isZombie(v) && v.mode !== 'bite' && !(chKbAbs(v) >= SNIPER_KD * 2 / 12 - 0.001)   /* c436 */) {   // c39: 자경단 몽둥이 — 밀림 1
@@ -7830,9 +7830,9 @@
   }
   function chDroneTick(dt0) { let dt = dt0;   // c468: 드론마다 정전기면 30%
     if (!chDroneOn && stars >= 3 && isZombie(me)) { chDroneOn = true; chDroneT = CH_DRONE_EVERY - 60; }   // c382: 개판이 되고 1분 뒤 첫 출동 (표시 없이)   // c375: 난리남
-    if (chDroneOn && !chDrones.some((d) => !d.dead) && (chDroneT += dt) >= CH_DRONE_EVERY) {   // c433: 살아 있는 드론이 있으면 주기가 안 흐른다 (다 죽어야 다음 주기 시작)
+    if (chDroneOn && !chDrones.some((d) => !d.dead && !d.cvy) && (chDroneT += dt) >= CH_DRONE_EVERY) {   // c433: 살아 있는 드론이 있으면 주기가 안 흐른다 (다 죽어야 다음 주기 시작)
       chDroneT = 0;
-      for (let i = 0, N = (stars <= 3 ? 1 : stars === 4 ? 2 : 3) * 2   /* c419: 한 번에 2배 */; i < N && chDrones.length < CH_DRONE_MAX; i++) {   /* c375: 난리남 1 · 개판 1 · 계엄 2 · 데프콘 2 (두 단계마다 한 대씩) */ const p = chEdgeSpot(Math.max(0, chZoneOf(me.foot.x, me.foot.z))); if (chDroneFree(p.x, p.z)) chDroneAdd(p.x, p.z); }
+      for (let i = 0, N = (stars <= 3 ? 1 : stars === 4 ? 2 : 3) * 2   /* c419: 한 번에 2배 */; i < N && chDrones.filter((d) => !d.cvy).length < CH_DRONE_MAX; i++) {   /* c506: 보스 드론 제외 */   /* c375: 난리남 1 · 개판 1 · 계엄 2 · 데프콘 2 (두 단계마다 한 대씩) */ const p = chEdgeSpot(Math.max(0, chZoneOf(me.foot.x, me.foot.z))); if (chDroneFree(p.x, p.z)) chDroneAdd(p.x, p.z); }
     }
     for (const d of chDrones.slice()) {
       if (d.dead) continue;
