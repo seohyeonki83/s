@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c481</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c482</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6310,14 +6310,15 @@
   function chMadRoll(c) {
     const r = chRedR('taser'); if (!r || c.tank || c.boss || c.mad || !(c.drone || c.robot)) return false;
     if (Math.random() >= 0.25 + 0.05 * (r - 1)) return false;
-    if (c.drone) { const i = chDrones.indexOf(c); if (i >= 0) chDrones.splice(i, 1); Object.assign(c, { mad: true, madIn: 2, stunT: 0, goo: 0, acid: 0, statT: 0, lureT: 0, tg: null, burst: 0, atkT: 0.3, madT: 0, hp: c.maxHp }); c.madS = chMadIcon(); chMadDr.push(c); return true; }
+    if (c.drone) { const i = chDrones.indexOf(c); if (i >= 0) chDrones.splice(i, 1); Object.assign(c, { mad: true, madIn: 2, madLeft: CH_MAD_T, stunT: 0, goo: 0, acid: 0, statT: 0, lureT: 0, tg: null, burst: 0, atkT: 0.3, madT: 0, hp: c.maxHp }); c.madS = chMadIcon(); chMadDr.push(c); return true; }
     const col = c.mesh.material.color.getHex(), mh = c.maxHp, fixed = c.fixed;
     makeZombie(c);   // 우리 편 (적이 공격한다) — 그림은 로봇 그대로
-    Object.assign(c, { mad: true, madIn: 2, madCol: col, madT: 0, madAtk: 0.3, stunT: 0, statT: 0, fixed });
+    Object.assign(c, { mad: true, madIn: 2, madLeft: CH_MAD_T, madCol: col, madT: 0, madAtk: 0.3, stunT: 0, statT: 0, fixed });
     c.mesh.material.color.setHex(col); c.maxHp = mh; c.hp = mh; c.hpDisp = mh; if (c.acid) c.acid.length = 0; c.madS = chMadIcon();
     return true;
   }
   function chMadStep(z, dt) {                  // 오작동 로봇 · 터렛
+    if ((z.madLeft -= dt) <= 0) { chMadEnd(z); return; }   // c482: 30초 뒤 살아 있으면 원래대로 (적)
     z.madS.position.set(z.foot.x, (z.halfH || RADIUS) * 2 + 0.75, z.foot.z); z.madS.material.rotation += dt * 7;
     if (z.madIn > 0) { z.madIn -= dt; z.vel.set(0, 0); z.hp = z.maxHp; z.mesh.material.color.setHex(Math.floor(clock * 20) % 2 ? 0x9fd8ff : z.madCol); if (z.madIn <= 0) z.mesh.material.color.setHex(z.madCol); return; }
     if (!z.fixed) { if ((z.madT -= dt) <= 0) { z.madT = rand(0.35, 0.9); z.madA = Math.random() * 6.283; } const sp = SPEED * 2; steer(z.vel, wantV.set(Math.cos(z.madA) * sp, Math.sin(z.madA) * sp), ACCEL * 2 * dt); } else z.vel.set(0, 0);
@@ -6327,11 +6328,24 @@
       if (best) { z.madAtk = HIT_EVERY / 2; sniperFx(z, best); landHit(z, best, CH_DMG_SO * (z.turret ? 8 : 4)); } else z.madAtk = 0.2;   // 공격 속도 2배 · 한 번에 연사 몫
     }
   }
+  const CH_MAD_T = 30;   // c482: 오작동 최대 30초 (연출 2초 포함)
+  function chMadEnd(z) {                       // c482: 오작동 로봇 · 터렛 → 원래 적으로 (남은 체력 비율 그대로)
+    const x = z.foot.x, zz = z.foot.z, k = Math.max(0.01, z.hp / z.maxHp), tur = z.turret, sp = z.space;
+    if (z.madS) { scene.remove(z.madS); z.madS.material.dispose(); z.madS = null; }
+    for (const o of bodies) { if (o.target === z) { o.target = null; if (o.mode === 'pounce' || o.mode === 'bite') o.mode = 'free'; } if (o.foe === z) o.foe = null; if (o.engaging === z) o.engaging = null; }
+    chBTgone(z);
+    chNoMix = true; const t = addCitizen(x, zz, square(x, zz), 'soldier'); chNoMix = false; t.space = sp;
+    if (tur) { t.robot = t.turret = true; chRobotAny = true; t.noLure = true; t.fixed = true; t.sleep = false; t.tick = 0; t.hp = t.maxHp = t.maxHp * 3; t.r = BODY * 1.35; t.halfH = RADIUS * 1.35; t.mesh.scale.setScalar(1.35); t.mesh.geometry = chSqGeo; t.mesh.material.color.setHex(0x4d5560); chAddGun(t, 0.6, 0.2, 0x1a1d21); }
+    else chMakeRobot(t);
+    t.met = true; t.disc = true; t.hp = t.maxHp * k; t.hpDisp = t.hp;
+    for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283; puff(x, 0.6, zz, 0x9fd8ff, 0.3, 0.6, 0.3, Math.cos(a) * 2, 0.3, Math.sin(a) * 2, 0.9); }   // 정신 차림
+  }
   function chMadDie(z) { if (z.madS) { scene.remove(z.madS); z.madS.material.dispose(); z.madS = null; } chRobotDie(z); }
   function chMadDroneTick(dt) {                // 오작동 드론 — 마구 날아다니며 인간을 쏜다
     for (let i = chMadDr.length - 1; i >= 0; i--) {
       const d = chMadDr[i];
       if (d.dead) { scene.remove(d.madS); chMadDr.splice(i, 1); continue; }   // c481: 인간 총에 맞아 터짐
+      if ((d.madLeft -= dt) <= 0) { scene.remove(d.madS); d.madS = null; d.mad = false; d.tg = null; d.atkT = HIT_EVERY; chMadDr.splice(i, 1); chDrones.push(d); continue; }   // c482: 30초 — 다시 적 드론
       const gone = () => { scene.remove(d.s); d.s.material.dispose(); scene.remove(d.sh); if (d.tr) { scene.remove(d.tr); d.tr.material.dispose(); } scene.remove(d.madS); chMadDr.splice(i, 1); };
       if (Math.hypot(d.x - me.foot.x, d.z - me.foot.z) > me.sense * 2.5) { if ((d.farT = (d.farT || 0) + dt) > 25) { gone(); continue; } } else d.farT = 0;
       if (d.madIn > 0) { d.madIn -= dt; chDroneDraw(d, dt); d.s.position.x += rand(-0.12, 0.12); d.s.position.z += rand(-0.08, 0.08); d.s.material.color.setHex(Math.floor(clock * 20) % 2 ? 0x9fd8ff : 0xffffff); if (d.madIn <= 0) d.s.material.color.setHex(0xffffff); }

@@ -1,0 +1,24 @@
+import pathlib
+s = pathlib.Path('c481.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:70], s.count(a)); R.append((a, b))
+rep("Object.assign(c, { mad: true, madIn: 2, stunT: 0, goo: 0, acid: 0, statT: 0, lureT: 0, tg: null, burst: 0, atkT: 0.3, madT: 0, hp: c.maxHp });", "Object.assign(c, { mad: true, madIn: 2, madLeft: CH_MAD_T, stunT: 0, goo: 0, acid: 0, statT: 0, lureT: 0, tg: null, burst: 0, atkT: 0.3, madT: 0, hp: c.maxHp });")
+rep("Object.assign(c, { mad: true, madIn: 2, madCol: col, madT: 0, madAtk: 0.3, stunT: 0, statT: 0, fixed });", "Object.assign(c, { mad: true, madIn: 2, madLeft: CH_MAD_T, madCol: col, madT: 0, madAtk: 0.3, stunT: 0, statT: 0, fixed });")
+rep("  function chMadStep(z, dt) {                  // 오작동 로봇 · 터렛\n", "  function chMadStep(z, dt) {                  // 오작동 로봇 · 터렛\n    if ((z.madLeft -= dt) <= 0) { chMadEnd(z); return; }   // c482: 30초 뒤 살아 있으면 원래대로 (적)\n")
+rep("  function chMadDie(z) {", r"""  const CH_MAD_T = 30;   // c482: 오작동 최대 30초 (연출 2초 포함)
+  function chMadEnd(z) {                       // c482: 오작동 로봇 · 터렛 → 원래 적으로 (남은 체력 비율 그대로)
+    const x = z.foot.x, zz = z.foot.z, k = Math.max(0.01, z.hp / z.maxHp), tur = z.turret, sp = z.space;
+    if (z.madS) { scene.remove(z.madS); z.madS.material.dispose(); z.madS = null; }
+    for (const o of bodies) { if (o.target === z) { o.target = null; if (o.mode === 'pounce' || o.mode === 'bite') o.mode = 'free'; } if (o.foe === z) o.foe = null; if (o.engaging === z) o.engaging = null; }
+    chBTgone(z);
+    chNoMix = true; const t = addCitizen(x, zz, square(x, zz), 'soldier'); chNoMix = false; t.space = sp;
+    if (tur) { t.robot = t.turret = true; chRobotAny = true; t.noLure = true; t.fixed = true; t.sleep = false; t.tick = 0; t.hp = t.maxHp = t.maxHp * 3; t.r = BODY * 1.35; t.halfH = RADIUS * 1.35; t.mesh.scale.setScalar(1.35); t.mesh.geometry = chSqGeo; t.mesh.material.color.setHex(0x4d5560); chAddGun(t, 0.6, 0.2, 0x1a1d21); }
+    else chMakeRobot(t);
+    t.met = true; t.disc = true; t.hp = t.maxHp * k; t.hpDisp = t.hp;
+    for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283; puff(x, 0.6, zz, 0x9fd8ff, 0.3, 0.6, 0.3, Math.cos(a) * 2, 0.3, Math.sin(a) * 2, 0.9); }   // 정신 차림
+  }
+  function chMadDie(z) {""")
+rep("      if (d.dead) { scene.remove(d.madS); chMadDr.splice(i, 1); continue; }   // c481: 인간 총에 맞아 터짐\n", "      if (d.dead) { scene.remove(d.madS); chMadDr.splice(i, 1); continue; }   // c481: 인간 총에 맞아 터짐\n      if ((d.madLeft -= dt) <= 0) { scene.remove(d.madS); d.madS = null; d.mad = false; d.tg = null; d.atkT = HIT_EVERY; chMadDr.splice(i, 1); chDrones.push(d); continue; }   // c482: 30초 — 다시 적 드론\n")
+pathlib.Path('c482_patch.py').write_text('C482_R = ' + repr(R) + '\n')
+print(len(R))
