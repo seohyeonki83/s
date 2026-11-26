@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c506</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c507</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -465,7 +465,7 @@
         for (const d of ['e', 'n', 'h']) { const ok = chUnlocked(st, d), cl = CH_SV.clr[st + d]; h += `<button data-st="${st}" data-d="${d}" ${ok ? '' : 'disabled'}>${ok ? '' : '🔒 '}${CH_DIF_NM[d]}${cl ? ' ✓' : ''}</button>`; }
         h += '</div></div>';
       }
-      h += `<button class="og-tut" data-tut="1">튜토리얼 다시 하기</button>`;
+      h += `<button class="og-tut" data-tut="1">튜토리얼 다시 하기</button><div style="text-align:center;margin-top:28px"><button class="og-rst" data-rst="1">초기화</button></div>`;   // c507
       ov.innerHTML = h;
     };
     const st = document.createElement('style');
@@ -474,12 +474,17 @@
       '#outg .og-up{display:flex;align-items:center;gap:10px}#outg .og-up>div:first-child{flex:1}#outg .og-n{font-size:16px;font-weight:900}#outg .og-s{font-size:12px;color:#9aa6b8;font-weight:700}' +
       '#outg .og-bar{width:12px;height:40px;border-radius:6px;background:#2c3340;position:relative;overflow:hidden}#outg .og-bar i{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(#7fe3ff,#c78bff)}' +
       '#outg button{font:inherit;font-weight:900;color:#fff;background:#2f6fe0;border:none;border-radius:12px;padding:10px 12px;touch-action:manipulation}#outg button:disabled{background:#3a4250;color:#8a93a3}#outg button small{font-weight:700;opacity:0.85}' +
-      '#outg .og-d{display:flex;gap:8px;margin-top:8px}#outg .og-d button{flex:1;padding:12px 0}#outg .og-tut{width:100%;margin-top:14px;background:#3a4250}';
+      '#outg .og-d{display:flex;gap:8px;margin-top:8px}#outg .og-d button{flex:1;padding:12px 0}#outg .og-tut{width:100%;margin-top:14px;background:#3a4250}#outg .og-rst{font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;background:transparent;color:#6b7482;border:1px solid #3a4250}#outg .og-rst.on{color:#fff;background:#c62828;border-color:#c62828}';
     document.head.appendChild(st);
     ov.addEventListener('click', (e) => {
       const b = e.target.closest('button'); if (!b || b.disabled) return;
       if (b.dataset.up) { if (CH_SV.genes < CH_UP_COST) return; CH_SV.genes -= CH_UP_COST; CH_SV.up[b.dataset.up]++; chSave(); draw(); return; }
       if (b.dataset.tut) { ov.remove(); tut(); return; }
+      if (b.dataset.rst) {   // c507: 초기화 — 한 번 누르면 확인, 3초 안에 한 번 더 누르면 전부 지운다
+        if (!b.classList.contains('on')) { b.classList.add('on'); b.textContent = '정말 초기화? 한 번 더 누르기'; setTimeout(() => { if (b.isConnected) { b.classList.remove('on'); b.textContent = '초기화'; } }, 3000); return; }
+        try { localStorage.removeItem('rd_genes'); localStorage.setItem('rd_save_v1', JSON.stringify({ genes: 0, clr: {}, sub: {}, up: { hp: 0, ahp: 0, atk: 0 }, tut: false, mig: 1 })); window.name = ''; } catch (e) {}
+        location.reload(); return;
+      }
       if (b.dataset.st) { CH_UPK.hp = 1 + 0.01 * CH_SV.up.hp; CH_UPK.ahp = 1 + 0.01 * CH_SV.up.ahp; CH_UPK.atk = 1 + 0.01 * CH_SV.up.atk; ov.remove(); go(+b.dataset.st, b.dataset.d); }
     });
     draw(); document.body.appendChild(ov);
