@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c473</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c474</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6355,10 +6355,10 @@
   function chAbsorbHit(a, v) {                 // c430: 흡수 좀비에게 맞은 적 — 흡수한 무기 효과 (그 무기 지속 시간 × 빨간 별 ÷ 6)
     const B = chMB(a); if (!B || B.id !== 'absorb' || !B.r) return; const k = B.r / 6;
     if (chAbsK === 'taser' && chHas('taser')) { v.stunT = Math.max(v.stunT || 0, CH_WV('taserT', chLvB('taser')) * chLingK() * k); v.vel.set(0, 0); }
-    else if (chAbsK === 'bomb' && chHas('bomb')) gooOn(v, ((3 + chLvB('bomb'))) * chLingK() * k);
+    else if (chAbsK === 'bomb' && chHas('bomb')) gooOn(v, ((4 + 0.6 * chLvB('bomb'))) * chLingK() * k);
   }
   function gooOn(c, T) {                         // 영구: 좀비가 될 때까지 이동·공격 20% 느리게 + 초당 1 데미지
-    c.gooLeft = Math.max(c.goo ? c.gooLeft : 0, T ?? ((3 + chLvB('bomb'))) * chLingK());   /* c430: T = 흡수 좀비 */   /* c420: 잔류제 */   // c286: 남은 시간과 새 시간 중 긴 쪽   // c123: 10초, 강화마다 +1초 (다시 맞으면 시간만 새로)
+    c.gooLeft = Math.max(c.goo ? c.gooLeft : 0, T ?? ((4 + 0.6 * chLvB('bomb'))) * chLingK());   /* c430: T = 흡수 좀비 */   /* c420: 잔류제 */   // c286: 남은 시간과 새 시간 중 긴 쪽   // c123: 10초, 강화마다 +1초 (다시 맞으면 시간만 새로)
     if (c.acid) c.acid.length = 0;   // c287: 산성 폭발은 자폭 산성으로 교체
     if (c.goo) return;
     c.goo = true; c.gooT = 0; c.smokeT = 0;
@@ -6781,7 +6781,7 @@
     return null;
   }
   const CH_STAT = {                           // c21: 획득창·설명창에 나오는 수치 (n = 강화 단계)
-    bomb: (n) => `터지는 범위 ${1.5 + n}칸 · 산성 ${3 + Math.min(5, n)}초`,   /* c473 */
+    bomb: (n) => `터지는 범위 ${1.5 + n}칸 · 산성 ${+(4 + 0.6 * Math.min(5, n)).toFixed(1)}초`,   /* c474 */
     mutate: (n) => `주사 ${CH_WV('mutN', n)}개 · 변이 ${6 + 3 * n}초`,
     taser: (n) => `한 번에 ${CH_WV('taserN', n)}명 · ${CH_WV('taserT', n)}초 감전 · 장탄 3` + (n > 5 ? ` · 정전기 ${(MELEE * chStatK(n - 5)).toFixed(1)}칸` : ''),   /* c468 */   /* c420 */   /* c251 */
     awaken: (n) => `최대 사용 시간 ${5 + 3 * n}초 · 가득 차는 데 35초`,
@@ -6859,7 +6859,7 @@
   }
   // ── c25 · c27: 레벨업 = 도구·장비 14종 가운데 랜덤 3장 중 하나를 고른다 — 없는 것이면 새로 얻고, 가진 것이면 강화 +1 ──
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
-    bomb: ['', (n) => `${1.5 + n}칸·${3 + Math.min(5, n)}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['유혹', (n) => `${CH_WV('cashT', n)}초`]   /* c420 */   /* c226 */,
+    bomb: ['', (n) => `${1.5 + n}칸·${+(4 + 0.6 * Math.min(5, n)).toFixed(1)}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${6 + 3 * n}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${5 + 3 * n}초`], cash: ['유혹', (n) => `${CH_WV('cashT', n)}초`]   /* c420 */   /* c226 */,
     book: ['쿨타임', (n) => `-${5 + 9 * n}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['공속', (n) => `+${10 + 10 * n}%`], crowbar: ['건물', (n) => `+${15 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`]   /* c278: 카드는 총격만 (밀림은 설명 칸에) */,
     shoes: ['이동', (n) => `+${5 * (1 + n)}%`], parasite: ['확률', (n) => `${20 + 5 * n}%`], teeth: ['감염', (n) => `${Math.round(100 + 80 / 6 * (1 + n))}%`], acid: ['확률', (n) => `${30 + 10 * n}%`], acidp: ['도트', (n) => `+${1 + n}`], linger: ['지속', (n) => `+${5 * (1 + n)}%`],   /* c420 */   /* c224 */ catalyst: ['변이', (n) => `+${5 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
@@ -7684,7 +7684,7 @@
     for (const d of chDrones.slice()) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || (blk && blocked(x, z, d.x, d.z))) continue; if (d.goo <= 0) { d.acid = Math.max(d.acid, T); } chDotPop(d.x + 0.6, d.z, chAcidHit()); chDroneDmg(d, chAcidHit()); }
   }
   function chDroneGooAt(x, z, R) {             // 산성 자폭 원기둥 — 그림자 점이 원 안이면 자폭 산성 (산성 폭발은 이걸로 바뀐다)
-    for (const d of chDrones) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || blocked(x, z, d.x, d.z)) continue; d.goo = Math.max(d.goo, ((3 + chLvB('bomb'))) * chLingK());   /* c420 */ d.acid = 0; }
+    for (const d of chDrones) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || blocked(x, z, d.x, d.z)) continue; d.goo = Math.max(d.goo, ((4 + 0.6 * chLvB('bomb'))) * chLingK());   /* c420 */ d.acid = 0; }
   }
   function chDroneSeen() {                     // 내 시야 안 드론 (거리 · 벽에 안 가림)
     return chDrones.filter((d) => !d.dead && Math.hypot(d.x - me.foot.x, d.z - me.foot.z) <= me.sense && !fireBlocked(me.foot.x, me.foot.z, d.x, d.z));
@@ -8147,7 +8147,7 @@
     if (o.obj.hp <= 0) { o.obj.hp = 0; breakObj(o.obj); }
   }
   function chTankGoo(car) {                    // 산성 — 이동·공격 20% 느리게 + 초당 2 데미지 (사람과 같다)
-    car.gooLeft = Math.max(car.goo ? car.gooLeft : 0, ((3 + chLvB('bomb'))) * chLingK());   /* c420 */   // c286   // c123
+    car.gooLeft = Math.max(car.goo ? car.gooLeft : 0, ((4 + 0.6 * chLvB('bomb'))) * chLingK());   /* c420 */   // c286   // c123
     if (car.acid) car.acid.length = 0;   // c287
     if (car.goo) return;
     car.goo = true; car.gooT = 0; car.gooS = [];
