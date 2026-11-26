@@ -1,0 +1,1 @@
+C501_R = [("    const R = 2 + chLvB('bomb');", "    const R = 1.7 + 0.5 * chLvB('bomb');   /* c501: 1.7칸 · 0.5칸씩 · ★5 4.2칸 */"), ('    bomb: (n) => `터지는 범위 ${2 + Math.min(5, n)}칸', '    bomb: (n) => `터지는 범위 ${+(1.7 + 0.5 * Math.min(5, n)).toFixed(1)}칸'), ("    bomb: ['', (n) => `${2 + Math.min(5, n)}칸·", "    bomb: ['', (n) => `${+(1.7 + 0.5 * Math.min(5, n)).toFixed(1)}칸·")]
