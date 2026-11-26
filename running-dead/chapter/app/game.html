@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c499</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c500</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3257,10 +3257,16 @@
       else g.drawImage(CH_ICON[B.done ? 'x' : B.type], Math.max(0, Math.min(W - szB, X((B.x0 + B.x1) / 2) - szB / 2)), Math.max(0, Math.min(H - szB, Z((B.z0 + B.z1) / 2) - szB / 2)), szB, szB);   // 가장자리 건물은 미니맵 안쪽으로 당겨서 잘리지 않게
     }
     for (const B of buildings) if (B.type === 'house' && B.taken) { const s = szB / 3; g.drawImage(CH_ICON.x, X((B.x0 + B.x1) / 2) - s / 2, Z((B.z0 + B.z1) / 2) - s / 2, s, s); }   // c56: 점령한 집 = 3분의 1 크기 X (지붕엔 표시 없음)
-    for (const P of CH_MAP.passPts) {                                     // c4: 길목 — 그 자리를 밝혔으면 양쪽 화살표
-      if (!P.found && explored[Math.floor((P.z - MM.z0) / MM_CELL) * mmW + Math.floor((P.x - MM.x0) / MM_CELL)]) P.found = true;
-      if (P.found) g.drawImage(CH_ICON[P.dir === 'h' ? 'passH' : 'passV'], X(P.x) - sz2 / 2, Z(P.z) - sz2 / 2, sz2, sz2);
-    }
+    CH_MAP.passPts.forEach((P, i) => {                                    // c500: 건널목 — 양쪽 입구에 노란 화살표 (들어가는 쪽을 가리킨다) · 밝힌 입구만
+      const Q = CH_MAP.passes2 && CH_MAP.passes2[i], ex = (x, z) => explored[Math.floor((z - MM.z0) / MM_CELL) * mmW + Math.floor((x - MM.x0) / MM_CELL)];
+      if (!Q) { if (!P.found && ex(P.x, P.z)) P.found = true; if (P.found) g.drawImage(CH_ICON[P.dir === 'h' ? 'passH' : 'passV'], X(P.x) - sz2 / 2, Z(P.z) - sz2 / 2, sz2, sz2); return; }   // c4 (끝점이 없는 맵)
+      for (const [ax, az, bx, bz, k] of [[Q.ax, Q.az, Q.bx, Q.bz, 'fa'], [Q.bx, Q.bz, Q.ax, Q.az, 'fb']]) {
+        if (!P[k] && ex(ax, az)) P[k] = true; if (!P[k]) continue;
+        const cx = X(ax), cz = Z(az), dx = X(bx) - cx, dz = Z(bz) - cz, l = Math.hypot(dx, dz) || 1, ux = dx / l, uz = dz / l, r = sz2 * 0.6;
+        g.beginPath(); g.moveTo(cx + ux * r, cz + uz * r); g.lineTo(cx - ux * r * 0.55 - uz * r * 0.8, cz - uz * r * 0.55 + ux * r * 0.8); g.lineTo(cx - ux * r * 0.55 + uz * r * 0.8, cz - uz * r * 0.55 - ux * r * 0.8); g.closePath();
+        g.fillStyle = '#ffd34d'; g.fill(); g.lineWidth = 1.2 * u; g.strokeStyle = 'rgba(0, 0, 0, 0.85)'; g.stroke();
+      }
+    });
     for (const p of pickups) {                                            // c20: 안 주운 아이템 — 테스트맵처럼 미니맵에 늘 보인다 (금색 동그라미 + 아이콘). 건물 아이콘 위에 그린다
       const px = X(p.x), py = Z(p.z), pr = 5.5 * u;
       g.fillStyle = 'rgba(0, 0, 0, 0.85)'; g.beginPath(); g.arc(px, py, pr + 1.2 * u, 0, Math.PI * 2); g.fill();
@@ -4666,7 +4672,7 @@
     carObs = [];
     for (const S of stations) { S.down = false; S.found = false; S.roof.material = stationRoofMat; }
     for (const B of buildings) if (!B.station) { B.found = false; B.done = false; }
-    if (CHAPTER) for (const P of CH_MAP.passPts) P.found = false;   // 일반 건물도 다시 '발견 전'으로 (v166)   // 미니맵에서 다시 '발견 전'으로
+    if (CHAPTER) for (const P of CH_MAP.passPts) P.found = P.fa = P.fb = false;   /* c500 */   // 일반 건물도 다시 '발견 전'으로 (v166)   // 미니맵에서 다시 '발견 전'으로
     cmdReadyAt = 0;
     for (const r of rings) scene.remove(r);
     rings.length = 0;
