@@ -1512,6 +1512,8 @@ from c481_patch import C481_R
 R += C481_R
 from c482_patch import C482_R
 R += C482_R
+from c483_patch import C483_R
+R += C483_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
