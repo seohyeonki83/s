@@ -1,0 +1,7 @@
+import pathlib
+s = pathlib.Path('c487.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:70], s.count(a)); R.append((a, b))
+rep("zDamage(z) * 40 / (ALLY_DAMAGE * 1.15 * 1.1 * 1.07 * 1.03)   /* c487: 동료 히드라 침 = 40", "zDamage(z) * 50 / (ALLY_DAMAGE * 1.15 * 1.1 * 1.07 * 1.03)   /* c488: 50 · c487: 동료 히드라 침 = 40")
+pathlib.Path('c488_patch.py').write_text('C488_R = ' + repr(R) + '\n')
