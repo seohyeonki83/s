@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c515</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c516</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -9355,8 +9355,8 @@
       for (let k = 0; k < 7; k++) { let x = 0, z = 0, h = 0; for (let t = 0; t < 80; t++) { x = P.x0 + 1.0 + k * (10 / 6) + J(0.4);   /* c343: 경찰차 7 → 6 (+ 바리케이트 1) — 사이 틈이 조금 생긴다 */ z = zL + J(1.3); h = (Math.random() < 0.3 ? J(0.9) : J(0.35)) + (Math.random() < 0.15 ? Math.PI / 2 : 0); if (free(x, z, 1.15, cars)) break; }
         cars.push([x, z, 1.15]); const c = chParked(x, z, h, k === 3); c.tutS = P; }   // 네 번째는 바리케이트
       const put2 = (t, x0, z0, spread) => { let x = 0, z = 0; for (let n = 0; n < 60; n++) { x = Math.max(P.x0 + 0.6, Math.min(P.x1 - 0.6, x0 + J(spread))); z = z0 + J(spread * 0.7); if (free(x, z, 0.5, ppl) && free(x, z, 1.25, cars.map(([a, b]) => [a, b, 0]))) break; } ppl.push([x, z, 0.42]); post(P, t, x, z); };
-      cars.forEach(([x, z], k) => { if (k === 3) return; put2('police', x + J(0.6), z - 1.7 - Math.random() * 0.6, 0.5); if (k % 2 || k === 6) return; put2('police', x + (Math.random() < 0.5 ? -1 : 1) * (0.9 + Math.random() * 0.4), z - 1.0 - Math.random() * 1.2, 0.4); });   // 차마다 경찰 2 (뒤 하나 · 옆구리 하나)
-      for (let k = 0; k < 4; k++) put2('soldier', cx + J(4.2), zL - 3.0 - Math.random() * 2.6, 0.6); }
+      cars.forEach(([x, z], k) => { if (k === 3) return; if (k !== 5) put2('police', x + J(0.6), z - 1.7 - Math.random() * 0.6, 0.5); if (k % 2 || k === 6 || k === 2) return;   /* c516: 병력 20% 줄임 — 경찰 9 → 7 */ put2('police', x + (Math.random() < 0.5 ? -1 : 1) * (0.9 + Math.random() * 0.4), z - 1.0 - Math.random() * 1.2, 0.4); });   // 차마다 경찰 2 (뒤 하나 · 옆구리 하나)
+      for (let k = 0; k < 3; k++) put2('soldier',   /* c516: 군인 4 → 3 */ cx + J(4.2), zL - 3.0 - Math.random() * 2.6, 0.6); }
     const LX = (Q.x0 + Q.x1) / 2, R1 = Q.z1, R0 = Q.z0, obst = (x, z) => { const c = chParked(x, z, 0, true); c.tutS = Q; return c; };   // c338: 마지막 길목 = 바리케이트만 (6개, 세 줄 엇갈림) — 그 사이사이에 경찰 · 군인 · 저격수
     obst(LX - 1.5, R1 - 4.6); obst(LX + 1.8, R1 - 4.6); obst(LX - 1.5, R1 - 9.8); obst(LX + 1.8, R1 - 9.8);   /* c510: 바리케이트 사이를 조금 더 벌림 (2.5 → 3.3) */   /* c344: 철문 앞 바리케이트 6 → 4 (가운데 줄을 뺐다) */
     for (const [t, dx, z] of [['police', -1.6, R1 - 5.8], ['soldier', 1.7, R1 - 5.8], ['sniper', 0.9, R1 - 6.7],   /* c344: 철문 앞 병력 반 — 경찰 5 → 3 · 군인 10 → 5 · 저격수 4 → 2 */
@@ -9380,7 +9380,7 @@
       ['zvat', 7.85, 6.55], ['zvat', 7.85, 4.85], ['vat', 7.9, 0.9], ['wcab', 3.6, 0.55], ['jarEye', 4.6, 0.55], ['scope', 2.6, 0.6], ['tubes', 6.0, 0.6],   /* c303: 좀비 수조 둘 = 출구(오른쪽 아래 문) 바로 위 오른쪽 벽 */ ['iv', 3.0, 11.4], ['biodrum', 4.4, 11.3], ['jarBrain', 5.6, 11.4]]);
     const man = (B, type, x, z, r = 1.2) => { const A = { x0: x - r, z0: z - r, x1: x + r, z1: z + r }, c = addCitizen(x, z, A, type); c.area = A; c.home = B; c.space = B; c.disc = true; return c; };   // disc = 처음 발견 강등에서 뺀다 · 제자리 둘레만 돈다
     man(C1, '', (C1.x0 + C1.x1) / 2, (C1.z0 + C1.z1) / 2); man(C2, 'guard', (C2.x0 + C2.x1) / 2, (C2.z0 + C2.z1) / 2);   // 복도: 하양 1 · 노랑 1
-    { const q = man(L2, 'police', L2.x0 + 6.55, L2.z0 + 5.7, 0.4); q.post = q.area; enterNormal(q); }   /* c303: 수조 앞 경찰도 같이 */   // c296: 오른쪽 위 좀비 수조 앞 경찰 1 (제자리)
+    /* c516: 수조 앞 경찰 뺌 */   /* c303: 수조 앞 경찰도 같이 */   // c296: 오른쪽 위 좀비 수조 앞 경찰 1 (제자리)
     { const p = man(L2, 'police', L2.x0 + 7.4, L2.z0 + 11.0, 0.7); p.post = p.area; enterNormal(p); chVig(man(L2, 'attacker', L2.x0 + 6.2, L2.z0 + 11.0, 0.7)); }   // c294: 오른쪽 아래 경찰 1 + 그 옆 빨강 1 (제자리)
     const busy = [[6.2, 11.0], [7.4, 11.0], [7.85, 6.55], [7.85, 4.85], [6.55, 5.7], [7.9, 0.9]], free = (x, z) => !(x > 1.9 && x < 6.9 && z > 3.9 && z < 8.1) && !(x < 1.8 && z > 4.0 && z < 8.0) && !(x < 1.9 && z < 4.0) && busy.every(([a, b]) => Math.hypot(a - x, b - z) > 1.4);
     for (const type of ['', '', '', '', 'attacker']) {   /* c331: 하양 3 → 4 · 주황 2 → 1 */ let x = 0, z = 0; for (let t = 0; t < 200; t++) { x = 1 + Math.random() * 6.7; z = 1.4 + Math.random() * 9.2; if (free(x, z)) break; } busy.push([x, z]); man(L2, type, L2.x0 + x, L2.z0 + z); }   // 하양 3 · 주황 2 — 아무 데나
