@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c466</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c468</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2397,6 +2397,7 @@
     }
     if (c.state === 'held') { c.vel.set(0, 0); return; }   // 물리는 중엔 꼼짝 못 한다
     if (c.stunT > 0) { c.stunT -= dt; c.vel.set(0, 0); return; }
+    if (c.statT > 0) dt *= CH_STAT_SLOW;   // c468: 정전기 — 모든 동작 30%
     if (c.burstN > 0 && (c.burstT -= dt) <= 0) soldierBullet(c);
     if (c.state === 'lured') c.burstN = 0;   // c464: 유혹 중엔 연사도 끊는다
     if (c.military && c.state !== 'fight' && c.state !== 'evade' && c.state !== 'lured') moveShoot(c, dt, true);   /* c464: 끌려가며 쏘던 것 */   // v449: 따라가기·복귀·추적 중에도 쏜다 (공격 속도 절반)   // v410: 군인 연사 진행   // 감전 (v190) — 2초 동안 아무것도 못 한다 (맞기는 한다)
@@ -4287,7 +4288,7 @@
       b.tracer.scale.set(L2, 1, b.sniper ? SNIPER_THICK : 1);
       b.tracer.material.opacity = 1 - b.shotT / SHOT_FLASH;
       if (b.tracer2) { const t2 = b.tracer2; t2.visible = true; t2.position.copy(b.tracer.position); t2.rotation.y = b.tracer.rotation.y; t2.scale.set(L2, 1, SNIPER_THICK * 2.4); t2.material.opacity = 0.9 * (1 - b.shotT / SHOT_FLASH); }   // v413: 빨간 바깥 선
-      if ((b.shotT += dt) >= SHOT_FLASH) b.shotT = -1;
+      if ((b.shotT += dt * (b.statT > 0 ? CH_STAT_SLOW : 1)) >= SHOT_FLASH) b.shotT = -1;
     }
     for (const b of bodies) {
       if (b !== me && !onView(b.foot.x, b.foot.z, 1)) {   // 화면 밖 캐릭터는 숨기고 그림 갱신을 건너뛴다 (v172)
@@ -4308,7 +4309,7 @@
       if (b.recoilT >= 0) {                   // 총 반동 (v252): 0.04초에 뒤로 0.2칸 팍 → 0.3초에 걸쳐 천천히 제자리 (그림만, 실제 자리는 그대로)
         const t = b.recoilT, k = t < 0.04 ? t / 0.04 : Math.pow(Math.max(0, 1 - (t - 0.04) / 0.3), 2);
         b.mesh.position.x += b.recoilX * 0.2 * k * (b.recoilK || 1); b.mesh.position.z += b.recoilZ * 0.2 * k * (b.recoilK || 1);   /* c436: 샷건 반동 2배 */
-        if ((b.recoilT += dt) > 0.34) b.recoilT = -1;
+        if ((b.recoilT += dt * (b.statT > 0 ? CH_STAT_SLOW : 1)) > 0.34) b.recoilT = -1;   /* c468 */
       }
       if (b.aimGun) chGunAim(b);   // c436
       if (b.knockT > 0 && !b.knockSlide) b.mesh.position.y += Math.sin(Math.PI * (1 - b.knockT / KNOCK_T)) * 0.9;   // 치여 날아갈 때 살짝 떠오른다
@@ -5214,7 +5215,7 @@
     }
     if (CHAPTER) chBoardTick(dt);   // c47: 싸움이 끝난 사람은 차로 돌아간다
     for (const b of bodies) {
-      if (!b.fixed && !b.sleep) { const gk = (b.goo && !CHAPTER ? 0.56 : 1)   /* c421 */ * (CHAPTER && b.goo ? chStickyK() : 1)   /* c422: 끈적 산성 */ * (b.rage && !CHAPTER ? 1 + rageK() : 1) * chDownK(b);   /* c420: 분노 — 챕터는 이동 속도 없음 */   /* c418: 체력이 다한 적은 반 */   /* c19 · c22: 분노 바이러스 — 이동 속도 +5~15% */   /* v344: 20% → 44% 느리게 (0.8 × 0.7) */ b.foot.x += b.vel.x * dt * gk; b.foot.z += b.vel.y * dt * gk; }   // v275: 산성 덩어리 묻으면 이동 20% 느리게
+      if (!b.fixed && !b.sleep) { const gk = (b.goo && !CHAPTER ? 0.56 : 1)   /* c421 */ * (CHAPTER && b.goo ? chStickyK() : 1)   /* c422: 끈적 산성 */ * (b.rage && !CHAPTER ? 1 + rageK() : 1) * chDownK(b) * (b.statT > 0 ? CH_STAT_SLOW : 1);   /* c468: 정전기 */   /* c420: 분노 — 챕터는 이동 속도 없음 */   /* c418: 체력이 다한 적은 반 */   /* c19 · c22: 분노 바이러스 — 이동 속도 +5~15% */   /* v344: 20% → 44% 느리게 (0.8 × 0.7) */ b.foot.x += b.vel.x * dt * gk; b.foot.z += b.vel.y * dt * gk; }   // v275: 산성 덩어리 묻으면 이동 20% 느리게
       if (b.split && (b.splitT -= dt) <= 0) b.split = null;
       if (b.stick) { const L = LUNGE_IN + LUNGE_OUT, u = b.lungeT >= 0 ? Math.min(1, b.lungeT / L) : -1; b.stick.rotation.z = u < 0 ? -0.5 : -0.5 + 2.6 * Math.sin(Math.PI * u); }   // c40
       if (b.lungeT >= 0) {                    // 때리는 모션 시간 — 붙는 순간 데미지
@@ -5330,7 +5331,7 @@
     shoes: { icon: IC.shoes, name: '운동화', passive: true },
     teeth: { icon: IC.teeth, name: '틀니', passive: true }, parasite: { icon: IC.parasite, name: '분열세포', passive: true },   /* c370 */ linger: { icon: IC.linger, name: '잔류제', passive: true },   /* c420 */ acidp: { icon: IC.acidp, name: '산성 강도', passive: true },   /* c259 */ acid: { icon: IC.acid, name: '산성 폭발', passive: true },   // c224       // v275: 내 이동 속도 +10%                         // 패시브 (v201) — 총알 피해 30% 감소, 똑똑한 두뇌마다 10% 더
   };
-  const CH_W = { taserN: [1, 2, 2, 3, 3, 4, 5], taserT: [0.5, 1, 1.5, 2, 2.5, 3, 3.5]   /* c269: 처음 0.5초 · 0.5초씩 */, mutN: [1, 1, 2, 2, 3, 3, 4], cashT: [2, 3.3, 4.7, 6, 7.3, 8.7, 10], cashH: [1, 2, 4, 5, 6, 8, 9] }   /* c258 */, CH_WV = (k, n) => CH_W[k][Math.max(0, Math.min(CH_W[k].length - 1, n))];   // c139: 무기 수치표
+  const CH_W = { taserN: [1, 2, 2, 3, 4, 5], taserT: [1, 1.5, 2, 2.5, 3, 4]   /* c468: ★0~★5 */   /* c269: 처음 0.5초 · 0.5초씩 */, mutN: [1, 1, 2, 2, 3, 3, 4], cashT: [2, 3.3, 4.7, 6, 7.3, 8.7, 10], cashH: [1, 2, 4, 5, 6, 8, 9] }   /* c258 */, CH_WV = (k, n) => CH_W[k][Math.max(0, Math.min(CH_W[k].length - 1, n))];   // c139: 무기 수치표
   const taserN = (n) => 1 + Math.floor(n / 2), taserT = (n) => STUN_T + Math.ceil(n / 2);   // 테이저건 강화 n단계: 감전 대상 수 · 감전 시간(초) — 홀수 번째 강화는 시간 +1초, 짝수 번째는 대상 +1명
   const STUN_T = 3, CASH_N = 3,   /* 감전 기본 3초 (4.5 → 3.15 → 3초) */ CASH_R = [1, 2], CASH_GET = 0.7;   // v195: 감전 2 → 4초, 돈다발 뿌리는 거리 2~4 → 1~2칸
   const ITEM_TEXT = {                         // 장비·도구 설명 — [하는 일, 강화 시 달라지는 것, (덧붙임)]. 수치는 안 쓴다 (수치는 그 아래 '지금 · 다음 강화' 줄에 나온다)
@@ -5401,8 +5402,8 @@
   const up = { brain: 0, meat: 0, arm: 0, bite: 0, skin: 0, leg: 0, life: 0 };
   const ilv = {};                             // c19: 아이템마다 강화 단계 (챕터) — 같은 걸 또 얻으면 그것만 +1. 테스트맵은 지금까지처럼 '장비/도구 강화' 한 값을 다 같이 쓴다
   const lv = (k) => CHAPTER ? (ilv[k] || 0) : up.brain;
-  const chStars = (n) => '★'.repeat(Math.max(0, Math.min(6, n)));   // c26: 강화 단계 = 별 (최대 5개)
-  const chStarsK = (k, n) => CHAPTER && n >= chLvMax(k) ? 'MAX' : CHAPTER && n > 6 ? `<span style="color:#ff3b30">${'★'.repeat(n - 6)}</span>` : chStars(n);   /* c422: 흰 ★6 다음은 빨간 별 */   // c283: 끝까지 강화 = 노란 MAX
+  const chStars = (n) => '★'.repeat(Math.max(0, Math.min(5, n)));   /* c468: 흰 별 5개 */   // c26: 강화 단계 = 별 (최대 5개)
+  const chStarsK = (k, n) => CHAPTER && n >= chLvMax(k) ? 'MAX' : CHAPTER && n > 5 ? `<span style="color:#ff3b30">${'★'.repeat(n - 5)}</span>` : chStars(n);   /* c468: 흰 ★5 다음은 빨간 별 */   /* c422: 흰 ★6 다음은 빨간 별 */   // c283: 끝까지 강화 = 노란 MAX
   const starTag = (n, k) => n ? ` <span style="color:#ffd34d;letter-spacing:-1px">${k ? chStarsK(k, n) : chStars(n)}</span>` : '';
   const lvText = (kind) => { const n = lv(kind); if (!CHAPTER) return `지금 (강화 ${n}단계): ${statLine(kind, n)}<br>다음 강화: ${statLine(kind, n + 1)}`; const max = n >= chLvMax(kind); return `지금${starTag(n, kind)}${max ? ' (최대)' : ''}: ${statLine(kind, n)}` + (max ? '' : `<br>다음 강화${starTag(n + 1, kind)}: ${statLine(kind, n + 1)}`); };
   let level = 0, xp = 0, pendingLv = 0, lvOpen = false, hasVest = false, vestEl = null, victoryOn = false;
@@ -6256,9 +6257,29 @@
   }
   const gooMat = new THREE.SpriteMaterial({ map: flashTex, color: 0x5fcf3a, transparent: true, depthTest: false, depthWrite: false });
   const chChainL = [], chChBuf = [];           // c431: 전이 감전 숙주 {e, t: 남은 감전, k: 다음 번개까지, r: 빨간 별}
+  const chStatL = [], chStatBuf = [];         // c468: 정전기 — 감전된 숙주 {e, t, r}
+  const chStatK = (r) => 1 + 0.25 * (r - 1);   // 범위 배율 — 빨★1 = 1배 … 빨★5 = 2배 (근접 거리 기준)
+  const CH_STAT_SLOW = 0.3;                    // 정전기 걸린 적은 모든 동작이 30% 속도
+  function chStatTick(dt) {
+    for (let i = chStatL.length - 1; i >= 0; i--) {
+      const H = chStatL[i], e = H.e, gone = e.drone ? e.dead : e.tank ? e.wreck : e.kind !== 'citizen' || !bodies.includes(e);
+      if (gone || (H.t -= dt) <= 0) { chStatL.splice(i, 1); continue; }
+      const x = e.foot ? e.foot.x : e.x, z = e.foot ? e.foot.z : e.z, Rr = MELEE * chStatK(H.r);
+      for (const c of nearIn(cCells, x, z, Rr + 0.5, chStatBuf)) { if (c === e || c.kind !== 'citizen' || !(c.hp > 0 || c.robot) || c.space !== (e.space ?? null) || Math.hypot(c.foot.x - x, c.foot.z - z) > Rr) continue; c.statT = 0.12; }
+      for (const d of chDrones) { if (d === e || d.dead || Math.hypot(d.x - x, d.z - z) > Rr + d.r) continue; d.statT = 0.12; }
+    }
+    for (const c of bodies) if (c.statT > 0) { c.statT -= dt; if ((c.statFx = (c.statFx || 0) - dt) <= 0 && c.mesh.visible) { c.statFx = rand(0.12, 0.22); for (let k = 0; k < 2; k++) { const a = Math.random() * 6.283, r = (c.r || BODY) * rand(0.6, 1.1); const f = puff(c.foot.x + Math.cos(a) * r, rand(0.5, 1.2), c.foot.z + Math.sin(a) * r, k ? 0xbfe6ff : 0x4aa8ff, 0.12, 0.32, 0.14, 0, 0.3, 0, 0.95); f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; } } }   // 걸린 동안 파란 정전기 불꽃
+    for (const d of chDrones) if (d.statT > 0) { d.statT -= dt; if ((d.statFx = (d.statFx || 0) - dt) <= 0) { d.statFx = rand(0.12, 0.22); const a = Math.random() * 6.283; const f = puff(d.x + Math.cos(a) * 0.5, (d.air ?? 1) + 0.6, d.z + Math.sin(a) * 0.5, 0x4aa8ff, 0.12, 0.32, 0.14, 0, 0.3, 0, 0.95); f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; } }
+  }
+  function chTaserLook() {                     // c468: 빨간 별부터 테이저건이 노랑 → 파랑
+    const red = chRedR('taser') > 0, O = chItem0.taser || (chItem0.taser = { name: ITEM.taser.name, icon: ITEM.taser.icon, col: ITEM.taser.col });
+    ITEM.taser.col = red ? '#4aa8ff' : O.col; ITEM.taser.icon = red ? O.icon.replace('#ffd23a', '#4aa8ff') : O.icon;
+    const it = items.find((x) => x.kind === 'taser'); if (it && it.el) { const ic = it.el.querySelector('.ic'); if (ic) ic.innerHTML = ITEM.taser.icon; it.el.style.setProperty('--c', ITEM.taser.col); }
+  }
   function chTaserT(e) {                       // c431: 테이저 감전 시간 (전이 감전이면 +0.3초씩 · 숙주로 등록)
     const r = chBrR('taser', 'chain'), T = (CH_WV('taserT', lv('taser')) + 0.3 * r) * chLingK();
     if (r) chChainL.push({ e, t: T, k: 0.8, r });
+    const sr = chRedR('taser'); if (sr) chStatL.push({ e, t: T, r: sr });   // c468: 정전기 숙주
     return T;
   }
   function chChainTick(dt) {                   // c431: 숙주가 감전된 동안 0.8초마다 둘레 적 0.2초 감전 (잔류제 영향 없음 · 다시 번지지 않음)
@@ -6442,6 +6463,7 @@
   let reviveT = 0;
   function itemsTick(dt) {
     if (CHAPTER && chChainL.length) chChainTick(dt);   // c431
+    if (CHAPTER) chStatTick(dt);   // c468
     if (chEBL.length) chEBTick(dt);   // c464
     if (CHAPTER && chRobotAny) for (let i = bodies.length - 1; i >= 0; i--) { const c = bodies[i]; if (c && c.robot && c.hp <= 0) chRobotDie(c); }   // c436: 로봇은 체력 0이면 터진다
     if (reviveT > 0) { const p = Math.ceil(reviveT); reviveT = Math.max(0, reviveT - dt); if (Math.ceil(reviveT) !== p) refreshBadges(); }
@@ -6724,9 +6746,10 @@
     const it = items.find((x) => x.kind === k); if (it && it.el) { const ic = it.el.querySelector('.ic'); if (ic) ic.innerHTML = ITEM[k].icon; it.el.style.setProperty('--c', ITEM[k].col); }
   }                             // c422: 무기마다 고른 길 (id)
   const chBrR = (k, id) => CHAPTER && chBr[k] === id ? Math.max(0, lv(k) - 6) : 0;   // 그 길의 빨간 별 수 (안 골랐으면 0)
-  const chLvB = (k) => Math.min(6, lv(k));     // c422: 원래 수치는 흰 ★6에서 멈춘다
+  const chLvB = (k) => Math.min(5, lv(k));   /* c468: 원래 수치는 흰 ★5에서 멈춘다 */
+  const chRedR = (k) => CHAPTER ? Math.max(0, lv(k) - 5) : 0;   // c468: 빨간 별 수 (갈림길 없이 한 길)     // c422: 원래 수치는 흰 ★6에서 멈춘다
   const chStickyK = () => 1 - 0.15 * chBrR('bomb', 'sticky');   // 끈적 산성 — 15%씩 느리게 (90%까지)
-  const chLvMax = (k) => k === 'bag' ? 3 : /* c198: 빠루도 5번 (+120%) */ ITEM[k] && !ITEM[k].passive ? (CH_BRANCH[k] ? 12 : 6)   /* c422: 갈림길이 있는 무기는 빨간 ★6까지 */ : 5;   /* c139: 무기는 6번까지 강화 */   // c21: 가방은 4개가 끝 (도구 칸 5개가 다 열린다)
+  const chLvMax = (k) => k === 'bag' ? 3 : /* c198: 빠루도 5번 (+120%) */ ITEM[k] && !ITEM[k].passive ? (k === 'taser' ? 10 : 5)   /* c468: 갈림길 없앰 — 테이저건 10단계 (흰 5 · 빨강 5), 나머지 무기는 정해질 때까지 ★5 */   /* c422: 갈림길이 있는 무기는 빨간 ★6까지 */ : 5;   /* c139: 무기는 6번까지 강화 */   // c21: 가방은 4개가 끝 (도구 칸 5개가 다 열린다)
   const chHas = (k) => ITEM[k].passive ? !!owned[k] : items.some((x) => x.kind === k);
   const chToolCap = () => CH_ET ? SLOT_A.length : Math.min(SLOT_A.length, 1 + (owned.bag ? 1 + lv('bag') : 0));   // c21: 쓸 수 있는 도구는 처음 1개 — 가방 하나마다 +1, 최대 5
   const chAccMax = () => 5 + 3 * chLvB('awaken');   /* c430 */   // c21: 각성 주사 — 모을 수 있는 시간(초). 가득 차는 데는 늘 40초
@@ -6749,7 +6772,7 @@
   const CH_STAT = {                           // c21: 획득창·설명창에 나오는 수치 (n = 강화 단계)
     bomb: (n) => `터지는 범위 ${1.5 + n}칸 · 산성 ${4 + 2 * n}초`,
     mutate: (n) => `주사 ${CH_WV('mutN', n)}개 · 변이 ${6 + 3 * n}초`,
-    taser: (n) => `한 번에 ${CH_WV('taserN', n)}명 · ${CH_WV('taserT', n)}초 감전 · 장탄 3`,   /* c420 */   /* c251 */
+    taser: (n) => `한 번에 ${CH_WV('taserN', n)}명 · ${CH_WV('taserT', n)}초 감전 · 장탄 3` + (n > 5 ? ` · 정전기 ${(MELEE * chStatK(n - 5)).toFixed(1)}칸` : ''),   /* c468 */   /* c420 */   /* c251 */
     awaken: (n) => `최대 사용 시간 ${5 + 3 * n}초 · 가득 차는 데 35초`,
     cash: (n) => `유혹 ${CH_WV('cashT', n)}초 · 알아채는 거리 ${(8.64 * 1.15 * chCashStep(Math.min(6, n))).toFixed(1)}칸`   /* c429 */,   /* c226 */
     book: (n) => `무기 쿨타임 -${5 + 9 * n}%`,
@@ -6783,7 +6806,8 @@
   function chLingK() { return CHAPTER && owned.linger ? 1 + 0.05 * (1 + lv('linger')) : 1; }   // c420: 잔류제 — 적이 입은 부정적 효과(감전 · 산성 · 유혹) 시간 배율 (5%씩, 다 강화하면 30%)
   function chCatB() { return CHAPTER && owned.catalyst ? 0.05 * (1 + lv('catalyst')) : 0; }   // c420: 촉매제 — 변이 좀비(나 포함) 공격력·최대 체력 +5%씩
   function chItemChanged(kind) {
-    if (CHAPTER && CH_BRANCH[kind] && lv(kind) > 6 && !chBr[kind] && !pendingAward.includes('br:' + kind)) pendingAward.push('br:' + kind);   // c422: 갈림길 고르기              // 얻었거나 강화한 바로 그때 적용할 것
+    if (CHAPTER && kind === 'taser') chTaserLook();   // c468
+    if (false && CHAPTER && CH_BRANCH[kind] && lv(kind) > 6 && !chBr[kind]   /* c468: 갈림길 없음 */ && !pendingAward.includes('br:' + kind)) pendingAward.push('br:' + kind);   // c422: 갈림길 고르기              // 얻었거나 강화한 바로 그때 적용할 것
     if (kind === 'blood' && isZombie(me)) {   // 혈액팩: 나만 최대 체력 +10% (기본 체력 기준 — 얻을 때, 그리고 강화할 때마다)
       const d = MY_HP * (CHAPTER ? 0.12 : 0.10);   /* c198: 12%씩 */
       if (me.baseMaxHp) { me.baseMaxHp += d; me.maxHp += d * 3; me.hp = Math.min(me.maxHp, me.hp + d * 3); } else { me.maxHp += d; me.hp = Math.min(me.maxHp, me.hp + d); }
@@ -7590,7 +7614,7 @@
     const dx = w[0] - d.x, dz = w[1] - d.z, l = Math.hypot(dx, dz) || 1e-6; if (l < 0.3) d.wayI++;
     return [dx / l, dz / l];
   }
-  function chDroneTick(dt) {
+  function chDroneTick(dt0) { let dt = dt0;   // c468: 드론마다 정전기면 30%
     if (!chDroneOn && stars >= 3 && isZombie(me)) { chDroneOn = true; chDroneT = CH_DRONE_EVERY - 60; }   // c382: 개판이 되고 1분 뒤 첫 출동 (표시 없이)   // c375: 난리남
     if (chDroneOn && !chDrones.some((d) => !d.dead) && (chDroneT += dt) >= CH_DRONE_EVERY) {   // c433: 살아 있는 드론이 있으면 주기가 안 흐른다 (다 죽어야 다음 주기 시작)
       chDroneT = 0;
@@ -7598,6 +7622,7 @@
     }
     for (const d of chDrones.slice()) {
       if (d.dead) continue;
+      dt = dt0 * (d.statT > 0 ? CH_STAT_SLOW : 1);   // c468
       if (Math.hypot(d.x - me.foot.x, d.z - me.foot.z) > me.sense * 2.5) { if ((d.farT = (d.farT || 0) + dt) > 25) { d.dead = true; scene.remove(d.s); d.s.material.dispose(); scene.remove(d.sh); if (d.tr) { scene.remove(d.tr); d.tr.material.dispose(); } chDrones.splice(chDrones.indexOf(d), 1); continue; } } else d.farT = 0;   // c438: 못 오는 드론은 조용히 사라진다 (경험치 없음)
       // 산성 (폭발 = 1 + 산성 강도 · 자폭 = 2 + 산성 강도, 0.5초마다)
       if (d.goo > 0) { d.goo -= dt; if ((d.gooT += dt) >= CH_DOT_T) { d.gooT -= CH_DOT_T; const n = 2 + chAcidB(); chDotPop(d.x + 0.6, d.z, n); chDroneDmg(d, n); if (d.dead) continue; } }
@@ -8272,7 +8297,7 @@
   }
   function chETLabel(k) {
     if (!chHas(k)) return '없음';
-    const n = lv(k); if (n <= 6) return '★' + n;
+    const n = lv(k); if (n <= 5) return '★' + n; return '빨★' + (n - 5);   /* c468 */
     const B = CH_BRANCH[k] && CH_BRANCH[k].find((b) => b.id === chBr[k]);
     return (B ? B.name.slice(0, 2) : '') + ' 빨★' + (n - 6);
   }
@@ -8295,9 +8320,9 @@
   function chETPick(k) {
     paused = true; acqOpen = true; stopInput();
     const ov = document.createElement('div'); ov.id = 'etpick';
-    const cur = chHas(k) ? lv(k) : -1, btn = (n, br, col, tx) => `<div class="n${cur === n && (n <= 6 || chBr[k] === br) ? ' on' : ''}" data-n="${n}" data-b="${br || ''}" style="${col ? 'border-color:' + col : ''}">${tx}</div>`;
-    let h = `<div style="font-size:20px">${ITEM[k].name}</div><div class="lb">흰 별</div><div class="row">` + [0, 1, 2, 3, 4, 5, 6].map((n) => btn(n, '', '', '★' + n)).join('') + '</div>';
-    for (const B of CH_BRANCH[k] || []) h += `<div class="lb" style="color:${B.col || '#fff'}">${B.name}</div><div class="row">` + [1, 2, 3, 4, 5, 6].map((r) => btn(6 + r, B.id, B.col, '빨★' + r)).join('') + '</div>';
+    const cur = chHas(k) ? lv(k) : -1, btn = (n, br, col, tx) => `<div class="n${cur === n ? ' on' : ''}" data-n="${n}" data-b="${br || ''}" style="${col ? 'border-color:' + col : ''}">${tx}</div>`;
+    let h = `<div style="font-size:20px">${ITEM[k].name}</div><div class="lb">흰 별</div><div class="row">` + [0, 1, 2, 3, 4, 5].map((n) => btn(n, '', '', '★' + n)).join('') + '</div>';   /* c468 */
+    if (chLvMax(k) > 5) h += `<div class="lb" style="color:#ff5a5a">빨간 별</div><div class="row">` + [1, 2, 3, 4, 5].map((r) => btn(5 + r, '', '#ff5a5a', '빨★' + r)).join('') + '</div>';
     h += `<div class="row" style="margin-top:12px"><div class="n" data-x="1" style="min-width:100px">닫기</div></div>`;
     ov.innerHTML = h; stage.appendChild(ov);
     const block = (e) => { e.stopPropagation(); e.preventDefault(); };

@@ -1,0 +1,53 @@
+import pathlib
+s = pathlib.Path('c466.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:70], s.count(a)); R.append((a, b))
+# ── 10단계: 흰 ★5 + 빨간 ★5 · 갈림길 없음 ──
+rep("const chStars = (n) => '★'.repeat(Math.max(0, Math.min(6, n)));", "const chStars = (n) => '★'.repeat(Math.max(0, Math.min(5, n)));   /* c468: 흰 별 5개 */")
+rep("CHAPTER && n > 6 ? `<span style=\"color:#ff3b30\">${'★'.repeat(n - 6)}</span>` : chStars(n);", "CHAPTER && n > 5 ? `<span style=\"color:#ff3b30\">${'★'.repeat(n - 5)}</span>` : chStars(n);   /* c468: 흰 ★5 다음은 빨간 별 */")
+rep("const chLvB = (k) => Math.min(6, lv(k));", "const chLvB = (k) => Math.min(5, lv(k));   /* c468: 원래 수치는 흰 ★5에서 멈춘다 */\n  const chRedR = (k) => CHAPTER ? Math.max(0, lv(k) - 5) : 0;   // c468: 빨간 별 수 (갈림길 없이 한 길)")
+rep("ITEM[k] && !ITEM[k].passive ? (CH_BRANCH[k] ? 12 : 6)", "ITEM[k] && !ITEM[k].passive ? (k === 'taser' ? 10 : 5)   /* c468: 갈림길 없앰 — 테이저건 10단계 (흰 5 · 빨강 5), 나머지 무기는 정해질 때까지 ★5 */")
+rep("if (CHAPTER && CH_BRANCH[kind] && lv(kind) > 6 && !chBr[kind]", "if (false && CHAPTER && CH_BRANCH[kind] && lv(kind) > 6 && !chBr[kind]   /* c468: 갈림길 없음 */")
+# ── 테이저건 수치 ──
+rep("taserN: [1, 2, 2, 3, 3, 4, 5], taserT: [0.5, 1, 1.5, 2, 2.5, 3, 3.5]", "taserN: [1, 2, 2, 3, 4, 5], taserT: [1, 1.5, 2, 2.5, 3, 4]   /* c468: ★0~★5 */")
+rep("    taser: (n) => `한 번에 ${CH_WV('taserN', n)}명 · ${CH_WV('taserT', n)}초 감전 · 장탄 3`,",
+    "    taser: (n) => `한 번에 ${CH_WV('taserN', n)}명 · ${CH_WV('taserT', n)}초 감전 · 장탄 3` + (n > 5 ? ` · 정전기 ${(MELEE * chStatK(n - 5)).toFixed(1)}칸` : ''),   /* c468 */")
+# ── 정전기: 빨간 별 — 감전된 적 둘레 적이 30% 속도 (동작 자체가 느려짐) ──
+rep("  function chTaserT(e) {", r"""  const chStatL = [], chStatBuf = [];         // c468: 정전기 — 감전된 숙주 {e, t, r}
+  const chStatK = (r) => 1 + 0.25 * (r - 1);   // 범위 배율 — 빨★1 = 1배 … 빨★5 = 2배 (근접 거리 기준)
+  const CH_STAT_SLOW = 0.3;                    // 정전기 걸린 적은 모든 동작이 30% 속도
+  function chStatTick(dt) {
+    for (let i = chStatL.length - 1; i >= 0; i--) {
+      const H = chStatL[i], e = H.e, gone = e.drone ? e.dead : e.tank ? e.wreck : e.kind !== 'citizen' || !bodies.includes(e);
+      if (gone || (H.t -= dt) <= 0) { chStatL.splice(i, 1); continue; }
+      const x = e.foot ? e.foot.x : e.x, z = e.foot ? e.foot.z : e.z, Rr = MELEE * chStatK(H.r);
+      for (const c of nearIn(cCells, x, z, Rr + 0.5, chStatBuf)) { if (c === e || c.kind !== 'citizen' || !(c.hp > 0 || c.robot) || c.space !== (e.space ?? null) || Math.hypot(c.foot.x - x, c.foot.z - z) > Rr) continue; c.statT = 0.12; }
+      for (const d of chDrones) { if (d === e || d.dead || Math.hypot(d.x - x, d.z - z) > Rr + d.r) continue; d.statT = 0.12; }
+    }
+    for (const c of bodies) if (c.statT > 0) { c.statT -= dt; if ((c.statFx = (c.statFx || 0) - dt) <= 0 && c.mesh.visible) { c.statFx = rand(0.12, 0.22); for (let k = 0; k < 2; k++) { const a = Math.random() * 6.283, r = (c.r || BODY) * rand(0.6, 1.1); const f = puff(c.foot.x + Math.cos(a) * r, rand(0.5, 1.2), c.foot.z + Math.sin(a) * r, k ? 0xbfe6ff : 0x4aa8ff, 0.12, 0.32, 0.14, 0, 0.3, 0, 0.95); f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; } } }   // 걸린 동안 파란 정전기 불꽃
+    for (const d of chDrones) if (d.statT > 0) { d.statT -= dt; if ((d.statFx = (d.statFx || 0) - dt) <= 0) { d.statFx = rand(0.12, 0.22); const a = Math.random() * 6.283; const f = puff(d.x + Math.cos(a) * 0.5, (d.air ?? 1) + 0.6, d.z + Math.sin(a) * 0.5, 0x4aa8ff, 0.12, 0.32, 0.14, 0, 0.3, 0, 0.95); f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; } }
+  }
+  function chTaserLook() {                     // c468: 빨간 별부터 테이저건이 노랑 → 파랑
+    const red = chRedR('taser') > 0, O = chItem0.taser || (chItem0.taser = { name: ITEM.taser.name, icon: ITEM.taser.icon, col: ITEM.taser.col });
+    ITEM.taser.col = red ? '#4aa8ff' : O.col; ITEM.taser.icon = red ? O.icon.replace('#ffd23a', '#4aa8ff') : O.icon;
+    const it = items.find((x) => x.kind === 'taser'); if (it && it.el) { const ic = it.el.querySelector('.ic'); if (ic) ic.innerHTML = ITEM.taser.icon; it.el.style.setProperty('--c', ITEM.taser.col); }
+  }
+  function chTaserT(e) {""")
+rep("    if (r) chChainL.push({ e, t: T, k: 0.8, r });\n    return T;", "    if (r) chChainL.push({ e, t: T, k: 0.8, r });\n    const sr = chRedR('taser'); if (sr) chStatL.push({ e, t: T, r: sr });   // c468: 정전기 숙주\n    return T;")
+rep("    if (CHAPTER && chChainL.length) chChainTick(dt);   // c431", "    if (CHAPTER && chChainL.length) chChainTick(dt);   // c431\n    if (CHAPTER) chStatTick(dt);   // c468")
+rep("  function chItemChanged(kind) {\n", "  function chItemChanged(kind) {\n    if (CHAPTER && kind === 'taser') chTaserLook();   // c468\n")
+# 느려짐 — 생각 · 쿨타임 · 연사 · 몽둥이 (updateCitizen 안 시간) · 이동 · 총 반동 · 총구 섬광
+rep("    if (c.stunT > 0) { c.stunT -= dt; c.vel.set(0, 0); return; }", "    if (c.stunT > 0) { c.stunT -= dt; c.vel.set(0, 0); return; }\n    if (c.statT > 0) dt *= CH_STAT_SLOW;   // c468: 정전기 — 모든 동작 30%")
+rep("* chDownK(b);   /* c420: 분노", "* chDownK(b) * (b.statT > 0 ? CH_STAT_SLOW : 1);   /* c468: 정전기 */   /* c420: 분노")
+rep("      if ((b.shotT += dt) >= SHOT_FLASH) b.shotT = -1;", "      if ((b.shotT += dt * (b.statT > 0 ? CH_STAT_SLOW : 1)) >= SHOT_FLASH) b.shotT = -1;")
+rep("        if ((b.recoilT += dt) > 0.34) b.recoilT = -1;", "        if ((b.recoilT += dt * (b.statT > 0 ? CH_STAT_SLOW : 1)) > 0.34) b.recoilT = -1;   /* c468 */")
+# 드론도 느려진다
+rep("  function chDroneTick(dt) {", "  function chDroneTick(dt0) { let dt = dt0;   // c468: 드론마다 정전기면 30%")
+rep("    for (const d of chDrones.slice()) {\n      if (d.dead) continue;\n", "    for (const d of chDrones.slice()) {\n      if (d.dead) continue;\n      dt = dt0 * (d.statT > 0 ? CH_STAT_SLOW : 1);   // c468\n")
+# ── 적 테스트 무기 단계 고르기 — 흰 ★0~5 · 빨★1~5 (테이저건) ──
+rep("    const n = lv(k); if (n <= 6) return '★' + n;", "    const n = lv(k); if (n <= 5) return '★' + n; return '빨★' + (n - 5);   /* c468 */")
+rep("    let h = `<div style=\"font-size:20px\">${ITEM[k].name}</div><div class=\"lb\">흰 별</div><div class=\"row\">` + [0, 1, 2, 3, 4, 5, 6].map((n) => btn(n, '', '', '★' + n)).join('') + '</div>';\n    for (const B of CH_BRANCH[k] || []) h += `<div class=\"lb\" style=\"color:${B.col || '#fff'}\">${B.name}</div><div class=\"row\">` + [1, 2, 3, 4, 5, 6].map((r) => btn(6 + r, B.id, B.col, '빨★' + r)).join('') + '</div>';",
+    "    let h = `<div style=\"font-size:20px\">${ITEM[k].name}</div><div class=\"lb\">흰 별</div><div class=\"row\">` + [0, 1, 2, 3, 4, 5].map((n) => btn(n, '', '', '★' + n)).join('') + '</div>';   /* c468 */\n    if (chLvMax(k) > 5) h += `<div class=\"lb\" style=\"color:#ff5a5a\">빨간 별</div><div class=\"row\">` + [1, 2, 3, 4, 5].map((r) => btn(5 + r, '', '#ff5a5a', '빨★' + r)).join('') + '</div>';")
+rep("const cur = chHas(k) ? lv(k) : -1, btn = (n, br, col, tx) => `<div class=\"n${cur === n && (n <= 6 || chBr[k] === br) ? ' on' : ''}\"", "const cur = chHas(k) ? lv(k) : -1, btn = (n, br, col, tx) => `<div class=\"n${cur === n ? ' on' : ''}\"")
+pathlib.Path('c468_patch.py').write_text('C468_R = ' + repr(R) + '\n')
