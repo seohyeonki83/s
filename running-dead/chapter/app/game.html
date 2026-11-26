@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c511</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c512</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -2244,7 +2244,24 @@
   //   대신 같은 편 누가 보고 있으면 그 편 전체가 본 걸로 친다. 그렇게 보이는 상대면 문이 열려 있는 한 안↔밖도 개입한다
   //   원거리(경찰 총·히드라 토사물·테이저)는 공격선이 벽에 안 막혀야 (열린 문 틈은 OK — 막히면 다가가기만), 근접은 문으로 들어가 같은 공간이 됐을 때. 덮치기도 같은 공간에서만 (v297)
   //   쫓던 상대가 건물 안으로 들어가면 안에 우리 편이 없는 한 안 보이니까 더 못 쫓는다
-  const linked = (a, b) => a === b || (a && b ? (a.parent === b ? a.doors.some((D) => D.out === b) : b.parent === a ? b.doors.some((D) => D.out === a) : false) : (a || b).parent ? (a || b).doors.some((D) => !D.out) : (a || b).doors.length > 0);   /* c53: 복도 ↔ 방(방문), 밖 ↔ 방(쪽문)도 */   // 같은 공간이거나, 밖 ↔ 열린 문이 있는 건물
+  // c512: 벽 없이 통째로 이어진 두 건물(튜토리얼 복도 꺾이는 곳처럼)은 싸울 때 한 공간 — 서로 다른 칸이라 옆에 두고도 못 때리고 맴돌던 것
+  let chNbrOk = false;
+  function chNbrBuild() {
+    chNbrOk = true; const top = buildings.filter((B) => !B.parent && B.walls), E = 0.02;
+    const walled = (B, x0, z0, x1, z1) => B.walls.some(([ax, az, bx, bz]) => (ax === bx && x0 === x1 && Math.abs(ax - x0) < E && Math.min(az, bz) <= z0 + E && Math.max(az, bz) >= z0 - E) || (az === bz && z0 === z1 && Math.abs(az - z0) < E && Math.min(ax, bx) <= x0 + E && Math.max(ax, bx) >= x0 - E));
+    const locked = (B, x, z) => (B.locks || []).some((K) => K.obj && Math.abs(K.cx - x) < (K.nz ? (K.w || DOOR) / 2 + E : E) && Math.abs(K.cz - z) < (K.nz ? E : (K.w || DOOR) / 2 + E));
+    for (let i = 0; i < top.length; i++) for (let j = i + 1; j < top.length; j++) {
+      const A = top[i], B = top[j]; let pts = null;
+      for (const [P, Q] of [[A, B], [B, A]]) {
+        if (Math.abs(P.x1 - Q.x0) < E) { const a = Math.max(P.z0, Q.z0), b = Math.min(P.z1, Q.z1); if (b - a > 1) pts = [0.2, 0.35, 0.5, 0.65, 0.8].map((t) => [P.x1, a + (b - a) * t, P.x1, a + (b - a) * t]); }
+        if (Math.abs(P.z1 - Q.z0) < E) { const a = Math.max(P.x0, Q.x0), b = Math.min(P.x1, Q.x1); if (b - a > 1) pts = [0.2, 0.35, 0.5, 0.65, 0.8].map((t) => [a + (b - a) * t, P.z1, a + (b - a) * t, P.z1]); }
+      }
+      if (!pts || !pts.some(([x, z]) => !walled(A, x, z, x, z) && !walled(B, x, z, x, z) && !locked(A, x, z) && !locked(B, x, z))) continue;
+      (A.nbr = A.nbr || new Set()).add(B); (B.nbr = B.nbr || new Set()).add(A);
+    }
+  }
+  function chSameSp(a, b) { if (a === b) return true; if (!CHAPTER || !a || !b || a.parent || b.parent) return false; if (!chNbrOk) chNbrBuild(); return !!(a.nbr && a.nbr.has(b)); }
+  const linked = (a, b) => a === b || chSameSp(a, b) || (a && b ? (a.parent === b ? a.doors.some((D) => D.out === b) : b.parent === a ? b.doors.some((D) => D.out === a) : false) : (a || b).parent ? (a || b).doors.some((D) => !D.out) : (a || b).doors.length > 0);   /* c53: 복도 ↔ 방(방문), 밖 ↔ 방(쪽문)도 */   // 같은 공간이거나, 밖 ↔ 열린 문이 있는 건물
   const hsBuf = [], HS_R = SIGHT * 2;
   function hSeen(z) {                         // 사람 편 누가 이 좀비를 직접 보고 있나 (같은 공간, 자기 시야 안) — 걸음마다 한 번만 잰다
     if (z.hsT === clock) return z.hsV;
@@ -2559,7 +2576,7 @@
     if (pick) c.foe = nearestZombie(c, c.sight);
     if (!c.foe) { enterNormal(c); return; }
     const z = c.foe, d = Math.hypot(z.foot.x - c.foot.x, z.foot.z - c.foot.z);
-    if (d > MELEE || z.space !== c.space) { steer(c.vel, toward(c, z.foot.x, z.foot.z, PANIC_SPEED * (c.soft ? CH_SOFT_MOVE : 1)), ACCEL * dt); return; }   /* c84 */   // v296: 다른 공간이면 문으로 들어가서 때린다
+    if (d > MELEE || !chSameSp(z.space, c.space)) { steer(c.vel, toward(c, z.foot.x, z.foot.z, PANIC_SPEED * (c.soft ? CH_SOFT_MOVE : 1)), ACCEL * dt); return; }   /* c84 */   // v296: 다른 공간이면 문으로 들어가서 때린다
     c.locked = true;                            // 근접 거리에 붙었다 = 때리기 시작 → 이 상대로 고정
     steer(c.vel, wantV.set(0, 0), ACCEL * dt);
     if (c.atkT <= 0) { strike(c, z); c.atkT = HIT_EVERY; }
@@ -3522,7 +3539,7 @@
       const R = (MELEE + (a.r - BODY)) * 1.2 * 2 * (CHAPTER ? chSplK(a) : 1), fx = v.foot.x - a.foot.x,   /* c378: 범위 = 촉매제 없으면 지금의 80%, 다 강화하면 1.5배 */ fz = v.foot.z - a.foot.z, fl = Math.hypot(fx, fz) || 1;
       a.splashing = true;
       for (const c of bodies) {
-        if (c === v || c.kind !== 'citizen' || c.hp <= 0 || c.space !== a.space) continue;
+        if (c === v || c.kind !== 'citizen' || c.hp <= 0 || !chSameSp(c.space, a.space)) continue;
         const dx = c.foot.x - a.foot.x, dz = c.foot.z - a.foot.z, d = Math.hypot(dx, dz);
         if (d > R || d < 1e-3 || (dx * fx + dz * fz) / (d * fl) < Math.cos((CHAPTER ? 75 : 45) * Math.PI / 180)) continue;   /* c378: 앞쪽 150° (좌우 75°씩) */   // v378: 앞쪽 90° · 거리 2배
         landHit(a, c, (a === me ? CH_UPK.atk * ALLY_DAMAGE * (1 + 0.07 * up.arm) * (CHAPTER ? 3 : 1.3 * 1.3 * 2) : v.kind === 'citizen' ? dmg : zDamage(a)) * (CHAPTER ? (chMonster(a) ? 1 : 0.5) : 0.3));   /* c430: 괴물은 범위 피해 100% */   /* c378: 범위 안 적은 50% (넉백도 같이) */   // v558: 각성한 나의 범위 공격 = 덩치 범위 데미지
@@ -3625,7 +3642,7 @@
     z.engaging = c;                           // 수비형은 이걸 보고 '누가 나를 노리나'를 안다
     const d = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z);
     if (d > ATTACK_HOLD) z.attacking = false; // 상대가 1.5칸 밖 = 공격 중 아님 (다가가는 중)
-    if (d > MELEE + (c.kind === 'safe' ? c.r : 0) || (c.space !== z.space && !(c.kind === 'safe' && chSafeReach(z, c)))) { steer(z.vel, toward(z, c.foot.x, c.foot.z, z.speed), ACCEL * dt); return; }   /* c54: 방을 꽉 채운 금고는 문간에서 때린다 */   // v296: 다른 공간이면 문으로 들어가서 때린다   // 큰 금고는 겉면까지 닿으면 때린다 (v196)
+    if (d > MELEE + (c.kind === 'safe' ? c.r : 0) || (!chSameSp(c.space, z.space) && !(c.kind === 'safe' && chSafeReach(z, c)))) { steer(z.vel, toward(z, c.foot.x, c.foot.z, z.speed), ACCEL * dt); return; }   /* c54: 방을 꽉 채운 금고는 문간에서 때린다 */   // v296: 다른 공간이면 문으로 들어가서 때린다   // 큰 금고는 겉면까지 닿으면 때린다 (v196)
     if (CHAPTER && c.kind === 'citizen' && chWallCut(z.foot.x, z.foot.z, c.foot.x, c.foot.z)) { steer(z.vel, toward(z, c.foot.x, c.foot.z, z.speed), ACCEL * dt); return; }   // c86: 바리케이트 너머 사람은 못 친다 — 계속 밀어붙이면서 (가면서 치기로) 바리케이트를 친다
     if (CHAPTER && c.kind === 'citizen' && c.vel && c.vel.lengthSq() > 0.6 && c.vel.x * (c.foot.x - z.foot.x) + c.vel.y * (c.foot.z - z.foot.z) > 0) steer(z.vel, toward(z, c.foot.x, c.foot.z, z.speed), ACCEL * dt);   // c403: 뒤로 빠지는 적(저격수 회피 등) — 근접 거리 안이어도 서지 않고 계속 붙으면서 친다 (멈췄다 놓치고 다시 쫓는 걸 되풀이하지 않게)
     else steer(z.vel, wantV.set(0, 0), ACCEL * dt);
@@ -3644,7 +3661,7 @@
     const inDomain = (b) => Math.hypot(b.foot.x - areaX(), b.foot.z - areaZ()) <= (b.mut === 'armor' ? (b.attacking ? 5.8 * 1.3 : 4.6 * 1.2)   /* v367: 지배 +20% (5.52) · 공격 지배 +30% (7.54) */   /* v350: 덩치 지배 4.6 · 공격 지배 5.8칸 */   /* v347: 덩치 지배 = 자리(근접 1.3배)의 1.3배, 공격 지배는 그 1.3배 */ : (b.attacking ? DOMAIN_FIGHT : DOMAIN)) * (b.cmd ? b.cmd.mul : 1) * armyK;   // 공격 중이면 지배 거리가 늘어난다. 명령 중이면 (기본·공격 둘 다) 7초 동안 3배
   // 덮치는 중(marked)인 시민은 아무도 안 노린다. 동료가 쫓기 시작해 찜한 시민은 다른 동료가 안 노린다 (나는 상관없이 노린다).
   // HP가 남은 시민(수비형)은 찜이 없다 — 여럿이 같이 때린다. 다른 공간(건물 안·밖)에 있는 시민은 안 보인다.
-  const huntable = (z, b) => b && b.kind === 'citizen' && !(CHAPTER && z.mini && b.hp <= 0) && /* c393: 작은 좀비는 쓰러진 사람을 노리지 않는다 (감염 못 시킨다) */ !b.marked && !(CHAPTER && b.hp <= 0 && chPounceBlocked(z.foot.x, z.foot.z, b.foot.x, b.foot.z)) && (   /* c304: 큰 물건 너머 쓰러진 사람은 쫓지 않는다 (그 물건을 친다) */z === me || !chDown(b) || !b.chaser || b.chaser === z) && (b.space === z.space || (linked(z.space, b.space) && zSeen(b))) && !(CHAPTER && z === me && me.mut && b.hp <= 0 && chMeYield(b));   /* c57: 변이한 나는 덮치기 맨 끝 */   // v296: 다른 공간도 좀비 편이 보고 있으면
+  const huntable = (z, b) => b && b.kind === 'citizen' && !(CHAPTER && z.mini && b.hp <= 0) && /* c393: 작은 좀비는 쓰러진 사람을 노리지 않는다 (감염 못 시킨다) */ !b.marked && !(CHAPTER && b.hp <= 0 && chPounceBlocked(z.foot.x, z.foot.z, b.foot.x, b.foot.z)) && (   /* c304: 큰 물건 너머 쓰러진 사람은 쫓지 않는다 (그 물건을 친다) */z === me || !chDown(b) || !b.chaser || b.chaser === z) && (chSameSp(b.space, z.space) || (linked(z.space, b.space) && zSeen(b))) && !(CHAPTER && z === me && me.mut && b.hp <= 0 && chMeYield(b));   /* c57: 변이한 나는 덮치기 맨 끝 */   // v296: 다른 공간도 좀비 편이 보고 있으면
 
   // 동료 좀비 찜: 쫓기 시작하면 그 시민에 내 이름을 걸고, 그만 쫓으면 푼다
   function claimPrey(z, c) {
@@ -3698,7 +3715,7 @@
   }
   function chMeYield(t) {
     if (!chAllyTakes(t)) return false;
-    if (t.space !== me.space || Math.hypot(t.foot.x - me.foot.x, t.foot.z - me.foot.z) > me.attack) return true;   // 내가 아직 못 덮치는 자리 — 그냥 양보 (시간은 안 센다)
+    if (!chSameSp(t.space, me.space) || Math.hypot(t.foot.x - me.foot.x, t.foot.z - me.foot.z) > me.attack) return true;   // 내가 아직 못 덮치는 자리 — 그냥 양보 (시간은 안 센다)
     if (!(clock - t.yLast < 0.5)) t.yAt = clock;   // 양보하기 시작한 때 (0.5초 넘게 끊겼으면 새로 센다)
     t.yLast = clock;
     return clock - t.yAt < CH_YIELD_MAX;
@@ -3717,7 +3734,7 @@
     if (CHAPTER && z.mini) return null;   // c393: 작은 좀비는 덮치지 못한다 — 공격만
     let best = null, bd = z.attack;
     for (const b of nearIn(cCells, z.foot.x, z.foot.z, z.attack, poBuf)) {   // 둘레 칸의 시민만 (v177)
-      if (b.kind !== 'citizen' || b.marked || !chDown(b) || b.space !== z.space) continue;   /* c283 */
+      if (b.kind !== 'citizen' || b.marked || !chDown(b) || !chSameSp(b.space, z.space)) continue;   /* c283 */
       if (!inSight(z, b)) continue;            // 명령 중엔 보이는 시민만 덮친다
       const d = Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z);
       if (d <= bd && dashOk(z, b)) { bd = d; best = b; }
@@ -3725,7 +3742,7 @@
     return best;
   }
 
-  const stillPounceable = (z, b) => b && b.kind === 'citizen' && !b.marked && chDown(b) && b.space === z.space && inSight(z, b) && dashOk(z, b)
+  const stillPounceable = (z, b) => b && b.kind === 'citizen' && !b.marked && chDown(b) && chSameSp(b.space, z.space) && inSight(z, b) && dashOk(z, b)
     && Math.hypot(b.foot.x - z.foot.x, b.foot.z - z.foot.z) <= z.attack ? b : null;   // 0.1초 전에 찾아 둔 시민이 아직 덮칠 수 있나 (v172)
   // 덮쳐도 되나: 덮치는 동안은 다른 몸을 통과해서(벽만 막힌다) 거의 늘 0.2초 안에 닿는다.
   // 그래도 1초 안에 못 닿은 시민은(벽 모서리 등) 1초 동안 다시 안 덮친다 — 막혀서 제자리 덮치기를 되풀이하지 않게
@@ -4051,7 +4068,7 @@
     if (z !== me) recallCheck(z, dt);            // 감염 중에도 시간은 센다 — 물기는 끝까지, 끝나면 바로 복귀
     if (z.mut && z !== me && z.mode === 'free') { mutStep(z, dt); return; }   // v558: 각성한 나는 원래대로 조종 (덮치기 가능)   // v275: 변이 좀비는 따로 (덮치기·물기 없음)
     const p = z.pick;
-    const ready = huntable(z, p) && p.space === z.space && Math.hypot(p.foot.x - z.foot.x, p.foot.z - z.foot.z) <= z.attack ? p : null;   // v296: 덮치기는 같은 공간에서만   // 덮치기 가능 = 타겟이 덮침 거리 안
+    const ready = huntable(z, p) && chSameSp(p.space, z.space) && Math.hypot(p.foot.x - z.foot.x, p.foot.z - z.foot.z) <= z.attack ? p : null;   // v296: 덮치기는 같은 공간에서만   // 덮치기 가능 = 타겟이 덮침 거리 안
     let jump = null;                             // 동료가 무조건 먼저 덮칠 시민 (아래에서 정한다)
     if (z.mode === 'bite') {
       if (input.x || input.y) endBite(z, false);   // 움직이면 감염 포기
@@ -4082,7 +4099,7 @@
         unclaim(z);
         goSlot(z, dt);                             // 복귀 명령 — 지배 거리 안에 들어올 때까지 유혹 무시
       } else {
-        const t = aimed && aimed.kind === 'citizen' && !aimed.marked && aimed.space === z.space && !(CHAPTER && z === me && me.mut && chDown(aimed) && chMeYield(aimed)) ? aimed : ready;   /* c57 */   // 테두리가 떠 있던 시민은 무조건 노린다 (문 밖으로 나가 버렸으면 빼고)
+        const t = aimed && aimed.kind === 'citizen' && !aimed.marked && chSameSp(aimed.space, z.space) && !(CHAPTER && z === me && me.mut && chDown(aimed) && chMeYield(aimed)) ? aimed : ready;   /* c57 */   // 테두리가 떠 있던 시민은 무조건 노린다 (문 밖으로 나가 버렸으면 빼고)
         const prey = huntable(z, p) ? p : null;
         const adj = CHAPTER && !t && !prey ? chAdjFoe(z) : null, go = (CHAPTER && !z.space ? chDownDrone(z) : null) || (CHAPTER && z === me && z.mut === 'hydra' && !z.space ? chHydDrone(z) : null) || t || prey || adj;   /* c398: 땅에 떨어진 드론 = 저격수처럼 맨 먼저 (나·동료) */   /* c375: 히드라인 나도 드론이 1순위 */   /* c374: 히드라인 나 — 노릴 사람이 없으면 드론 */   /* c205: t·prey가 있으면 안 쓰인다 */   /* c64: 3명 제한에 걸렸어도 근접 거리 안의 적은 친다 */
         if (z !== me) {
@@ -6197,7 +6214,7 @@
     if (z.mut === 'armor') {
       if (!t) { const ob = nearObj(z), sf = nearSafe(z); if (ob) fightObj(z, ob, dt); else if (sf) fight(z, sf, dt); else if (CHAPTER && (z.propT = chNearFurn(z))) chHitFurn(z, z.propT, dt); else allyIdle(z, dt); return; }   // v353: 덩치도 금고
       z.engaging = t;
-      if (bd > z.r + (t.r || BODY) + (MELEE - 2 * BODY) / 3 || t.space !== z.space) { steer(z.vel, toward(z, t.foot.x, t.foot.z, z.speed), ACCEL * dt); return; }   // v296: 덩치도 근접은 같은 공간에서
+      if (bd > z.r + (t.r || BODY) + (MELEE - 2 * BODY) / 3 || !chSameSp(t.space, z.space)) { steer(z.vel, toward(z, t.foot.x, t.foot.z, z.speed), ACCEL * dt); return; }   // v296: 덩치도 근접은 같은 공간에서
       steer(z.vel, wantV.set(0, 0), ACCEL * dt);
       if (z.atkT <= 0) { strike(z, t); z.atkT = HIT_EVERY; z.attacking = true; }
       return;
@@ -8669,7 +8686,7 @@
   function chAdjFoe(z) {                        // 근접 거리 안에서 가장 가까운, 아직 체력이 남은 사람 (같은 공간). 3명 제한과 상관없이
     let best = null, bd = Infinity;
     for (const c of nearIn(cCells, z.foot.x, z.foot.z, MELEE + 1.2, chAdjBuf)) {
-      if (c.kind !== 'citizen' || !(c.hp > 0) || c.space !== z.space || c.marked) continue;
+      if (c.kind !== 'citizen' || !(c.hp > 0) || !chSameSp(c.space, z.space) || c.marked) continue;
       const d = Math.hypot(c.foot.x - z.foot.x, c.foot.z - z.foot.z);
       if (d <= MELEE + Math.max(0, (z.r || BODY) - BODY) + Math.max(0, (c.r || BODY) - BODY) && d < bd && !chWallCut(z.foot.x, z.foot.z, c.foot.x, c.foot.z)) { bd = d; best = c; }   // 바리케이트 너머는 빼고 (c205: 거리 먼저)
     }
