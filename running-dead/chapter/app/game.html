@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c495</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c496</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5658,7 +5658,7 @@
       for (const c of bodies.slice(n0)) if (c.kind === 'citizen') { for (const k of fresh) k.who.add(c); enterLured(c); } }
   }
   function chGoldMachines(fresh) {             // c427: 금 — 기계도 홀린다 (날아와 내려앉는 시간까지 유혹 시간)
-    const r = chRedR('cash'); if (!r) return; const TM = (1 + 0.5 * (r - 1)) * chLingK();   // c469: 기계 1초 · 빨간 별마다 +0.5초 (잔류제)
+    const r = chRedR('cash'); if (!r) return; const TM = r * chLingK();   /* c496: 기계 1초 · 1초씩 (빨★5 = 5초) */   // c469: 기계 1초 · 빨간 별마다 +0.5초 (잔류제)
     for (const d of chDrones) { if (d.dead) continue; const k = chNearFresh(fresh, d.x, d.z, SIGHT * cashK() + 4, null); if (!k) continue; d.lureT = TM; d.lureK = k; d.tg = null; }
     for (const c of bodies) { if (!c.robot || c.turret || c.state === 'held' || c.state === 'lured') continue; const k = chNearFresh(fresh, c.foot.x, c.foot.z, SIGHT * cashK() + 4, c.space); if (!k) continue; c.robotLure = TM; for (const q of fresh) q.who.add(c); enterLured(c); }   // c436: 로봇도 금에 홀린다 (드론과 같은 비율)
     for (const tk of chTanks) if (!tk.wreck) { const k = chNearFresh(fresh, tk.x, tk.z, SIGHT * cashK() + 4, null);   /* c454 */ if (k) { tk.lureT = TM; tk.lureX = k.x; tk.lureZ = k.z; } }
@@ -6712,7 +6712,7 @@
     mutate: '가장 가까운 동료 하나의 체력을 가득 채우고 잠시 변이 좀비로 만듭니다. 변이 좀비는 더 세고 빠릅니다. 강화하면 주사를 더 들고 다니고 변이가 더 오래 갑니다.',
     taser: '주변 적에게 전기를 쏴 잠시 멈추게 합니다. 보스도 멈춥니다. 장탄 3발을 연달아 쓸 수 있고, 강화하면 감전시키는 수와 시간이 늘어납니다.',
     awaken: '충전된 게이지만큼 내가 변이 좀비로 변하고, 게이지가 찬 만큼 체력을 회복합니다. 강화하면 한 번에 쓸 수 있는 시간이 늘어납니다.',
-    cash: '바닥에 돈을 뿌려 인간들이 정신 못 차리고 돈을 쫓게 만듭니다. 훈련된 인간은 유혹에 강합니다. 유혹된 인간은 맞아도 유혹 시간이 끝날 때까지 돈을 쫓습니다. 강화하면 알아채는 거리와 유혹 시간이 늘어납니다.',
+    cash: '바닥에 돈을 뿌려 인간들이 정신 못 차리고 돈을 쫓게 만듭니다. 훈련된 인간은 유혹에 강합니다. 유혹된 인간은 맞아도 유혹 시간이 끝날 때까지 돈을 쫓습니다. 강화하면 알아채는 거리와 유혹 시간이 늘어납니다. 빨간 별부터는 비트코인 — 기계(드론 · 로봇 · 보스)도 홀리고(1초부터 1초씩), 차는 서고 사람이 내려 뛰어옵니다.',   /* c496 */
     book: '내가 가진 모든 무기의 쿨타임이 줄어들고, 각성 게이지도 더 빨리 찹니다. 강화하면 더 줄어듭니다.',
     bag: '쓸 수 있는 무기 칸이 하나 늘어납니다. 칸이 꽉 차도 무기는 얻지만, 칸이 늘어나야 쓸 수 있습니다. 강화할 때마다 한 칸씩 늘어납니다.',
     rage: '동료들의 공격 속도를 올립니다. 30초마다 동료 한 마리가 분노 바이러스에 걸리고, 변이한 동료가 먼저 걸립니다. 강화하면 더 빨라집니다.',
@@ -6872,7 +6872,7 @@
     mutate: (n) => `주사 ${CH_WV('mutN', n)}개 · 변이 ${CH_MUT_TT[Math.min(5, n)]}초` + (n > 5 ? ` · 괴물 — 히드라 사거리 ×${(1 + (n - 5) / 5).toFixed(1)} · 덩치 힘 ${(7 + 7 * (n - 5) / 5).toFixed(1)} · 범위 공격 ×${(0.5 + 0.25 * (n - 6)).toFixed(2)}` : ''),   /* c484 */
     taser: (n) => `한 번에 ${CH_WV('taserN', n)}명 · ${CH_WV('taserT', n)}초 감전 · 장탄 3` + (n > 5 ? ` · 기계 오작동 ${25 + 5 * (n - 6)}%` : ''),   /* c481 */   /* c420 */   /* c251 */
     awaken: (n) => `최대 사용 시간 ${CH_MUT_TT[Math.min(5, n)]}초 · 가득 차는 데 40초` + (n > 5 ? ` · 괴물 — 히드라 사거리 ×${(1 + (n - 5) / 5).toFixed(1)} · 덩치 힘 ${(7 + 7 * (n - 5) / 5).toFixed(1)} · 범위 공격 ×${(0.5 + 0.25 * (n - 6)).toFixed(2)}` : ''),   /* c484 */
-    cash: (n) => `유혹 ${CH_WV('cashT', Math.min(5, n))}초 · 알아채는 거리 ${(8.64 * 1.15 * 1.25 * chCashStep(Math.min(5, n))).toFixed(1)}칸` + (n > 5 ? ` · 비트코인 — 기계 ${(1 + 0.5 * (n - 6)).toFixed(1)}초 · 차에서 내려 뛰어온다` : '')   /* c469 */   /* c429 */,   /* c226 */
+    cash: (n) => `유혹 ${CH_WV('cashT', Math.min(5, n))}초 · 알아채는 거리 ${(8.64 * 1.15 * 1.25 * chCashStep(Math.min(5, n))).toFixed(1)}칸` + (n > 5 ? ` · 비트코인 — 기계 ${n - 5}초 · 차에서 내려 뛰어온다` : '')   /* c469 */   /* c429 */,   /* c226 */
     book: (n) => `무기 쿨타임 -${5 + 9 * n}%`,
     bag: (n) => `무기 ${Math.min(5, 2 + n)}칸`,
     rage: (n) => `30초마다 동료 1명 · 공격 속도 +${10 + 10 * n}%`,   /* c420 */
@@ -6947,7 +6947,7 @@
   }
   // ── c25 · c27: 레벨업 = 도구·장비 14종 가운데 랜덤 3장 중 하나를 고른다 — 없는 것이면 새로 얻고, 가진 것이면 강화 +1 ──
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
-    bomb: ['', (n) => `${2 + Math.min(5, n)}칸·${+(4 + 0.6 * Math.min(5, n)).toFixed(1)}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${CH_MUT_TT[Math.min(5, n)]}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${CH_MUT_TT[Math.min(5, n)]}초`], cash: ['유혹', (n) => `${CH_WV('cashT', n)}초`]   /* c420 */   /* c226 */,
+    bomb: ['', (n) => `${2 + Math.min(5, n)}칸·${+(4 + 0.6 * Math.min(5, n)).toFixed(1)}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${CH_MUT_TT[Math.min(5, n)]}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${CH_MUT_TT[Math.min(5, n)]}초`], cash: ['유혹', (n) => `${CH_WV('cashT', Math.min(5, n))}초`]   /* c496: 빨간 별에서 10초로 잘못 뜨던 것 */   /* c420 */   /* c226 */,
     book: ['쿨타임', (n) => `-${5 + 9 * n}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['공속', (n) => `+${10 + 10 * n}%`], crowbar: ['건물', (n) => `+${15 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`]   /* c278: 카드는 총격만 (밀림은 설명 칸에) */,
     shoes: ['이동', (n) => `+${5 * (1 + n)}%`], parasite: ['확률', (n) => `${20 + 5 * n}%`], teeth: ['감염', (n) => `${Math.round(100 + 80 / 6 * (1 + n))}%`], acid: ['확률', (n) => `${30 + 10 * n}%`], acidp: ['도트', (n) => `+${1 + n}`], linger: ['지속', (n) => `+${5 * (1 + n)}%`],   /* c420 */   /* c224 */ catalyst: ['변이', (n) => `+${5 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };
