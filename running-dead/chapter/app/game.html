@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c486</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c487</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -6131,7 +6131,7 @@
     s.position.copy(z.foot).addScaledVector(UP, RADIUS);
     scene.add(s);
     let rs = null; if (CHAPTER && chMonster(z)) { rs = new THREE.Sprite(new THREE.SpriteMaterial({ map: flashTex, color: 0xff2a2a, transparent: true, depthTest: false, depthWrite: false })); rs.scale.setScalar(0.62); rs.renderOrder = UI_ME - 0.9; rs.position.copy(s.position); scene.add(rs); }   // c448: 괴물 히드라 — 빨간 덩어리가 섞인다
-    spits.push({ s, z, t, dmg: z === me ? zDamage(z) : zDamage(z) * 4, dT: 0, rs });   // v558: 각성한 나는 내 데미지 그대로   // v301: 2배 더 (일반 데미지의 2 → 4배)
+    spits.push({ s, z, t, dmg: z === me ? zDamage(z) : zDamage(z) * 40 / (ALLY_DAMAGE * 1.15 * 1.1 * 1.07 * 1.03)   /* c487: 동료 히드라 침 = 40 (챕터 동료 배율을 곱한 뒤 · 촉매제는 그 위에) */, dT: 0, rs });   // v558: 각성한 나는 내 데미지 그대로   // v301: 2배 더 (일반 데미지의 2 → 4배)
   }
   function chSpitHit(x, z, fx, fz) {          // c324: 맞으면 녹색 액체가 탁 — 터진 자국 + 사방으로 튀는 방울 (날아온 쪽으로 더 많이)
     const f = puff(x, 0.45, z, 0xffffff, 0.45, 1.3, 0.45, 0, 0, 0, 1); f.s.material.map = splatTex; f.s.material.rotation = Math.random() * 6.28; f.s.renderOrder = UI_ME - 1;   /* 맞은 몸 위에 보이게 */
