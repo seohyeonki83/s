@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c541</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c542</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -482,6 +482,7 @@
 #outg button{font:inherit;color:inherit;border:none;background:none;touch-action:manipulation;cursor:pointer}
 #outg .top{display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:linear-gradient(#0d1117,rgba(13,17,23,0.85));z-index:2}
 #outg .gp{display:flex;align-items:center;gap:6px;background:#1b2330;border:2px solid #2d3a4d;border-radius:20px;padding:5px 12px 5px 8px;font-weight:900;font-size:17px}
+#outg .vr{font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0}
 #outg .ttl{flex:1;text-align:center;font-weight:900;font-size:18px;letter-spacing:1px;color:#e8d8ff}
 #outg .tb{width:44px;height:40px;border-radius:12px;background:#1b2330;border:2px solid #2d3a4d;font-size:19px;display:flex;align-items:center;justify-content:center}
 #outg .map{flex:1;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;display:flex;background:linear-gradient(#16324a,#0f2236)}
@@ -575,7 +576,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
 <g stroke="#2f5c54" stroke-width="4"><rect x="${NODES[0][0] * 24 - 80}" y="${NODES[0][1] * 10 - 130}" width="160" height="62" rx="8" fill="#a9d9cc"/><path d="M${NODES[0][0] * 24 - 44} ${NODES[0][1] * 10 - 130} a44 44 0 0 1 88 0 Z" fill="#c6eee3"/><rect x="${NODES[0][0] * 24 - 8}" y="${NODES[0][1] * 10 - 190}" width="16" height="22" fill="#7fb8a8"/></g>
 </svg>`;
     const draw = (keep) => {
-      let h = `<div class="top"><div class="gp">${CH_GENE_I(20)}<span>${CH_SV.genes}</span></div><div class="ttl"></div><button class="tb" data-set="1" aria-label="설정">⚙️</button></div><div class="map"><div class="in">${mapSvg}`;
+      let h = `<div class="top"><div class="gp">${CH_GENE_I(20)}<span>${CH_SV.genes}</span></div><div class="ttl"><span class="vr">${((document.getElementById('ver') || {}).textContent || '').match(/c\d+/) || ''}</span></div><button class="tb" data-set="1" aria-label="설정">⚙️</button></div><div class="map"><div class="in">${mapSvg}`;
       NODES.forEach(([x, y], i) => {
         const n = i;
         if (n === 0) { h += `<button class="nd tn" data-tn="1" style="left:${x}%;top:${y}%"><div class="nm">생체 연구소</div><div class="cbx"><i class="cb ${pre.tut ? '' : 'on'}" data-cb="t"></i></div></button>`; return; }   // c520: 튜토리얼 = 지도 첫 깃발 (아웃게임에 왔으면 이미 클리어)

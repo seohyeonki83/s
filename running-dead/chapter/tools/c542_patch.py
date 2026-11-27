@@ -1,0 +1,1 @@
+C542_R = [('<div class="ttl"></div>', '<div class="ttl"><span class="vr">${((document.getElementById(\'ver\') || {}).textContent || \'\').match(/c\\d+/) || \'\'}</span></div>'), ('#outg .ttl{', '#outg .vr{font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0}\n#outg .ttl{')]
