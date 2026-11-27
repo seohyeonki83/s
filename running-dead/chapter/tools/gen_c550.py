@@ -1,0 +1,12 @@
+import pathlib
+s = pathlib.Path('c549.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:80], s.count(a)); R.append((a, b))
+rep("const CH_MIXL = CH_RUN ? { e: 5, n: 4, h: 3 }[CH_DIF] : 5;", "const CH_MIXL = CH_RUN ? { e: 6, n: 5, h: 4 }[CH_DIF] : 5;   /* c550: 한 단계씩 뒤로 — 쉬움 계엄 · 보통 총동원령 · 어려움 팬데믹 */")
+rep("const CH_MIX_T = { e: 5, n: 4, h: 3 };", "const CH_MIX_T = { e: 6, n: 5, h: 4 };")
+rep("    if (stars > chBar.stage) { for (let s = chBar.stage + 1; s <= stars; s++) chBarGrow(s); chBar.stage = stars; }",
+    "    if (stars > chBar.stage) { for (let s = chBar.stage + 1; s <= stars; s++) chBarGrow(s); chBar.stage = stars; }\n    if (CHAPTER && CH_MIXL > STAR_MAX && chAL >= CH_MIXL && !chBar.lateT) { chBar.lateT = true; for (const X of chBar.X) { if (CH_MAP.world && CH_SEC && !chSecAwake(X.cx, X.cz)) { (X.pend = X.pend || []).push('T'); continue; } chBarTurret(X); chBarForm(X); } updateCarObs(); }   // c550: 쉬움 — 건널목이 다 자란 뒤(계엄)에 터렛 · 샷건")
+rep("for (const s of X.pend) chBarGrowX(X, s);", "for (const s of X.pend) { if (s === 'T') { chBarTurret(X); chBarForm(X); } else chBarGrowX(X, s); }   /* c550: 늦은 터렛 */")
+pathlib.Path('c550_patch.py').write_text('C550_R = ' + repr(R) + '\n')
+print(len(R))
