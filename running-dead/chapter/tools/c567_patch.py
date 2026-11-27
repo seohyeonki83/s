@@ -1,0 +1,1 @@
+C567_R = [('CH_SV.up[b.dataset.up]++; chSave(); draw(); upSheet(); }', "CH_SV.up[b.dataset.up]++; chSave(); { const m = ov.querySelector('.map'); draw(m ? m.scrollLeft : 0); } upSheet(); }   /* c567: 다시 그려도 지도는 보던 자리 그대로 */")]

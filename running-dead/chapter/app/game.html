@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c566</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c567</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -617,7 +617,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       const row = (k, ic, nm, ds) => { const v = CH_SV.up[k]; return `<div class="ug"><div class="ic">${ic}</div><div class="tx"><div class="n1">${nm}</div></div><div class="pc">${v}</div><button class="ub" data-up="${k}" ${CH_SV.genes < CH_UP_COST ? 'disabled' : ''}>+1 ${CH_GENE_I(14)}${CH_UP_COST}</button></div>`; };
       openSheet(`<div class="hd"><div><div class="t2">성장</div></div><button class="x">✕</button></div><div class="ds">${CH_GENE_I(14)} <b>${CH_SV.genes}</b></div>` +
         row('hp', '❤️', '내 체력', '내 최대 체력 · 혈액팩 회복량') + row('ahp', '🧟', '동료 체력', '동료 좀비 최대 체력') + row('atk', '⚔️', '공격력', '나 · 동료 · 덩치 · 히드라 · 산성 · 끈끈이 피해'),
-        (b) => { if (b.dataset.up && CH_SV.genes >= CH_UP_COST) { CH_SV.genes -= CH_UP_COST; CH_SV.up[b.dataset.up]++; chSave(); draw(); upSheet(); } });
+        (b) => { if (b.dataset.up && CH_SV.genes >= CH_UP_COST) { CH_SV.genes -= CH_UP_COST; CH_SV.up[b.dataset.up]++; chSave(); { const m = ov.querySelector('.map'); draw(m ? m.scrollLeft : 0); } upSheet(); }   /* c567: 다시 그려도 지도는 보던 자리 그대로 */ });
     };
     const tutSheet = () => {   // c520: 튜토리얼 상세 — 생체 연구소 · 목표 탈출하기
       openSheet(`<div class="hd"><div><div class="t1">튜토리얼</div><div class="t2">생체 연구소</div></div><button class="x">✕</button></div><div class="ds">${CH_STORY.t}</div>` +
