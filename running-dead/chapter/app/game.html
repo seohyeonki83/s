@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c547</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c548</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -683,7 +683,13 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       blk.remove(); done();
     })();
   }
-  const CH_PICK = window.__map || await new Promise((res) => {
+  function chLoadShow() {                       // c548: 맵을 만드는 동안 — 검은 화면 + '인간 세계에 침투 중...'
+    if (document.getElementById('ldx')) return;
+    const st = document.createElement('style'); st.textContent = '#ldx{position:fixed;inset:0;z-index:2000;background:#000;display:flex;align-items:center;justify-content:center;font:800 18px system-ui,-apple-system,sans-serif;color:#cfc6dd;letter-spacing:2px}#ldx i{font-style:normal;display:inline-block;width:1.6em;text-align:left}#ldx i::after{content:"";animation:ldxd 1.2s steps(4) infinite}@keyframes ldxd{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}'; document.head.appendChild(st);
+    const d = document.createElement('div'); d.id = 'ldx'; d.innerHTML = '인간 세계에 침투 중<i></i>'; document.body.appendChild(d);
+  }
+  const CH_PICK = window.__map || await new Promise((res0) => {
+    const res = (v) => { chLoadShow(); setTimeout(() => res0(v), 80); };   // c548: 로딩 화면이 먼저 그려지고 나서 맵을 만든다
     let nm = ''; try { nm = window.name || ''; window.name = ''; } catch (e) {}
     if (!CH_SV.tut || nm === 'rd-run:t') { res('t'); return; }
     if (nm.startsWith('rd-run:')) { const [, a, b] = nm.split(':'); if (+a >= 1 && +a <= 4 && CH_DIF_NM[b] && chUnlocked(+a, b)) { CH_STG = +a; CH_DIF = b; res('m'); return; } }   // c517: 결과 창 '다시 하기'
@@ -11351,6 +11357,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     resize();
     requestAnimationFrame(frame);
     window.__rdReady = true;
+    { const l = document.getElementById('ldx'); if (l) { l.style.transition = 'opacity 0.35s'; l.style.opacity = '0'; setTimeout(() => l.remove(), 400); } }   // c548
   }
 
   window.__rd = { get me() { return me; }, sec: () => ({ on: CH_SEC, secs: chSecs, dormB: chDormB, dormC: chDormC, dormO: chDormO, objs, props: chProps, outProps: chOutProps, big: chBigOut, scene, wakeAll: chSecWakeAll }), bodies, spawn, fleeDir, step: stepWorld, buildings, explored, ch: CHAPTER ? CH_MAP : null, zombify: makeZombie, slotOf, pop: () => chPop, awaken: awakenMe, bar: () => chBar, outProps: () => chOutProps, canopies: () => chCanopies, propDef: CH_PROP, tool: chTool, trNet: () => chNet, onRoad: chOnRoad, lootCars: CH_LOOT_CAR, lootType: chLootType, robbed: () => chRobbed, trDriver: chTrDriver, zebras: () => chZebras, carLoad: chCarLoad, carCap: chCarCap, carW: chCarW, tr: () => chTr, roadG: () => chRoadG, trSpawn: chTrSpawn, trExit: chTrExit, trReset: chTrReset, trOff: () => { for (const c of chTr.cars) { chTrGone(c); c.tr.mode = 'gone'; } chTr.cars.length = 0; for (const Z of chTr.Z) { Z.n = 0; Z.want = 0; } }, furn: () => ({ props: chProps.filter((p) => !p.out), slabs: chSlabs, n: chFurnN }), heart: chHeartDrop, nav: chNavOf, navPlan: chNavPlan, hearts: () => pickups.filter((q) => q.kind === 'heart').length, deco: () => chDeco, bays: () => chBays, civCar: chDecoCarNow, decoObjs: () => chDecoObjs, carObs: () => carObs, carBoxes: () => chCarBoxes, teams: () => teamWait, park: chParked, kills: (n) => { if (n !== undefined) deaths = n; return deaths; }, teamEv: () => CH_TEAM_EVENTS, incident: (x, z) => callPolice({ x, z }), use: useItem, tier: chTier, hold: () => items, rooms: chRooms, spaceOf, linked, chStart, mutate, openDoor: chOpenDoor, cars: () => cars, objsL: () => objs, lastInc: () => lastIncident, stars: () => stars, setStars: (n, x, z) => { stars = n; deaths = Math.max(deaths, STAR_AT[n - 1]); lastIncident = new THREE.Vector2(x, z); }, xp: (n) => { for (let i = 0; i < n; i++) gainXp(); return { level, xp, pendingLv }; }, lvInfo: () => ({ level, xp, pendingLv, need: needXp(level + pendingLv) }), chips: () => chips.length, objs, breakObj, rageK: CHAPTER ? rageK : null, loot: CHAPTER ? chLoot : null, breakSafe, give: (k) => pendingAward.push(k), inv: () => ({ tools: items.map((x) => x.kind + ':' + (x.off ? 'off' : x.kind === 'awaken' ? (+x.acc.toFixed(1)) + 's' : x.ammo)), owned: Object.keys(owned), lv: Object.assign({}, ilv), cap: chToolCap(), pickups: pickups.map((p) => [p.kind, +p.x.toFixed(1), +p.z.toFixed(1)]), acq: acqOpen }), zDamage, route: CHAPTER ? chRoute : null, cf: () => ({ D: cfD, W: cfW, H: cfH, block: cfBlock, ready: cfReady, runs: cfRuns, dist: cfDist }), get armyK() { return armyK; } };   // 확인용 (콘솔에서 상태 보기·한 걸음씩 돌리기)
