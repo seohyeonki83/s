@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c528</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c529</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4185,7 +4185,7 @@ ${[1, 2, 3].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y]) 
 
   function updateZombie(z, dt) {
     if (z.mad) { if (z.knockT > 0) { knockStep(z, dt); return; } chMadStep(z, dt); return; }   // c480: 오작동 기계
-    if (z.knockT > 0) { if (z.bombing) chBombIcon(z); if (CHAPTER && z.atkT > 0) z.atkT -= dt * (z.rage ? 1 + rageK() : 1); knockStep(z, dt); return; }   // c527: 바리케이트를 밀다 튕기는 동안에도 공격 쿨타임은 돈다 (밀기만 하고 못 치던 것)
+    if (z.knockT > 0) { if (z.bombing) chBombIcon(z); knockStep(z, dt); return; }   // c529: c527의 동료 쿨타임 변경은 되돌림 (동료는 그대로)
     if (CHAPTER && z.bombing) { chBombStep(z, dt); return; }   // c272: 자폭 돌진 중
     if (CH_ET) { z.pick = null; z.aim = null; z.engaging = null; if (z === me) { const on = pid !== null; steer(z.vel, wantV.set(on ? move.x * z.speed : 0, on ? move.y * z.speed : 0), ACCEL * 3 * dt); return; }   // c465: 적 테스트 — 공격 안 함
       const dx = me.foot.x - z.foot.x, dz = me.foot.z - z.foot.z, d = Math.hypot(dx, dz) || 1, w = d > 2.4 ? Math.min(1, (d - 2.4) / 1.5) * z.speed : 0; steer(z.vel, wantV.set(dx / d * w, dz / d * w), ACCEL * dt); return; }   // 동료 — 나를 따라다니기만

@@ -1,0 +1,9 @@
+import pathlib
+s = pathlib.Path('c528.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:80], s.count(a)); R.append((a, b))
+rep("if (CHAPTER && z.atkT > 0) z.atkT -= dt * (z.rage ? 1 + rageK() : 1); knockStep(z, dt); return; }   // c527: 바리케이트를 밀다 튕기는 동안에도 공격 쿨타임은 돈다 (밀기만 하고 못 치던 것)",
+    "knockStep(z, dt); return; }   // c529: c527의 동료 쿨타임 변경은 되돌림 (동료는 그대로)")
+pathlib.Path('c529_patch.py').write_text('C529_R = ' + repr(R) + '\n')
+print(len(R))
