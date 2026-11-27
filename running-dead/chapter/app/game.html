@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c555</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c556</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1664,6 +1664,11 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
         chPop.gangs = chPop.gangs.filter((G) => !G.members || G.members.length); chPop.wg = chPop.wg.filter((G) => !G.members || G.members.length); }
     }
     let w = 0; for (const b of bodies) if (!cut.has(b)) bodies[w++] = b; bodies.length = w;
+  }
+  function chOrange10() {                      // c556: 맵 전체 주황(건물 안 포함) 10%를 하양으로
+    const L = bodies.filter((b) => b.kind === 'citizen' && b.attacker && !b.vig && !b.police && !b.boss && !b.robot && !b.fixed && b !== me);
+    for (let i = L.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [L[i], L[j]] = [L[j], L[i]]; }
+    for (const b of L.slice(0, Math.round(L.length * 0.1))) chDemote(b, '');
   }
   function chPopulate() {
     chPopReset();
@@ -5313,7 +5318,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
   //   경찰서·경찰은 START_COP_CLEAR(15칸) 안에 없어야 하고, 밖에 있는 시민(일반·수비형·공격형)은 내 인지거리 밖이면 된다
   function testPopulate() {                   // v396: 시험 맵 — 저격수 2명을 세로 가운데, 가로로 고르게 / 나는 아래 가운데
     const W = MM.x1 - MM.x0, cz = (MM.z0 + MM.z1) / 2;
-    if (CHAPTER) { chRoomDoors(); { const st = chStart(); me.foot.set(st[0], 0, st[1]); } if (CH_MAP.world) chSwG = new Map();   /* c406 */ me.space = null; if (CH_TUT) { const X = buildings.find((B) => B.type === 'box'); me.foot.set((X.x0 + X.x1) / 2, 0, (X.z0 + X.z1) / 2); me.px = me.foot.x; me.pz = me.foot.z; me.space = X; }   /* c289: 박스 한가운데서 시작 */   /* c53: 방문 반은 열어 두고, 시작 자리는 아무 구역 바깥 라인 */ chOutPlace(); if (CH_NOHUM) chPopReset(); else { chPopulate(); chSpotPeople(); } chSafes();   /* c357: 사람 없는 맵 (거점 맵 — 지금은 사물·차만) */ chFurnPlace(); chDispReset(); chBarReset(); chDecoPlace(); if (!CH_TUT) chCull15(); if (CH_TYPEB) chTypeBSetup(); chStartW = { x: me.foot.x, z: me.foot.z, n: 1 + Math.floor(Math.random() * 2), tries: 0 }; chTrReset(); chSwG = null; return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작 · c11: 인간 200명
+    if (CHAPTER) { chRoomDoors(); { const st = chStart(); me.foot.set(st[0], 0, st[1]); } if (CH_MAP.world) chSwG = new Map();   /* c406 */ me.space = null; if (CH_TUT) { const X = buildings.find((B) => B.type === 'box'); me.foot.set((X.x0 + X.x1) / 2, 0, (X.z0 + X.z1) / 2); me.px = me.foot.x; me.pz = me.foot.z; me.space = X; }   /* c289: 박스 한가운데서 시작 */   /* c53: 방문 반은 열어 두고, 시작 자리는 아무 구역 바깥 라인 */ chOutPlace(); if (CH_NOHUM) chPopReset(); else { chPopulate(); chSpotPeople(); } chSafes();   /* c357: 사람 없는 맵 (거점 맵 — 지금은 사물·차만) */ chFurnPlace(); chDispReset(); chBarReset(); chDecoPlace(); if (!CH_TUT) { chCull15(); chOrange10(); }   /* c556 */ if (CH_TYPEB) chTypeBSetup(); chStartW = { x: me.foot.x, z: me.foot.z, n: 1 + Math.floor(Math.random() * 2), tries: 0 }; chTrReset(); chSwG = null; return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작 · c11: 인간 200명
     me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;
     if (CAR_TEST) { carTestSetup(); return; }
     teamQueue.push(1);                        // v410: 시험 맵 — 시작하자마자 맵 가장자리에서 1팀 (군인 2 + 저격수 1)
