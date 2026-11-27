@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c573</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c574</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1568,7 +1568,13 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     const R = c.sight * 0.8, dx = z.foot.x - c.foot.x,   /* c573: 맞는 범위 = 경찰 사거리 0.8배 */ dz = z.foot.z - c.foot.z, d0 = Math.hypot(dx, dz) || 1, ux = dx / d0, uz = dz / d0, cs = Math.cos(Math.PI / 6);
     c.shotT = 0; c.shotAt = z; c.recoilT = 0; c.recoilX = -ux; c.recoilZ = -uz; c.recoilK = 2;
     { const f = puff(c.foot.x + ux * RADIUS, 0, c.foot.z + uz * RADIUS, 0xfff23a, 1.4, 1.6, 0.09, 0, 0, 0, 0.8); f.s.material.map = flashTex; f.s.position.addScaledVector(UP, RADIUS); f.s.renderOrder = UI - 0.5; f.peak = true; }
-    for (let i = 0; i < 7; i++) { const a = Math.atan2(uz, ux) + rand(-0.5, 0.5), sp = rand(8, 14); const f = puff(c.foot.x + ux * 0.6, 0.6, c.foot.z + uz * 0.6, 0xffe9a0, 0.18, 0.08, 0.18, Math.cos(a) * sp, 0, Math.sin(a) * sp, 0.9); f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true; }
+    {   /* c574: 샷건 머즐 — 앞쪽 60° 부채꼴로 번쩍 + 산탄이 맞는 범위 끝까지 방사형으로 */
+      const a0 = Math.atan2(uz, ux), mx = c.foot.x + ux * 0.55, mz = c.foot.z + uz * 0.55;
+      for (let k = -2; k <= 2; k++) { const a = a0 + k * 0.21, d = 0.75 + (2 - Math.abs(k)) * 0.2; const f = puff(mx + Math.cos(a) * d, 0, mz + Math.sin(a) * d, 0xfff23a, 1.05 - Math.abs(k) * 0.12, 0.5, 0.09, 0, 0, 0, 0.85); f.s.material.map = flashTex; f.s.position.addScaledVector(UP, RADIUS); f.s.renderOrder = UI - 0.5; f.peak = true; }   // 부채꼴 섬광
+      const life = 0.15, sp = R / life * 1.25;   /* 이펙트 감속(초당 2.5) 만큼 보탠다 */
+      for (let i = 0; i < 13; i++) { const a = a0 + (i / 12 - 0.5) * (Math.PI / 3) + rand(-0.04, 0.04), v = sp * rand(0.8, 1.0);   // 산탄 13알 — 부채꼴 끝까지
+        for (let j = 0; j < 3; j++) { const f = puff(mx, 0.6, mz, j ? 0xffc864 : 0xfff6c8, j ? 0.16 - j * 0.03 : 0.22, 0.06, life, Math.cos(a) * v, 0, Math.sin(a) * v, j ? 0.7 - j * 0.2 : 1, j * 0.018); f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true; } }   // 알갱이 + 꼬리 2개
+    }
     const dmg = CH_DMG_PO / 5;
     for (const t of nearIn(zCells, c.foot.x, c.foot.z, R + 1, chSgBuf)) {
       if (!isZombie(t) || t.space !== c.space) continue;
