@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c560</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c561</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -447,11 +447,12 @@
   // ── c505: 본편 — 저장 · 아웃게임 (스테이지 · 난이도 · 성장). 처음엔 튜토리얼부터 ──
   const CH_SV = (() => { let o = null; try { o = JSON.parse(localStorage.getItem('rd_save_v1') || 'null'); } catch (e) {} o = o || {}; o.genes = o.genes || 0; o.clr = o.clr || {}; o.sub = o.sub || {}; o.up = Object.assign({ hp: 0, ahp: 0, atk: 0 }, o.up || {}); o.tut = !!o.tut;
     if (!o.v4) { o = { genes: 0, clr: {}, sub: {}, up: { hp: 0, ahp: 0, atk: 0 }, tut: false, mig: 1, v2: 1, v3: 1, v4: 1 }; }   // c538: 챕터 개편 — 기록 전부 초기화   // c515: 한 번 더 전부 초기화   // c508: 옛 버전에서 옮겨온 유전자까지 한 번 깨끗이
+    if (!o.u2) { for (const k of ['hp', 'ahp', 'atk']) o.up[k] = (o.up[k] || 0) * 2; o.u2 = 1; }   /* c561: 성장 1 = 50 · 0.25% — 이미 찍은 포인트는 2배로 옮겨 효과 그대로 */
     try { localStorage.removeItem('rd_genes'); } catch (e) {} return o; })();
   function chSave() { try { localStorage.setItem('rd_save_v1', JSON.stringify(CH_SV)); } catch (e) {} }
   chSave();
-  const CH_UP_COST = 100;   // 성장 1 = 유전자 100 · 기본값의 0.5% (c522)
-  const CH_UP_K = 0.005;   // c522: 성장 1 = 기본값의 0.5% (유전자 100)
+  const CH_UP_COST = 50;   /* c561: 100 → 50 */   // 성장 1 = 유전자 100 · 기본값의 0.5% (c522)
+  const CH_UP_K = 0.0025;   /* c561: 0.5% → 0.25% */   // c522: 성장 1 = 기본값의 0.5% (유전자 100)
   const CH_UPK = { hp: 1 + CH_UP_K * CH_SV.up.hp, ahp: 1 + CH_UP_K * CH_SV.up.ahp, atk: 1 + CH_UP_K * CH_SV.up.atk };
   const CH_DIF_NM = { e: '쉬움', n: '보통', h: '어려움' };
   let CH_STG = +window.__stg || 2, CH_DIF = window.__dif || 'h';   // 테스트 맵 기본값 (불도저 · 어려움)
