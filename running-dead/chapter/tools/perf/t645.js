@@ -1,0 +1,13 @@
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const errs = [];
+const p = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage(); p.on('pageerror', (e) => errs.push(e.message));
+await p.route('**/three.module.min.js', (r) => r.fulfill({ path: __dirname + '/../node_modules/three/build/three.module.min.js', contentType: 'application/javascript' }));
+const url = 'file:///home/user/s/running-dead/chapter/c552.html';
+await p.goto(url); await p.evaluate(() => localStorage.setItem('rd_save_v1', JSON.stringify({ genes: 7777, clr: { '1e': 1 }, sub: {}, up: { hp: 5, ahp: 0, atk: 3 }, tut: true, mig: 1, v2: 1, v3: 1, v4: 1 })));
+await p.goto(url); await p.waitForSelector('#outg [data-set]', { timeout: 30000 });
+await p.click('#outg [data-set]'); await p.click('[data-rst="2"]'); console.log('1st:', await p.textContent('[data-rst="2"]'));
+await Promise.all([p.waitForNavigation(), p.click('[data-rst="2"]')]);
+await p.waitForSelector('#outg .gp', { timeout: 30000 }); await p.waitForTimeout(500);
+console.log('save:', await p.evaluate(() => localStorage.getItem('rd_save_v1')), '| 상단 유전자:', await p.textContent('#outg .gp span'));
+await p.screenshot({ path: __dirname + '/shots/c552.png' });
+console.log('errors', JSON.stringify(errs.slice(0, 3))); await b.close(); })();
