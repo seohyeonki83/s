@@ -1,0 +1,1 @@
+C571_R = [('const CH_MIXL = CH_RUN ? { e: 6, n: 5, h: 4 }[CH_DIF] : 5;', 'const CH_MIXL = CH_RUN ? { e: 5, n: 4, h: 3 }[CH_DIF] : 5;   /* c571: 쉬움 총동원령 · 보통 팬데믹 · 어려움 비상 */'), ('const CH_MIX_T = { e: 6, n: 5, h: 4 };', 'const CH_MIX_T = { e: 5, n: 4, h: 3 };')]
