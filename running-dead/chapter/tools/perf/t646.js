@@ -1,0 +1,18 @@
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const errs = [];
+const p = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage(); p.on('pageerror', (e) => errs.push(e.message));
+await p.route('**/three.module.min.js', (r) => r.fulfill({ path: __dirname + '/../node_modules/three/build/three.module.min.js', contentType: 'application/javascript' }));
+const url = 'file:///home/user/s/running-dead/chapter/c553.html';
+await p.goto(url); await p.evaluate(() => { localStorage.setItem('rd_save_v1', JSON.stringify({ genes: 530, clr: {}, sub: {}, up: { hp: 0, ahp: 0, atk: 0 }, tut: true, mig: 1, v2: 1, v3: 1, v4: 1 })); });
+await p.goto(url); await p.waitForSelector('#outg', { timeout: 30000 }); await p.waitForTimeout(300);
+await p.evaluate(() => { const s = [...document.querySelectorAll('#outg [data-n], #outg [data-st]')][0]; s && s.click(); }); await p.waitForTimeout(400);
+await p.screenshot({ path: __dirname + '/shots/c553_out.png' });
+await p.evaluate(() => { window.name = 'rd-run:1:e'; }); await p.goto(url);
+await p.waitForSelector('#ldx', { timeout: 30000 }); await p.screenshot({ path: __dirname + '/shots/c553_load.png' });
+await p.waitForSelector('#ldx .go', { timeout: 90000 }); await p.waitForTimeout(1500);
+console.log('goal before press:', await p.evaluate(() => !!document.getElementById('goal')));
+await p.screenshot({ path: __dirname + '/shots/c553_ready.png' });
+await p.dispatchEvent('#ldx .go', 'pointerdown'); await p.waitForTimeout(1500);
+console.log('ldx after:', await p.evaluate(() => !!document.getElementById('ldx')), 'goal:', await p.evaluate(() => !!document.getElementById('goal')), 'g6:', await p.evaluate(() => !!document.querySelector('#goal .g6')));
+await p.screenshot({ path: __dirname + '/shots/c553_goal.png' });
+console.log('errors', JSON.stringify(errs.slice(0, 3))); await b.close(); })();

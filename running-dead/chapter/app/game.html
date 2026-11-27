@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c552</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c553</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -471,6 +471,11 @@
     3: { nm: '북부 군사기지', ds: '검문소 너머 군대가 지키는 기지.', boss: ['기지 수호 로봇', '기지 안을 지키는 거대한 사각 로봇', 'bbot'] },
     4: { nm: '국경 요새', ds: '군대가 지키는 마지막 도시.', boss: ['장갑차', '기관총을 쏘며 밀고 오는 장갑차', 'tank'] },
   };
+  const CH_STORY = { t: '차가운 수조 속에서 눈을 떴다. 몸이 예전 같지 않다. 나를 이렇게 만든 건 저 흰 가운의 인간들이다. 문을 부수고, 길을 막는 자는 모두 물어뜯어라. 이곳을 빠져나가는 것, 그게 복수의 시작이다.',   /* c553 */
+    1: '실험실을 빠져나온 감염은 조용한 도시로 번지기 시작했다. 도시를 지키려 특공대가 몰려온다. 그들마저 우리 무리로 만들어라.',
+    2: '공장과 창고 너머로 감염이 퍼지자 군은 중장비를 앞세웠다. 벽을 밀고 들어오는 강철을 무너뜨리고 이 지구를 삼켜라.',
+    3: '모든 병력은 북쪽 군사기지에서 나온다. 검문소를 넘어 기지 한가운데까지 밀고 들어가라. 그곳이 무너지면 군은 머리를 잃는다.',
+    4: '마지막 방어선, 국경 요새. 장갑차가 길을 막고 서 있다. 이곳만 넘으면 더는 우리를 막을 것이 없다.' };
   const CH_GENE_I = (w = 16) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" style="vertical-align:-3px"><path d="M7 2c0 6 10 6 10 10S7 16 7 22" fill="none" stroke="#7fe3ff" stroke-width="2.6" stroke-linecap="round"/><path d="M17 2c0 6-10 6-10 10s10 4 10 10" fill="none" stroke="#c78bff" stroke-width="2.6" stroke-linecap="round"/><path d="M9 7h6M8 12h8M9 17h6" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity="0.8"/></svg>`;
   const chClrText = (d, n = CH_STG) => n === 3 ? '메인 기지 점령하기' : d === 'e' ? '특공대 3번 물리치기' : d === 'n' ? '특공대 4번 물리치기' : '보스 물리치기';   // c539
   const chMisTxt = (d, i, n = CH_STG) => { if (n === 3) { const B = CH_MIS_B[d]; return i ? `${B[1]}분 안에 스테이지 클리어` : `${B[0]}분 안에 검문소 점령`; } const M = CH_MIS_T[d]; return i ? `동료 ${M[1]}마리 모으기` : `${M[0][1]}분 안에 경보 '${CH_LVN[M[0][0] - 1]}' 도달`; };   // c539
@@ -596,7 +601,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     const stageSheet = (n, d) => {
       const I = CH_STG_INFO[n], key = n + d, ok = chUnlocked(n, d);
       const tab = (q) => { const okq = chUnlocked(n, q); return `<button data-d="${q}" class="${q === d ? 'sel' : ''} ${q}">${okq ? '' : '🔒 '}${CH_DIF_NM[q]}<small>${cleared(n + q) ? '★ 클리어' : '&nbsp;'}</small></button>`; };
-      let h = `<div class="hd"><div><div class="t1">스테이지 ${n}</div><div class="t2">${I.nm}</div></div><button class="x">✕</button></div><div class="ds">${I.ds}</div><div class="tabs">${['e', 'n', 'h'].map(tab).join('')}</div>`;
+      let h = `<div class="hd"><div><div class="t1">스테이지 ${n}</div><div class="t2">${I.nm}</div></div><button class="x">✕</button></div><div class="ds">${CH_STORY[n]}</div><div class="tabs">${['e', 'n', 'h'].map(tab).join('')}</div>`;
       h += `<div class="cd"><div class="k">클리어 조건</div><div class="v">${chClrText(d, n)}</div></div>`;
       if (d === 'h') h += `<div class="cd bs"><div class="k">보스</div><img src="${I.boss[2] === 'bbot' ? CH_BBOT_IMG : CH_BOSS_IMG[I.boss[2]]}" alt=""><div class="bn">${I.boss[0]}</div><div class="bbt">${I.boss[1]}</div></div>`;
       /* c527: 위험도 칸 뺌 */
@@ -614,7 +619,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
         (b) => { if (b.dataset.up && CH_SV.genes >= CH_UP_COST) { CH_SV.genes -= CH_UP_COST; CH_SV.up[b.dataset.up]++; chSave(); draw(); upSheet(); } });
     };
     const tutSheet = () => {   // c520: 튜토리얼 상세 — 생체 연구소 · 목표 탈출하기
-      openSheet(`<div class="hd"><div><div class="t1">튜토리얼</div><div class="t2">생체 연구소</div></div><button class="x">✕</button></div><div class="ds">실험실에서 깨어난 첫 좀비.</div>` +
+      openSheet(`<div class="hd"><div><div class="t1">튜토리얼</div><div class="t2">생체 연구소</div></div><button class="x">✕</button></div><div class="ds">${CH_STORY.t}</div>` +
         `<div class="cd"><div class="k">목표</div><div class="v">생체 실험실을 탈출하라</div></div>` +
         `<div class="cd"><div class="k">보상</div><div class="rw got"><div class="gi">${CH_GENE_I()}500</div><div class="lb">첫 클리어 · 받음 ✓</div></div></div>` +
         `<button class="go" data-go="1">다시 하기</button>`, (b) => { if (b.dataset.go) { ov.remove(); tut(); } });
@@ -684,13 +689,14 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       blk.remove(); done();
     })();
   }
-  function chLoadShow() {                       // c548: 맵을 만드는 동안 — 검은 화면 + '인간 세계에 침투 중...'
+  let chLdxWait = false;   /* c553: 로딩 화면의 [침투하기]를 누를 때까지 판을 세운다 */
+  function chLoadShow(k) {                       // c548: 맵을 만드는 동안 — 검은 화면 + '인간 세계에 침투 중...'   /* c553: + 그 맵 이야기 · 끝나면 [침투하기] */
     if (document.getElementById('ldx')) return;
-    const st = document.createElement('style'); st.textContent = '#ldx{position:fixed;inset:0;z-index:2000;background:#000;display:flex;align-items:center;justify-content:center;font:800 18px system-ui,-apple-system,sans-serif;color:#cfc6dd;letter-spacing:2px}#ldx i{font-style:normal;display:inline-block;width:1.6em;text-align:left}#ldx i::after{content:"";animation:ldxd 1.2s steps(4) infinite}@keyframes ldxd{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}'; document.head.appendChild(st);
-    const d = document.createElement('div'); d.id = 'ldx'; d.innerHTML = '인간 세계에 침투 중<i></i>'; document.body.appendChild(d);
+    const st = document.createElement('style'); st.textContent = '#ldx{position:fixed;inset:0;z-index:2000;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;font:800 18px system-ui,-apple-system,sans-serif;color:#cfc6dd;letter-spacing:2px}#ldx i{font-style:normal;display:inline-block;width:1.6em;text-align:left}#ldx i::after{content:"";animation:ldxd 1.2s steps(4) infinite}@keyframes ldxd{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}'; st.textContent += '#ldx .st{width:min(320px,84vw);font:600 15px/1.75 system-ui,-apple-system,sans-serif;color:#e8e2f0;letter-spacing:0;text-align:left;word-break:keep-all}#ldx .lw{height:52px;display:flex;align-items:center}#ldx .go{font:900 18px system-ui,sans-serif;color:#fff;background:#7a2fb0;border:0;border-radius:14px;padding:14px 46px;letter-spacing:2px;box-shadow:0 4px 14px rgba(160,70,230,0.45);animation:ldxin 0.3s ease-out}@keyframes ldxin{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:none}}'; document.head.appendChild(st);
+    const d = document.createElement('div'); d.id = 'ldx'; d.innerHTML = (CH_STORY[k] ? '<div class="st">' + CH_STORY[k] + '</div>' : '') + '<div class="lw">인간 세계에 침투 중<i></i></div>'; document.body.appendChild(d); chLdxWait = true;
   }
   const CH_PICK = window.__map || await new Promise((res0) => {
-    const res = (v) => { chLoadShow(); setTimeout(() => res0(v), 80); };   // c548: 로딩 화면이 먼저 그려지고 나서 맵을 만든다
+    const res = (v) => { chLoadShow(v === 't' ? 't' : CH_STG); setTimeout(() => res0(v), 80); };   // c548: 로딩 화면이 먼저 그려지고 나서 맵을 만든다
     let nm = ''; try { nm = window.name || ''; window.name = ''; } catch (e) {}
     if (!CH_SV.tut || nm === 'rd-run:t') { res('t'); return; }
     if (nm.startsWith('rd-run:')) { const [, a, b] = nm.split(':'); if (+a >= 1 && +a <= 4 && CH_DIF_NM[b] && chUnlocked(+a, b)) { CH_STG = +a; CH_DIF = b; res('m'); return; } }   // c517: 결과 창 '다시 하기'
@@ -10904,7 +10910,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     stage.appendChild(dim); dim.getBoundingClientRect(); dim.style.opacity = '1';
     const el = document.createElement('div');
     el.id = 'goal';
-    el.innerHTML = '<div class="g1">목표</div><div class="g2">' + (CH_TUT ? '생체 실험실을 탈출하라' : CH_TYPEB ? '메인 기지 점령' : CH_RUN ? (CH_DIF === 'h' ? CH_STG_INFO[CH_STG].boss[0] + ' 물리치기' : '특공대 ' + (CH_DIF === 'e' ? 3 : 4) + '번 물리치기') : '모든 경찰서를 파괴해라') + '</div>' + (CH_TUT || CH_RUN ? '<div class="g6">' + chStory() + '</div>' : '') + (CH_RUN ? '<div class="g4"><div class="g5" style="margin-top:0">서브 미션</div>' + [0, 1].map((i) => '<div>· ' + chMisTxt(CH_DIF, i) + '</div>').join('') + '</div>' : '') + '<div class="g3">' + (CH_RUN ? [] : stations).map(() => '<span>!</span>').join('') + '</div><button class="ok okBtn">확인</button>';   // 경찰서 수만큼 느낌표 (v214), 확인 버튼 (v218)
+    el.innerHTML = '<div class="g1">목표</div><div class="g2">' + (CH_TUT ? '생체 실험실을 탈출하라' : CH_TYPEB ? '메인 기지 점령' : CH_RUN ? (CH_DIF === 'h' ? CH_STG_INFO[CH_STG].boss[0] + ' 물리치기' : '특공대 ' + (CH_DIF === 'e' ? 3 : 4) + '번 물리치기') : '모든 경찰서를 파괴해라') + '</div>' + ''   /* c553: 이야기는 로딩 화면으로 */ + (CH_RUN ? '<div class="g4"><div class="g5" style="margin-top:0">서브 미션</div>' + [0, 1].map((i) => '<div>· ' + chMisTxt(CH_DIF, i) + '</div>').join('') + '</div>' : '') + '<div class="g3">' + (CH_RUN ? [] : stations).map(() => '<span>!</span>').join('') + '</div><button class="ok okBtn">확인</button>';   // 경찰서 수만큼 느낌표 (v214), 확인 버튼 (v218)
     stage.appendChild(el);
     el.getBoundingClientRect(); el.classList.add('on');
     const okBtn = el.querySelector('.ok');
@@ -11184,7 +11190,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     if (fxBusyPrev && !busy) fxGapUntil = now + 1000;   // v420: 연출이 끝나면 1초 쉬고 다음
     fxBusyPrev = busy;
     if (busy || victoryOn || menuOv) return;   // v284: 일시정지·설명창 동안도 기다린다
-    if (!goalShown) { if (CH_TUT ? now - chGoalAt >= 500 : spawnFrames >= 3) showGoal(); return; }   /* c346: 튜토리얼 — 시작 0.5초 뒤 목표 창 */   // 판 시작 → 첫 장면을 몇 프레임 그린 뒤 목표 (v202)
+    if (!goalShown) { if (chLdxWait) return; if (CH_TUT ? now - chGoalAt >= 500 : spawnFrames >= 3) showGoal(); return; }   /* c346: 튜토리얼 — 시작 0.5초 뒤 목표 창 */   // 판 시작 → 첫 장면을 몇 프레임 그린 뒤 목표 (v202)
     if (now < fxGapUntil) return;
     if (tutQueue.length) { showTut(tutQueue.shift()); return; }
     if ((CH_RUN || CH_TUT) && !chRunOver && ((CH_RUN && chSf.won) || (CH_TUT && chTutGate && chTutGate.dead && me.foot.z < chTutGateZ - 0.5))) { chRunResult(true); return; }   // c505: 클리어 → 결과 창
@@ -11361,7 +11367,8 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     resize();
     requestAnimationFrame(frame);
     window.__rdReady = true;
-    { const l = document.getElementById('ldx'); if (l) { l.style.transition = 'opacity 0.35s'; l.style.opacity = '0'; setTimeout(() => l.remove(), 400); } }   // c548
+    { const l = document.getElementById('ldx'); if (l) { const w = l.querySelector('.lw'); w.innerHTML = '<button class="go">침투하기</button>';   /* c553: 다 만들었다 → [침투하기] 누르면 들어간다 */
+      w.querySelector('.go').addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); if (!chLdxWait) return; chLdxWait = false; l.style.transition = 'opacity 0.35s'; l.style.opacity = '0'; setTimeout(() => l.remove(), 400); }); } }   // c548
   }
 
   window.__rd = { get me() { return me; }, sec: () => ({ on: CH_SEC, secs: chSecs, dormB: chDormB, dormC: chDormC, dormO: chDormO, objs, props: chProps, outProps: chOutProps, big: chBigOut, scene, wakeAll: chSecWakeAll }), bodies, spawn, fleeDir, step: stepWorld, buildings, explored, ch: CHAPTER ? CH_MAP : null, zombify: makeZombie, slotOf, pop: () => chPop, awaken: awakenMe, bar: () => chBar, outProps: () => chOutProps, canopies: () => chCanopies, propDef: CH_PROP, tool: chTool, trNet: () => chNet, onRoad: chOnRoad, lootCars: CH_LOOT_CAR, lootType: chLootType, robbed: () => chRobbed, trDriver: chTrDriver, zebras: () => chZebras, carLoad: chCarLoad, carCap: chCarCap, carW: chCarW, tr: () => chTr, roadG: () => chRoadG, trSpawn: chTrSpawn, trExit: chTrExit, trReset: chTrReset, trOff: () => { for (const c of chTr.cars) { chTrGone(c); c.tr.mode = 'gone'; } chTr.cars.length = 0; for (const Z of chTr.Z) { Z.n = 0; Z.want = 0; } }, furn: () => ({ props: chProps.filter((p) => !p.out), slabs: chSlabs, n: chFurnN }), heart: chHeartDrop, nav: chNavOf, navPlan: chNavPlan, hearts: () => pickups.filter((q) => q.kind === 'heart').length, deco: () => chDeco, bays: () => chBays, civCar: chDecoCarNow, decoObjs: () => chDecoObjs, carObs: () => carObs, carBoxes: () => chCarBoxes, teams: () => teamWait, park: chParked, kills: (n) => { if (n !== undefined) deaths = n; return deaths; }, teamEv: () => CH_TEAM_EVENTS, incident: (x, z) => callPolice({ x, z }), use: useItem, tier: chTier, hold: () => items, rooms: chRooms, spaceOf, linked, chStart, mutate, openDoor: chOpenDoor, cars: () => cars, objsL: () => objs, lastInc: () => lastIncident, stars: () => stars, setStars: (n, x, z) => { stars = n; deaths = Math.max(deaths, STAR_AT[n - 1]); lastIncident = new THREE.Vector2(x, z); }, xp: (n) => { for (let i = 0; i < n; i++) gainXp(); return { level, xp, pendingLv }; }, lvInfo: () => ({ level, xp, pendingLv, need: needXp(level + pendingLv) }), chips: () => chips.length, objs, breakObj, rageK: CHAPTER ? rageK : null, loot: CHAPTER ? chLoot : null, breakSafe, give: (k) => pendingAward.push(k), inv: () => ({ tools: items.map((x) => x.kind + ':' + (x.off ? 'off' : x.kind === 'awaken' ? (+x.acc.toFixed(1)) + 's' : x.ammo)), owned: Object.keys(owned), lv: Object.assign({}, ilv), cap: chToolCap(), pickups: pickups.map((p) => [p.kind, +p.x.toFixed(1), +p.z.toFixed(1)]), acq: acqOpen }), zDamage, route: CHAPTER ? chRoute : null, cf: () => ({ D: cfD, W: cfW, H: cfH, block: cfBlock, ready: cfReady, runs: cfRuns, dist: cfDist }), get armyK() { return armyK; } };   // 확인용 (콘솔에서 상태 보기·한 걸음씩 돌리기)
