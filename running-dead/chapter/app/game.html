@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c536</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c537</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -481,9 +481,9 @@
 #outg .gp{display:flex;align-items:center;gap:6px;background:#1b2330;border:2px solid #2d3a4d;border-radius:20px;padding:5px 12px 5px 8px;font-weight:900;font-size:17px}
 #outg .ttl{flex:1;text-align:center;font-weight:900;font-size:18px;letter-spacing:1px;color:#e8d8ff}
 #outg .tb{width:44px;height:40px;border-radius:12px;background:#1b2330;border:2px solid #2d3a4d;font-size:19px;display:flex;align-items:center;justify-content:center}
-#outg .map{flex:1;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#outg .map{flex:1;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;display:flex;background:linear-gradient(#16324a,#0f2236)}
 #outg .map::-webkit-scrollbar{display:none}
-#outg .in{position:relative;height:100%;aspect-ratio:2.4/1;min-width:900px}
+#outg .in{position:relative;height:100%;aspect-ratio:2.4/1;min-width:900px;margin-left:45vw;flex:none}
 #outg .in svg{position:absolute;inset:0;width:100%;height:100%}
 #outg .nd{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px}
 #outg .fl{width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8a5c,#c4302b);border:3px solid #ffe2a8;box-shadow:0 4px 0 #6d1a16,0 6px 14px rgba(0,0,0,0.6);font-weight:900;font-size:24px;display:flex;align-items:center;justify-content:center;text-shadow:0 2px 2px rgba(0,0,0,0.5)}
@@ -559,8 +559,8 @@
 <linearGradient id="land" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4b6b3f"/><stop offset="0.5" stop-color="#5d7a46"/><stop offset="1" stop-color="#6b6a45"/></linearGradient></defs>
 <rect width="2400" height="1000" fill="url(#sea)"/>
 <g stroke="#1d4363" stroke-width="3" fill="none" opacity="0.6"><path d="M0 120 q60 -14 120 0 t120 0 t120 0"/><path d="M1900 930 q60 -14 120 0 t120 0 t120 0"/><path d="M700 960 q60 -14 120 0 t120 0"/></g>
-<path d="M-20 260 C 120 130, 330 170, 470 120 S 760 60, 900 140 S 1180 90, 1330 130 S 1640 60, 1800 120 S 2160 90, 2420 170 L 2420 860 C 2240 930, 2060 880, 1880 920 S 1520 960, 1380 900 S 1060 950, 900 900 S 560 960, 400 910 S 120 930, -20 880 Z" fill="url(#land)" stroke="#2b3f25" stroke-width="10"/>
-<path d="M-20 260 C 120 130, 330 170, 470 120 S 760 60, 900 140 S 1180 90, 1330 130 S 1640 60, 1800 120 S 2160 90, 2420 170" fill="none" stroke="#d8c48a" stroke-width="6" opacity="0.35"/>
+<path d="M70 250 C 170 140, 330 170, 470 120 S 760 60, 900 140 S 1180 90, 1330 130 S 1640 60, 1800 120 S 2160 90, 2420 170 L 2420 860 C 2240 930, 2060 880, 1880 920 S 1520 960, 1380 900 S 1060 950, 900 900 S 560 960, 400 910 S 140 930, 80 870 C 10 780, 60 600, 20 480 S 40 300, 70 250 Z" fill="url(#land)" stroke="#2b3f25" stroke-width="10"/>
+<path d="M70 250 C 170 140, 330 170, 470 120 S 760 60, 900 140 S 1180 90, 1330 130 S 1640 60, 1800 120 S 2160 90, 2420 170" fill="none" stroke="#d8c48a" stroke-width="6" opacity="0.35"/>
 <path d="M300 140 C 340 330, 520 420, 470 600 S 640 820, 700 930" fill="none" stroke="#2a5878" stroke-width="22" stroke-linecap="round"/><path d="M300 140 C 340 330, 520 420, 470 600 S 640 820, 700 930" fill="none" stroke="#3b7aa3" stroke-width="10" stroke-linecap="round"/>
 <path d="M1540 120 C 1500 300, 1640 420, 1600 560 S 1700 780, 1680 930" fill="none" stroke="#2a5878" stroke-width="18" stroke-linecap="round"/><path d="M1540 120 C 1500 300, 1640 420, 1600 560 S 1700 780, 1680 930" fill="none" stroke="#3b7aa3" stroke-width="8" stroke-linecap="round"/>
 <g fill="#7a7466" stroke="#4d483d" stroke-width="5">${[[760, 250], [830, 300], [700, 320], [1200, 760], [1280, 720], [1360, 780], [2050, 700], [2130, 740], [1960, 760], [1100, 230], [2250, 300]].map(([x, y]) => `<path d="M${x - 60} ${y + 50} L${x} ${y - 55} L${x + 60} ${y + 50} Z"/>`).join('')}</g>
@@ -582,7 +582,7 @@ ${[1, 2, 3].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y]) 
       });
       h += `</div></div><div class="hint">← 지도를 밀어서 둘러보기 →</div><div class="bt"><button class="ugb" data-ug="1"><span class="i">💪</span>성장</button></div>`;
       ov.innerHTML = h;
-      const m = ov.querySelector('.map'), nd = ov.querySelector(anim ? (anim.t ? '.nd[data-tn]' : `.nd[data-st="${anim.n}"]`) : `.nd[data-st="${curN}"]`); if (m && nd && keep === undefined) requestAnimationFrame(() => { m.scrollLeft = Math.max(0, nd.offsetLeft - m.clientWidth / 2); }); else if (m && keep !== undefined) m.scrollLeft = keep;
+      const m = ov.querySelector('.map'), nd = ov.querySelector(anim ? (anim.t ? '.nd[data-tn]' : `.nd[data-st="${anim.n}"]`) : `.nd[data-st="${curN}"]`); if (m && nd && keep === undefined) requestAnimationFrame(() => { m.scrollLeft = Math.max(0, nd.offsetLeft + nd.offsetParent.offsetLeft - m.clientWidth / 2); }); else if (m && keep !== undefined) m.scrollLeft = keep;
     };
     let sheet = null;
     const closeSheet = () => { if (sheet) { sheet.remove(); sheet = null; } };
@@ -663,7 +663,7 @@ ${[1, 2, 3].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y]) 
       }
       const nx = pre.lock && ov.querySelector(`.nd[data-st="${pre.lock}"]`);
       if (nx) {
-        await pan(Math.max(0, nx.offsetLeft - map.clientWidth / 2), 900);
+        await pan(Math.max(0, nx.offsetLeft + nx.offsetParent.offsetLeft - map.clientWidth / 2), 900);
         await wait(250);
         const fl = nx.querySelector('.lkI') || nx.querySelector('.nm'), [lx, ly] = ctr(fl);
         fl.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(-14deg)' }, { transform: 'rotate(12deg)' }, { transform: 'rotate(-8deg)' }, { transform: 'rotate(0)' }], { duration: 420 });
