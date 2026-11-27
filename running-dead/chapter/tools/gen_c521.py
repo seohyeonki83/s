@@ -1,0 +1,15 @@
+import pathlib
+s = pathlib.Path('c520.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:80], s.count(a)); R.append((a, b))
+rep("const CH_SK = CH_RUN ? 1 + 0.2 * (CH_STG - 1) : 1;", "const CH_SK = CH_RUN ? 1 + 0.3 * (CH_STG - 1) : 1;   /* c521: 스테이지마다 +30% (1.0 · 1.3 · 1.6) */")
+rep("+${(n - 1) * 20}%", "+${(n - 1) * 30}%")
+rep("적이 20% 더 단단하고 세다.", "적이 30% 더 단단하고 세다.")
+rep("적이 40% 더 단단하고 세다.", "적이 60% 더 단단하고 세다.")
+rep("add += 100; R.push(['🎓', '튜토리얼 첫 클리어', 100, true]);", "add += 500; R.push(['🎓', '튜토리얼 첫 클리어', 500, true]);   /* c521: 100 → 500 */")
+rep("CH_GENE_I()}100</div><div class=\"lb\">첫 클리어 · 받음", "CH_GENE_I()}500</div><div class=\"lb\">첫 클리어 · 받음")
+rep("#outg .bt{display:flex;justify-content:center;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(13,17,23,0.85),#0d1117)}",
+    "#outg .bt{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;pointer-events:none;z-index:3}#outg .bt button{pointer-events:auto}")   # c521: 버튼 뒤 띠 없앰 — 지도 위에 버튼만
+pathlib.Path('c521_patch.py').write_text('C521_R = ' + repr(R) + '\n')
+print(len(R))
