@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c531</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c532</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -471,7 +471,7 @@
   const chClrText = (d) => d === 'e' ? '특공대 3번 물리치기' : d === 'n' ? '특공대 4번 물리치기' : '보스 물리치기';
   const chMisTxt = (d, i) => { const M = CH_MIS_T[d]; return i ? `동료 ${M[1]}마리 모으기` : `${M[0][1]}분 안에 경보 '${CH_LVN[M[0][0] - 1]}' 도달`; };
   const chLockWhy = (st, d) => d === 'e' ? `스테이지 ${st - 1}을 클리어하면 열려` : d === 'n' ? '쉬움을 클리어하면 열려' : '보통을 클리어하면 열려';
-  function chOutgame(go, tut) {
+  function chOutgame(go, tut, anim) {
     const ov = document.createElement('div'); ov.id = 'outg';
     const st = document.createElement('style');
     st.textContent = `
@@ -496,8 +496,13 @@
 #outg .sr i{font-style:normal;color:#3d4450}#outg .sr i.on{color:#ffd34d;text-shadow:0 0 6px rgba(255,200,60,0.7)}
 #outg .md{font-size:11px;font-weight:800;color:#bcd;background:rgba(0,0,0,0.5);padding:1px 6px;border-radius:6px}
 #outg .nd.dn .fl{font-size:30px}
-#outg .nd.tn .fl{font-size:30px!important;background:radial-gradient(circle at 35% 30%,#7ff0d2,#1f8f78);border-color:#d6fff4;box-shadow:0 4px 0 #0f4a3e,0 6px 14px rgba(0,0,0,0.6);font-size:26px}
-#outg .nd.tn .md{color:#7ff0d2}
+#outg .nd.tn .fl{font-size:30px}
+#outg .cbx{display:flex;gap:4px}#outg .cb{width:17px;height:17px;border-radius:5px;background:rgba(0,0,0,0.6);border:2px solid #9aa3b0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:12px;font-weight:900;color:#fff;line-height:1}#outg .cb.on{background:#2e9e5b;border-color:#8dffbd}#outg .cb.on::after{content:'✓'}
+#outg .blk{position:absolute;inset:0;z-index:50}
+#outg .stamp{position:absolute;z-index:40;pointer-events:none;transform:translate(-50%,-50%);font-weight:900;color:#8dffbd;text-shadow:0 0 18px rgba(80,255,160,0.95),0 0 40px rgba(80,255,160,0.6),0 4px 0 #0d5a33}
+#outg .ring{position:absolute;z-index:39;pointer-events:none;border-radius:50%;border:6px solid rgba(141,255,189,0.9);transform:translate(-50%,-50%)}
+#outg .shard{position:absolute;z-index:41;pointer-events:none;width:12px;height:12px;border-radius:3px;background:#b9c1cc;box-shadow:0 0 6px rgba(255,255,255,0.6)}
+
 #outg .bt{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;pointer-events:none;z-index:3}#outg .bt button{pointer-events:auto}
 #outg .ugb{display:flex;align-items:center;justify-content:center;gap:8px;width:min(300px,80vw);padding:14px 0;border-radius:18px;background:linear-gradient(#4f8dff,#2a5fd0);box-shadow:0 4px 0 #173a85;font-size:21px;font-weight:900;color:#fff}
 #outg .ugb .i{font-size:24px}
@@ -540,11 +545,14 @@
 #outg .sb.rst.on{background:#c62828;color:#fff;border-color:#c62828}
 `;
     document.head.appendChild(st);
-    const cleared = (k) => !!CH_SV.clr[k];
+    const pre = { hide: anim && !anim.t ? anim.n + anim.d : null, tut: !!(anim && anim.t), lock: null };   // c532: 연출 전 모습 (방금 깬 칸은 아직 빈칸 · 열릴 스테이지는 아직 잠김)
+    if (anim && anim.t) pre.lock = 1; else if (anim && anim.n < 3 && ['e', 'n', 'h'].every((q) => q === anim.d || !CH_SV.clr[anim.n + q])) pre.lock = anim.n + 1;
+    const cleared = (k) => k !== pre.hide && !!CH_SV.clr[k];
+    const okN = (n) => chUnlocked(n, 'e') && n !== pre.lock;
     const stars = (n) => ['e', 'n', 'h'].map((d) => `<i class="${cleared(n + d) ? 'on' : ''}">★</i>`).join('');
     const medals = (n) => ['e', 'n', 'h'].reduce((a, d) => a + (CH_SV.sub[n + d + '0'] ? 1 : 0) + (CH_SV.sub[n + d + '1'] ? 1 : 0), 0);
     const NODES = [[6, 60], [20, 36], [34, 62], [48, 36], [63, 60], [78, 38], [93, 60]];   // c520: 깃발 자리 (% · 가로 · 세로) — 0 = 튜토리얼 (생체 연구소)
-    let curN = 1; for (const n of [1, 2, 3]) if (chUnlocked(n, 'e')) curN = n;
+    let curN = 1; for (const n of [1, 2, 3]) if (okN(n)) curN = n;
     const path = () => { let d = `M ${NODES[0][0] * 24} ${NODES[0][1] * 10}`; for (let i = 1; i < NODES.length; i++) { const [ax, ay] = NODES[i - 1], [bx, by] = NODES[i], mx = (ax + bx) / 2 * 24; d += ` C ${mx} ${ay * 10}, ${mx} ${by * 10}, ${bx * 24} ${by * 10}`; } return d; };
     const mapSvg = `<svg viewBox="0 0 2400 1000" preserveAspectRatio="none">
 <defs><linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16324a"/><stop offset="1" stop-color="#0f2236"/></linearGradient>
@@ -563,18 +571,18 @@
 ${[1, 2, 3].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y]) => `<g fill="#cfc6b4" stroke="#5a5244" stroke-width="4" opacity="0.9">${[[-70, -40, 36, 50], [-30, -70, 40, 80], [16, -50, 34, 60], [56, -30, 30, 40]].map(([dx, dy, w, h]) => `<rect x="${x + dx}" y="${y + dy - 60}" width="${w}" height="${h}"/>`).join('')}</g>`).join('')}
 <g stroke="#2f5c54" stroke-width="4"><rect x="${NODES[0][0] * 24 - 80}" y="${NODES[0][1] * 10 - 130}" width="160" height="62" rx="8" fill="#a9d9cc"/><path d="M${NODES[0][0] * 24 - 44} ${NODES[0][1] * 10 - 130} a44 44 0 0 1 88 0 Z" fill="#c6eee3"/><rect x="${NODES[0][0] * 24 - 8}" y="${NODES[0][1] * 10 - 190}" width="16" height="22" fill="#7fb8a8"/></g>
 </svg>`;
-    const draw = () => {
+    const draw = (keep) => {
       let h = `<div class="top"><div class="gp">${CH_GENE_I(20)}<span>${CH_SV.genes}</span></div><div class="ttl"></div><button class="tb" data-set="1" aria-label="설정">⚙️</button></div><div class="map"><div class="in">${mapSvg}`;
       NODES.forEach(([x, y], i) => {
         const n = i;
-        if (n === 0) { h += `<button class="nd tn" data-tn="1" style="left:${x}%;top:${y}%"><div class="fl">✓</div><div class="nm">생체 연구소</div><div class="md">✓ 탈출</div></button>`; return; }   // c520: 튜토리얼 = 지도 첫 깃발 (아웃게임에 왔으면 이미 클리어)
+        if (n === 0) { h += `<button class="nd tn" data-tn="1" style="left:${x}%;top:${y}%"><div class="fl">${pre.tut ? '🧪' : '✓'}</div><div class="nm">생체 연구소</div><div class="cbx"><i class="cb ${pre.tut ? '' : 'on'}" data-cb="t"></i></div></button>`; return; }   // c520: 튜토리얼 = 지도 첫 깃발 (아웃게임에 왔으면 이미 클리어)
         if (n > 3) { h += `<div class="nd soon" style="left:${x}%;top:${y}%"><div class="fl">준비 중</div></div>`; return; }
-        const ok = chUnlocked(n, 'e');
-        h += `<button class="nd ${ok ? '' : 'lk'} ${n === curN ? 'cur' : ''} ${['e', 'n', 'h'].some((q) => cleared(n + q)) ? 'dn' : ''}" data-st="${n}" style="left:${x}%;top:${y}%"><div class="fl">${!ok ? '🔒' : ['e', 'n', 'h'].some((q) => cleared(n + q)) ? '✓' : n}</div><div class="nm">${CH_STG_INFO[n].nm}</div><div class="sr">${stars(n)}</div><div class="md">🎖 ${medals(n)}/6</div></button>`;
+        const ok = okN(n);
+        h += `<button class="nd ${ok ? '' : 'lk'} ${n === curN ? 'cur' : ''} ${['e', 'n', 'h'].some((q) => cleared(n + q)) ? 'dn' : ''}" data-st="${n}" style="left:${x}%;top:${y}%"><div class="fl">${!ok ? '🔒' : ['e', 'n', 'h'].some((q) => cleared(n + q)) ? '✓' : n}</div><div class="nm">${CH_STG_INFO[n].nm}</div><div class="cbx">${['e', 'n', 'h'].map((q) => `<i class="cb ${cleared(n + q) ? 'on' : ''}" data-cb="${n + q}"></i>`).join('')}</div><div class="md">🎖 ${medals(n)}/6</div></button>`;
       });
       h += `</div></div><div class="hint">← 지도를 밀어서 둘러보기 →</div><div class="bt"><button class="ugb" data-ug="1"><span class="i">💪</span>성장</button></div>`;
       ov.innerHTML = h;
-      const m = ov.querySelector('.map'), nd = ov.querySelector(`.nd[data-st="${curN}"]`); if (m && nd) requestAnimationFrame(() => { m.scrollLeft = Math.max(0, nd.offsetLeft - m.clientWidth / 2); });
+      const m = ov.querySelector('.map'), nd = ov.querySelector(anim ? (anim.t ? '.nd[data-tn]' : `.nd[data-st="${anim.n}"]`) : `.nd[data-st="${curN}"]`); if (m && nd && keep === undefined) requestAnimationFrame(() => { m.scrollLeft = Math.max(0, nd.offsetLeft - m.clientWidth / 2); }); else if (m && keep !== undefined) m.scrollLeft = keep;
     };
     let sheet = null;
     const closeSheet = () => { if (sheet) { sheet.remove(); sheet = null; } };
@@ -627,19 +635,62 @@ ${[1, 2, 3].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y]) 
         const d = ['h', 'n', 'e'].find((q) => chUnlocked(n, q) && !cleared(n + q)) || ['h', 'n', 'e'].find((q) => chUnlocked(n, q)); stageSheet(n, d); }
     });
     draw(); document.body.appendChild(ov);
+    if (anim) chOgAnim(ov, anim, pre, () => { anim = null; pre.hide = null; pre.tut = false; pre.lock = null; const m = ov.querySelector('.map'); draw(m ? m.scrollLeft : 0); });
+  }
+  function chOgAnim(ov, anim, pre, done) {      // c532: 클리어 체크가 쾅 박히고 (2.5초) → 처음 깬 거면 다음 스테이지로 카메라 → 자물쇠 박살 · 해금 → 제자리로. 그동안 손 못 댄다
+    const blk = document.createElement('div'); blk.className = 'blk'; ov.appendChild(blk);
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const map = ov.querySelector('.map'), inn = ov.querySelector('.in');
+    const pan = (x, ms) => new Promise((r) => { const x0 = map.scrollLeft, t0 = performance.now(); const f = (t) => { const k = Math.min(1, (t - t0) / ms), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; map.scrollLeft = x0 + (x - x0) * e; if (k < 1) requestAnimationFrame(f); else r(); }; requestAnimationFrame(f); });
+    const ctr = (el) => { const a = el.getBoundingClientRect(), b = inn.getBoundingClientRect(); return [a.left - b.left + a.width / 2, a.top - b.top + a.height / 2]; };
+    (async () => {
+      await wait(450);
+      const nd = ov.querySelector(anim.t ? '.nd[data-tn]' : `.nd[data-st="${anim.n}"]`), cb = ov.querySelector(`.cb[data-cb="${anim.t ? 't' : anim.n + anim.d}"]`);
+      const x0 = map.scrollLeft;
+      if (cb) {
+        const [cx, cy] = ctr(cb), st = document.createElement('div'); st.className = 'stamp'; st.textContent = '✓'; st.style.left = cx + 'px'; st.style.top = cy + 'px'; st.style.fontSize = '110px'; inn.appendChild(st);
+        st.animate([{ transform: 'translate(-50%,-50%) scale(3.2) rotate(-18deg)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(0.9) rotate(4deg)', opacity: 1, offset: 0.7 }, { transform: 'translate(-50%,-50%) scale(1) rotate(0deg)', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.5,0,.8,.4)', fill: 'forwards' });
+        await wait(400);
+        map.animate([{ transform: 'translate(0,0)' }, { transform: 'translate(-9px,6px)' }, { transform: 'translate(8px,-7px)' }, { transform: 'translate(-6px,-4px)' }, { transform: 'translate(4px,5px)' }, { transform: 'translate(0,0)' }], { duration: 380 });
+        if (navigator.vibrate) try { navigator.vibrate(60); } catch (e) {}
+        for (let k = 0; k < 2; k++) { const r = document.createElement('div'); r.className = 'ring'; r.style.left = cx + 'px'; r.style.top = cy + 'px'; inn.appendChild(r); r.animate([{ width: '20px', height: '20px', opacity: 1 }, { width: (220 + k * 120) + 'px', height: (220 + k * 120) + 'px', opacity: 0 }], { duration: 700 + k * 250, easing: 'ease-out', fill: 'forwards' }); setTimeout(() => r.remove(), 1100); }
+        for (let k = 0; k < 14; k++) { const p = document.createElement('div'); p.className = 'shard'; p.style.background = '#8dffbd'; p.style.left = cx + 'px'; p.style.top = cy + 'px'; inn.appendChild(p); const a = k / 14 * Math.PI * 2, d = 70 + Math.random() * 60; p.animate([{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }, { transform: `translate(${Math.cos(a) * d - 6}px,${Math.sin(a) * d - 6}px) scale(0.3)`, opacity: 0 }], { duration: 650, easing: 'ease-out', fill: 'forwards' }); setTimeout(() => p.remove(), 700); }
+        cb.classList.add('on'); cb.animate([{ transform: 'scale(2.2)' }, { transform: 'scale(1)' }], { duration: 400, easing: 'ease-out' });
+        const fl = nd && nd.querySelector('.fl'); if (fl && (anim.t || !['e', 'n', 'h'].some((q) => q !== anim.d && CH_SV.clr[anim.n + q]))) { fl.textContent = '✓'; fl.animate([{ transform: 'scale(1.5)' }, { transform: 'scale(1)' }], { duration: 450, easing: 'ease-out' }); }
+        await wait(1100);
+        st.animate([{ opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }, { opacity: 0, transform: 'translate(-50%,-50%) scale(0.25)' }], { duration: 450, easing: 'ease-in', fill: 'forwards' });
+        await wait(550); st.remove();
+      }
+      const nx = pre.lock && ov.querySelector(`.nd[data-st="${pre.lock}"]`);
+      if (nx) {
+        await pan(Math.max(0, nx.offsetLeft - map.clientWidth / 2), 900);
+        await wait(250);
+        const fl = nx.querySelector('.fl'), [lx, ly] = ctr(fl);
+        fl.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(-14deg)' }, { transform: 'rotate(12deg)' }, { transform: 'rotate(-8deg)' }, { transform: 'rotate(0)' }], { duration: 420 });
+        await wait(430);
+        for (let k = 0; k < 12; k++) { const p = document.createElement('div'); p.className = 'shard'; p.style.left = lx + 'px'; p.style.top = ly + 'px'; inn.appendChild(p); const a = k / 12 * Math.PI * 2 + Math.random() * 0.4, d = 60 + Math.random() * 70; p.animate([{ transform: 'translate(-50%,-50%) rotate(0)', opacity: 1 }, { transform: `translate(${Math.cos(a) * d - 6}px,${Math.sin(a) * d + 30}px) rotate(${Math.random() * 540}deg)`, opacity: 0 }], { duration: 800, easing: 'cubic-bezier(.2,.6,.4,1)', fill: 'forwards' }); setTimeout(() => p.remove(), 850); }
+        const r = document.createElement('div'); r.className = 'ring'; r.style.borderColor = 'rgba(255,214,120,0.95)'; r.style.left = lx + 'px'; r.style.top = ly + 'px'; inn.appendChild(r); r.animate([{ width: '20px', height: '20px', opacity: 1 }, { width: '260px', height: '260px', opacity: 0 }], { duration: 800, easing: 'ease-out', fill: 'forwards' }); setTimeout(() => r.remove(), 850);
+        nx.classList.remove('lk'); fl.textContent = String(pre.lock); fl.animate([{ transform: 'scale(0.2)' }, { transform: 'scale(1.35)', offset: 0.6 }, { transform: 'scale(1)' }], { duration: 550, easing: 'ease-out' });
+        await wait(1300);
+        await pan(x0, 900);
+      }
+      await wait(200);
+      blk.remove(); done();
+    })();
   }
   const CH_PICK = window.__map || await new Promise((res) => {
     let nm = ''; try { nm = window.name || ''; window.name = ''; } catch (e) {}
     if (!CH_SV.tut || nm === 'rd-run:t') { res('t'); return; }
     if (nm.startsWith('rd-run:')) { const [, a, b] = nm.split(':'); if (+a >= 1 && +a <= 3 && CH_DIF_NM[b] && chUnlocked(+a, b)) { CH_STG = +a; CH_DIF = b; res('m'); return; } }   // c517: 결과 창 '다시 하기'
-    chOutgame((st, d) => { CH_STG = st; CH_DIF = d; res('m'); }, () => res('t'));
+    const anim = nm.startsWith('rd-anim:') ? (nm === 'rd-anim:t' ? { t: true } : { n: +nm.split(':')[1], d: nm.split(':')[2] }) : null;   // c532
+    chOutgame((st, d) => { CH_STG = st; CH_DIF = d; res('m'); }, () => res('t'), anim);
   });
   const CH_RUN = CH_PICK === 'm' && !window.__noRun;   // c505: 본편 판 (스테이지 · 난이도 규칙)
   const CH_SK = CH_RUN ? 1 + 0.2 * (CH_STG - 1) : 1;   /* c522: 다시 +20%씩 (1.0 · 1.2 · 1.4) */   /* c521: 스테이지마다 +30% (1.0 · 1.3 · 1.6) */   // 스테이지 강화 — 적 체력 · 공격력 · 벽 · 사물 (보스 체력 제외)
   const CH_MIXL = CH_RUN ? { e: 5, n: 4, h: 3 }[CH_DIF] : 5;   // 샷건 · 로봇 섞임 + 건널목 터렛 — 쉬움 총동원령 · 보통 팬데믹 · 어려움 비상
   const CH_MIS = CH_MIS_T[CH_RUN ? CH_DIF : 'e'];   // c517: 표는 위 (아웃게임과 같은 것)   // 서브 미션 (임시) — [경보 단계, 분] · 동료 수
   const chMis = [{ done: false }, { done: false }];
-  let chRunT = 0, chRunGenes = 0, chRunOver = false;
+  let chRunT = 0, chRunGenes = 0, chRunOver = false, chAnimKey = '';
   const CH_TOUR = CH_PICK === 'w', CH_MAIN = CH_PICK === 'm' || CH_TOUR, CH_BASE = CH_PICK === 'p',   /* c407: 본 맵 테스트 = 본 맵 + 둘러보기 */ CH_NOHUM = false, CH_ET = CH_PICK === 'e', CH_SMALL = CH_PICK === 's' || CH_BASE || CH_ET, CH_BT = CH_PICK === 'k',   /* c463: 적 테스트 = 작은 맵 위 */ CH_TUT = CH_PICK === 't';   /* c354: 거점 맵 (사람 수는 작은 맵 몫) */   // c289: 튜토리얼 1   // c166: 보스 테스트
   { const v = document.getElementById('ver'); if (v && CH_RUN) v.textContent = '스테이지 ' + CH_STG + ' · ' + CH_DIF_NM[CH_DIF]; else if (v) v.textContent = v.textContent.replace('챕터', CH_TUT ? '튜토리얼 1' : CH_TOUR ? '본 맵 테스트' : CH_MAIN ? '본 맵' : CH_BASE ? '거점 맵' : CH_ET ? '적 테스트' : CH_SMALL ? '작은 맵' : CH_BT ? '보스 테스트' : '큰 맵'); }
   // ── c406: 본 맵 — 시작할 때마다 새로 만드는 랜덤 월드 ──
@@ -6594,10 +6645,10 @@ ${[1, 2, 3].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y]) 
   function chRunResult(win) {                 // c505 · c517: 클리어 · 실패 — 보상 정산 (아이콘 줄) → 지도로 · 다시 하기
     if (chRunOver) return; chRunOver = true; paused = true; stopInput();
     const R = []; let add = 0;
-    if (CH_TUT) { if (win && !CH_SV.tut) { add += 500; R.push(['🎓', '튜토리얼 첫 클리어', 500, true]);   /* c521: 100 → 500 */ } if (win) CH_SV.tut = true; }
+    if (CH_TUT) { if (win && !CH_SV.tut) { chAnimKey = 'rd-anim:t'; add += 500; R.push(['🎓', '튜토리얼 첫 클리어', 500, true]);   /* c521: 100 → 500 */ } if (win) CH_SV.tut = true; }
     else if (CH_RUN && win) {
       const key = CH_STG + CH_DIF;
-      if (!CH_SV.clr[key]) { const g = CH_CLR_G[CH_DIF]; add += g; R.push(['★', CH_DIF_NM[CH_DIF] + ' 첫 클리어', g, true]); CH_SV.clr[key] = 1; } else R.push(['★', CH_DIF_NM[CH_DIF] + ' 클리어 (이미 받음)', 0, false]);
+      if (!CH_SV.clr[key]) { chAnimKey = 'rd-anim:' + CH_STG + ':' + CH_DIF; const g = CH_CLR_G[CH_DIF]; add += g; R.push(['★', CH_DIF_NM[CH_DIF] + ' 첫 클리어', g, true]); CH_SV.clr[key] = 1; } else R.push(['★', CH_DIF_NM[CH_DIF] + ' 클리어 (이미 받음)', 0, false]);
       chMis.forEach((m, i) => { const k = key + i; if (m.done && !CH_SV.sub[k]) { add += 100; R.push(['🎖', '서브 미션 ' + (i + 1), 100, true]); CH_SV.sub[k] = 1; } });
     }
     CH_SV.genes += add; chSave();
@@ -6612,7 +6663,7 @@ ${[1, 2, 3].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y]) 
     h += `<div style="display:flex;gap:10px;margin-top:16px;width:min(340px,88vw)"><button data-a="map" style="flex:1;font:900 17px system-ui;color:#fff;background:#2a3340;border:none;border-radius:14px;padding:13px 0">지도로</button><button data-a="again" style="flex:1;font:900 17px system-ui;color:#2b1400;background:linear-gradient(#ffb547,#f07b12);border:none;border-radius:14px;padding:13px 0">다시 하기</button></div>`;
     ov.innerHTML = h; stage.appendChild(ov);
     ov.addEventListener('pointerdown', (e) => e.stopPropagation());   // 조이스틱이 손가락을 가져가지 않게
-    ov.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; try { window.name = b.dataset.a === 'again' ? (CH_TUT ? 'rd-run:t' : 'rd-run:' + CH_STG + ':' + CH_DIF) : ''; } catch (er) {} location.reload(); });
+    ov.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; try { window.name = b.dataset.a === 'again' ? (CH_TUT ? 'rd-run:t' : 'rd-run:' + CH_STG + ':' + CH_DIF) : chAnimKey;   /* c532: 지도로 → 체크 · 해금 연출 */ } catch (er) {} location.reload(); });
   }
   function chMadRoll(c) { const ok = chMadRoll0(c); if (ok) chGeneAdd(1); return ok; }   // c505: 오작동 = 적에서 사라짐 · c528: c517에서 결과 창을 바꾸다 같이 지워졌던 것 되살림
   function chMadRoll0(c) {
