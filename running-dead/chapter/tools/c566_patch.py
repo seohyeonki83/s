@@ -1,0 +1,1 @@
+C566_R = [('const needXp = (L) => CHAPTER ? Math.round(15 + 0.1 * L * L) :', 'const needXp = (L) => CHAPTER ? Math.max(1, Math.round(15 + 0.1 * L * L - 10 * Math.exp(-L / 5))) :   /* c566: 첫 레벨업 5명 — 빼는 양이 레벨마다 줄어 Lv20쯤 원래 곡선과 같아진다 */')]
