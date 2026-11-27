@@ -1,0 +1,17 @@
+import pathlib
+s = pathlib.Path('c572.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:80], s.count(a)); R.append((a, b))
+rep("    c.sg = true; c.hp = c.maxHp = c.maxHp * 1.5; chAddGun(c, 0.62, 0.15);",
+    "    c.sg = true; c.hp = c.maxHp = c.maxHp * CH_SG_HPK; chAddGun(c, 0.62, 0.15); c.baseCol = 0x7a1f94; c.mesh.material.color.setHex(c.baseCol);   /* c573: 체력 450(스테이지 1) · 살짝 진한 보라 */")
+rep("  function chShotgun(c, z) {", "  const CH_SG_HPK = 450 / 252;   /* c573: 스테이지 1 경찰 252 → 샷건 450 (스테이지 강화는 그대로 곱해진다) */\n  function chShotgun(c, z) {")
+rep("    const R = c.sight * 0.5, dx = z.foot.x - c.foot.x,", "    const R = c.sight * 0.8, dx = z.foot.x - c.foot.x,   /* c573: 맞는 범위 = 경찰 사거리 0.8배 */")
+rep("      const D = SNIPER_KD * 0.4 * Math.max(0, 1 - e / R);", "      const D = SNIPER_KD * 0.8 * Math.max(0, 1 - e / R);   /* c573: 붙어 있으면 저격수 넉백의 80% */")
+rep("* (c.sg ? 0.4 : 1);   /* c436: 샷건 경찰은 경찰 사거리 0.4배까지 다가가 쏜다 */", "* (c.sg ? 0.5 : 1);   /* c573: 0.5배까지 다가가 쏜다 */   /* c436: 0.4배 */")
+rep(": c.sg ? 1.6 : 1); }", ": c.sg ? 1 / HIT_EVERY : 1); }   /* c573: 샷건 1초마다 */")
+rep("c.mesh.geometry = chSqGeo; c.mesh.material.color.setHex(0x2f5a1a);", "c.mesh.geometry = chSqGeo; c.mesh.material.color.setHex(0x2f5a1a); c.baseCol = 0x2f5a1a;")
+rep("        const base = b.boss ? CH_PINK : b.vig ? 0xc62828 : COLOR[", "        const base = b.baseCol !== undefined ? b.baseCol : b.turret ? 0x4d5560 : b.boss ? CH_PINK : b.vig ? 0xc62828 : COLOR[   /* c573: 샷건 · 사각 · 터렛 · 보스는 제 색으로 돌아온다 */")
+rep("color.setHex(0x7a1212)", "color.setHex(0x7a1212); c.baseCol = 0x7a1212")
+pathlib.Path('c573_patch.py').write_text('C573_R = ' + repr(R) + '\n')
+print(len(R))
