@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c576</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c577</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -10916,12 +10916,12 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
   let chTutClk = -9;
   function chTutAdd(k, item) { tutSeen[k] = true; CH_SV.seen[k] = 1; chSave(); tutQueue.push(Object.assign({ k }, item)); }
   function checkTut() {                       // 처음으로 내 시야에 들어온 종류 → 소개 줄 세우기
-    if (CH_RUN) {   /* c575: 챕터 — 적 종류마다 처음 발견(나 + 동료 시야)하면 카메라가 가서 한 번 소개 (보스 빼고 · 기록에 남아 다시 안 나온다) */
+    if (CH_RUN || CH_TUT) {   /* c577: 튜토리얼도 같은 기록 — 게임 전체에서 처음 볼 때 한 번 */   /* c575: 챕터 — 적 종류마다 처음 발견(나 + 동료 시야)하면 카메라가 가서 한 번 소개 (보스 빼고 · 기록에 남아 다시 안 나온다) */
       if (clock - chTutClk < 0.2 || !isZombie(me)) return; chTutClk = clock; const SV = CH_SV.seen = CH_SV.seen || {};   // 판 시작에 '본 것'으로 찍어 두는 기본 종류도 챕터에선 저장 기록만 본다
       for (const b of bodies) {
         if (b.kind !== 'citizen' || b.bBoss || b.dead) continue;
         const k = b.turret ? 'turret' : b.robot ? 'robot' : b.sg ? 'sg' : b.sniper ? 'sniper' : b.soldier ? 'soldier' : b.police ? 'police' : b.boss ? 'pink' : b.vig ? 'red' : b.attacker ? 'attacker' : b.guard ? 'guard' : 'citizen';
-        if (SV[k] || k === 'red' || k === 'attacker' || k === 'guard' || !(iSee(b) || zSeen(b))) continue;   /* c576: 빨강 · 주황 · 노랑은 소개 안 함 */
+        if (SV[k] || k === 'red' || k === 'attacker' || k === 'guard' || k === 'turret' || !(iSee(b) || zSeen(b))) continue;   /* c577: 터렛도 소개 안 함 */   /* c576: 빨강 · 주황 · 노랑은 소개 안 함 */
         chTutAdd(k, { x: b.foot.x, z: b.foot.z, b });
       }
       if (!SV.drone) for (const d of chDrones) if (!d.dead && (iSee(d) || zSeen(d))) { chTutAdd('drone', { x: d.foot.x, z: d.foot.z, b: { foot: d.foot, halfH: d.h, mesh: d.s } }); break; }

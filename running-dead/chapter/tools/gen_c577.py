@@ -1,0 +1,9 @@
+import pathlib
+s = pathlib.Path('c576.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:80], s.count(a)); R.append((a, b))
+rep("    if (CH_RUN) {   /* c575:", "    if (CH_RUN || CH_TUT) {   /* c577: 튜토리얼도 같은 기록 — 게임 전체에서 처음 볼 때 한 번 */   /* c575:")
+rep("if (SV[k] || k === 'red' || k === 'attacker' || k === 'guard' || !(iSee(b) || zSeen(b))) continue;", "if (SV[k] || k === 'red' || k === 'attacker' || k === 'guard' || k === 'turret' || !(iSee(b) || zSeen(b))) continue;   /* c577: 터렛도 소개 안 함 */")
+pathlib.Path('c577_patch.py').write_text('C577_R = ' + repr(R) + '\n')
+print(len(R))
