@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c535</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c536</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -497,7 +497,7 @@
 #outg .md{font-size:11px;font-weight:800;color:#bcd;background:rgba(0,0,0,0.5);padding:1px 6px;border-radius:6px}
 #outg .nd.dn .fl{font-size:30px}
 #outg .nd.tn .fl{font-size:30px}
-#outg .cbx{display:flex;gap:4px}#outg .cbx{gap:6px!important;margin-top:3px}#outg .cb{width:32px;height:32px;border-radius:8px;border-width:3px!important;font-size:21px!important;background:rgba(0,0,0,0.6);border:2px solid #9aa3b0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:12px;font-weight:900;color:#fff;line-height:1}#outg .cb.on{background:#2e9e5b;border-color:#8dffbd}#outg .cb.on::after{content:'✓'}
+#outg .cbx{display:flex;gap:4px}#outg .nd{padding:6px}#outg .nm{font-size:14px!important}#outg .nd.lk .cb{opacity:0.45}#outg .lkI{display:inline-block}#outg .cbx{gap:7px!important;margin-top:4px}#outg .cb{width:36px;height:36px;border-radius:50%!important;border-width:3px!important;font-size:22px!important;box-shadow:0 3px 8px rgba(0,0,0,0.5);background:rgba(0,0,0,0.6);border:2px solid #9aa3b0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:12px;font-weight:900;color:#fff;line-height:1}#outg .cb.on{background:#2e9e5b;border-color:#8dffbd}#outg .cb.on::after{content:'✓'}
 #outg .blk{position:absolute;inset:0;z-index:50}
 #outg .stamp{position:absolute;z-index:40;pointer-events:none;transform:translate(-50%,-50%);font-weight:900;color:#8dffbd;text-shadow:0 0 18px rgba(80,255,160,0.95),0 0 40px rgba(80,255,160,0.6),0 4px 0 #0d5a33}
 #outg .ring{position:absolute;z-index:39;pointer-events:none;border-radius:50%;border:6px solid rgba(141,255,189,0.9);transform:translate(-50%,-50%)}
@@ -575,10 +575,10 @@ ${[1, 2, 3].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y]) 
       let h = `<div class="top"><div class="gp">${CH_GENE_I(20)}<span>${CH_SV.genes}</span></div><div class="ttl"></div><button class="tb" data-set="1" aria-label="설정">⚙️</button></div><div class="map"><div class="in">${mapSvg}`;
       NODES.forEach(([x, y], i) => {
         const n = i;
-        if (n === 0) { h += `<button class="nd tn" data-tn="1" style="left:${x}%;top:${y}%"><div class="fl">🧪</div><div class="nm">생체 연구소</div><div class="cbx"><i class="cb ${pre.tut ? '' : 'on'}" data-cb="t"></i></div></button>`; return; }   // c520: 튜토리얼 = 지도 첫 깃발 (아웃게임에 왔으면 이미 클리어)
-        if (n > 3) { h += `<div class="nd soon" style="left:${x}%;top:${y}%"><div class="fl">준비 중</div></div>`; return; }
+        if (n === 0) { h += `<button class="nd tn" data-tn="1" style="left:${x}%;top:${y}%"><div class="nm">생체 연구소</div><div class="cbx"><i class="cb ${pre.tut ? '' : 'on'}" data-cb="t"></i></div></button>`; return; }   // c520: 튜토리얼 = 지도 첫 깃발 (아웃게임에 왔으면 이미 클리어)
+        if (n > 3) { h += `<div class="nd soon" style="left:${x}%;top:${y}%"><div class="nm" style="opacity:0.6">준비 중</div></div>`; return; }
         const ok = okN(n);
-        h += `<button class="nd ${ok ? '' : 'lk'} ${n === curN ? 'cur' : ''} ${['e', 'n', 'h'].some((q) => cleared(n + q)) ? 'dn' : ''}" data-st="${n}" style="left:${x}%;top:${y}%"><div class="fl">${!ok ? '🔒' : n}</div><div class="nm">${CH_STG_INFO[n].nm}</div><div class="cbx">${['e', 'n', 'h'].map((q) => `<i class="cb ${cleared(n + q) ? 'on' : ''}" data-cb="${n + q}"></i>`).join('')}</div></button>`;
+        h += `<button class="nd ${ok ? '' : 'lk'} ${n === curN ? 'cur' : ''} ${['e', 'n', 'h'].some((q) => cleared(n + q)) ? 'dn' : ''}" data-st="${n}" style="left:${x}%;top:${y}%"><div class="nm">${!ok ? '<span class="lkI">🔒 </span>' : ''}${CH_STG_INFO[n].nm}</div><div class="cbx">${['e', 'n', 'h'].map((q) => `<i class="cb ${cleared(n + q) ? 'on' : ''}" data-cb="${n + q}"></i>`).join('')}</div></button>`;
       });
       h += `</div></div><div class="hint">← 지도를 밀어서 둘러보기 →</div><div class="bt"><button class="ugb" data-ug="1"><span class="i">💪</span>성장</button></div>`;
       ov.innerHTML = h;
@@ -665,12 +665,12 @@ ${[1, 2, 3].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y]) 
       if (nx) {
         await pan(Math.max(0, nx.offsetLeft - map.clientWidth / 2), 900);
         await wait(250);
-        const fl = nx.querySelector('.fl'), [lx, ly] = ctr(fl);
+        const fl = nx.querySelector('.lkI') || nx.querySelector('.nm'), [lx, ly] = ctr(fl);
         fl.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(-14deg)' }, { transform: 'rotate(12deg)' }, { transform: 'rotate(-8deg)' }, { transform: 'rotate(0)' }], { duration: 420 });
         await wait(430);
         for (let k = 0; k < 12; k++) { const p = document.createElement('div'); p.className = 'shard'; p.style.left = lx + 'px'; p.style.top = ly + 'px'; inn.appendChild(p); const a = k / 12 * Math.PI * 2 + Math.random() * 0.4, d = 60 + Math.random() * 70; p.animate([{ transform: 'translate(-50%,-50%) rotate(0)', opacity: 1 }, { transform: `translate(${Math.cos(a) * d - 6}px,${Math.sin(a) * d + 30}px) rotate(${Math.random() * 540}deg)`, opacity: 0 }], { duration: 800, easing: 'cubic-bezier(.2,.6,.4,1)', fill: 'forwards' }); setTimeout(() => p.remove(), 850); }
         const r = document.createElement('div'); r.className = 'ring'; r.style.borderColor = 'rgba(255,214,120,0.95)'; r.style.left = lx + 'px'; r.style.top = ly + 'px'; inn.appendChild(r); r.animate([{ width: '20px', height: '20px', opacity: 1 }, { width: '260px', height: '260px', opacity: 0 }], { duration: 800, easing: 'ease-out', fill: 'forwards' }); setTimeout(() => r.remove(), 850);
-        nx.classList.remove('lk'); fl.textContent = String(pre.lock); fl.animate([{ transform: 'scale(0.2)' }, { transform: 'scale(1.35)', offset: 0.6 }, { transform: 'scale(1)' }], { duration: 550, easing: 'ease-out' });
+        nx.classList.remove('lk'); if (fl.classList.contains('lkI')) fl.remove(); for (const q of [nx.querySelector('.nm'), nx.querySelector('.cbx')]) if (q) q.animate([{ transform: 'scale(0.6)' }, { transform: 'scale(1.3)', offset: 0.6 }, { transform: 'scale(1)' }], { duration: 550, easing: 'ease-out' });
         await wait(1300);
         await pan(x0, 900);
       }

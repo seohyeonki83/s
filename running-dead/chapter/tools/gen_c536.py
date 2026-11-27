@@ -1,0 +1,16 @@
+import pathlib
+s = pathlib.Path('c535.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:80], s.count(a)); R.append((a, b))
+# c536: 깃발 동그라미(번호 · 아이콘) 없앰 — 건물 그림 + 이름 + 난이도 원 3개만. 잠긴 곳은 이름 앞 자물쇠
+rep('<div class="nd soon" style="left:${x}%;top:${y}%"><div class="fl">준비 중</div></div>', '<div class="nd soon" style="left:${x}%;top:${y}%"><div class="nm" style="opacity:0.6">준비 중</div></div>')
+rep('<div class="fl">🧪</div><div class="nm">생체 연구소</div>', '<div class="nm">생체 연구소</div>')
+rep("<div class=\"fl\">${!ok ? '🔒' : n}</div><div class=\"nm\">${CH_STG_INFO[n].nm}</div>", "<div class=\"nm\">${!ok ? '<span class=\"lkI\">🔒 </span>' : ''}${CH_STG_INFO[n].nm}</div>")
+rep("#outg .cbx{gap:6px!important;margin-top:3px}#outg .cb{width:32px;height:32px;border-radius:8px;border-width:3px!important;font-size:21px!important;",
+    "#outg .nd{padding:6px}#outg .nm{font-size:14px!important}#outg .nd.lk .cb{opacity:0.45}#outg .lkI{display:inline-block}#outg .cbx{gap:7px!important;margin-top:4px}#outg .cb{width:36px;height:36px;border-radius:50%!important;border-width:3px!important;font-size:22px!important;box-shadow:0 3px 8px rgba(0,0,0,0.5);")
+rep("const fl = nx.querySelector('.fl'), [lx, ly] = ctr(fl);", "const fl = nx.querySelector('.lkI') || nx.querySelector('.nm'), [lx, ly] = ctr(fl);")
+rep("nx.classList.remove('lk'); fl.textContent = String(pre.lock); fl.animate([{ transform: 'scale(0.2)' }, { transform: 'scale(1.35)', offset: 0.6 }, { transform: 'scale(1)' }], { duration: 550, easing: 'ease-out' });",
+    "nx.classList.remove('lk'); if (fl.classList.contains('lkI')) fl.remove(); for (const q of [nx.querySelector('.nm'), nx.querySelector('.cbx')]) if (q) q.animate([{ transform: 'scale(0.6)' }, { transform: 'scale(1.3)', offset: 0.6 }, { transform: 'scale(1)' }], { duration: 550, easing: 'ease-out' });")
+pathlib.Path('c536_patch.py').write_text('C536_R = ' + repr(R) + '\n')
+print(len(R))
