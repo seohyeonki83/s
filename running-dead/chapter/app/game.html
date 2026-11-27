@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c517</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c518</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -9480,13 +9480,13 @@ ${[[1, 192, 640], [2, 600, 380], [3, 1008, 620]].map(([n, x, y]) => `<g fill="#c
     { const zL = P.z0 + (P.z1 - P.z0) * 0.5, J = (a) => (Math.random() * 2 - 1) * a, cars = [], ppl = [];   // c340: 영화처럼 듬성듬성 — 가운데 띠에 경찰차 7 · 바리케이트 1을 들쭉날쭉 (조금씩 돌아가 있고 앞뒤로 어긋남), 경찰은 차 뒤·옆에 붙어서 제멋대로, 군인 4는 그 뒤 아무 데나
       const free = (x, z, r, L) => L.every(([a, b, rr]) => Math.hypot(a - x, b - z) > r + rr);
       for (let k = 0; k < 7; k++) { let x = 0, z = 0, h = 0; for (let t = 0; t < 80; t++) { x = P.x0 + 1.0 + k * (10 / 6) + J(0.4);   /* c343: 경찰차 7 → 6 (+ 바리케이트 1) — 사이 틈이 조금 생긴다 */ z = zL + J(1.3); h = (Math.random() < 0.3 ? J(0.9) : J(0.35)) + (Math.random() < 0.15 ? Math.PI / 2 : 0); if (free(x, z, 1.15, cars)) break; }
-        cars.push([x, z, 1.15]); const c = chParked(x, z, h, k === 3); c.tutS = P; }   // 네 번째는 바리케이트
+        cars.push([x, z, 1.15]); if (k === 3) continue; const c = chParked(x, z, h, false); c.tutS = P; }   /* c518: 주차장 줄의 바리케이트 뺌 (그 자리는 빈틈) */   // 네 번째는 바리케이트
       const put2 = (t, x0, z0, spread) => { let x = 0, z = 0; for (let n = 0; n < 60; n++) { x = Math.max(P.x0 + 0.6, Math.min(P.x1 - 0.6, x0 + J(spread))); z = z0 + J(spread * 0.7); if (free(x, z, 0.5, ppl) && free(x, z, 1.25, cars.map(([a, b]) => [a, b, 0]))) break; } ppl.push([x, z, 0.42]); post(P, t, x, z); };
       cars.forEach(([x, z], k) => { if (k === 3) return; if (k !== 5) put2('police', x + J(0.6), z - 1.7 - Math.random() * 0.6, 0.5); if (k % 2 || k === 6 || k === 2) return;   /* c516: 병력 20% 줄임 — 경찰 9 → 7 */ put2('police', x + (Math.random() < 0.5 ? -1 : 1) * (0.9 + Math.random() * 0.4), z - 1.0 - Math.random() * 1.2, 0.4); });   // 차마다 경찰 2 (뒤 하나 · 옆구리 하나)
       for (let k = 0; k < 3; k++) put2('soldier',   /* c516: 군인 4 → 3 */ cx + J(4.2), zL - 3.0 - Math.random() * 2.6, 0.6); }
     const LX = (Q.x0 + Q.x1) / 2, R1 = Q.z1, R0 = Q.z0, obst = (x, z) => { const c = chParked(x, z, 0, true); c.tutS = Q; return c; };   // c338: 마지막 길목 = 바리케이트만 (6개, 세 줄 엇갈림) — 그 사이사이에 경찰 · 군인 · 저격수
-    obst(LX - 1.5, R1 - 4.6); obst(LX + 1.8, R1 - 4.6); obst(LX - 1.5, R1 - 9.8); obst(LX + 1.8, R1 - 9.8);   /* c510: 바리케이트 사이를 조금 더 벌림 (2.5 → 3.3) */   /* c344: 철문 앞 바리케이트 6 → 4 (가운데 줄을 뺐다) */
-    for (const [t, dx, z] of [['police', -1.6, R1 - 5.8], ['soldier', 1.7, R1 - 5.8], ['sniper', 0.9, R1 - 6.7],   /* c344: 철문 앞 병력 반 — 경찰 5 → 3 · 군인 10 → 5 · 저격수 4 → 2 */
+    obst(LX - 1.5, R1 - 4.6); obst(LX + 1.8, R1 - 4.6); obst(LX + 1.8, R1 - 9.8);   /* c518: 철문 쪽 줄 왼쪽 바리케이트 뺌 (4 → 3) */   /* c510: 바리케이트 사이를 조금 더 벌림 (2.5 → 3.3) */   /* c344: 철문 앞 바리케이트 6 → 4 (가운데 줄을 뺐다) */
+    for (const [t, dx, z] of [['police', -1.6, R1 - 5.8], ['soldier', 1.7, R1 - 5.8], /* c518: 저격수 뺌 */   /* c344: 철문 앞 병력 반 — 경찰 5 → 3 · 군인 10 → 5 · 저격수 4 → 2 */
       ['soldier', -2.0, R1 - 7.6], ['police', 0.8, R1 - 7.9],
       ['soldier', -2.2, R1 - 11.0], ['police', 2.2, R1 - 11.0], ['soldier', 0.7, R1 - 11.0],
       ]) post(   /* c510: 철문 앞 저격수 1 · 군인 1 뺌 */Q, t, LX + dx, z, t === 'sniper' ? 0.4 : 0.5);
