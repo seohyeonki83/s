@@ -1,0 +1,1 @@
+C549_R = [('  const CH_DISC_N = 2;', '  const CH_DISC_N = 4, CH_DISC_P = 3;   /* c549: 바뀐 빨강 4 · 바뀐 경찰 3 */'), ('if (chDiscR >= CH_DISC_N && chDiscP >= CH_DISC_N) return;', 'if (chDiscR >= CH_DISC_N && chDiscP >= CH_DISC_P) return;'), ('cop = c.police && !c.military && c.street && chDiscP < CH_DISC_N;', 'cop = c.police && !c.military && c.street && chDiscP < CH_DISC_P;')]
