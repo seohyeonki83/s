@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c544</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c545</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -8383,11 +8383,26 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     if (CH_STG === 1 && CH_RUN) return chCvy.some((c) => !c.wreck && !c.crewOut) || bodies.some((b) => b.kind === 'citizen' && b.cvy) || chDrones.some((d) => d.cvy && !d.dead) || teamWait.some((w) => w.cvy);
     return chTanks.some((t) => !t.wreck);
   }
+  const chMisQ = [];
+  function chMisPop(i) {                        // c545: 서브 미션 달성 — 게임을 멈추고 바바박 · 확인을 누르면 사라진다
+    if (!document.getElementById('misxst')) { const st = document.createElement('style'); st.id = 'misxst'; st.textContent = '#misx{position:absolute;inset:0;z-index:31;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,sans-serif;background:rgba(0,0,0,0.72)}#misx .fl{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(255,210,60,0.35),rgba(0,0,0,0) 60%);pointer-events:none}#misx .bd{position:absolute;left:0;right:0;top:calc(36% - 70px);height:200px;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,0.9) 22%,rgba(0,0,0,0.9) 78%,rgba(0,0,0,0));pointer-events:none}#misx .tx{position:relative;text-align:center;margin-top:-6vh}#misx .t1{font:900 15px system-ui;color:#ffd34d;letter-spacing:4px}#misx .t2{margin-top:6px;font:900 40px/1.1 system-ui;color:#fff;text-shadow:0 0 18px rgba(255,200,60,0.9),0 4px 0 #5a3d00}#misx .t3{margin-top:10px;font:800 16px system-ui;color:#e9e2f5}#misx .gn{display:inline-flex;align-items:center;gap:6px;margin-top:16px;padding:8px 18px;border-radius:14px;background:#151b24;border:2px solid #ffd34d;font:900 26px system-ui;color:#fff}#misx .nt{margin-top:6px;font:700 12px system-ui;color:#9aa6b8}#misx button{position:relative;margin-top:26px;font:900 18px system-ui;color:#2b1400;background:linear-gradient(#ffd34d,#f0a012);border:none;border-radius:14px;padding:12px 46px}'; document.head.appendChild(st); }
+    const key = CH_STG + CH_DIF + i, got = !!CH_SV.sub[key], el = document.createElement('div'); el.id = 'misx';
+    el.innerHTML = `<div class="fl"></div><div class="bd"></div><div class="tx"><div class="t1">서브 미션 ${i + 1}</div><div class="t2">달성!</div><div class="t3">${chMisTxt(CH_DIF, i)}</div><div class="gn">${CH_GENE_I(24)}${got ? '' : '+'}${CH_SUB_G}</div><div class="nt">${got ? '이미 받은 보상' : '스테이지를 클리어하면 받는다'}</div></div><button type="button">확인</button>`;
+    const wasP = paused; paused = true; stopInput(); stage.appendChild(el);
+    el.querySelector('.tx').animate([{ transform: 'scale(2.6)', opacity: 0 }, { transform: 'scale(0.94)', opacity: 1, offset: 0.6 }, { transform: 'scale(1)' }], { duration: 420, easing: 'ease-out' });
+    el.querySelector('.fl').animate([{ opacity: 0 }, { opacity: 1 }, { opacity: 0.4 }, { opacity: 1 }], { duration: 900, fill: 'forwards' });
+    el.querySelector('.gn').animate([{ transform: 'scale(0)' }, { transform: 'scale(0)', offset: 0.45 }, { transform: 'scale(1.3)', offset: 0.75 }, { transform: 'scale(1)' }], { duration: 750, easing: 'ease-out' });
+    stage.animate([{ transform: 'translate(0,0)' }, { transform: 'translate(-7px,5px)', offset: 0.35 }, { transform: 'translate(6px,-5px)', offset: 0.45 }, { transform: 'translate(0,0)', offset: 0.6 }, { transform: 'translate(0,0)' }], { duration: 700 });
+    const b = el.querySelector('button'); b.addEventListener('pointerdown', (e) => e.stopPropagation());
+    b.addEventListener('click', (e) => { e.stopPropagation(); el.remove(); if (!wasP) { paused = false; last = 0; } });
+  }
   function chRunTick(dt) {                     // c505: 판 시간 · 서브 미션 · 끼인 특공대 풀기
     chRunT += dt;
     if (CH_TYPEB) { const B = CH_MIS_B[CH_DIF]; if (!chMis[0].done && chB && chB.chkCap && chRunT <= B[0] * 60) chMis[0].done = true; if (!chMis[1].done && chSf.won && chRunT <= B[1] * 60) chMis[1].done = true; }
     else if (!chMis[0].done && chAL >= CH_MIS[0][0] && chRunT <= CH_MIS[0][1] * 60) chMis[0].done = true;
     if (!CH_TYPEB && !chMis[1].done && zombies.length - 1 >= CH_MIS[1]) chMis[1].done = true;
+    for (let i = 0; i < 2; i++) if (chMis[i].done && !chMis[i].shown) { chMis[i].shown = true; if (!chSf.won) chMisQ.push(i); }   // c545: 서브 미션 달성 연출
+    if (chMisQ.length && !paused && !chRunOver && !document.getElementById('misx')) chMisPop(chMisQ.shift());
     if ((chSf.stkT = (chSf.stkT || 0) - dt) > 0) return; chSf.stkT = 1;
     for (const b of bodies) {
       if (b.kind !== 'citizen' || !(b.sfw || b.tkU || b.cvy) || b.fixed || b.state === 'held') continue;
