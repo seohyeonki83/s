@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c539</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c540</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -613,7 +613,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     };
     const tutSheet = () => {   // c520: 튜토리얼 상세 — 생체 연구소 · 목표 탈출하기
       openSheet(`<div class="hd"><div><div class="t1">튜토리얼</div><div class="t2">생체 연구소</div></div><button class="x">✕</button></div><div class="ds">실험실에서 깨어난 첫 좀비.</div>` +
-        `<div class="cd"><div class="k">목표</div><div class="v">탈출하기</div></div>` +
+        `<div class="cd"><div class="k">목표</div><div class="v">생체 실험실을 탈출하라</div></div>` +
         `<div class="cd"><div class="k">보상</div><div class="rw got"><div class="gi">${CH_GENE_I()}500</div><div class="lb">첫 클리어 · 받음 ✓</div></div></div>` +
         `<button class="go" data-go="1">다시 하기</button>`, (b) => { if (b.dataset.go) { ov.remove(); tut(); } });
     };
@@ -773,9 +773,9 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     const SRC = M.zones.map(([x0, z0, x1, z1], zi) => ({ zi, x0, z0, w: x1 - x0, h: z1 - z0, big: z1 - z0 > 60 }));
     const mk = (si) => { const S = SRC[si], k = ri(2) * 2, f = ri(2); return { si, k, f, W: S.w, H: S.h, g: 0 }; };   // 세로로 길게 — 180°만 돌리고 뒤집기
     const big = mk(ri(2)), small = mk(2 + ri(2)), pair = ri(2) ? [big, small] : [small, big];   // [북쪽, 남쪽]
-    const NS = Math.round(Math.sqrt(0.7 * SRC[2].w * SRC[2].h));   // 작은 단락 넓이의 70% · 정사각형
-    const W = big.W, N = { custom: true, si: -1, W: NS, H: NS, g: 0 };
-    N.x0 = (W - NS) * (0.2 + 0.6 * rnd()); N.z0 = 0; N.x1 = N.x0 + NS; N.z1 = NS;
+    const NS0 = Math.sqrt(0.7 * SRC[2].w * SRC[2].h), NW = Math.round(NS0 * 2 / 3), NH = Math.round(NS0 * 1.3);   // c540: 가로 3분의 2 · 세로 1.3배   // 작은 단락 넓이의 70% · 정사각형
+    const W = big.W, N = { custom: true, si: -1, W: NW, H: NH, g: 0 };
+    N.x0 = (W - NW) * (0.2 + 0.6 * rnd()); N.z0 = 0; N.x1 = N.x0 + NW; N.z1 = NH;
     const A = pair[0], B = pair[1]; A.x0 = 0; A.z0 = N.z1 + GAP; A.x1 = W; A.z1 = A.z0 + A.H; B.x0 = 0; B.z0 = A.z1; B.x1 = W; B.z1 = B.z0 + B.H; B.g = 4;   // B(남쪽)에서 시작
     const zones = [N, A, B], cx = W / 2, cz = B.z1 / 2;
     for (const z of zones) { z.x0 -= cx; z.x1 -= cx; z.z0 -= cz; z.z1 -= cz; }
@@ -785,9 +785,9 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     // 군사기지 (북쪽 구역) — 메인 기지(맨 북쪽 · 문 3개) · 마당 · 막사 2+2 · 검문소 초소
     const bx = (N.x0 + N.x1) / 2, B0 = { x: bx, z: N.z0 + 2 + 5.5, w: 13, d: 11, doors: ['s', 'e', 'w'], locks: [], kinds: {}, local: out.b.length, block: -1, t: 'mbase', zone: 0 }; out.b.push(B0);
     const bks = [];
-    for (const [sx, row] of [[-1, 0], [1, 0], [-1, 1], [1, 1]]) { const w = 8, d = 5.5, x = sx < 0 ? N.x0 + 2 + w / 2 : N.x1 - 2 - w / 2, z = N.z0 + 25.4 + row * 7.2;
+    for (const [sx, row] of [[-1, 0], [1, 0], [-1, 1], [1, 1]]) { const w = 5.5, d = 5, x = sx < 0 ? N.x0 + 1.5 + w / 2 : N.x1 - 1.5 - w / 2, z = N.z1 - 5.5 - (1 - row) * 7.6;   /* c540: 막사 = 남쪽 입구 양옆 (좁게) */
       const b = { x, z, w, d, doors: [sx < 0 ? 'e' : 'w'], locks: [], kinds: {}, local: out.b.length, block: -1, t: 'bks', zone: 0 }; out.b.push(b); bks.push(b.local); }
-    const ck = { x: u + M.passW / 2 * 1.5 + 1.6, z: N.z1 - 1.6, w: 2.4, d: 2.2, doors: ['w'], locks: [], kinds: {}, local: out.b.length, block: -1, t: 'chk', zone: 0 }; out.b.push(ck);
+    const ck = { x: u + M.passW / 2 * 1.5 + 1.6, z: N.z1 - 1.2, w: 2.4, d: 2.2, doors: ['w'], locks: [], kinds: {}, local: out.b.length, block: -1, t: 'chk', zone: 0 }; out.b.push(ck);
     out.typeB = { nz: 0, base: B0.local, bks, chk: ck.local, yz: N.z0 + 13 + SIGHT, bx };
     return out;
   }
@@ -6761,7 +6761,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       } }
     { const sb = BK[Math.floor(Math.random() * BK.length)]; addSafe(sb); const s = sb.safe; s.B = sb; s.loot = chLoot(CH_DROP.army ? 'army' : 'store'); s.dud = !s.loot; s.room = null; }   // 막사 하나에 보물상자
     const teams = [], yard = [], zb = T.yz;
-    for (const dx of [-12, -4, 4, 12]) { const tx = T.bx + dx; chParked(tx - 1.03, zb, 0, true); chParked(tx + 1.03, zb, 0, true);
+    for (const dx of [-8.4, -2.8, 2.8, 8.4]) {   /* c540: 좁아진 마당 */ const tx = T.bx + dx; chParked(tx - 1.03, zb, 0, true); chParked(tx + 1.03, zb, 0, true);
       const hz = zb - 1.7; teams.push({ x: tx, z: hz });
       for (const [t, ox, oz] of [['soldier', -1, 0], ['soldier', 1, 0], ['robot', 0, -1]]) { const c = man(null, t, tx + ox, hz + oz, 0.7); c.yardT = teams.length - 1; c.lastHp = c.hp; yard.push(c); } }
     const X = chBar && chBar.X[0], turrets = [];
@@ -9742,7 +9742,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     put(L2, [['chair', 2.15, 5.1], ['chair', 2.15, 6], ['chair', 2.15, 6.9], ['chair', 4.33, 5.1], ['chair', 4.33, 6.9],   // c303: 오른쪽 실험대 의자는 두 실험대 사이로 (출구 옆 수조 자리)
       ['zvat', 7.85, 6.55], ['zvat', 7.85, 4.85], ['vat', 7.9, 0.9], ['wcab', 3.6, 0.55], ['jarEye', 4.6, 0.55], ['scope', 2.6, 0.6], ['tubes', 6.0, 0.6],   /* c303: 좀비 수조 둘 = 출구(오른쪽 아래 문) 바로 위 오른쪽 벽 */ ['iv', 3.0, 11.4], ['biodrum', 4.4, 11.3], ['jarBrain', 5.6, 11.4]]);
     const man = (B, type, x, z, r = 1.2) => { const A = { x0: x - r, z0: z - r, x1: x + r, z1: z + r }, c = addCitizen(x, z, A, type); c.area = A; c.home = B; c.space = B; c.disc = true; return c; };   // disc = 처음 발견 강등에서 뺀다 · 제자리 둘레만 돈다
-    man(C1, '', (C1.x0 + C1.x1) / 2, (C1.z0 + C1.z1) / 2); man(C2, 'guard', (C2.x0 + C2.x1) / 2, (C2.z0 + C2.z1) / 2);   // 복도: 하양 1 · 노랑 1
+    { const D = L.locks[0], pts = [[C1.x0 + 0.9, C1.z0 + 0.9], [C1.x1 - 0.9, C1.z0 + 0.9], [C1.x0 + 0.9, C1.z1 - 0.9], [C1.x1 - 0.9, C1.z1 - 0.9]].sort((a, b) => Math.hypot(b[0] - D.cx, b[1] - D.cz) - Math.hypot(a[0] - D.cx, a[1] - D.cz)); const w1 = man(C1, '', pts[0][0], pts[0][1]); w1.area = { x0: pts[0][0] - 0.6, z0: pts[0][1] - 0.6, x1: pts[0][0] + 0.6, z1: pts[0][1] + 0.6 }; }   /* c540: 복도 맨 끝으로 */ man(C2, 'guard', (C2.x0 + C2.x1) / 2, (C2.z0 + C2.z1) / 2);   // 복도: 하양 1 · 노랑 1
     /* c516: 수조 앞 경찰 뺌 */   /* c303: 수조 앞 경찰도 같이 */   // c296: 오른쪽 위 좀비 수조 앞 경찰 1 (제자리)
     { const p = man(L2, 'police', L2.x0 + 7.4, L2.z0 + 11.0, 0.7); p.post = p.area; enterNormal(p); chVig(man(L2, 'attacker', L2.x0 + 6.2, L2.z0 + 11.0, 0.7)); }   // c294: 오른쪽 아래 경찰 1 + 그 옆 빨강 1 (제자리)
     const busy = [[6.2, 11.0], [7.4, 11.0], [7.85, 6.55], [7.85, 4.85], [6.55, 5.7], [7.9, 0.9]], free = (x, z) => !(x > 1.9 && x < 6.9 && z > 3.9 && z < 8.1) && !(x < 1.8 && z > 4.0 && z < 8.0) && !(x < 1.9 && z < 4.0) && busy.every(([a, b]) => Math.hypot(a - x, b - z) > 1.4);
@@ -10865,7 +10865,14 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     const S = !tutSeen.station && stations.find((S) => !S.down && iSeeStation(S));   // 미니맵 '찾음'(동료 시야 포함)과는 따로 — 내가 봐야 발견 (v224)
     if (S) { tutSeen.station = true; tutQueue.push({ k: 'station', x: (S.x0 + S.x1) / 2, z: (S.z0 + S.z1) / 2, S }); }
   }
-  if (CHAPTER) { const st = document.createElement('style'); st.textContent = '#goal .g4{margin:12px auto 0;width:min(330px,86vw);font:800 14px/1.5 system-ui,sans-serif;color:#e8ecf2;background:rgba(10,14,20,0.75);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:10px 12px;text-align:left;text-shadow:none}#goal .g5{margin-top:8px;font:900 11px system-ui;color:#ffd34d;letter-spacing:1px}#goal .g2{font-size:28px!important}'; document.head.appendChild(st); }   // c517
+  if (CHAPTER) { const st = document.createElement('style'); st.textContent = '#goal .g4{margin:12px auto 0;width:min(330px,86vw);font:800 14px/1.5 system-ui,sans-serif;color:#e8ecf2;background:rgba(10,14,20,0.75);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:10px 12px;text-align:left;text-shadow:none}#goal .g5{margin-top:8px;font:900 11px system-ui;color:#ffd34d;letter-spacing:1px}#goal .g6{margin:12px auto 0;width:min(320px,84vw);font:600 14px/1.6 system-ui,sans-serif;color:#e9e2f5;text-shadow:0 2px 6px rgba(0,0,0,0.95);word-break:keep-all}#goal .g2{font-size:28px!important}'; document.head.appendChild(st); }   // c517
+  function chStory() {                          // c540: 맵마다 이야기 한 단락
+    if (CH_TUT) return '차가운 수조 속에서 눈을 떴다. 몸이 예전 같지 않다. 나를 이렇게 만든 건 저 흰 가운의 인간들이다. 문을 부수고, 길을 막는 자는 모두 물어뜯어라. 이곳을 빠져나가는 것, 그게 복수의 시작이다.';
+    return { 1: '실험실을 빠져나온 감염은 조용한 도시로 번지기 시작했다. 도시를 지키려 특공대가 몰려온다. 그들마저 우리 무리로 만들어라.',
+      2: '공장과 창고 너머로 감염이 퍼지자 군은 중장비를 앞세웠다. 벽을 밀고 들어오는 강철을 무너뜨리고 이 지구를 삼켜라.',
+      3: '모든 병력은 북쪽 군사기지에서 나온다. 검문소를 넘어 기지 한가운데까지 밀고 들어가라. 그곳이 무너지면 군은 머리를 잃는다.',
+      4: '마지막 방어선, 국경 요새. 장갑차가 길을 막고 서 있다. 이곳만 넘으면 더는 우리를 막을 것이 없다.' }[CH_STG] || '';
+  }
   function showGoal() {                       // 시작 목표 — 위쪽에 크게, [확인]을 누를 때까지 멈춰 있다 (v218)
     goalShown = true; tutOpen = true; paused = true; stopInput();
     const dim = document.createElement('div');   // 목표 뜰 때 바탕 어둡게 (v216)
@@ -10873,7 +10880,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     stage.appendChild(dim); dim.getBoundingClientRect(); dim.style.opacity = '1';
     const el = document.createElement('div');
     el.id = 'goal';
-    el.innerHTML = '<div class="g1">목표</div><div class="g2">' + (CH_TUT ? '탈출하기' : CH_TYPEB ? '메인 기지 점령' : CH_RUN ? (CH_DIF === 'h' ? CH_STG_INFO[CH_STG].boss[0] + ' 물리치기' : '특공대 ' + (CH_DIF === 'e' ? 3 : 4) + '번 물리치기') : '모든 경찰서를 파괴해라') + '</div>' + (CH_RUN ? '<div class="g4"><div class="g5" style="margin-top:0">서브 미션</div>' + [0, 1].map((i) => '<div>· ' + chMisTxt(CH_DIF, i) + '</div>').join('') + '</div>' : '') + '<div class="g3">' + (CH_RUN ? [] : stations).map(() => '<span>!</span>').join('') + '</div><button class="ok okBtn">확인</button>';   // 경찰서 수만큼 느낌표 (v214), 확인 버튼 (v218)
+    el.innerHTML = '<div class="g1">목표</div><div class="g2">' + (CH_TUT ? '생체 실험실을 탈출하라' : CH_TYPEB ? '메인 기지 점령' : CH_RUN ? (CH_DIF === 'h' ? CH_STG_INFO[CH_STG].boss[0] + ' 물리치기' : '특공대 ' + (CH_DIF === 'e' ? 3 : 4) + '번 물리치기') : '모든 경찰서를 파괴해라') + '</div>' + (CH_TUT || CH_RUN ? '<div class="g6">' + chStory() + '</div>' : '') + (CH_RUN ? '<div class="g4"><div class="g5" style="margin-top:0">서브 미션</div>' + [0, 1].map((i) => '<div>· ' + chMisTxt(CH_DIF, i) + '</div>').join('') + '</div>' : '') + '<div class="g3">' + (CH_RUN ? [] : stations).map(() => '<span>!</span>').join('') + '</div><button class="ok okBtn">확인</button>';   // 경찰서 수만큼 느낌표 (v214), 확인 버튼 (v218)
     stage.appendChild(el);
     el.getBoundingClientRect(); el.classList.add('on');
     const okBtn = el.querySelector('.ok');
