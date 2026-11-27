@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c550</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c551</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -8093,7 +8093,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
   function chBarGrowX(X, s) {                  // 건널목 하나를 s단계만큼
     const N = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
     {
-      for (const e of [0, 1]) {
+      for (const e of (s <= STAR_MAX ? [0, 1] : [])) {   /* c551: 바리케이트·경찰차는 5단계까지 */
         if (s === 1) { const q = Math.random(), kinds = q < 0.55 ? [true, false] : q < 0.8 ? [true, true] : [true, true, false];   /* c72: 3분의 1 줄임 — 바리케이트 1 + 경찰차 1 (넷에 한 번은 바리케이트만 2, 다섯에 한 번은 바리케이트 2 + 경찰차 1) */   // 바리케이트 2 + 경찰차 1 (가끔 하나 더)
           kinds.sort(() => Math.random() - 0.5); chBarRow0(X, e, kinds); }
         else { const q = Math.random(), k = s === 4 ? (q < 0.25 ? 1 : 0) : q < 0.2 ? 0 : q < 0.8 ? 1 : 2;   // 단계마다 양쪽에 하나씩 (4단계는 그대로) — 가끔 안 늘거나 둘이 는다
@@ -8101,8 +8101,10 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
           for (let i = 0; i < k; i++) if (Math.random() < 2 / 3 && live(true) < 6) chBarAdd(X, e, true); if (Math.random() < 0.2 * 2 / 3 && live(false) < 3) chBarAdd(X, e, false); }   /* c88: 한쪽 끝에 바리케이트 6개 · 경찰차 3대까지 */   // 가끔 경찰차도 한 대
       }
       const r2 = Math.random();                // 수비대: 말한 수에서 한두 명씩 다르게 — 1단계 경찰 4 · 2단계 경찰 +2 · 3단계 군인 +3 저격수 +1 · 4단계 군인 +2 저격수 +1 · 그 뒤로 군인 +3씩
-      const add = s === 1 ? { police: N(2, 4) } : s === 2 ? { police: N(2, 4) } : s === 3 ? { soldier: N(2, 3), sniper: N(1, 2) } : s === 4 ? { soldier: N(2, 3), sniper: N(2, 3) } : { soldier: N(3, 4), sniper: N(2, 3) };   // c88: 수상함 경찰 2~4 · 난리남 경찰 +2~4 · 개판 군인 2~3 저격수 1~2 · 계엄 군인 2~3 저격수 2~3 · 데프콘 군인 3~4 저격수 2~3 (절반으로 안 자른다)
-      for (const type of ['police', 'soldier', 'sniper']) for (let i = 0, n = add[type] || 0; i < n; i++) {   /* c72: 인원 절반 */ const c = addCitizen(X.cx, X.cz, square(X.cx, X.cz), type === 'sniper' ? 'robot' : type);   /* c505: 건널목 저격수 → 로봇 */ c.gar = X; c.fresh = true; X.units.push(c); }
+      const add = s <= 2 ? { police: N(2, 4) } : s < CH_MIXL ? { soldier: 1, sniper: 1 } : s === CH_MIXL ? {} : (() => { const o = { soldier: 1, sniper: 1, sg: 1 }; delete o[['soldier', 'sniper', 'sg'][Math.floor(Math.random() * 3)]]; return o; })();   /* c551: 1~2 경찰 2~4 · 터렛 전 군인 1 + 사각 1 · 터렛 단계는 터렛만 · 그 뒤 사각·군인·샷건 중 랜덤 둘 */
+      chNoMix = true;   /* c551: 건널목 증원은 정한 그대로 (섞임 없음) */
+      for (const type of ['police', 'soldier', 'sniper', 'sg']) for (let i = 0, n = add[type] || 0; i < n; i++) {   /* c72: 인원 절반 */ const c = addCitizen(X.cx, X.cz, square(X.cx, X.cz), type === 'sniper' ? 'robot' : type === 'sg' ? 'police' : type); if (type === 'sg') chMakeSg(c);   /* c505: 건널목 저격수 → 로봇 */ c.gar = X; c.fresh = true; X.units.push(c); }
+      chNoMix = false;
       if (CHAPTER && s === CH_MIXL) chBarTurret(X);   /* c505: 난이도별 */   // c437: 총동원령 — 터렛 1기 · 샷건 경찰 2명
       chBarForm(X);
     }
@@ -8112,7 +8114,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     const [x, z] = chBarXZ(X, CH_TYPEB ? 2.6 * (X.side ? 1 : -1) : 0, CH_BAR_HALF - 0.75), t = addCitizen(x, z, square(x, z), 'soldier');   /* c539: Type B — 기본 2기 옆에 하나 더 */
     t.robot = t.turret = true; chRobotAny = true; t.noLure = true; t.fixed = true; t.met = true; t.sleep = false; t.tick = 0; t.hp = t.maxHp = t.maxHp * 3;
     t.r = BODY * 1.35; t.halfH = RADIUS * 1.35; t.mesh.scale.setScalar(1.35); t.mesh.geometry = chSqGeo; t.mesh.material.color.setHex(0x4d5560); chAddGun(t, 0.6, 0.2, 0x1a1d21);
-    for (let i = 0; i < 2; i++) { const c = addCitizen(X.cx, X.cz, square(X.cx, X.cz), 'police'); chMakeSg(c); c.gar = X; c.fresh = true; X.units.push(c); }
+    /* c551: 터렛 단계엔 샷건 경찰 없음 */
     chNoMix = false;
   }
   // ── c374: 드론 — 경보 '난리남'부터 30초마다 2대 (동시에 8대까지). 진짜 자리 = 땅 위 그림자 한 점 (이동·시야·사거리·맞기는 전부 이 점), 그림은 그 점에서 수직 위로 띄운다 ──
@@ -8296,15 +8298,15 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
   window.__droneT = () => [chDroneOn, +chDroneT.toFixed(1)]; window.__drones = () => chDrones; window.__droneAdd = (x, z) => chDroneAdd(x, z);   // 테스트용
   function chBarTick(dt) {
     if (!chBar || !isZombie(me)) return;
-    if ((chBar.t -= dt) > 0 && stars <= chBar.stage) return;
+    const chBL = CHAPTER ? chAL : stars;   /* c551: 챕터는 10단계 경보까지 증원 */
+    if ((chBar.t -= dt) > 0 && chBL <= chBar.stage) return;
     chBar.t = 0.3;
     const o = chClass(me.foot.x, me.foot.z, chBarTmp);
     if (chBar.zone < 0 || (o.corr < 0 && o.land && o.zone !== chBar.zone)) {   // 내가 있는 구역이 바뀌었다 (다리·길목 위에 있는 동안은 그대로) → 건널목마다 내 쪽 끝으로
       chBar.zone = o.zone;
       for (const X of chBar.X) { const side = chZD[o.zone][X.P.za] <= chZD[o.zone][X.P.zb] ? 0 : 1; if (side !== X.side) { X.side = side; if (chBar.stage) chBarForm(X); } }
     }
-    if (stars > chBar.stage) { for (let s = chBar.stage + 1; s <= stars; s++) chBarGrow(s); chBar.stage = stars; }
-    if (CHAPTER && CH_MIXL > STAR_MAX && chAL >= CH_MIXL && !chBar.lateT) { chBar.lateT = true; for (const X of chBar.X) { if (CH_MAP.world && CH_SEC && !chSecAwake(X.cx, X.cz)) { (X.pend = X.pend || []).push('T'); continue; } chBarTurret(X); chBarForm(X); } updateCarObs(); }   // c550: 쉬움 — 건널목이 다 자란 뒤(계엄)에 터렛 · 샷건
+    if (chBL > chBar.stage) { for (let s = chBar.stage + 1; s <= chBL; s++) chBarGrow(s); chBar.stage = chBL; }
   }
   function chHoldLeash(c, dt) {                // 사수지역 지배 거리 — 자리에서 이만큼 벗어나면 싸우다가도 돌아온다 (군인이 저격수를 따르는 규칙과 같다)
     const H = c.hold;
