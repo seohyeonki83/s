@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c524</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c525</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -9531,7 +9531,7 @@ ${[1, 2, 3].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y]) 
     chAddSlab('labtable2', L.x0 + 6.8, L.z0 + 4.2, 0, L); chAddSlab('rbed', L.x0 + 7.6, L.z0 + 7.6, 0, L);   // c299: 구속 벨트 침대   // 실험실: 작은 실험대 하나 — c296: 1.5배
     put(L, [['vat', 0.9, 0.8, 1.4], ['wcab', 2.5, 0.7, 1.4], ['scope', 4.6, 0.7], ['tubes', 5.9, 0.7], ['chair', 6.8, 5.2, 1],   // c297: 의자 원래 크기 · 수조·약품장은 2배에서 30퍼센트 줄임 (1.4배)   // c296: 첫 방 사물은 2배 크기 — 자리도 다시
       ['jarEye', 11.4, 2.6], ['jarHand', 11.4, 3.8], ['jarBrain', 11.4, 5.0], ['iv', 9.6, 5.8], ['biodrum', 11.1, 7.8]], 2);
-    { const D = L.locks[0], sf = addSafe(L) || L.safe; sf.foot.set(D.cx, 0, L.z0 + 0.4);   /* 문턱에 걸쳐 — 양옆 틈(0.57칸)으로 몸(0.8칸)이 못 지나간다 */ sf.px = sf.foot.x; sf.pz = sf.foot.z; sf.space = L; sf.B = L; sf.room = null; sf.loot = 'revive'; sf.dud = false; }   // c302: 첫 방 문을 막고 선 금고 — 늘 변이 줄기세포
+    { const D = L.locks[0], sf = addSafe(L) || L.safe; sf.foot.set(D.cx, 0, L.z0 + 0.4);   /* 문턱에 걸쳐 — 양옆 틈(0.57칸)으로 몸(0.8칸)이 못 지나간다 */ sf.px = sf.foot.x; sf.pz = sf.foot.z; sf.space = L; sf.B = L; sf.room = null; sf.loot = 'revive'; sf.dud = false; if (D.obj && !D.obj.dead) { const o = D.obj, B = o.B; o.dead = true; if (o.hpBar) o.hpBar.visible = false; const i = walls.indexOf(o.seg), j = B.walls.indexOf(o.seg); if (i >= 0) walls.splice(i, 1); if (j >= 0) B.walls.splice(j, 1); if (!B.doors.includes(o.L)) B.doors.push(o.L); rebuildSight(B); o.mesh.visible = false; o.gap.visible = true; } }   // c302: 첫 방 문을 막고 선 금고 — 늘 변이 줄기세포 · c525: 그 뒤 문은 처음부터 뚫려 있다
     for (const x of [3.0, 5.67]) chAddSlab('lbench', L2.x0 + x, L2.z0 + 6, Math.PI / 2, L2);
     chAddSlab('rbed', L2.x0 + 0.85, L2.z0 + 2.4, Math.PI / 2, L2);   // c299: 두 번째 방 왼쪽 위 — 구속 벨트 침대 (세로)   // 두 번째 방: 세로로 긴 실험대 둘 (세로 가운데)
     put(L2, [['chair', 2.15, 5.1], ['chair', 2.15, 6], ['chair', 2.15, 6.9], ['chair', 4.33, 5.1], ['chair', 4.33, 6.9],   // c303: 오른쪽 실험대 의자는 두 실험대 사이로 (출구 옆 수조 자리)
