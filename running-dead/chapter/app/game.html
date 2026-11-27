@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c540</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c541</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -8345,7 +8345,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     chSfHud();
   }
   let chDiscR = 0, chDiscP = 0, chDiscT = 0, chDiscO = 0, chDiscY = 0;
-  const CH_DISC_N = 10;   /* c456: 14 → 10 */   /* c252: 2배 */   // c246: 그대로 남은 빨강·경찰 합이 7명이 될 때까지
+  const CH_DISC_N = 4, CH_DISC_O = 2, CH_DISC_Y = 2;   /* c541: 빨강·경찰 4 · 주황 2 · 노랑 2 */   /* c456: 14 → 10 */   /* c252: 2배 */   // c246: 그대로 남은 빨강·경찰 합이 7명이 될 때까지
   function chDemote(c, to) {                   // c220: 그 자리에서 노랑('guard') 또는 하양('')으로
     c.demoted = true;   // c262: 바뀐 노랑은 '처음 만나는 노랑'에 안 센다
     if (c.police) { c.police = false; c.military = false; if (c.tracer) { scene.remove(c.tracer); c.tracer = null; } c.calls = []; c.heading = null; c.onDuty = false; }
@@ -8358,12 +8358,12 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     c.hpDisp = c.hp; enterNormal(c);
   }
   function chDiscTick(dt) {                    // c220: 처음 발견 — 나·동료 시야에 처음 들어온 빨강 5명 · 경찰 2명까지
-    if (chDiscR >= CH_DISC_N && chDiscO >= 4 && chDiscY >= 3) return;
+    if (chDiscR >= CH_DISC_N && chDiscO >= CH_DISC_O && chDiscY >= CH_DISC_Y) return;
     if ((chDiscT -= dt) > 0) return; chDiscT = 0.1;
     for (const c of bodies) {
       if (c.kind !== 'citizen' || c.disc || c.boss || !(c.hp > 0)) continue;
       const red = c.attacker && c.vig && chDiscR < CH_DISC_N, cop = c.police && !c.military && c.street && chDiscR < CH_DISC_N;   /* c238: 배회 경찰만 */
-      const org = c.attacker && !c.vig && chDiscO < 4, yel = c.guard && !c.demoted && chDiscY < 3;   // c262: 주황 4명 · 원래 노랑 3명
+      const org = c.attacker && !c.vig && chDiscO < CH_DISC_O, yel = c.guard && !c.demoted && chDiscY < CH_DISC_Y;   // c262: 주황 4명 · 원래 노랑 3명
       if (!red && !cop && !org && !yel) continue;
       if (!(iSee(c) || zSeen(c))) continue;
       c.disc = true;
