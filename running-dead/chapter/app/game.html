@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c553</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c554</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1551,7 +1551,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     c.sg = true; c.hp = c.maxHp = c.maxHp * 1.5; chAddGun(c, 0.62, 0.15);
   }
   function chMakeRobot(c) { if (c.robot) return;   // c505: 두 번 안 바뀐다                    // c436: 사각 로봇 — 군인 바탕 · 체력 2배 · 몸 1.5배 · 감염 안 됨(체력 0이면 터짐) · 현금 · 다이아몬드에 반응 안 함
-    chRobotAny = true; c.robot = true; c.noLure = true; c.hp = c.maxHp = c.maxHp * 2; c.r = BODY * 1.5; c.halfH = RADIUS * 1.5; c.mesh.scale.setScalar(1.5);
+    chRobotAny = true; c.robot = true; c.noLure = true; c.hp = c.maxHp = c.maxHp * 1.6;   /* c554: 사각 로봇 체력 20% 줄임 (2 → 1.6배) */ c.r = BODY * 1.5; c.halfH = RADIUS * 1.5; c.mesh.scale.setScalar(1.5);
     c.mesh.geometry = chSqGeo; c.mesh.material.color.setHex(0x6f7a86); chAddGun(c, 0.55, 0.17, 0x2a2f35);
   }
   function chRobotDie(c) {                     // c436: 로봇 — 차처럼 터지고 사라진다 (경험치 1)
