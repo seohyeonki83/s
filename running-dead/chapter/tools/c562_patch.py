@@ -1,0 +1,1 @@
+C562_R = [('c.mesh.geometry = chSqGeo; c.mesh.material.color.setHex(0x6f7a86);', 'c.mesh.geometry = chSqGeo; c.mesh.material.color.setHex(0x2f5a1a);   /* c562: 회색 → 진한 녹색 (군인 0x556b2f보다 진하게) */'), ('debris(c.foot.x, c.foot.z, 12, [0x6f7a86, 0x2a2f35, 0x151515]', 'debris(c.foot.x, c.foot.z, 12, [0x2f5a1a, 0x2a2f35, 0x151515]')]
