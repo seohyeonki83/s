@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c518</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c519</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -5436,6 +5436,7 @@ ${[[1, 192, 640], [2, 600, 380], [3, 1008, 620]].map(([n, x, y]) => `<g fill="#c
       }
     }
     if (CHAPTER && !CH_ET) chSfTick(dt);   // c463 · c122
+    if (CHAPTER) chChestBlink();   // c519
     while (teamQueue.length) queueSquads(teamQueue.shift());
     for (let i = teamWait.length - 1; i >= 0; i--) if (!teamWait[i].hold && (teamWait[i].t -= dt) <= 0) { const w = teamWait.splice(i, 1)[0]; if (w.boss) { chSf.bossOut = true; if (w.kind === 'tank' || w.tank) chBossSpawn(w.seg, 'tank'); else { chBossSpawn(w.seg); chBossSpawn(w.seg); } }   /* c505 */   /* c494 */   /* c454: 불도저 2대 */ else if (w.car) { const p = teamSpot(w.seg); addCar(p.x, p.z, Math.atan2(me.foot.z - p.z, me.foot.x - p.x), null, 0, w.car); const cc = cars[cars.length - 1]; if (w.tk) cc.tkWave = true; if (w.sfw) cc.sfw = w.sfw;
       if (w.cvy) { chSf.bossOut = true; cc.tkWave = true; cc.cvy = true; chCvy.push(cc); for (let k = 0; k < w.nd; k++) { const d = chDroneAdd(cc.x, cc.z); d.cvy = true; d.ride = cc; d.rideK = k; } } }   /* c505: 군인차 부대 — 드론이 붙어 온다 */ else { chTkMark = !!w.tk; chSfTag = w.sfw || 0; spawnTeam(w.comp, w.first, w.seg); chTkMark = false; chSfTag = 0; }   /* c505 */ }   // v444: 분대 10초 간격   // v410: 군인팀 출동 (이번 걸음 좀비 목록을 만든 뒤)
@@ -5940,6 +5941,20 @@ ${[[1, 192, 640], [2, 600, 380], [3, 1008, 620]].map(([n, x, y]) => `<g fill="#c
   // 금고 (v190): 경찰서마다 안쪽 왼쪽·오른쪽·왼쪽 아래·오른쪽 아래 중 한 곳. 나만 때려 부술 수 있다 (체력 = 경찰의 1.5배)
   const SAFE_HP = MY_DAMAGE * 7.5;   /* v549: 내 기본 공격 8대 */   /* v548: 1/3 (756 → 252) */   /* v353: 3배 */
   const safeGeo = new THREE.PlaneGeometry(2.85, 2.85), safeInGeo = new THREE.PlaneGeometry(1.86, 1.86);   // v195: 금고 2배, v196: 1.5배 더 (원래의 3배)
+  let chGlowTex = null;
+  function chChestBlink() {                   // c519: 보물상자(금고)가 금빛으로 깜빡인다 — 뒤에 빛 번짐 + 상자도 살짝 밝아졌다 어두워졌다
+    const k = 0.5 + 0.5 * Math.sin(clock * 5.5);   // 약 0.9초에 한 번
+    for (const b of bodies) {
+      if (b.kind !== 'safe' || b.dead || !b.mesh || b.mesh.material.map !== chestTex) continue;   // 보물상자 그림인 것만
+      if (!b.glow) {
+        if (!chGlowTex) { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 6, 64, 64, 64); gr.addColorStop(0, 'rgba(255,236,120,1)'); gr.addColorStop(0.5, 'rgba(255,190,30,0.75)'); gr.addColorStop(1, 'rgba(255,150,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); chGlowTex = new THREE.CanvasTexture(c); }
+        b.glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: chGlowTex, transparent: true, depthTest: false, depthWrite: false}));
+        b.glow.renderOrder = (b.mesh.renderOrder || 0) - 0.01; b.glow.scale.set(3.4, 3.4, 1); b.mesh.add(b.glow);
+      }
+      b.glow.material.opacity = 0.15 + 0.85 * k; const sc = 3.2 + 1.4 * k; b.glow.scale.set(sc, sc, 1);
+      b.mesh.material.color.setScalar(0.85 + 0.15 * k); b.mesh.scale.setScalar(0.7 * (1 + 0.08 * k));
+    }
+  }
   function addSafe(S) {
     const m = 2.2, cz = (S.z0 + S.z1) / 2, spots = S.station ? [[S.x0 + m, cz], [S.x1 - m, cz], [S.x0 + m, S.z1 - m], [S.x1 - m, S.z1 - m]] : [[rand(S.x0 + 2, S.x1 - 2), rand(S.z0 + 2, S.z1 - 2)]];   // 첫 마을 건물은 안 아무 자리 (v232)
     const [x, z] = spots[Math.floor(Math.random() * spots.length)];
