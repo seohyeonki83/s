@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c519</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c520</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -494,7 +494,12 @@
 #outg .sr{display:flex;gap:1px;font-size:15px;line-height:1}
 #outg .sr i{font-style:normal;color:#3d4450}#outg .sr i.on{color:#ffd34d;text-shadow:0 0 6px rgba(255,200,60,0.7)}
 #outg .md{font-size:11px;font-weight:800;color:#bcd;background:rgba(0,0,0,0.5);padding:1px 6px;border-radius:6px}
-#outg .hint{position:absolute;bottom:calc(10px + env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;font-size:12px;color:rgba(255,255,255,0.55);pointer-events:none}
+#outg .nd.tn .fl{background:radial-gradient(circle at 35% 30%,#7ff0d2,#1f8f78);border-color:#d6fff4;box-shadow:0 4px 0 #0f4a3e,0 6px 14px rgba(0,0,0,0.6);font-size:26px}
+#outg .nd.tn .md{color:#7ff0d2}
+#outg .bt{display:flex;justify-content:center;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(13,17,23,0.85),#0d1117)}
+#outg .ugb{display:flex;align-items:center;justify-content:center;gap:8px;width:min(300px,80vw);padding:14px 0;border-radius:18px;background:linear-gradient(#4f8dff,#2a5fd0);box-shadow:0 4px 0 #173a85;font-size:21px;font-weight:900;color:#fff}
+#outg .ugb .i{font-size:24px}
+#outg .hint{position:absolute;bottom:calc(92px + env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;font-size:12px;color:rgba(255,255,255,0.55);pointer-events:none}
 #outg .bd{position:absolute;inset:0;background:rgba(0,0,0,0.55);z-index:5;display:flex;align-items:flex-end;justify-content:center}
 #outg .sh{width:100%;max-width:520px;max-height:90%;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#161c25;border-radius:20px 20px 0 0;border-top:3px solid #3a4a62;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));box-sizing:border-box}
 #outg .sh .hd{display:flex;align-items:flex-start;gap:10px}
@@ -536,7 +541,7 @@
     const cleared = (k) => !!CH_SV.clr[k];
     const stars = (n) => ['e', 'n', 'h'].map((d) => `<i class="${cleared(n + d) ? 'on' : ''}">★</i>`).join('');
     const medals = (n) => ['e', 'n', 'h'].reduce((a, d) => a + (CH_SV.sub[n + d + '0'] ? 1 : 0) + (CH_SV.sub[n + d + '1'] ? 1 : 0), 0);
-    const NODES = [[8, 64], [25, 38], [42, 62], [59, 36], [75, 60], [91, 40]];   // 깃발 자리 (% · 가로 · 세로)
+    const NODES = [[6, 60], [20, 36], [34, 62], [48, 36], [63, 60], [78, 38], [93, 60]];   // c520: 깃발 자리 (% · 가로 · 세로) — 0 = 튜토리얼 (생체 연구소)
     let curN = 1; for (const n of [1, 2, 3]) if (chUnlocked(n, 'e')) curN = n;
     const path = () => { let d = `M ${NODES[0][0] * 24} ${NODES[0][1] * 10}`; for (let i = 1; i < NODES.length; i++) { const [ax, ay] = NODES[i - 1], [bx, by] = NODES[i], mx = (ax + bx) / 2 * 24; d += ` C ${mx} ${ay * 10}, ${mx} ${by * 10}, ${bx * 24} ${by * 10}`; } return d; };
     const mapSvg = `<svg viewBox="0 0 2400 1000" preserveAspectRatio="none">
@@ -553,17 +558,19 @@
 <g fill="#3a5a2e">${[[140, 420], [180, 460], [110, 480], [620, 760], [660, 800], [960, 520], [1000, 560], [1440, 330], [1480, 300], [1830, 440], [1870, 480], [2300, 560], [2260, 600], [380, 820]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="34"/>`).join('')}</g>
 <path d="${path()}" fill="none" stroke="#2b2316" stroke-width="30" stroke-linecap="round" opacity="0.55"/>
 <path d="${path()}" fill="none" stroke="#e8d7a6" stroke-width="12" stroke-linecap="round" stroke-dasharray="26 22"/>
-${[[1, 192, 640], [2, 600, 380], [3, 1008, 620]].map(([n, x, y]) => `<g fill="#cfc6b4" stroke="#5a5244" stroke-width="4" opacity="0.9">${[[-70, -40, 36, 50], [-30, -70, 40, 80], [16, -50, 34, 60], [56, -30, 30, 40]].map(([dx, dy, w, h]) => `<rect x="${x + dx}" y="${y + dy - 60}" width="${w}" height="${h}"/>`).join('')}</g>`).join('')}
+${[1, 2, 3].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y]) => `<g fill="#cfc6b4" stroke="#5a5244" stroke-width="4" opacity="0.9">${[[-70, -40, 36, 50], [-30, -70, 40, 80], [16, -50, 34, 60], [56, -30, 30, 40]].map(([dx, dy, w, h]) => `<rect x="${x + dx}" y="${y + dy - 60}" width="${w}" height="${h}"/>`).join('')}</g>`).join('')}
+<g stroke="#2f5c54" stroke-width="4"><rect x="${NODES[0][0] * 24 - 80}" y="${NODES[0][1] * 10 - 130}" width="160" height="62" rx="8" fill="#a9d9cc"/><path d="M${NODES[0][0] * 24 - 44} ${NODES[0][1] * 10 - 130} a44 44 0 0 1 88 0 Z" fill="#c6eee3"/><rect x="${NODES[0][0] * 24 - 8}" y="${NODES[0][1] * 10 - 190}" width="16" height="22" fill="#7fb8a8"/></g>
 </svg>`;
     const draw = () => {
-      let h = `<div class="top"><div class="gp">${CH_GENE_I(20)}<span>${CH_SV.genes}</span></div><div class="ttl">러닝데드</div><button class="tb" data-ug="1" aria-label="성장">💪</button><button class="tb" data-set="1" aria-label="설정">⚙️</button></div><div class="map"><div class="in">${mapSvg}`;
+      let h = `<div class="top"><div class="gp">${CH_GENE_I(20)}<span>${CH_SV.genes}</span></div><div class="ttl"></div><button class="tb" data-set="1" aria-label="설정">⚙️</button></div><div class="map"><div class="in">${mapSvg}`;
       NODES.forEach(([x, y], i) => {
-        const n = i + 1;
+        const n = i;
+        if (n === 0) { h += `<button class="nd tn" data-tn="1" style="left:${x}%;top:${y}%"><div class="fl">🧪</div><div class="nm">생체 연구소</div><div class="md">✓ 탈출</div></button>`; return; }   // c520: 튜토리얼 = 지도 첫 깃발 (아웃게임에 왔으면 이미 클리어)
         if (n > 3) { h += `<div class="nd soon" style="left:${x}%;top:${y}%"><div class="fl">준비 중</div></div>`; return; }
         const ok = chUnlocked(n, 'e');
         h += `<button class="nd ${ok ? '' : 'lk'} ${n === curN ? 'cur' : ''}" data-st="${n}" style="left:${x}%;top:${y}%"><div class="fl">${ok ? n : '🔒'}</div><div class="nm">${CH_STG_INFO[n].nm}</div><div class="sr">${stars(n)}</div><div class="md">🎖 ${medals(n)}/6</div></button>`;
       });
-      h += `</div></div><div class="hint">← 지도를 밀어서 둘러보기 →</div>`;
+      h += `</div></div><div class="hint">← 지도를 밀어서 둘러보기 →</div><div class="bt"><button class="ugb" data-ug="1"><span class="i">💪</span>성장</button></div>`;
       ov.innerHTML = h;
       const m = ov.querySelector('.map'), nd = ov.querySelector(`.nd[data-st="${curN}"]`); if (m && nd) requestAnimationFrame(() => { m.scrollLeft = Math.max(0, nd.offsetLeft - m.clientWidth / 2); });
     };
@@ -591,8 +598,14 @@ ${[[1, 192, 640], [2, 600, 380], [3, 1008, 620]].map(([n, x, y]) => `<g fill="#c
         row('hp', '❤️', '내 체력', '내 최대 체력 · 혈액팩 회복량') + row('ahp', '🧟', '동료 체력', '동료 좀비 최대 체력') + row('atk', '⚔️', '공격력', '나 · 동료 · 덩치 · 히드라 · 산성 · 끈끈이 피해'),
         (b) => { if (b.dataset.up && CH_SV.genes >= CH_UP_COST) { CH_SV.genes -= CH_UP_COST; CH_SV.up[b.dataset.up]++; chSave(); draw(); upSheet(); } });
     };
+    const tutSheet = () => {   // c520: 튜토리얼 상세 — 생체 연구소 · 목표 탈출하기
+      openSheet(`<div class="hd"><div><div class="t1">튜토리얼</div><div class="t2">생체 연구소</div></div><button class="x">✕</button></div><div class="ds">실험실 수조에서 깨어난 첫 좀비. 동료를 모으고 길을 막는 사람들을 물리치며 연구소를 빠져나가라.</div>` +
+        `<div class="cd"><div class="k">목표</div><div class="v">탈출하기</div></div>` +
+        `<div class="cd"><div class="k">보상</div><div class="rw got"><div class="gi">${CH_GENE_I()}100</div><div class="lb">첫 클리어 · 받음 ✓<small>처음 한 번만</small></div></div><div class="rw"><div class="gi">${CH_GENE_I()}1</div><div class="lb">적 하나 없앨 때마다<small>다시 해도 받는다</small></div></div></div>` +
+        `<button class="go" data-go="1">다시 하기</button>`, (b) => { if (b.dataset.go) { ov.remove(); tut(); } });
+    };
     const setSheet = () => {
-      openSheet(`<div class="hd"><div><div class="t2">설정</div></div><button class="x">✕</button></div><div style="height:12px"></div><button class="sb" data-tut="1">튜토리얼 다시 하기<br><small style="font-size:11px;color:#8fa0b8">처치 유전자만 받는다</small></button><div style="height:18px"></div><button class="sb rst" data-rst="1">초기화 (모든 기록 삭제)</button>`,
+      openSheet(`<div class="hd"><div><div class="t2">설정</div></div><button class="x">✕</button></div><div style="height:12px"></div><button class="sb rst" data-rst="1">초기화 (모든 기록 삭제)</button>`,
         (b) => {
           if (b.dataset.tut) { ov.remove(); tut(); return; }
           if (b.dataset.rst) {
@@ -607,6 +620,7 @@ ${[[1, 192, 640], [2, 600, 380], [3, 1008, 620]].map(([n, x, y]) => `<g fill="#c
       const b = e.target.closest('button'); if (!b) return;
       if (b.dataset.ug) { upSheet(); return; }
       if (b.dataset.set) { setSheet(); return; }
+      if (b.dataset.tn) { tutSheet(); return; }
       if (b.dataset.st) { const n = +b.dataset.st; if (!chUnlocked(n, 'e')) { b.animate([{ transform: 'translate(-50%,-50%)' }, { transform: 'translate(-46%,-50%)' }, { transform: 'translate(-54%,-50%)' }, { transform: 'translate(-50%,-50%)' }], { duration: 250 }); return; }
         const d = ['h', 'n', 'e'].find((q) => chUnlocked(n, q) && !cleared(n + q)) || ['h', 'n', 'e'].find((q) => chUnlocked(n, q)); stageSheet(n, d); }
     });
@@ -6585,7 +6599,7 @@ ${[[1, 192, 640], [2, 600, 380], [3, 1008, 620]].map(([n, x, y]) => `<g fill="#c
     const ov = document.createElement('div'); ov.id = 'rres';
     ov.style.cssText = 'position:absolute;inset:0;z-index:70;background:rgba(8,10,14,0.94);color:#fff;font-family:system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px;box-sizing:border-box';
     const row = (ic, nm, g, nw) => `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:12px;background:${nw ? '#22303f' : '#1a2029'};margin-top:6px"><span style="width:26px;text-align:center;font-size:18px">${ic}</span><span style="flex:1;font:800 14px system-ui">${nm}${nw ? ' <b style="color:#ffd34d;font-size:11px">NEW</b>' : ''}</span><span style="display:flex;align-items:center;gap:4px;font:900 16px system-ui">${G}${g}</span></div>`;
-    let h = `<div style="font:900 40px system-ui;color:${win ? '#ffd34d' : '#ff5a5a'};text-shadow:0 0 18px ${win ? 'rgba(255,200,60,0.6)' : 'rgba(255,60,60,0.5)'}">${win ? '클리어!' : '실패'}</div><div style="font:800 14px system-ui;color:#9aa6b8">${CH_TUT ? '튜토리얼' : '스테이지 ' + CH_STG + ' · ' + CH_STG_INFO[CH_STG].nm + ' · ' + CH_DIF_NM[CH_DIF]}</div>`;
+    let h = `<div style="font:900 40px system-ui;color:${win ? '#ffd34d' : '#ff5a5a'};text-shadow:0 0 18px ${win ? 'rgba(255,200,60,0.6)' : 'rgba(255,60,60,0.5)'}">${win ? '클리어!' : '실패'}</div><div style="font:800 14px system-ui;color:#9aa6b8">${CH_TUT ? '튜토리얼 · 생체 연구소' : '스테이지 ' + CH_STG + ' · ' + CH_STG_INFO[CH_STG].nm + ' · ' + CH_DIF_NM[CH_DIF]}</div>`;
     h += `<div style="width:min(340px,88vw);margin-top:10px">` + row('🧟', '적 처치 · 감염', chRunGenes, false) + R.map(([ic, nm, g, nw]) => row(ic, nm, g, nw)).join('');
     if (CH_RUN) h += `<div style="margin-top:12px;font:900 11px system-ui;color:#8fa0b8;letter-spacing:1px">서브 미션${win ? '' : ' · 클리어해야 받는다'}</div>` + [0, 1].map((i) => `<div style="display:flex;align-items:center;gap:8px;margin-top:5px;font:700 13px system-ui;color:${chMis[i].done ? '#fff' : '#8a93a3'}"><span style="width:20px;height:20px;border-radius:6px;border:2px solid ${chMis[i].done ? '#5fd38f' : '#4a5668'};background:${chMis[i].done ? '#2e9e5b' : 'transparent'};display:flex;align-items:center;justify-content:center;font-size:12px">${chMis[i].done ? '✓' : ''}</span>${chMisTxt(CH_DIF, i)}</div>`).join('');
     h += `<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #3a4250;margin-top:14px;padding-top:10px;font:900 15px system-ui"><span>보유 유전자</span><span style="display:flex;align-items:center;gap:5px">${G}${CH_SV.genes}</span></div></div>`;
@@ -10652,7 +10666,7 @@ ${[[1, 192, 640], [2, 600, 380], [3, 1008, 620]].map(([n, x, y]) => `<g fill="#c
     stage.appendChild(dim); dim.getBoundingClientRect(); dim.style.opacity = '1';
     const el = document.createElement('div');
     el.id = 'goal';
-    el.innerHTML = '<div class="g1">목표</div><div class="g2">' + (CH_TUT ? '이곳을 탈출하십시오' : CH_RUN ? (CH_DIF === 'h' ? CH_STG_INFO[CH_STG].boss[0] + ' 물리치기' : '특공대 ' + (CH_DIF === 'e' ? 3 : 4) + '번 물리치기') : '모든 경찰서를 파괴해라') + '</div>' + (CH_RUN ? '<div class="g4">' + chClrText(CH_DIF) + '<div class="g5">서브 미션</div>' + [0, 1].map((i) => '<div>· ' + chMisTxt(CH_DIF, i) + '</div>').join('') + '</div>' : '') + '<div class="g3">' + (CH_RUN ? [] : stations).map(() => '<span>!</span>').join('') + '</div><button class="ok okBtn">확인</button>';   // 경찰서 수만큼 느낌표 (v214), 확인 버튼 (v218)
+    el.innerHTML = '<div class="g1">목표</div><div class="g2">' + (CH_TUT ? '탈출하기' : CH_RUN ? (CH_DIF === 'h' ? CH_STG_INFO[CH_STG].boss[0] + ' 물리치기' : '특공대 ' + (CH_DIF === 'e' ? 3 : 4) + '번 물리치기') : '모든 경찰서를 파괴해라') + '</div>' + (CH_RUN ? '<div class="g4">' + chClrText(CH_DIF) + '<div class="g5">서브 미션</div>' + [0, 1].map((i) => '<div>· ' + chMisTxt(CH_DIF, i) + '</div>').join('') + '</div>' : '') + '<div class="g3">' + (CH_RUN ? [] : stations).map(() => '<span>!</span>').join('') + '</div><button class="ok okBtn">확인</button>';   // 경찰서 수만큼 느낌표 (v214), 확인 버튼 (v218)
     stage.appendChild(el);
     el.getBoundingClientRect(); el.classList.add('on');
     const okBtn = el.querySelector('.ok');
