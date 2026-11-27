@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c534</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c535</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -497,7 +497,7 @@
 #outg .md{font-size:11px;font-weight:800;color:#bcd;background:rgba(0,0,0,0.5);padding:1px 6px;border-radius:6px}
 #outg .nd.dn .fl{font-size:30px}
 #outg .nd.tn .fl{font-size:30px}
-#outg .cbx{display:flex;gap:4px}#outg .cbx{gap:5px!important;margin-top:2px}#outg .cb{width:24px;height:24px;border-radius:6px;font-size:16px!important;background:rgba(0,0,0,0.6);border:2px solid #9aa3b0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:12px;font-weight:900;color:#fff;line-height:1}#outg .cb.on{background:#2e9e5b;border-color:#8dffbd}#outg .cb.on::after{content:'✓'}
+#outg .cbx{display:flex;gap:4px}#outg .cbx{gap:6px!important;margin-top:3px}#outg .cb{width:32px;height:32px;border-radius:8px;border-width:3px!important;font-size:21px!important;background:rgba(0,0,0,0.6);border:2px solid #9aa3b0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:12px;font-weight:900;color:#fff;line-height:1}#outg .cb.on{background:#2e9e5b;border-color:#8dffbd}#outg .cb.on::after{content:'✓'}
 #outg .blk{position:absolute;inset:0;z-index:50}
 #outg .stamp{position:absolute;z-index:40;pointer-events:none;transform:translate(-50%,-50%);font-weight:900;color:#8dffbd;text-shadow:0 0 18px rgba(80,255,160,0.95),0 0 40px rgba(80,255,160,0.6),0 4px 0 #0d5a33}
 #outg .ring{position:absolute;z-index:39;pointer-events:none;border-radius:50%;border:6px solid rgba(141,255,189,0.9);transform:translate(-50%,-50%)}
@@ -575,10 +575,10 @@ ${[1, 2, 3].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y]) 
       let h = `<div class="top"><div class="gp">${CH_GENE_I(20)}<span>${CH_SV.genes}</span></div><div class="ttl"></div><button class="tb" data-set="1" aria-label="설정">⚙️</button></div><div class="map"><div class="in">${mapSvg}`;
       NODES.forEach(([x, y], i) => {
         const n = i;
-        if (n === 0) { h += `<button class="nd tn" data-tn="1" style="left:${x}%;top:${y}%"><div class="fl">${pre.tut ? '🧪' : '✓'}</div><div class="nm">생체 연구소</div><div class="cbx"><i class="cb ${pre.tut ? '' : 'on'}" data-cb="t"></i></div></button>`; return; }   // c520: 튜토리얼 = 지도 첫 깃발 (아웃게임에 왔으면 이미 클리어)
+        if (n === 0) { h += `<button class="nd tn" data-tn="1" style="left:${x}%;top:${y}%"><div class="fl">🧪</div><div class="nm">생체 연구소</div><div class="cbx"><i class="cb ${pre.tut ? '' : 'on'}" data-cb="t"></i></div></button>`; return; }   // c520: 튜토리얼 = 지도 첫 깃발 (아웃게임에 왔으면 이미 클리어)
         if (n > 3) { h += `<div class="nd soon" style="left:${x}%;top:${y}%"><div class="fl">준비 중</div></div>`; return; }
         const ok = okN(n);
-        h += `<button class="nd ${ok ? '' : 'lk'} ${n === curN ? 'cur' : ''} ${['e', 'n', 'h'].some((q) => cleared(n + q)) ? 'dn' : ''}" data-st="${n}" style="left:${x}%;top:${y}%"><div class="fl">${!ok ? '🔒' : ['e', 'n', 'h'].some((q) => cleared(n + q)) ? '✓' : n}</div><div class="nm">${CH_STG_INFO[n].nm}</div><div class="cbx">${['e', 'n', 'h'].map((q) => `<i class="cb ${cleared(n + q) ? 'on' : ''}" data-cb="${n + q}"></i>`).join('')}</div></button>`;
+        h += `<button class="nd ${ok ? '' : 'lk'} ${n === curN ? 'cur' : ''} ${['e', 'n', 'h'].some((q) => cleared(n + q)) ? 'dn' : ''}" data-st="${n}" style="left:${x}%;top:${y}%"><div class="fl">${!ok ? '🔒' : n}</div><div class="nm">${CH_STG_INFO[n].nm}</div><div class="cbx">${['e', 'n', 'h'].map((q) => `<i class="cb ${cleared(n + q) ? 'on' : ''}" data-cb="${n + q}"></i>`).join('')}</div></button>`;
       });
       h += `</div></div><div class="hint">← 지도를 밀어서 둘러보기 →</div><div class="bt"><button class="ugb" data-ug="1"><span class="i">💪</span>성장</button></div>`;
       ov.innerHTML = h;
@@ -656,7 +656,7 @@ ${[1, 2, 3].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y]) 
         for (let k = 0; k < 2; k++) { const r = document.createElement('div'); r.className = 'ring'; r.style.left = cx + 'px'; r.style.top = cy + 'px'; inn.appendChild(r); r.animate([{ width: '20px', height: '20px', opacity: 1 }, { width: (220 + k * 120) + 'px', height: (220 + k * 120) + 'px', opacity: 0 }], { duration: 700 + k * 250, easing: 'ease-out', fill: 'forwards' }); setTimeout(() => r.remove(), 1100); }
         for (let k = 0; k < 14; k++) { const p = document.createElement('div'); p.className = 'shard'; p.style.background = '#8dffbd'; p.style.left = cx + 'px'; p.style.top = cy + 'px'; inn.appendChild(p); const a = k / 14 * Math.PI * 2, d = 70 + Math.random() * 60; p.animate([{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }, { transform: `translate(${Math.cos(a) * d - 6}px,${Math.sin(a) * d - 6}px) scale(0.3)`, opacity: 0 }], { duration: 650, easing: 'ease-out', fill: 'forwards' }); setTimeout(() => p.remove(), 700); }
         cb.classList.add('on'); cb.animate([{ transform: 'scale(2.2)' }, { transform: 'scale(1)' }], { duration: 400, easing: 'ease-out' });
-        const fl = nd && nd.querySelector('.fl'); if (fl && (anim.t || !['e', 'n', 'h'].some((q) => q !== anim.d && CH_SV.clr[anim.n + q]))) { fl.textContent = '✓'; fl.animate([{ transform: 'scale(1.5)' }, { transform: 'scale(1)' }], { duration: 450, easing: 'ease-out' }); }
+        const fl = nd && nd.querySelector('.fl'); if (false) { fl.animate([{ transform: 'scale(1.5)' }, { transform: 'scale(1)' }], { duration: 450, easing: 'ease-out' }); }
         await wait(1100);
         st.animate([{ opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }, { opacity: 0, transform: 'translate(-50%,-50%) scale(0.25)' }], { duration: 450, easing: 'ease-in', fill: 'forwards' });
         await wait(550); st.remove();
