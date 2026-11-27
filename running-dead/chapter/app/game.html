@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c523</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c524</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -495,7 +495,8 @@
 #outg .sr{display:flex;gap:1px;font-size:15px;line-height:1}
 #outg .sr i{font-style:normal;color:#3d4450}#outg .sr i.on{color:#ffd34d;text-shadow:0 0 6px rgba(255,200,60,0.7)}
 #outg .md{font-size:11px;font-weight:800;color:#bcd;background:rgba(0,0,0,0.5);padding:1px 6px;border-radius:6px}
-#outg .nd.tn .fl{background:radial-gradient(circle at 35% 30%,#7ff0d2,#1f8f78);border-color:#d6fff4;box-shadow:0 4px 0 #0f4a3e,0 6px 14px rgba(0,0,0,0.6);font-size:26px}
+#outg .nd.dn .fl{font-size:30px}
+#outg .nd.tn .fl{font-size:30px!important;background:radial-gradient(circle at 35% 30%,#7ff0d2,#1f8f78);border-color:#d6fff4;box-shadow:0 4px 0 #0f4a3e,0 6px 14px rgba(0,0,0,0.6);font-size:26px}
 #outg .nd.tn .md{color:#7ff0d2}
 #outg .bt{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;pointer-events:none;z-index:3}#outg .bt button{pointer-events:auto}
 #outg .ugb{display:flex;align-items:center;justify-content:center;gap:8px;width:min(300px,80vw);padding:14px 0;border-radius:18px;background:linear-gradient(#4f8dff,#2a5fd0);box-shadow:0 4px 0 #173a85;font-size:21px;font-weight:900;color:#fff}
@@ -566,10 +567,10 @@ ${[1, 2, 3].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y]) 
       let h = `<div class="top"><div class="gp">${CH_GENE_I(20)}<span>${CH_SV.genes}</span></div><div class="ttl"></div><button class="tb" data-set="1" aria-label="설정">⚙️</button></div><div class="map"><div class="in">${mapSvg}`;
       NODES.forEach(([x, y], i) => {
         const n = i;
-        if (n === 0) { h += `<button class="nd tn" data-tn="1" style="left:${x}%;top:${y}%"><div class="fl">🧪</div><div class="nm">생체 연구소</div><div class="md">✓ 탈출</div></button>`; return; }   // c520: 튜토리얼 = 지도 첫 깃발 (아웃게임에 왔으면 이미 클리어)
+        if (n === 0) { h += `<button class="nd tn" data-tn="1" style="left:${x}%;top:${y}%"><div class="fl">✓</div><div class="nm">생체 연구소</div><div class="md">✓ 탈출</div></button>`; return; }   // c520: 튜토리얼 = 지도 첫 깃발 (아웃게임에 왔으면 이미 클리어)
         if (n > 3) { h += `<div class="nd soon" style="left:${x}%;top:${y}%"><div class="fl">준비 중</div></div>`; return; }
         const ok = chUnlocked(n, 'e');
-        h += `<button class="nd ${ok ? '' : 'lk'} ${n === curN ? 'cur' : ''}" data-st="${n}" style="left:${x}%;top:${y}%"><div class="fl">${ok ? n : '🔒'}</div><div class="nm">${CH_STG_INFO[n].nm}</div><div class="sr">${stars(n)}</div><div class="md">🎖 ${medals(n)}/6</div></button>`;
+        h += `<button class="nd ${ok ? '' : 'lk'} ${n === curN ? 'cur' : ''} ${['e', 'n', 'h'].some((q) => cleared(n + q)) ? 'dn' : ''}" data-st="${n}" style="left:${x}%;top:${y}%"><div class="fl">${!ok ? '🔒' : ['e', 'n', 'h'].some((q) => cleared(n + q)) ? '✓' : n}</div><div class="nm">${CH_STG_INFO[n].nm}</div><div class="sr">${stars(n)}</div><div class="md">🎖 ${medals(n)}/6</div></button>`;
       });
       h += `</div></div><div class="hint">← 지도를 밀어서 둘러보기 →</div><div class="bt"><button class="ugb" data-ug="1"><span class="i">💪</span>성장</button></div>`;
       ov.innerHTML = h;
