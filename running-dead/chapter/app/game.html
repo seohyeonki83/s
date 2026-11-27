@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c562</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c563</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -706,6 +706,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
   });
   const CH_RUN = CH_PICK === 'm' && !window.__noRun;
   const CH_TYPEB = CH_RUN && CH_STG === 3;   // c539: 챕터 3 = Type B (세로로 긴 맵 · 북쪽 군사기지)   // c505: 본편 판 (스테이지 · 난이도 규칙)
+  const CH_E7H = 0.93 * 0.95;   /* c563: 적 체력만 5% 더 (공격력은 0.93 그대로) */
   const CH_E7 = 0.93;   /* c560: 다시 7%로 */   /* c557: 7% → 10% (원래 값 기준) · 챕터 강화(CH_SK)는 이 값 위에 곱해진다 */   /* c555: 적 캐릭터 기본 체력 · 공격력 7% 낮춤 (드론 · 차량 제외, 튜토리얼 포함) */
   const CH_SK = CH_RUN ? 1 + 0.1 * (CH_STG - 1) : 1;   /* c544: 챕터마다 +10% (복리 아님 — 1.0 · 1.1 · 1.2 · 1.3) */   /* c522: 다시 +20%씩 (1.0 · 1.2 · 1.4) */   /* c521: 스테이지마다 +30% (1.0 · 1.3 · 1.6) */   // 스테이지 강화 — 적 체력 · 공격력 · 벽 · 사물 (보스 체력 제외)
   const CH_MIXL = CH_RUN ? { e: 6, n: 5, h: 4 }[CH_DIF] : 5;   /* c550: 한 단계씩 뒤로 — 쉬움 계엄 · 보통 총동원령 · 어려움 팬데믹 */   // 샷건 · 로봇 섞임 + 건널목 터렛 — 쉬움 총동원령 · 보통 팬데믹 · 어려움 비상
@@ -2445,7 +2446,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     scene.add(c.gauge);
     enterNormal(c);
     if (robo) chMakeRobot(c); if (chSfTag) c.sfw = chSfTag;   // c505
-    if (CHAPTER && c.maxHp > 0) { c.maxHp *= CH_SK * CH_E7; c.hp *= CH_SK * CH_E7; }   // c505: 스테이지 강화   /* c555: × CH_E7 */
+    if (CHAPTER && c.maxHp > 0) { c.maxHp *= CH_SK * CH_E7H; c.hp *= CH_SK * CH_E7H; }   // c505: 스테이지 강화   /* c555: × CH_E7 */
     return c;
   }
 
@@ -7920,7 +7921,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     const c = chPut(x, z, B, 'attacker', B);
     c.boss = type; c.mesh.material.color.setHex(CH_PINK); chSoftOff(c);   /* c84 */   // c55: 변이 좀비가 될 사람은 분홍
     if (type === 'armor') { c.r = BODY * 1.5; c.halfH = RADIUS * 1.5; c.mesh.scale.setScalar(1.5); }   // c55: 덩치가 될 사람만 크다 — 히드라가 될 사람은 보통 크기 (다이아몬드로 알아본다)
-    c.hp = c.maxHp = GUARD_HP * (type === 'armor' ? 4 : 2) * 0.95 * 0.9 * 1.1 * 0.95 * CH_E7; c.hpDisp = c.hp;   /* c555 */   /* c230 · c232 · c245 */   /* c153 */ c.dmgK = type === 'armor' ? 2 : 4;
+    c.hp = c.maxHp = GUARD_HP * (type === 'armor' ? 4 : 2) * 0.95 * 0.9 * 1.1 * 0.95 * CH_E7H; c.hpDisp = c.hp;   /* c555 */   /* c230 · c232 · c245 */   /* c153 */ c.dmgK = type === 'armor' ? 2 : 4;
     const g = new THREE.Group();
     const mk = (sz, col, zz) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(sz, sz), new THREE.MeshBasicMaterial({ color: col, transparent: true, depthTest: false, depthWrite: false })); m.rotation.z = Math.PI / 4; m.position.z = zz; m.renderOrder = 1; return m; };
     g.add(mk(0.38, 0x1c1c1e, 0), mk(0.27, 0xb05cff, 0.002)); g.position.set(0, 0.5, 0.02);
@@ -8379,7 +8380,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     if (c.stick) { c.mesh.remove(c.stick); c.stick = null; }
     c.mesh.material.color.setHex(COLOR[to === 'guard' ? 'guard' : 'citizen']);
     if (!c.soft) { c.soft = true; c.sight *= CH_SOFT_SIGHT; }
-    if (to === 'guard') { c.hp = c.maxHp = CH_SK * CH_E7 * GUARD_HP * 0.95 * 0.9 * 0.95 * 0.9 * 1.1 * 0.95;   /* c555 */   /* c505 */   /* c230 · c232 · c245 */ if (!c.hpBar) addHpBar(c, hpFoeMat); }
+    if (to === 'guard') { c.hp = c.maxHp = CH_SK * CH_E7H * GUARD_HP * 0.95 * 0.9 * 0.95 * 0.9 * 1.1 * 0.95;   /* c555 */   /* c505 */   /* c230 · c232 · c245 */ if (!c.hpBar) addHpBar(c, hpFoeMat); }
     else { c.hp = c.maxHp = 0; if (c.hpBar) { scene.remove(c.hpBar); c.hpBar = null; } }
     c.hpDisp = c.hp; enterNormal(c);
   }
