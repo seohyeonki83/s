@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c579</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c580</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3261,7 +3261,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     let sn = null;
     for (const t of car.squad) {
       const p = t === 'sniper' ? far.shift() : S.shift();
-      chNoMix = !!car.cvy; const c = addCitizen(p.x, p.z, square(p.x, p.z), t); chNoMix = false; if (car.sfw) c.sfw = car.sfw; if (car.cvy) c.cvy = true;   /* c579: 보스 인원은 섞임 없음 */   /* c505 */
+      const c = addCitizen(p.x, p.z, square(p.x, p.z), t); if (car.sfw) c.sfw = car.sfw; if (car.cvy) c.cvy = true;   /* c505 */
       if (CHAPTER) { (car.crew = car.crew || []).push(c); c.met = true; }   // c47 · c52: 내린 사람은 깨어 있다
       if (car.tkWave) c.tkU = true; if (t === 'sniper') sn = c; else if (CHAPTER && !sn) c.noMaster = true; else if (sn) { c.master = sn; c.slotA = Math.random() * Math.PI * 2; c.slotK = rand(0.5, 1); }   // 저격수 뒤에 오는 군인 = 그 저격수 호위
       c.tick = 0;
@@ -7637,11 +7637,6 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
   //   ② 경보 출동: 경보 1단계가 되는 순간 한 번, 그 뒤 40초마다 (단계마다 3초씩 짧아진다). 걸어서 / 경찰차 50:50.
   //      내가 있는 구역의 바깥 라인 중 안 보이는 곳에서 나와 마지막 사건 자리를 쫓는다 (테스트맵과 같다)
   const CH_LM = new Set(['bank', 'police', 'fire', 'mart', 'hospital', 'army', 'library', 'conv', 'gym']);
-  const CH_MORE = 1.25;   /* c579: 출동 경찰 · 특공대 군인 25% 늘림 (보스 빼고 · 모든 챕터) */
-  function chSfMore(groups) {   // c579: 무리들(배열의 배열)의 군인 수 합을 1.25배로 — 늘어난 군인은 무리마다 돌아가며 붙인다
-    const g = groups.reduce((n, L) => n + L.filter((t) => t === 'soldier').length, 0), add = Math.round(g * CH_MORE) - g;
-    for (let i = 0; i < add; i++) groups[i % groups.length].push('soldier');
-  }
   const CH_DISP_N = [[2, 2], [2, 3], [3, 4], [4, 4], [5, 6]], CH_DISP_T = [28, 26.5, 25, 23.5, 22];   // c248: 경보 단계별 출동 인원 (최소, 최대) · 간격(초)   // 경보 단계별 출동 인원 (최소, 최대)
   let chDispT = -1, chDispStage = 0;
   const CH_TWICE = new Set(['mart', 'hospital', 'bank', 'library']);   // c48: 두 번 출동 — c54: 문이 부서졌을 때 · 그 뒤 안에 있던 사람이 한 명이라도 감염됐을 때
@@ -7680,7 +7675,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     if (chDispT > 0) { chDispT -= dt; return; }
     const chCarK = 1 + 0.15 * (5 - stars) / 4; chDispT = CH_DISP_T[Math.min(CH_DISP_T.length, stars) - 1];   /* c248: 수상함 28초 → 데프콘 22초 (사이는 1.5초씩) */
     const site = lastIncident ? lastIncident.clone() : new THREE.Vector2(me.foot.x, me.foot.z);
-    const [lo, hi] = CH_DISP_N[Math.min(CH_DISP_N.length, stars) - 1], n0 = (lo + Math.floor(Math.random() * (hi - lo + 1))) * CH_MORE, n = Math.floor(n0) + (Math.random() < n0 % 1 ? 1 : 0);   /* c579: 출동 경찰 25% 늘림 */
+    const [lo, hi] = CH_DISP_N[Math.min(CH_DISP_N.length, stars) - 1], n = lo + Math.floor(Math.random() * (hi - lo + 1));
     const pCar = chCarK / (1 + chCarK), zi = chZoneAt(me.foot.x, me.foot.z);   // c248: 인원을 무리로 나눠 — 무리마다 경찰차(2~3명) 또는 걸어서(1~2명)
     for (let left = n; left > 0;) {
       if (Math.random() < pCar) { const k = Math.min(left, 2 + (Math.random() < 0.5 ? 1 : 0)), q = chEdgeSpot(zi); addCar(q.x, q.z, Math.atan2(site.y - q.z, site.x - q.x), site, k); left -= k; continue; }
@@ -9073,15 +9068,13 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
         const cut = Math.random() < 0.5 ? 0 : 1 + Math.floor(Math.random() * (L.length - 1)), C = cut ? [L.slice(0, cut), L.slice(cut)] : [L];
         for (const c of C) { c.sort((a, b) => (b === S_) - (a === S_)); P.push(['C', c]); }
       }   /* c461: 1팀 저1군3 · 2팀 저2군4 · 3팀 저2군6 (보스 뒤 반복도 3팀) */   /* c459: 보스 뒤 반복 팀 저2군6 */   /* c457: 4번째를 2 · 3번째에 나눔 — 저1군3 · 저3군8 · 저4군10 */
-      if (CH_RUN || CHAPTER) chSfMore(P.map(([, c]) => c));   /* c579 */
       P.forEach(([m, c], k) => teamWait.push(m === 'W' ? { comp: c, t: k * 3, first: false, seg, hold: true, sfw: i + 1 } : { car: c, t: k * 3, seg: k ? chTeamSeg2(seg) : seg, hold: true, sfw: i + 1 }));   /* c505: 몇 번째 특공대 */
       return;
     }   /* c223: 2대 · 차마다 군인 1명 빼고 */
     const q = Math.random(), G6 = [G_, G_, G_, G_, G_, G_];
-    if (q < 0.1) { const C1 = [S_, G_, G_, G_]; chSfMore([C1]); teamWait.push({ car: C1, t: 0, seg, hold: true }); return; }   /* c579 */   // 쉬어 가는 차례 — 군인차 1대
+    if (q < 0.1) { teamWait.push({ car: [S_, G_, G_, G_], t: 0, seg, hold: true }); return; }   // 쉬어 가는 차례 — 군인차 1대
     const L = q < 0.3 ? [G6, G6.slice()] : q < 0.65 ? [[S_, G_, G_, S_, G_], [S_, G_, G_, G_]] : [[S_, G_, G_, S_, G_], G6];
     if (Math.random() < 0.5) L.reverse();
-    L[0] = L[0].slice(); L[1] = L[1].slice(); chSfMore(L);   /* c579 */
     teamWait.push({ car: L[0], t: 0, seg, hold: true }, { car: L[1], t: rand(0, 5), seg: chTeamSeg2(seg), hold: true });
   }
   // ── c64: 근접 거리 안에 적(사람)이 있으면 사물(문·차·바리케이트·금고)보다 그 적을 먼저 친다 — 나도 동료도 ──
