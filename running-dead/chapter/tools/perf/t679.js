@@ -1,0 +1,12 @@
+const { chromium } = require('playwright'); const fs = require('fs');
+(async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const errs = [];
+const src = fs.readFileSync(__dirname + '/var/c585.html', 'utf8').replace('window.__map = "b";', 'window.__map = "m"; window.__stg = 1; window.__dif = "e";').replace('window.__rd = { get me() { return me; },', 'window.__rd = { ev: (s) => eval(s), get me() { return me; },');
+fs.writeFileSync(__dirname + '/var/c585_gun.html', src);
+const p = await (await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3 })).newPage(); p.on('pageerror', (e) => errs.push(e.message));
+await p.route('**/three.module.min.js', (r) => r.fulfill({ path: __dirname + '/../node_modules/three/build/three.module.min.js', contentType: 'application/javascript' }));
+await p.goto('file://' + __dirname + '/var/c585_gun.html'); await p.waitForFunction(() => window.__rdReady && window.__rd && window.__rd.me, null, { timeout: 60000 });
+await p.waitForTimeout(1500); await p.evaluate(() => { const o = document.querySelector('.ok'); if (o) o.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); }); await p.waitForTimeout(1200);
+console.log(await p.evaluate(() => window.__rd.ev(`(() => { me.hp = me.maxHp = 1e9; chNoMix = true; const L = []; const put = (t, dz, sg) => { const x = me.foot.x - 3.2, z = me.foot.z + dz; const c = addCitizen(x, z, square(x, z), t); if (sg) chMakeSg(c); c.fixed = true; c.sleep = true; c.shotAt = { foot: { x: x + 5, z } }; c.atkT = 999; c.sight = 0.01; c.sense = 0.01; c.vel.set(0, 0); L.push(t + (sg ? '(샷건)' : '') + ':' + (c.aimGun ? c.aimGun.children.length + '조각' : '없음')); return c; };
+  put('police', -4); { const t = put('soldier', -1.5); t.robot = t.turret = true; t.mesh.scale.setScalar(1.35); t.mesh.geometry = chSqGeo; t.mesh.material.color.setHex(0x4d5560); chAddGun(t, 0.6, 0.2, 0x1a1d21); } { const bb = put('robot', 2.5); chBossLook(bb); } chNoMix = false; window.__L = L; return L.join(' '); })()`)));
+await p.waitForTimeout(500); await p.screenshot({ path: __dirname + '/shots/c585_guns.png', clip: { x: 0, y: 180, width: 230, height: 470 } });
+console.log('errors', JSON.stringify(errs.slice(0, 3))); await b.close(); })();
