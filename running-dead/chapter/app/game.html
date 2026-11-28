@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c592</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c593</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -573,8 +573,8 @@
 #outg .ub:disabled{background:#3a4250;color:#8a93a3}
 #outg .bt{gap:10px}#outg .bt .ugb{width:min(170px,43vw);position:relative}#outg .ugb.trb{background:linear-gradient(#b36bff,#7a35d0);box-shadow:0 4px 0 #4a1d85}
 #outg .ugb .bd2{position:absolute;top:-8px;right:-6px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:#ff3b5c;color:#fff;font-size:13px;line-height:22px;box-shadow:0 2px 4px rgba(0,0,0,.4)}
-#outg .ug{position:relative}#outg .ug .gg{display:flex;gap:3px;margin-top:7px}#outg .ug .gg i{flex:1;height:9px;border-radius:3px;background:#11161e;border:1px solid #2a3442}#outg .ug .gg i.on{background:#7fe3ff;border-color:#7fe3ff;box-shadow:0 0 6px rgba(127,227,255,.6)}
-#outg .ug.pop{animation:ugflash .7s ease-out}#outg .ug.pop .gg i{background:#fff;border-color:#fff;box-shadow:0 0 10px #7fe3ff}#outg .ug.pop .pc{animation:ugpop .7s ease-out}
+#outg .ug{position:relative}#outg .ug .gg{position:relative;height:10px;margin-top:8px;border-radius:5px;background:#11161e;border:1px solid #2a3442;overflow:hidden}#outg .ug .gg i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:linear-gradient(90deg,#4fc3f7,#7fe3ff);box-shadow:0 0 8px rgba(127,227,255,.6);transition:width .15s}   /* c593: 칸 없는 게이지 */
+#outg .ug.pop{animation:ugflash .7s ease-out}#outg .ug.pop .gg i{background:#fff;box-shadow:0 0 12px #7fe3ff}#outg .ug.pop .pc{animation:ugpop .7s ease-out}
 #outg .ug .pc{position:relative}#outg .ug .ufl{position:absolute;right:0;top:-6px;font-size:18px;color:#ffe066;text-shadow:0 0 8px rgba(255,200,60,.8);animation:ugfl .8s ease-out forwards}
 @keyframes ugpop{0%{transform:scale(1)}30%{transform:scale(1.7);color:#fff;text-shadow:0 0 16px #7fe3ff}100%{transform:scale(1)}}
 @keyframes ugflash{0%{border-color:#2a3442}25%{border-color:#7fe3ff;box-shadow:0 0 18px rgba(127,227,255,.55)}100%{border-color:#2a3442}}
@@ -651,7 +651,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     };
     const upSheet = (pop) => {   // c592: 성장 — 표시 100부터 · 클릭 1번 = 유전자 10 · 10칸 게이지가 꽉 차면 +1 (팡) · 특성 포인트 +1
       const row = (k, ic, nm) => { const v = CH_SV.up[k] || 0, lvN = Math.floor(v / 10), f = pop === k ? 10 : v % 10;
-        return `<div class="ug${pop === k ? ' pop' : ''}" data-row="${k}"><div class="ic">${ic}</div><div class="tx"><div class="n1">${nm}</div><div class="gg">${Array.from({ length: 10 }, (_, i) => `<i class="${i < f ? 'on' : ''}"></i>`).join('')}</div></div><div class="pc">${100 + lvN}${pop === k ? '<b class="ufl">+1</b>' : ''}</div><button class="ub" data-up="${k}" ${CH_SV.genes < CH_UP_COST ? 'disabled' : ''}>+ ${CH_GENE_I(14)}${CH_UP_COST}</button></div>`; };
+        return `<div class="ug${pop === k ? ' pop' : ''}" data-row="${k}"><div class="ic">${ic}</div><div class="tx"><div class="n1">${nm}</div><div class="gg"><i style="width:${f * 10}%"></i></div></div><div class="pc">${100 + lvN}${pop === k ? '<b class="ufl">+1</b>' : ''}</div><button class="ub" data-up="${k}" ${CH_SV.genes < CH_UP_COST ? 'disabled' : ''}>+ ${CH_GENE_I(14)}${CH_UP_COST}</button></div>`; };
       openSheet(`<div class="hd"><div><div class="t2">성장</div></div><button class="x">✕</button></div><div class="ds">${CH_GENE_I(14)} <b>${CH_SV.genes}</b> · 특성 포인트 <b class="tpn">${chTpLeft()}</b></div>` +
         row('hp', '❤️', '내 체력') + row('ahp', '🧟', '동료 체력') + row('atk', '⚔️', '공격력') + `<div class="gh">10번 채우면 +1 (능력 +0.5%) · 특성 포인트 +1</div>`,
         (b) => { if (b.dataset.up && CH_SV.genes >= CH_UP_COST) { const k = b.dataset.up; CH_SV.genes -= CH_UP_COST; CH_SV.up[k] = (CH_SV.up[k] || 0) + 1; chSave(); { const m = ov.querySelector('.map'); draw(m ? m.scrollLeft : 0); }   /* c567: 지도는 보던 자리 그대로 */
