@@ -1,0 +1,20 @@
+import pathlib
+s = pathlib.Path('c607.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:80], s.count(a)); R.append((a, b))
+# 화면 숫자 = 기본값 + 판 안 성장(산성 강도)만 — 공격력 성장은 실제 피해에만 (보이는 숫자에는 안 곱한다)
+rep("  const chAcidHit = () => Math.round(3 + 7 * lvE('acid') / 5) * HPK * CH_UPK.atk;", "  const chAcidHitN = () => Math.round(3 + 7 * lvE('acid') / 5) * HPK;   // c608: 산성피 순간 피해 — 화면 숫자 (공격력 성장 빼고)\n  const chAcidHit = () => Math.round(3 + 7 * lvE('acid') / 5) * HPK * CH_UPK.atk;")
+rep("chHitPop(c.foot.x + 0.6, c.foot.z, chAcidHit());", "chHitPop(c.foot.x + 0.6, c.foot.z, chAcidHitN());")
+rep("chHitPop(tk.x + 0.9, tk.z, chAcidHit(), 2.2);", "chHitPop(tk.x + 0.9, tk.z, chAcidHitN(), 2.2);")
+rep("chHitPop(d.x + 0.6, d.z, chAcidHit());", "chHitPop(d.x + 0.6, d.z, chAcidHitN());")
+rep("if (car) { const o = e.obj; if (o && o.hp > d) { o.hp -= d; chDotPop(e.x + 0.9, e.z, d, 2.2); } continue; }", "if (car) { const o = e.obj; if (o && o.hp > d) { o.hp -= d; chDotPop(e.x + 0.9, e.z, CH_ACID_DOT + chAcidB(), 2.2); } continue; }   /* c608: 화면은 공격력 성장 빼고 */")
+rep("e.hp = Math.max(0, e.hp - d); if (e.mesh.visible) chDotPop(e.foot.x + 0.6, e.foot.z, d);", "e.hp = Math.max(0, e.hp - d); if (e.mesh.visible) chDotPop(e.foot.x + 0.6, e.foot.z, CH_ACID_DOT + chAcidB());")
+rep("if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, Math.max(1, d / HPK));   // 화면에는 1", "if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, 1);   // 화면에는 1 (c608: 공격력 성장과 상관없이)")
+rep("if (p) chDotPop(p.x + 0.6, p.z, Math.max(1, d / HPK)); };", "if (p) chDotPop(p.x + 0.6, p.z, 1); };")
+rep("if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, (CH_GOO_DOT + chAcidB()) * CH_UPK.atk);", "if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, CH_GOO_DOT + chAcidB());   /* c608: 화면은 공격력 성장 빼고 */")
+rep("const n = (CH_GOO_DOT + chAcidB()) * CH_UPK.atk;   /* c475 */ chDotPop(d.x + 0.6, d.z, n);", "const n = (CH_GOO_DOT + chAcidB()) * CH_UPK.atk;   /* c475 */ chDotPop(d.x + 0.6, d.z, CH_GOO_DOT + chAcidB());")
+rep("const n = (CH_ACID_DOT + chAcidB()) * CH_UPK.atk;   /* c607 */   /* c478 */ chDotPop(d.x + 0.6, d.z, n);", "const n = (CH_ACID_DOT + chAcidB()) * CH_UPK.atk;   /* c607 */   /* c478 */ chDotPop(d.x + 0.6, d.z, CH_ACID_DOT + chAcidB());")
+rep("chDotPop(car.x + 0.9, car.z, gd, 2.2);", "chDotPop(car.x + 0.9, car.z, CH_GOO_DOT + chAcidB(), 2.2);   /* c608 */")
+pathlib.Path('c608_patch.py').write_text('C608_R = ' + repr(R) + '\n')
+print(len(R))

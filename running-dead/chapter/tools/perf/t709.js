@@ -1,0 +1,11 @@
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const errs = [];
+const p = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage(); p.on('pageerror', (e) => errs.push(e.message));
+await p.route('**/three.module.min.js', (r) => r.fulfill({ path: __dirname + '/../node_modules/three/build/three.module.min.js', contentType: 'application/javascript' }));
+await p.goto('file://' + __dirname + '/var/c608_d.html'); await p.waitForFunction(() => window.__rdReady && window.__rd && window.__rd.me, null, { timeout: 60000 });
+console.log(await p.evaluate(() => window.__rd.ev(`(() => { const out = []; for (const [atk, ap] of [[1, false], [1.5, false], [1.5, true]]) { CH_UPK.atk = atk; owned.acidp = ap; const D = [], H = []; const P0 = chDotPop, Q0 = chHitPop; chDotPop = (x, z, n) => D.push(Math.round(n)); chHitPop = (x, z, n) => H.push(Math.round(n));
+  chNoMix = true; const x = me.foot.x + 20, zz = me.foot.z + 20; const a = addCitizen(x, zz, square(x, zz), 'police'), c = addCitizen(x + 5, zz, square(x + 5, zz), 'police'); chNoMix = false; a.mesh.visible = c.mesh.visible = true;
+  const ha = a.hp; gooOn(a); for (let i = 0; i < 11; i++) gooTick(0.1); const g = D.splice(0), gd = ha - a.hp;
+  owned.acid = true; const al = addCitizen(x + 5.5, zz, square(x + 5.5, zz), ''); makeZombie(al); const hc = c.hp; chAcidOn(c, 3); const hit = 0; const hc2 = c.hp; for (let i = 0; i < 11; i++) chAcidTick(0.1);
+  chDotPop = P0; chHitPop = Q0; out.push('공격력x' + atk + (ap ? ' +산성강도' : '') + ' · 자폭도트 화면 ' + g + ' 실제 ' + gd.toFixed(1) + ' · 산성피 순간 화면 ' + H + ' 실제 ' + hit.toFixed(1) + ' · 산성피 도트 화면 ' + D + ' 실제 ' + (hc2 - c.hp).toFixed(1)); } CH_UPK.atk = 1; owned.acidp = false; owned.acid = false; return out.join('\\n'); })()`)));
+console.log('errors', JSON.stringify(errs.slice(0, 3))); await b.close(); })();
