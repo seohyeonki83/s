@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c605</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c606</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4028,7 +4028,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     if (z.dead) return;
     if (CHAPTER && z.bombing) { chBombBoom(z); return; }   // c272: 돌진하다 죽으면 그 자리에서 터진다 (터지면서 다시 여기로 온다)
     z.dead = true;
-    if (CHAPTER && owned.acid && z !== me) chAcidBurst(z);   // c224
+    if (CHAPTER && owned.acid && z !== me && !z.bombDie) chAcidBurst(z);   /* c606: 자폭한 동료는 산성피 없음 (자폭 산성과 겹치지 않게) */   // c224
     const t = z.target;
     if (t) {                                  // 덮치거나 무는 중이었으면 그 시민을 풀어 준다
       t.marked = false;
@@ -6881,7 +6881,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     }
     if (CHAPTER) for (const T of chTanks) if (!T.wreck && Math.hypot(T.x - x, T.z - zz) <= R + 1.4) chTankGoo(T);   /* c454 */   // c122
     if (CHAPTER && !z.space) chDroneGooAt(x, zz, R);   // c374: 드론 — 그림자 점이 원기둥 안이면 자폭 산성
-    killZombie(z);                            // 자폭한 동료는 죽는다 (우리 편은 안 다친다)
+    z.bombDie = true; killZombie(z);          // 자폭한 동료는 죽는다 (우리 편은 안 다친다)
   }
   const gooMat = new THREE.SpriteMaterial({ map: flashTex, color: 0x5fcf3a, transparent: true, depthTest: false, depthWrite: false });
   const chChainL = [], chChBuf = [];           // c431: 전이 감전 숙주 {e, t: 남은 감전, k: 다음 번개까지, r: 빨간 별}
@@ -7167,10 +7167,10 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       if (c.kind !== 'citizen' || c.space !== z.space) continue;
       if (Math.hypot(c.foot.x - x, c.foot.z - zz) > R + (c.r || BODY) || blocked(x, zz, c.foot.x, c.foot.z)) continue;
       chAcidOn(c, T);
-      if (c.hp > 0) { c.hp = Math.max(0, c.hp - chAcidHit()); if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, chAcidHit()); if (c.hp <= 0 && !c.police && c.state !== 'held') enterPanic(c, null, true); }   // c371: 터질 때 10 (고정 · 강화와 상관없다)
+      if (c.hp > 0) { c.hp = Math.max(0, c.hp - chAcidHit()); if (c.mesh.visible) chHitPop(c.foot.x + 0.6, c.foot.z, chAcidHit()); if (c.hp <= 0 && !c.police && c.state !== 'held') enterPanic(c, null, true); }   // c371: 터질 때 10 (고정 · 강화와 상관없다)
     }
     if (!z.space) chDroneAcid(x, zz, R, T, true);   // c374: 드론 — 그림자 점이 원기둥 안이면
-    for (const tk of chTanks) if (!tk.wreck && !z.space && Math.hypot(tk.x - x, tk.z - zz) - CAR_L * CH_TK_KL / 2 <= R) {   /* c454 */ chAcidOn(tk, T); const o = tk.obj; if (o && o.hp > chAcidHit()) { o.hp -= chAcidHit(); chDotPop(tk.x + 0.9, tk.z, chAcidHit(), 2.2); } }   /* c371 */   // 보스도
+    for (const tk of chTanks) if (!tk.wreck && !z.space && Math.hypot(tk.x - x, tk.z - zz) - CAR_L * CH_TK_KL / 2 <= R) {   /* c454 */ chAcidOn(tk, T); const o = tk.obj; if (o && o.hp > chAcidHit()) { o.hp -= chAcidHit(); chHitPop(tk.x + 0.9, tk.z, chAcidHit(), 2.2); } }   /* c371 */   // 보스도
     chAcidMiniF = false;   // c475
   }
   window.__kz = (z) => killZombie(z);   // 테스트용
@@ -7196,6 +7196,11 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     let t = chDotTexC.get(n); if (t) return t;
     const cv = document.createElement('canvas'); cv.width = 128; cv.height = 64; const g = cv.getContext('2d'); g.font = '800 52px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,0.75)'; g.strokeText('-' + n, 64, 34); g.fillStyle = '#7ed321'   /* c569: 도트 숫자 = 산성 녹색 */; g.fillText('-' + n, 64, 34);
     t = new THREE.CanvasTexture(cv); chDotTexC.set(n, t); return t;
+  }
+  const chHitTexC = new Map();
+  function chHitPop(x, z, n, y = 1.3) { n = Math.round(n);   // c606: 순간 피해(산성피 터짐) — 노랑 · 조금 크게 (도트와 구분)
+    let t = chHitTexC.get(n); if (!t) { const cv = document.createElement('canvas'); cv.width = 128; cv.height = 64; const g = cv.getContext('2d'); g.font = '900 54px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,0.8)'; g.strokeText('-' + n, 64, 34); g.fillStyle = '#ffd34d'; g.fillText('-' + n, 64, 34); t = new THREE.CanvasTexture(cv); chHitTexC.set(n, t); }
+    const f = puff(x, y, z, 0xffffff, 0.5, 0.5, 0.75, 0, 0.9, 0, 1); f.s.material.map = t; f.s.scale.set(1.9, 0.95, 1); f.fixedScale = true; f.late = true; f.s.renderOrder = UI_ME + 91;
   }
   function chDotPop(x, z, n, y = 1.3) { n = Math.round(n);   // c505: 보이는 숫자는 정수        // c265: 도트 숫자가 떠올랐다 사라진다
     const f = puff(x, y, z, 0xffffff, 0.5, 0.5, 0.75, 0, 0.9, 0, 1);
@@ -8507,7 +8512,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     }
   }
   function chDroneAcid(x, z, R, T, blk) {      // 산성 폭발 원기둥 — 그림자 점이 원 안이면 묻는다 (터질 때 10)
-    for (const d of chDrones.slice()) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || (blk && blocked(x, z, d.x, d.z))) continue; if (d.goo <= 0) { d.acid = Math.max(d.acid, T); } chDotPop(d.x + 0.6, d.z, chAcidHit()); chDroneDmg(d, chAcidHit()); }
+    for (const d of chDrones.slice()) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || (blk && blocked(x, z, d.x, d.z))) continue; if (d.goo <= 0) { d.acid = Math.max(d.acid, T); } chHitPop(d.x + 0.6, d.z, chAcidHit()); chDroneDmg(d, chAcidHit()); }
   }
   function chDroneGooAt(x, z, R) {             // 산성 자폭 원기둥 — 그림자 점이 원 안이면 자폭 산성 (산성 폭발은 이걸로 바뀐다)
     for (const d of chDrones) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || blocked(x, z, d.x, d.z)) continue; d.goo = Math.max(d.goo, ((4 + 0.6 * chLvB('bomb'))) * chLingK());   /* c420 */ d.acid = 0; }

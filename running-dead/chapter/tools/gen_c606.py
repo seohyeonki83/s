@@ -1,0 +1,22 @@
+import pathlib
+s = pathlib.Path('c605.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:80], s.count(a)); R.append((a, b))
+# 1) 자폭한 동료는 산성피를 터뜨리지 않는다
+rep("    if (CHAPTER && owned.acid && z !== me) chAcidBurst(z);   // c224", "    if (CHAPTER && owned.acid && z !== me && !z.bombDie) chAcidBurst(z);   /* c606: 자폭한 동료는 산성피 없음 (자폭 산성과 겹치지 않게) */   // c224")
+rep("    killZombie(z);                            // 자폭한 동료는 죽는다 (우리 편은 안 다친다)", "    z.bombDie = true; killZombie(z);          // 자폭한 동료는 죽는다 (우리 편은 안 다친다)")
+# 2) 산성피 순간 피해는 노랑 · 크게 (도트는 녹색 그대로)
+rep("    t = new THREE.CanvasTexture(cv); chDotTexC.set(n, t); return t;\n  }",
+    """    t = new THREE.CanvasTexture(cv); chDotTexC.set(n, t); return t;
+  }
+  const chHitTexC = new Map();
+  function chHitPop(x, z, n, y = 1.3) { n = Math.round(n);   // c606: 순간 피해(산성피 터짐) — 노랑 · 조금 크게 (도트와 구분)
+    let t = chHitTexC.get(n); if (!t) { const cv = document.createElement('canvas'); cv.width = 128; cv.height = 64; const g = cv.getContext('2d'); g.font = '900 54px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,0.8)'; g.strokeText('-' + n, 64, 34); g.fillStyle = '#ffd34d'; g.fillText('-' + n, 64, 34); t = new THREE.CanvasTexture(cv); chHitTexC.set(n, t); }
+    const f = puff(x, y, z, 0xffffff, 0.5, 0.5, 0.75, 0, 0.9, 0, 1); f.s.material.map = t; f.s.scale.set(1.9, 0.95, 1); f.fixedScale = true; f.late = true; f.s.renderOrder = UI_ME + 91;
+  }""")
+rep("chDotPop(c.foot.x + 0.6, c.foot.z, chAcidHit());", "chHitPop(c.foot.x + 0.6, c.foot.z, chAcidHit());")
+rep("chDotPop(tk.x + 0.9, tk.z, chAcidHit(), 2.2);", "chHitPop(tk.x + 0.9, tk.z, chAcidHit(), 2.2);")
+rep("chDotPop(d.x + 0.6, d.z, chAcidHit());", "chHitPop(d.x + 0.6, d.z, chAcidHit());")
+pathlib.Path('c606_patch.py').write_text('C606_R = ' + repr(R) + '\n')
+print(len(R))
