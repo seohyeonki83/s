@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c611</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c612</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4294,7 +4294,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
   }
   function chMini(c) { c.mini = true; c.mesh.scale.setScalar(0.5); if (!c.mut) { c.mesh.material.color.setHex(0x8cff4a);   /* c472: 밝은 녹색 · c427: 연분홍 */ c.force = 1 / 3;   /* c411: 미는 힘 = 보통 좀비의 3분의 1 */ } }   /* c384 · c386: 작은 좀비 색 — 동료(0x8aa4f5)보다 40% 밝게 */   // c370: 작은 좀비 그림 (변이가 풀려도 다시 이 크기) · c371: 그림만 반 — 몸(부딪힘 크기)·미는 힘은 보통 좀비와 같다
   function makeZombie(b) {
-    if (CHAPTER && b.sniper && b.kind === 'citizen') { const pool = CH_ITEMS.filter((k) => ITEM[k] && ITEM[k].passive && !chFull(k)); if (pool.length) { const sp = spaceOf(b.foot.x, b.foot.z) || b.space || null; let x = b.foot.x, z = b.foot.z; if (sp) { x = Math.max(sp.x0 + 0.7, Math.min(sp.x1 - 0.7, x)); z = Math.max(sp.z0 + 0.7, Math.min(sp.z1 - 0.7, z)); } dropPickup(pool[Math.floor(Math.random() * pool.length)], x, z, sp); } }   // c505: 저격수 → 장비 하나 · c514: 실제 서 있는 공간 안쪽에 떨군다
+    if (CHAPTER && b.sniper && b.kind === 'citizen') { const pool = CH_ITEMS.filter((k) => ITEM[k] && ITEM[k].passive && !chFull(k)); if (pool.length) { const sp = spaceOf(b.foot.x, b.foot.z) || b.space || null; let x = b.foot.x, z = b.foot.z; if (sp) { x = Math.max(sp.x0 + 0.7, Math.min(sp.x1 - 0.7, x)); z = Math.max(sp.z0 + 0.7, Math.min(sp.z1 - 0.7, z)); } dropPickup(pool[Math.floor(Math.random() * pool.length)], x, z, sp); pickups[pickups.length - 1].snip = true; } }   /* c612: 저격수 장비는 거리·벽 상관없이 나한테 날아온다 */   // c505: 저격수 → 장비 하나 · c514: 실제 서 있는 공간 안쪽에 떨군다
     if (CHAPTER && b.home && b.home.x0 !== undefined) { const P = b.home.parent || b.home; if (P.called === 1) P.lost = true; }   // c54: 문이 부서진 건물 안 사람이 감염됐다 → 두 번째 출동
     if (b.mark) { scene.remove(b.mark); b.mark = null; }
     if (b.stick) { b.mesh.remove(b.stick); b.stick = null; b.vig = false; } if (b.tool) { b.mesh.remove(b.tool); b.tool = null; }   /* c85: 들고 있던 것(기타·연장)도 사라진다 */   // c40: 감염되면 몽둥이를 놓는다   // v401: 감염되면 저격수 다이아몬드 지움
@@ -7332,7 +7332,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       if (p.kind === 'gene' && p.t < 0.45) { const k = Math.max(0, p.t / 0.45); p.s.position.set(p.x0 + (p.x - p.x0) * k, 0, p.z0 + (p.z - p.z0) * k).addScaledVector(UP, 0.7 + Math.sin(Math.PI * k) * 1.5); continue; }   // c108: 유전자는 뾰로롱 튀어나와 땅에 떨어진다 (떨어지기 전엔 못 줍는다)
       if (CHAPTER && isZombie(me)) {   /* c570: 자석 — 내 공격 거리의 1.5배 안이면 나한테 끌려온다 (벽에 안 가렸을 때) */
         const dx = me.foot.x - p.x, dz = me.foot.z - p.z, d = Math.hypot(dx, dz);
-        if (!p.mag && d <= CH_MAG_R * (MELEE + Math.max(0, (me.r || BODY) - BODY)) && (chSameSp(me.space, p.space) || !fireBlocked(me.foot.x, me.foot.z, p.x, p.z))) { p.mag = true; p.magV = 4; }
+        if (!p.mag && (p.snip || (d <= CH_MAG_R * (MELEE + Math.max(0, (me.r || BODY) - BODY)) && (chSameSp(me.space, p.space) || !fireBlocked(me.foot.x, me.foot.z, p.x, p.z))))) {   /* c612: 저격수 장비는 바로 */ p.mag = true; p.magV = 4; }
         if (p.mag && d > 0.01) { p.magV = Math.min(30, p.magV + 40 * dt); const st = Math.min(d, p.magV * dt); p.x += dx / d * st; p.z += dz / d * st; p.space = me.space; }
       }
       p.s.position.set(p.x, 0, p.z).addScaledVector(UP, (p.kind === 'gene' ? 0.7 : 1.0) + Math.sin(p.t * 3) * 0.12);   // v422: 크기에 맞춰 (아래 끝이 바닥 위)
