@@ -1,0 +1,11 @@
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const errs = [];
+const p = await (await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 })).newPage(); p.on('pageerror', (e) => errs.push(e.message));
+await p.route('**/three.module.min.js', (r) => r.fulfill({ path: __dirname + '/../node_modules/three/build/three.module.min.js', contentType: 'application/javascript' }));
+const url = 'file:///home/user/s/running-dead/chapter/c610.html';
+await p.goto(url); await p.evaluate(() => localStorage.setItem('rd_save_v1', JSON.stringify({ genes: 0, clr: { '1e': 1, '2e': 1 }, sub: { '1e0': 1, '1e1': 1, '2e0': 1, '3n1': 1 }, up: { hp: 0, ahp: 0, atk: 0 }, tr: {}, tut: true, mig: 1, v2: 1, v3: 1, v4: 1, u2: 1, u3: 1 })));
+await p.goto(url); await p.waitForSelector('#outg .ugb', { timeout: 30000 }); await p.waitForTimeout(300);
+console.log('특성 포인트 (클리어 2×5 + 서브 1+1+2+3 = 17 이어야):', await p.evaluate(() => (document.querySelector('#outg .bd2') || {}).textContent));
+await p.evaluate(() => document.querySelector('#outg .nd[data-st="2"]').click()); await p.waitForTimeout(400);
+console.log('챕터 2 서브미션 보상 표시:', await p.evaluate(() => [...document.querySelectorAll('#outg .sh .cd')].map((c) => c.textContent.replace(/\s+/g, ' ')).filter((t) => t.includes('서브')).join(' | ')));
+console.log('errors', JSON.stringify(errs.slice(0, 3))); await b.close(); })();
