@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c604</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c605</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1658,8 +1658,8 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + i * Math.PI / 2, L = new THREE.Mesh(chTurLeg, chTurLegMat); L.rotation.z = a; L.position.z = -0.002; L.renderOrder = c.mesh.renderOrder - 0.01; c.mesh.add(L); } }   /* c588: 땅에 박힌 고정대 4개 */ chGunShape(c, 'tgat'); return; }   /* c587: 터렛 = 동그란 몸 (사각과 같은 폭) + 가운데 포탑 + 기관포 */   /* c585: 터렛 = 기관포 */ if (c.aimGun) c.mesh.remove(c.aimGun);   /* c583: 있던 총은 바꿔 낀다 */ const g = new THREE.Mesh(new THREE.PlaneGeometry(L, W).translate(L / 2 + 0.05, 0, 0), col ? new THREE.MeshBasicMaterial({ color: col, transparent: true, depthTest: false, depthWrite: false }) : chGunMat); g.position.z = 0.012; g.renderOrder = 1; c.mesh.add(g); c.aimGun = g; }
   const CH_GUN_SHAPE = {   // c583: 위에서 본 총 — [앞쪽 시작, 앞쪽 끝, 폭] 조각들 (몸 가운데 = 0, 몸 반지름 0.5)
     pistol: [[0.34, 0.62, 0.1], [0.6, 0.66, 0.06]],   /* c585: 몸 밖으로 살짝 */                                                     // 권총 — 아주 짧게
-    rifle: [[0.0, 0.22, 0.13], [0.22, 0.56, 0.1], [0.3, 0.42, 0.14], [0.56, 0.8, 0.05], [0.78, 0.84, 0.08]],   // 소총 — 개머리 · 몸통 · 손잡이 · 총열 · 소염기
-    sniper: [[0.0, 0.2, 0.13], [0.2, 0.52, 0.09], [0.24, 0.46, 0.15], [0.52, 1.02, 0.045], [0.98, 1.1, 0.1]],  // 저격총 — 길쭉 · 가운데 조준경 · 끝에 머즐 브레이크
+    rifle: [[0.0, 0.18, 0.17], [0.18, 0.47, 0.15], [0.47, 0.62, 0.13], [0.62, 0.71, 0.085], [0.69, 0.75, 0.12]],   // c605: 소총 — 짧고 굵고 뭉툭 (개머리 · 몸통 · 손잡이 · 짧은 총열 · 뭉툭한 끝)
+    sniper: [[0.0, 0.24, 0.12], [0.24, 0.52, 0.075], [0.22, 0.52, 0.17, 0.0], [0.5, 0.54, 0.2], [0.34, 0.38, 0.05, 0.11], [0.52, 1.13, 0.034], [1.1, 1.21, 0.095]],   // c605: 저격총 — 10% 더 길게 · 굵은 조준경 + 앞 렌즈 고리 · 옆 노리쇠 손잡이 · 아주 가는 긴 총열 · 머즐 브레이크
     shotgun: [[0.0, 0.2, 0.21], [0.2, 0.42, 0.195], [0.42, 0.74, 0.15], [0.46, 0.62, 0.225], [0.72, 0.76, 0.18]],  // 샷건 — 굵은 총열 · 펌프 손잡이   /* c584: 두께 1.5배 */
     tgat: [[0.06, 0.36, 0.28], [0.36, 0.64, 0.055, -0.08], [0.36, 0.65, 0.055, 0], [0.36, 0.64, 0.055, 0.08], [0.43, 0.49, 0.25], [0.58, 0.65, 0.25]],   /* c586: 총신 3분의 1 짧게 · 조금 굵게 (뭉툭) */   // c585: 터렛 기관포 (조금 더 크게)
     gatling: [[0.08, 0.34, 0.24], [0.34, 0.66, 0.04, -0.065], [0.34, 0.68, 0.04, 0], [0.34, 0.66, 0.04, 0.065], [0.42, 0.47, 0.2], [0.62, 0.67, 0.2]],   // c584: 사각 로봇 기관포 — 몸통 · 총신 3개 · 고리 2개
