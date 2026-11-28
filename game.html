@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c606</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c608</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -7154,6 +7154,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     else if (!e.acidS && e.tank && e.g) { const g = new THREE.Group(); for (const [ox, oz, sc] of [[0.3, 0.1, 0.5], [-0.35, -0.12, 0.4], [0, 0.2, 0.34]]) { const s = new THREE.Sprite(chAcidMat); s.position.set(ox, 0.3, oz); s.scale.setScalar(sc); s.renderOrder = 1; g.add(s); } e.g.add(g); e.acidS = g; }   // c394: 보스(장갑차)도 산성 폭발이 묻으면 연두 덩어리 (자폭 산성과 같은 자리)
   }
   let chAcidMiniF = false;   // c475: 새끼 좀비 산성 폭발 중
+  const chAcidHitN = () => Math.round(3 + 7 * lvE('acid') / 5) * HPK;   // c608: 산성피 순간 피해 — 화면 숫자 (공격력 성장 빼고)
   const chAcidHit = () => Math.round(3 + 7 * lvE('acid') / 5) * HPK * CH_UPK.atk;   /* c505 */   /* c478 */   /* c476: 새끼 좀비 3 고정 되돌림 (c475) */   /* c400: 터질 때 피해 — 처음 3, 다 강화하면 10 (3 · 4 · 6 · 7 · 9 · 10) */   /* c399: 5 */   // c371: 산성 폭발이 터지는 순간 주는 피해 (고정)
   function chAcidBurst(z) {                    // c224: 동료·변이가 죽으며 산성피 — 범위 = 그 몸의 근접 거리 × 1.2 (강화마다 +15%) · 3초 (강화마다 +1초)
     const n = lvE('acid'); if (Math.random() >= 0.3 + 0.1 * n) return;
@@ -7167,15 +7168,16 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       if (c.kind !== 'citizen' || c.space !== z.space) continue;
       if (Math.hypot(c.foot.x - x, c.foot.z - zz) > R + (c.r || BODY) || blocked(x, zz, c.foot.x, c.foot.z)) continue;
       chAcidOn(c, T);
-      if (c.hp > 0) { c.hp = Math.max(0, c.hp - chAcidHit()); if (c.mesh.visible) chHitPop(c.foot.x + 0.6, c.foot.z, chAcidHit()); if (c.hp <= 0 && !c.police && c.state !== 'held') enterPanic(c, null, true); }   // c371: 터질 때 10 (고정 · 강화와 상관없다)
+      if (c.hp > 0) { c.hp = Math.max(0, c.hp - chAcidHit()); if (c.mesh.visible) chHitPop(c.foot.x + 0.6, c.foot.z, chAcidHitN()); if (c.hp <= 0 && !c.police && c.state !== 'held') enterPanic(c, null, true); }   // c371: 터질 때 10 (고정 · 강화와 상관없다)
     }
     if (!z.space) chDroneAcid(x, zz, R, T, true);   // c374: 드론 — 그림자 점이 원기둥 안이면
-    for (const tk of chTanks) if (!tk.wreck && !z.space && Math.hypot(tk.x - x, tk.z - zz) - CAR_L * CH_TK_KL / 2 <= R) {   /* c454 */ chAcidOn(tk, T); const o = tk.obj; if (o && o.hp > chAcidHit()) { o.hp -= chAcidHit(); chHitPop(tk.x + 0.9, tk.z, chAcidHit(), 2.2); } }   /* c371 */   // 보스도
+    for (const tk of chTanks) if (!tk.wreck && !z.space && Math.hypot(tk.x - x, tk.z - zz) - CAR_L * CH_TK_KL / 2 <= R) {   /* c454 */ chAcidOn(tk, T); const o = tk.obj; if (o && o.hp > chAcidHit()) { o.hp -= chAcidHit(); chHitPop(tk.x + 0.9, tk.z, chAcidHitN(), 2.2); } }   /* c371 */   // 보스도
     chAcidMiniF = false;   // c475
   }
   window.__kz = (z) => killZombie(z);   // 테스트용
   window.__goo = (c) => gooOn(c); window.__acidOn = (c, T) => chAcidOn(c, T);   // 테스트용
-  const CH_GOO_DOT = 2;   // c479: 자폭 산성 도트 (1초마다, + 산성 강도)
+  const CH_GOO_DOT = 4;   /* c607: 자폭 스위치 도트 기본 2 → 4 */
+  const CH_ACID_DOT = 1;   // c607: 산성피 도트 기본 2 → 1 (터지는 순간 피해는 그대로)   // c479: 자폭 산성 도트 (1초마다, + 산성 강도)
   const CH_DOT_T = 1;   // c401: 산성 도트(산성 폭발·산성 자폭 — 사람·보스·드론 모두) 간격 0.5 → 1초
   function chAcidTick(dt) {                    // c224: 겹마다 시간이 줄고, 0.5초마다 겹 수만큼 피해 (느려짐 없음)
     for (let i = chAcidL.length - 1; i >= 0; i--) {
@@ -7184,10 +7186,10 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       for (let k = e.acid.length - 1; k >= 0; k--) if ((e.acid[k] -= dt) <= 0) e.acid.splice(k, 1);
       if (gone || !e.acid.length) { if (e.acidS) { (e.mesh || e.g).remove(e.acidS); e.acidS = null; } e.acid.length = 0; e.acidT = 0; chAcidL.splice(i, 1); continue; }
       if ((e.acidT += dt) < CH_DOT_T) continue;
-      e.acidT -= CH_DOT_T; const d = (1 * HPK + chAcidB()) * CH_UPK.atk;   /* c478 */   // c259 · c261: 한 겹만 — 1 + 산성 강도
-      if (car) { const o = e.obj; if (o && o.hp > d) { o.hp -= d; chDotPop(e.x + 0.9, e.z, d, 2.2); } continue; }   // c265
+      e.acidT -= CH_DOT_T; const d = (CH_ACID_DOT + chAcidB()) * CH_UPK.atk;   /* c607 */   /* c478 */   // c259 · c261: 한 겹만 — 1 + 산성 강도
+      if (car) { const o = e.obj; if (o && o.hp > d) { o.hp -= d; chDotPop(e.x + 0.9, e.z, CH_ACID_DOT + chAcidB(), 2.2); } continue; }   /* c608: 화면은 공격력 성장 빼고 */   // c265
       if (e.hp <= 0) continue;
-      e.hp = Math.max(0, e.hp - d); if (e.mesh.visible) chDotPop(e.foot.x + 0.6, e.foot.z, d);   // c265
+      e.hp = Math.max(0, e.hp - d); if (e.mesh.visible) chDotPop(e.foot.x + 0.6, e.foot.z, CH_ACID_DOT + chAcidB());   // c265
       if (e.hp <= 0 && !e.police && e.state !== 'held') enterPanic(e, null, true);
     }
   }
@@ -7221,12 +7223,12 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
         const dx = c.foot.x - z.foot.x, dz = c.foot.z - z.foot.z; if (Math.abs(dx) > 3 || Math.abs(dz) > 3 || Math.hypot(dx, dz) > R0 + (c.r || BODY)) continue;
         c.hp = Math.max(0, c.hp - d);
         if (c.hp <= 0 && !c.police && !c.robot && c.state !== 'held') enterPanic(c, null, true);
-        if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, Math.max(1, d / HPK));   // 화면에는 1
+        if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, 1);   // 화면에는 1 (c608: 공격력 성장과 상관없이)
       }
       const reach = (z.r || BODY) + 0.12;   // c596: 사물 · 건물(문 · 벽) · 바리케이트 · 차량 · 금고 · 가구도 — 몸에 닿아 있으면
       const hitO = (o) => { const k = CH_SK !== 1 && !(o.car && (o.car.tank || o.car.cvy)) ? CH_SK : 1, dd = d / k; o.hp = Math.max(0, o.hp - dd);
         if (o.kind === 'obj') { if (o.type === 'wall') { chWallWarp(o); chWallFlash(o); } if (o.hp <= 0) breakObj(o); } else if (o.kind === 'safe' && o.hp <= 0) breakSafe(o);
-        const p = o.foot || (o.car ? { x: o.car.x, z: o.car.z } : null); if (p) chDotPop(p.x + 0.6, p.z, Math.max(1, d / HPK)); };
+        const p = o.foot || (o.car ? { x: o.car.x, z: o.car.z } : null); if (p) chDotPop(p.x + 0.6, p.z, 1); };
       for (const L of [objs, chWallObjs, chDecoObjs]) for (const o of L) { if (!o || o.dead || !(o.hp > 0)) continue; const p = o.type === 'wall' ? null : o.foot || (o.car ? { x: o.car.x, z: o.car.z } : o.L ? { x: o.L.cx, z: o.L.cz } : null); if (p && (Math.abs(p.x - z.foot.x) > 6 || Math.abs(p.z - z.foot.z) > 6)) continue; if (objGap(o, z) <= reach) hitO(o); }
       for (const o of bodies) { if (o.kind !== 'safe' || o.dead || !(o.hp > 0) || o.space !== z.space || Math.abs(o.foot.x - z.foot.x) > 4 || Math.abs(o.foot.z - z.foot.z) > 4) continue; if (Math.hypot(o.foot.x - z.foot.x, o.foot.z - z.foot.z) - (o.r || BODY) <= reach) hitO(o); }
     }
@@ -7245,7 +7247,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       if (c.hp <= 0) continue;                // 체력 0에서 멈춘다 (그다음은 감염)
       c.hp = Math.max(0, c.hp - (CH_GOO_DOT + chAcidB()) * CH_UPK.atk);   /* c505 */   /* c479: 2 */   /* c478 */   /* c475: 도트 3 · c123: 도트 2 · c259: + 산성 강도 */
       if (c.hp <= 0 && !c.police && c.state !== 'held') enterPanic(c, null, true);
-      if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, (CH_GOO_DOT + chAcidB()) * CH_UPK.atk);   // c475 · c265: 실제 피해 숫자
+      if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, CH_GOO_DOT + chAcidB());   /* c608: 화면은 공격력 성장 빼고 */   // c475 · c265: 실제 피해 숫자
     }
   }
 
@@ -8468,8 +8470,8 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       if (d.ride) { const c = d.ride; if (c.wreck || c.crewOut || !cars.includes(c)) d.ride = null; else { const a = d.rideK * 2.1 + clock * 0.6; d.x = c.x + Math.cos(a) * 0.8; d.z = c.z + Math.sin(a) * 0.8; d.foot.set(d.x, 0, d.z); chDroneDraw(d, dt); continue; } }   // c505: 차에 붙어 온다
       if (Math.hypot(d.x - me.foot.x, d.z - me.foot.z) > me.sense * 2.5) { if ((d.farT = (d.farT || 0) + dt) > 25) { d.dead = true; scene.remove(d.s); d.s.material.dispose(); scene.remove(d.sh); if (d.tr) { scene.remove(d.tr); d.tr.material.dispose(); } chDrones.splice(chDrones.indexOf(d), 1); continue; } } else d.farT = 0;   // c438: 못 오는 드론은 조용히 사라진다 (경험치 없음)
       // 산성 (폭발 = 1 + 산성 강도 · 자폭 = 2 + 산성 강도, 0.5초마다)
-      if (d.goo > 0) { d.goo -= dt; if ((d.gooT += dt) >= CH_DOT_T) { d.gooT -= CH_DOT_T; const n = (CH_GOO_DOT + chAcidB()) * CH_UPK.atk;   /* c475 */ chDotPop(d.x + 0.6, d.z, n); chDroneDmg(d, n); if (d.dead) continue; } }
-      else if (d.acid > 0) { d.acid -= dt; if ((d.acidT += dt) >= CH_DOT_T) { d.acidT -= CH_DOT_T; const n = (1 * HPK + chAcidB()) * CH_UPK.atk;   /* c478 */ chDotPop(d.x + 0.6, d.z, n); chDroneDmg(d, n); if (d.dead) continue; } }
+      if (d.goo > 0) { d.goo -= dt; if ((d.gooT += dt) >= CH_DOT_T) { d.gooT -= CH_DOT_T; const n = (CH_GOO_DOT + chAcidB()) * CH_UPK.atk;   /* c475 */ chDotPop(d.x + 0.6, d.z, CH_GOO_DOT + chAcidB()); chDroneDmg(d, n); if (d.dead) continue; } }
+      else if (d.acid > 0) { d.acid -= dt; if ((d.acidT += dt) >= CH_DOT_T) { d.acidT -= CH_DOT_T; const n = (CH_ACID_DOT + chAcidB()) * CH_UPK.atk;   /* c607 */   /* c478 */ chDotPop(d.x + 0.6, d.z, CH_ACID_DOT + chAcidB()); chDroneDmg(d, n); if (d.dead) continue; } }
       if (d.stunT > 0) { if ((d.air ?? 0) <= 0.45) d.stunT -= dt; chDroneDraw(d, dt); continue; }
       if (d.lureT > 0) {                        // c427: 금 — 금까지 날아가 내려앉는다 (남은 유혹 시간만큼 앉아 있다)
         d.lureT -= dt; const k = d.lureK, dx = k.x - d.x, dz = k.z - d.z, q = Math.hypot(dx, dz);
@@ -8512,7 +8514,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     }
   }
   function chDroneAcid(x, z, R, T, blk) {      // 산성 폭발 원기둥 — 그림자 점이 원 안이면 묻는다 (터질 때 10)
-    for (const d of chDrones.slice()) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || (blk && blocked(x, z, d.x, d.z))) continue; if (d.goo <= 0) { d.acid = Math.max(d.acid, T); } chHitPop(d.x + 0.6, d.z, chAcidHit()); chDroneDmg(d, chAcidHit()); }
+    for (const d of chDrones.slice()) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || (blk && blocked(x, z, d.x, d.z))) continue; if (d.goo <= 0) { d.acid = Math.max(d.acid, T); } chHitPop(d.x + 0.6, d.z, chAcidHitN()); chDroneDmg(d, chAcidHit()); }
   }
   function chDroneGooAt(x, z, R) {             // 산성 자폭 원기둥 — 그림자 점이 원 안이면 자폭 산성 (산성 폭발은 이걸로 바뀐다)
     for (const d of chDrones) { if (d.dead || Math.hypot(d.x - x, d.z - z) > R + d.r || blocked(x, z, d.x, d.z)) continue; d.goo = Math.max(d.goo, ((4 + 0.6 * chLvB('bomb'))) * chLingK());   /* c420 */ d.acid = 0; }
@@ -9078,7 +9080,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     }
     const spd = (car.tkSeen ? CAR_SPEED * CH_TR_SPD.sedan * CH_TR_SLOW / 2 * 1.2 :   /* c183: 20% 빠르게 */ CAR_SPEED * 0.9) /* c421: 산성 둔화 없음 */ * (car.goo ? chStickyK() : 1)   /* c422: 끈적 산성 */;   /* c179: 눈에 띄기 전 = 경찰차의 90% */   /* c168: 보인 뒤 속도 2배 (보통 차의 절반) */   /* c137: 눈에 띄기 전엔 보통 차 속도 */   // 보통 차(승용차)의 4분의 1
     if (car.goo && (car.gooLeft -= dt) <= 0) { car.goo = false; for (const s of car.gooS) car.g.remove(s); }   // c123
-    if (car.goo && (car.gooT += dt) >= CH_DOT_T) { car.gooT -= CH_DOT_T; const gd = (CH_GOO_DOT + chAcidB()) * CH_UPK.atk / (CH_SK !== 1 && !car.tank && !car.cvy ? CH_SK : 1);   /* c591: 차량 도트도 챕터 강화 */   /* c475 */ if (o && o.hp > gd) { o.hp -= gd; chDotPop(car.x + 0.9, car.z, gd, 2.2); } }   // c259 · c265
+    if (car.goo && (car.gooT += dt) >= CH_DOT_T) { car.gooT -= CH_DOT_T; const gd = (CH_GOO_DOT + chAcidB()) * CH_UPK.atk / (CH_SK !== 1 && !car.tank && !car.cvy ? CH_SK : 1);   /* c591: 차량 도트도 챕터 강화 */   /* c475 */ if (o && o.hp > gd) { o.hp -= gd; chDotPop(car.x + 0.9, car.z, CH_GOO_DOT + chAcidB(), 2.2);   /* c608 */ } }   // c259 · c265
     // 벽
     if (chTankWalls(car, dt)) {
       if (car.tkPX !== undefined) { car.x = car.tkPX; car.z = car.tkPZ; car.h = car.tkPH; car.foot.set(car.x, 0, car.z); if (o) o.foot.set(car.x, 0, car.z); }
