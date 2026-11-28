@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c590</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c591</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -3853,7 +3853,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     if (CHAPTER && a && (a.kind === 'citizen' || a.kind === 'tank')) dmg *= 1.15 * 1.2 * 0.95 * 0.93 * 0.93;
     if (CHAPTER && a && a.kind === 'citizen') dmg *= CH_E7;   /* c555: 적 캐릭터 공격 7% 낮춤 (드론 · 차량 제외) */
     if (CHAPTER && CH_SK !== 1 && a && (a.kind === 'citizen' || a.kind === 'drone' || a.kind === 'tank')) dmg *= CH_SK;   /* c506: 보스 공격도 */   // c505: 스테이지 강화 — 적 공격력
-    if (CHAPTER && CH_SK !== 1 && (v.kind === 'obj' || v.kind === 'safe') && !(v.car && v.car.tank)) dmg /= CH_SK;   // c505: 벽 · 사물 체력   /* c164: 7% 더 줄임 → 원래의 1.134배 */   /* c159: 7% 줄임 → 원래의 1.219배 */   /* c150: 장갑차도 군인과 같은 배율 */   /* c149: 전부 5% 줄임 → 사람·경찰·군인·저격수 1.311배 · 장갑차 1.0925배 */   /* c146: 사람·경찰·군인·저격수 20% 더 (합쳐서 1.38배) — 장갑차는 1.15배 그대로 */   // c143: 적(사람·경찰·군인·저격수·장갑차)의 공격력 15% 올림
+    if (CHAPTER && CH_SK !== 1 && (v.kind === 'obj' || v.kind === 'safe') && !(v.car && (v.car.tank || v.car.cvy))) dmg /= CH_SK;   /* c591: 보스 차량(군인차 부대)은 챕터 강화 빼기 */   // c505: 벽 · 사물 체력   /* c164: 7% 더 줄임 → 원래의 1.134배 */   /* c159: 7% 줄임 → 원래의 1.219배 */   /* c150: 장갑차도 군인과 같은 배율 */   /* c149: 전부 5% 줄임 → 사람·경찰·군인·저격수 1.311배 · 장갑차 1.0925배 */   /* c146: 사람·경찰·군인·저격수 20% 더 (합쳐서 1.38배) — 장갑차는 1.15배 그대로 */   // c143: 적(사람·경찰·군인·저격수·장갑차)의 공격력 15% 올림
     if (((TEST_MAP && !CHAPTER) && v === me) || (CH_ET && ((isZombie(v) && !v.mad) || (a && isZombie(a) && !a.mad)))) dmg = 0;   /* c465: 적 테스트 — 우리 편은 안 다치고, 우리 편 공격도 안 들어간다 */   /* c463: 적 테스트도 */   // v396: 시험 맵 — 나는 무적 (c42: 챕터는 빼고)
     if (CHAPTER && a && a.vig && isZombie(v) && v.mode !== 'bite' && !(chKbAbs(v) >= SNIPER_KD * 2 / 12 - 0.001)   /* c436 */) {   // c39: 자경단 몽둥이 — 밀림 1
       const T = ARMOR_KT * 2 / 12, D = SNIPER_KD * 2 / 12, V = D * 4 / (1 - Math.exp(-4 * T));   // c45: 1 → 2
@@ -7987,7 +7987,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     // c104: 다이아몬드 표시는 떼지 않는다 (얻은 변이 좀비 표시)
     b.r = BODY; delete b.halfH; b.mesh.scale.setScalar(1);
     mutate(b, t); pendingAward.push('mut:' + t); chMutFoc.push(b);   /* c449 */   /* c316: 동료 획득창 */   // c56: 검은 테두리는 뺐다 (테두리는 변이한 나만)
-    if (t === 'armor') b.maxHp = 380 * HPK * 0.9;   /* c478 */ else b.maxHp *= 1.0;   /* c164: 얻은 덩치 342로 되돌림 */   /* c163: 얻은 덩치 365.9 */   /* c136: 얻은 덩치 342 (히드라는 동료 체력에서 따라 내려간다) */   /* c115: 3분의 2로 (570 → 380 · 히드라 142 → 95) */   /* c106: 얻은 덩치 체력 570 */ b.hp = b.maxHp;   // c100 · c104: 얻은 덩치는 체력 2.4배 · 얻은 히드라는 1.5배
+    if (t === 'armor') { b.maxHp = 380 * HPK * 0.9 * CH_UPK.ahp; b.hp = Math.min(b.hp, b.maxHp); }   /* c591: 분홍에서 얻은 덩치도 동료 체력 성장 */   /* c478 */ else b.maxHp *= 1.0;   /* c164: 얻은 덩치 342로 되돌림 */   /* c163: 얻은 덩치 365.9 */   /* c136: 얻은 덩치 342 (히드라는 동료 체력에서 따라 내려간다) */   /* c115: 3분의 2로 (570 → 380 · 히드라 142 → 95) */   /* c106: 얻은 덩치 체력 570 */ b.hp = b.maxHp;   // c100 · c104: 얻은 덩치는 체력 2.4배 · 얻은 히드라는 1.5배
   }
   function chSafeInRoom(s, R) {                // c54: 금고를 방 안에 — 방문에서 가장 먼 자리. 작은 방이면 그 방 사람은 복도로 옮긴다
     const D = R.locks.find((L) => L.out) || R.locks[0], m = s.r + 0.3;
@@ -8922,7 +8922,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     }
     const spd = (car.tkSeen ? CAR_SPEED * CH_TR_SPD.sedan * CH_TR_SLOW / 2 * 1.2 :   /* c183: 20% 빠르게 */ CAR_SPEED * 0.9) /* c421: 산성 둔화 없음 */ * (car.goo ? chStickyK() : 1)   /* c422: 끈적 산성 */;   /* c179: 눈에 띄기 전 = 경찰차의 90% */   /* c168: 보인 뒤 속도 2배 (보통 차의 절반) */   /* c137: 눈에 띄기 전엔 보통 차 속도 */   // 보통 차(승용차)의 4분의 1
     if (car.goo && (car.gooLeft -= dt) <= 0) { car.goo = false; for (const s of car.gooS) car.g.remove(s); }   // c123
-    if (car.goo && (car.gooT += dt) >= CH_DOT_T) { car.gooT -= CH_DOT_T; const gd = (CH_GOO_DOT + chAcidB()) * CH_UPK.atk;   /* c475 */ if (o && o.hp > gd) { o.hp -= gd; chDotPop(car.x + 0.9, car.z, gd, 2.2); } }   // c259 · c265
+    if (car.goo && (car.gooT += dt) >= CH_DOT_T) { car.gooT -= CH_DOT_T; const gd = (CH_GOO_DOT + chAcidB()) * CH_UPK.atk / (CH_SK !== 1 && !car.tank && !car.cvy ? CH_SK : 1);   /* c591: 차량 도트도 챕터 강화 */   /* c475 */ if (o && o.hp > gd) { o.hp -= gd; chDotPop(car.x + 0.9, car.z, gd, 2.2); } }   // c259 · c265
     // 벽
     if (chTankWalls(car, dt)) {
       if (car.tkPX !== undefined) { car.x = car.tkPX; car.z = car.tkPZ; car.h = car.tkPH; car.foot.set(car.x, 0, car.z); if (o) o.foot.set(car.x, 0, car.z); }
