@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c586</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c587</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1549,7 +1549,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     return c;
   }
   const chGunMat = new THREE.MeshBasicMaterial({ color: 0x1d2024, transparent: true, depthTest: false, depthWrite: false }), chSqGeo = new THREE.PlaneGeometry(RADIUS * 1.8, RADIUS * 1.8);
-  function chAddGun(c, L, W, col) { if (col === 0x1a1d21 && c.turret) { chGunShape(c, 'tgat'); return; }   /* c585: 터렛 = 기관포 */ if (c.aimGun) c.mesh.remove(c.aimGun);   /* c583: 있던 총은 바꿔 낀다 */ const g = new THREE.Mesh(new THREE.PlaneGeometry(L, W).translate(L / 2 + 0.05, 0, 0), col ? new THREE.MeshBasicMaterial({ color: col, transparent: true, depthTest: false, depthWrite: false }) : chGunMat); g.position.z = 0.012; g.renderOrder = 1; c.mesh.add(g); c.aimGun = g; }
+  function chAddGun(c, L, W, col) { if (col === 0x1a1d21 && c.turret) { c.mesh.geometry = chTurGeo; if (!c.turDome) { const d = new THREE.Mesh(chTurDome, chTurDomeMat); d.position.z = 0.006; d.renderOrder = 0.5; c.mesh.add(d); c.turDome = d; } chGunShape(c, 'tgat'); return; }   /* c587: 터렛 = 동그란 몸 (사각과 같은 폭) + 가운데 포탑 + 기관포 */   /* c585: 터렛 = 기관포 */ if (c.aimGun) c.mesh.remove(c.aimGun);   /* c583: 있던 총은 바꿔 낀다 */ const g = new THREE.Mesh(new THREE.PlaneGeometry(L, W).translate(L / 2 + 0.05, 0, 0), col ? new THREE.MeshBasicMaterial({ color: col, transparent: true, depthTest: false, depthWrite: false }) : chGunMat); g.position.z = 0.012; g.renderOrder = 1; c.mesh.add(g); c.aimGun = g; }
   const CH_GUN_SHAPE = {   // c583: 위에서 본 총 — [앞쪽 시작, 앞쪽 끝, 폭] 조각들 (몸 가운데 = 0, 몸 반지름 0.5)
     pistol: [[0.34, 0.62, 0.1], [0.6, 0.66, 0.06]],   /* c585: 몸 밖으로 살짝 */                                                     // 권총 — 아주 짧게
     rifle: [[0.0, 0.22, 0.13], [0.22, 0.56, 0.1], [0.3, 0.42, 0.14], [0.56, 0.8, 0.05], [0.78, 0.84, 0.08]],   // 소총 — 개머리 · 몸통 · 손잡이 · 총열 · 소염기
@@ -1566,6 +1566,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     g.position.z = 0.012; c.mesh.add(g); c.aimGun = g;
   }
   const chRSqGeo = (() => { const h = RADIUS * 0.9, r = 0.13, S = new THREE.Shape(); S.moveTo(-h + r, -h); S.lineTo(h - r, -h); S.quadraticCurveTo(h, -h, h, -h + r); S.lineTo(h, h - r); S.quadraticCurveTo(h, h, h - r, h); S.lineTo(-h + r, h); S.quadraticCurveTo(-h, h, -h, h - r); S.lineTo(-h, -h + r); S.quadraticCurveTo(-h, -h, -h + r, -h); return new THREE.ShapeGeometry(S, 6); })();   // c584: 둥근 모서리 사각
+  const chTurGeo = new THREE.CircleGeometry(RADIUS * 0.9, 40), chTurDome = new THREE.CircleGeometry(RADIUS * 0.52, 32), chTurDomeMat = new THREE.MeshBasicMaterial({ color: 0x5f6875, transparent: true, depthTest: false, depthWrite: false });   // c587
   const chOctGeo = new THREE.CircleGeometry(RADIUS * 1.04, 8, Math.PI / 8);   // c583: 샷건 경찰 — 팔각형 몸
   function chMakeSg(c) {                       // c436: 샷건 경찰 — 경찰 + 늘 앞을 향한 샷건 · 체력 150% · 경찰 사거리 0.4배까지 다가가 쏜다
     c.sg = true; c.hp = c.maxHp = c.maxHp * CH_SG_HPK; chGunShape(c, 'shotgun'); c.mesh.geometry = chOctGeo;   /* c583: 샷건 모양 · 팔각형 */ c.baseCol = 0x5c1470;   /* c582: 더 어두운 보라 */ c.mesh.material.color.setHex(c.baseCol);   /* c573: 체력 450(스테이지 1) · 살짝 진한 보라 */
