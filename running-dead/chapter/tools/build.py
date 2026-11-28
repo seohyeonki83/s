@@ -1774,6 +1774,8 @@ from c612_patch import C612_R
 R += C612_R
 from c613_patch import C613_R
 R += C613_R
+from c614_patch import C614_R
+R += C614_R
 for e in R:
     a, b, n = (e + (1,))[:3]
     assert s.count(a) == n, (s.count(a), n, a[:70])
