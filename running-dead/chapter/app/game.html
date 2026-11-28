@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c591</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c592</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -447,13 +447,33 @@
   // ── c505: 본편 — 저장 · 아웃게임 (스테이지 · 난이도 · 성장). 처음엔 튜토리얼부터 ──
   const CH_SV = (() => { let o = null; try { o = JSON.parse(localStorage.getItem('rd_save_v1') || 'null'); } catch (e) {} o = o || {}; o.genes = o.genes || 0; o.clr = o.clr || {}; o.sub = o.sub || {}; o.up = Object.assign({ hp: 0, ahp: 0, atk: 0 }, o.up || {}); o.tut = !!o.tut;
     if (!o.v4) { o = { genes: 0, clr: {}, sub: {}, up: { hp: 0, ahp: 0, atk: 0 }, tut: false, mig: 1, v2: 1, v3: 1, v4: 1 }; }   // c538: 챕터 개편 — 기록 전부 초기화   // c515: 한 번 더 전부 초기화   // c508: 옛 버전에서 옮겨온 유전자까지 한 번 깨끗이
-    if (!o.u2) { for (const k of ['hp', 'ahp', 'atk']) o.up[k] = (o.up[k] || 0) * 2; o.u2 = 1; }   /* c561: 성장 1 = 50 · 0.25% — 이미 찍은 포인트는 2배로 옮겨 효과 그대로 */
+    if (!o.u2) { for (const k of ['hp', 'ahp', 'atk']) o.up[k] = (o.up[k] || 0) * 2; o.u2 = 1; }
+    if (!o.u3) { o.up = { hp: 0, ahp: 0, atk: 0 }; o.tr = {}; o.u3 = 1; }   /* c592: 성장 개편 — 성장 기록 새로 시작 (유전자 · 클리어 기록은 그대로) */ o.tr = o.tr || {};   /* c561: 성장 1 = 50 · 0.25% — 이미 찍은 포인트는 2배로 옮겨 효과 그대로 */
     try { localStorage.removeItem('rd_genes'); } catch (e) {} return o; })();
   function chSave() { try { localStorage.setItem('rd_save_v1', JSON.stringify(CH_SV)); } catch (e) {} }
   chSave();
-  const CH_UP_COST = 50;   /* c561: 100 → 50 */   // 성장 1 = 유전자 100 · 기본값의 0.5% (c522)
-  const CH_UP_K = 0.0025;   /* c561: 0.5% → 0.25% */   // c522: 성장 1 = 기본값의 0.5% (유전자 100)
-  const CH_UPK = { hp: 1 + CH_UP_K * CH_SV.up.hp, ahp: 1 + CH_UP_K * CH_SV.up.ahp, atk: 1 + CH_UP_K * CH_SV.up.atk };
+  const CH_UP_COST = 10;   /* c592: 1포인트 = 유전자 10 */
+  const CH_UP_K = 0.005;   /* c592: 게이지 1개(10포인트) = +0.5% */
+  const chUpLv = (k) => Math.floor((CH_SV.up[k] || 0) / 10);   // c592: 채운 게이지 수 (표시 = 100 + 이것)
+  const CH_UPK = { hp: 1 + CH_UP_K * chUpLv('hp'), ahp: 1 + CH_UP_K * chUpLv('ahp'), atk: 1 + CH_UP_K * chUpLv('atk') };
+  // ── c592: 특성 — 게이지 1개 = 특성 포인트 1 · 단계마다 비용 2배 (1 · 2 · 4 …) · 최대 10단계
+  const chTrait = (k) => (CH_SV.tr || {})[k] || 0;
+  const chTrCost = (lv) => Math.pow(2, lv);   // lv → lv+1 비용
+  const chTpAll = () => chUpLv('hp') + chUpLv('ahp') + chUpLv('atk');
+  const chTpLeft = () => chTpAll() - Object.values(CH_SV.tr || {}).reduce((n, lv) => n + Math.pow(2, lv) - 1, 0);
+  const chMutK = () => 1 + 0.02 * chTrait('mut');            // 돌연변이 — 괴물 추가분 +2%씩
+  const chStrB = () => 0.15 * chTrait('str');                // 괴력 — 내 미는 힘 +0.15씩
+  const chLureK = (c) => { const r0 = c.military ? 8 : c.police ? 5 : 0, r = Math.max(0, r0 - 0.2 * chTrait('cash')); return (10 - r) / 10; };   // 현금 — 유혹 저항력 (군인·저격수 8 · 경찰 5) −0.2씩
+  let chTzHit = false;   // 테이저 피해 중 (흡혈 안 함)
+  const CH_TRD = [
+    { k: 'start', ic: '🧟', nm: '시작 동료', fx: (L) => { const n = Math.floor(L / 2), m = L % 2; return L ? '판 시작 시 ' + [n ? '일반 좀비 ' + n : '', m ? '새끼 좀비 1' : ''].filter(Boolean).join(' + ') : '없음'; } },
+    { k: 'leech', ic: '🩸', nm: '흡혈', fx: (L) => `때릴 때마다 최대 체력의 ${(0.1 * L).toFixed(1)}% 회복` },
+    { k: 'bat', ic: '⚡', nm: '배터리 강화', fx: (L) => L ? `테이저 피해 = 내 한 대의 ${Math.round((1 / 3 + 2 / 3 * (L - 1) / 9) * 100)}%` : '테이저 피해 없음' },
+    { k: 'bomb', ic: '💥', nm: '자폭 스위치 폭발력 강화', fx: (L) => `자폭 범위 +${(0.17 * L).toFixed(2)}칸` },
+    { k: 'cash', ic: '💵', nm: '현금 강화', fx: (L) => `유혹 저항력 -${(0.2 * L).toFixed(1)} · 군인 ${Math.round((10 - (8 - 0.2 * L)) * 10)}% · 경찰 ${Math.round((10 - (5 - 0.2 * L)) * 10)}%` },
+    { k: 'mut', ic: '🦠', nm: '돌연변이', fx: (L) => `괴물 추가 능력 +${2 * L}% (스플래시 · 미는 힘 · 사거리)` },
+    { k: 'str', ic: '🦾', nm: '괴력', fx: (L) => `내 미는 힘 +${(0.15 * L).toFixed(2)}` },
+  ];
   const CH_DIF_NM = { e: '쉬움', n: '보통', h: '어려움' };
   let CH_STG = +window.__stg || 2, CH_DIF = window.__dif || 'h';   // 테스트 맵 기본값 (불도저 · 어려움)
   const chUnlocked = (st, d) => (st === 1 || ['e', 'n', 'h'].some((q) => CH_SV.clr[(st - 1) + q])) && (d === 'e' || CH_SV.clr[st + (d === 'n' ? 'e' : 'n')]);
@@ -551,6 +571,22 @@
 #outg .ug .pc{font-size:22px;font-weight:900;color:#7fe3ff;min-width:56px;text-align:right}
 #outg .ub{padding:10px 12px;border-radius:12px;background:#2f6fe0;font-weight:900;font-size:14px;display:flex;align-items:center;gap:4px;white-space:nowrap}
 #outg .ub:disabled{background:#3a4250;color:#8a93a3}
+#outg .bt{gap:10px}#outg .bt .ugb{width:min(170px,43vw);position:relative}#outg .ugb.trb{background:linear-gradient(#b36bff,#7a35d0);box-shadow:0 4px 0 #4a1d85}
+#outg .ugb .bd2{position:absolute;top:-8px;right:-6px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:#ff3b5c;color:#fff;font-size:13px;line-height:22px;box-shadow:0 2px 4px rgba(0,0,0,.4)}
+#outg .ug{position:relative}#outg .ug .gg{display:flex;gap:3px;margin-top:7px}#outg .ug .gg i{flex:1;height:9px;border-radius:3px;background:#11161e;border:1px solid #2a3442}#outg .ug .gg i.on{background:#7fe3ff;border-color:#7fe3ff;box-shadow:0 0 6px rgba(127,227,255,.6)}
+#outg .ug.pop{animation:ugflash .7s ease-out}#outg .ug.pop .gg i{background:#fff;border-color:#fff;box-shadow:0 0 10px #7fe3ff}#outg .ug.pop .pc{animation:ugpop .7s ease-out}
+#outg .ug .pc{position:relative}#outg .ug .ufl{position:absolute;right:0;top:-6px;font-size:18px;color:#ffe066;text-shadow:0 0 8px rgba(255,200,60,.8);animation:ugfl .8s ease-out forwards}
+@keyframes ugpop{0%{transform:scale(1)}30%{transform:scale(1.7);color:#fff;text-shadow:0 0 16px #7fe3ff}100%{transform:scale(1)}}
+@keyframes ugflash{0%{border-color:#2a3442}25%{border-color:#7fe3ff;box-shadow:0 0 18px rgba(127,227,255,.55)}100%{border-color:#2a3442}}
+@keyframes ugfl{0%{opacity:0;transform:translateY(8px)}20%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
+#outg .gh{font-size:12px;color:#8fa0b8;text-align:center;margin:4px 0 2px}
+#outg .tr{display:flex;align-items:center;gap:12px;background:#1e2530;border:2px solid #2a3442;border-radius:14px;padding:12px;margin-bottom:8px}
+#outg .tr .ic{width:46px;height:46px;border-radius:12px;background:#11161e;display:flex;align-items:center;justify-content:center;font-size:24px;flex:none}
+#outg .tr .tx{flex:1;min-width:0}#outg .tr .n1{font-weight:900;font-size:15px}#outg .tr .lv{font-size:12px;color:#c79bff;font-weight:900;margin-left:4px}
+#outg .tr .dt{display:flex;gap:3px;margin:6px 0 5px}#outg .tr .dt i{width:12px;height:12px;border-radius:50%;background:#11161e;border:1px solid #3a4250}#outg .tr .dt i.on{background:#c79bff;border-color:#c79bff;box-shadow:0 0 5px rgba(199,155,255,.7)}
+#outg .tr .n2{font-size:12px;color:#d9e1ec;font-weight:700}#outg .tr .n3{font-size:12px;color:#8fa0b8;font-weight:700;margin-top:2px}
+#outg .tr .ub{background:#7a35d0}#outg .tr .ub:disabled{background:#3a4250;color:#8a93a3}#outg .tr .mx{font-weight:900;color:#c79bff;font-size:14px}
+#outg .tr.pop{animation:trflash .7s ease-out}@keyframes trflash{0%{border-color:#2a3442}25%{border-color:#c79bff;box-shadow:0 0 18px rgba(199,155,255,.6)}100%{border-color:#2a3442}}
 #outg .sb{width:100%;padding:13px 0;border-radius:14px;background:#2a3340;font-weight:900;font-size:16px;margin-bottom:8px}
 #outg .sb.rst{background:transparent;border:1px solid #3a4250;color:#8a93a3;font-size:13px;padding:8px 0}
 #outg .sb.rst.on{background:#c62828;color:#fff;border-color:#c62828}
@@ -591,7 +627,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
         const ok = okN(n);
         h += `<button class="nd ${ok ? '' : 'lk'} ${n === curN ? 'cur' : ''} ${['e', 'n', 'h'].some((q) => cleared(n + q)) ? 'dn' : ''}" data-st="${n}" style="left:${x}%;top:${y}%"><div class="nm">${!ok ? '<span class="lkI">🔒 </span>' : ''}${CH_STG_INFO[n].nm}</div><div class="cbx">${['e', 'n', 'h'].map((q) => `<i class="cb ${cleared(n + q) ? 'on' : ''}" data-cb="${n + q}"></i>`).join('')}</div></button>`;
       });
-      h += `</div></div><div class="hint">← 지도를 밀어서 둘러보기 →</div><div class="bt"><button class="ugb" data-ug="1"><span class="i">💪</span>성장</button></div>`;
+      h += `</div></div><div class="hint">← 지도를 밀어서 둘러보기 →</div><div class="bt"><button class="ugb" data-ug="1"><span class="i">💪</span>성장</button><button class="ugb trb" data-trs="1"><span class="i">✦</span>특성${chTpLeft() > 0 ? `<span class="bd2">${chTpLeft()}</span>` : ''}</button></div>`;
       ov.innerHTML = h;
       const m = ov.querySelector('.map'), nd = ov.querySelector(anim ? (anim.t ? '.nd[data-tn]' : `.nd[data-st="${anim.n}"]`) : `.nd[data-st="${curN}"]`); if (m && nd && keep === undefined) requestAnimationFrame(() => { m.scrollLeft = Math.max(0, nd.offsetLeft + nd.offsetParent.offsetLeft - m.clientWidth / 2); }); else if (m && keep !== undefined) m.scrollLeft = keep;
     };
@@ -610,14 +646,24 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       h += `<div class="cd"><div class="k">보상</div><div class="rw ${got ? 'got' : ''}"><div class="gi">${CH_GENE_I()}${g}</div><div class="lb">첫 클리어${got ? ' · 받음 ✓' : ''}</div></div></div>`;
       h += `<div class="cd"><div class="k">서브 미션</div>${[0, 1].map((i) => { const dn = !!CH_SV.sub[key + i]; return `<div class="rw ${dn ? 'got' : ''}"><div class="ck ${dn ? 'on' : ''}">${dn ? '✓' : ''}</div><div class="lb">${chMisTxt(d, i, n)}</div><div class="gi">${CH_GENE_I()}${CH_SUB_G}</div></div>`; }).join('')}</div>`;
       h += ok ? `<button class="go" data-go="1">시작하기</button>` : `<button class="go" disabled>🔒 ${chLockWhy(n, d)}</button>`;
-      openSheet(h, (b) => { if (b.dataset.d) stageSheet(n, b.dataset.d); else if (b.dataset.go) { CH_UPK.hp = 1 + CH_UP_K * CH_SV.up.hp; CH_UPK.ahp = 1 + CH_UP_K * CH_SV.up.ahp; CH_UPK.atk = 1 + CH_UP_K * CH_SV.up.atk; ov.remove(); go(n, d); } });
+      openSheet(h, (b) => { if (b.dataset.d) stageSheet(n, b.dataset.d); else if (b.dataset.go) { CH_UPK.hp = 1 + CH_UP_K * chUpLv('hp'); CH_UPK.ahp = 1 + CH_UP_K * chUpLv('ahp'); CH_UPK.atk = 1 + CH_UP_K * chUpLv('atk');   /* c592 */ ov.remove(); go(n, d); } });
       const t = sheet.querySelector('.sh'); if (t) t.scrollTop = 0;
     };
-    const upSheet = () => {
-      const row = (k, ic, nm, ds) => { const v = CH_SV.up[k]; return `<div class="ug"><div class="ic">${ic}</div><div class="tx"><div class="n1">${nm}</div></div><div class="pc">${v}</div><button class="ub" data-up="${k}" ${CH_SV.genes < CH_UP_COST ? 'disabled' : ''}>+1 ${CH_GENE_I(14)}${CH_UP_COST}</button></div>`; };
-      openSheet(`<div class="hd"><div><div class="t2">성장</div></div><button class="x">✕</button></div><div class="ds">${CH_GENE_I(14)} <b>${CH_SV.genes}</b></div>` +
-        row('hp', '❤️', '내 체력', '내 최대 체력 · 혈액팩 회복량') + row('ahp', '🧟', '동료 체력', '동료 좀비 최대 체력') + row('atk', '⚔️', '공격력', '나 · 동료 · 덩치 · 히드라 · 산성 · 끈끈이 피해'),
-        (b) => { if (b.dataset.up && CH_SV.genes >= CH_UP_COST) { CH_SV.genes -= CH_UP_COST; CH_SV.up[b.dataset.up]++; chSave(); { const m = ov.querySelector('.map'); draw(m ? m.scrollLeft : 0); } upSheet(); }   /* c567: 다시 그려도 지도는 보던 자리 그대로 */ });
+    const upSheet = (pop) => {   // c592: 성장 — 표시 100부터 · 클릭 1번 = 유전자 10 · 10칸 게이지가 꽉 차면 +1 (팡) · 특성 포인트 +1
+      const row = (k, ic, nm) => { const v = CH_SV.up[k] || 0, lvN = Math.floor(v / 10), f = pop === k ? 10 : v % 10;
+        return `<div class="ug${pop === k ? ' pop' : ''}" data-row="${k}"><div class="ic">${ic}</div><div class="tx"><div class="n1">${nm}</div><div class="gg">${Array.from({ length: 10 }, (_, i) => `<i class="${i < f ? 'on' : ''}"></i>`).join('')}</div></div><div class="pc">${100 + lvN}${pop === k ? '<b class="ufl">+1</b>' : ''}</div><button class="ub" data-up="${k}" ${CH_SV.genes < CH_UP_COST ? 'disabled' : ''}>+ ${CH_GENE_I(14)}${CH_UP_COST}</button></div>`; };
+      openSheet(`<div class="hd"><div><div class="t2">성장</div></div><button class="x">✕</button></div><div class="ds">${CH_GENE_I(14)} <b>${CH_SV.genes}</b> · 특성 포인트 <b class="tpn">${chTpLeft()}</b></div>` +
+        row('hp', '❤️', '내 체력') + row('ahp', '🧟', '동료 체력') + row('atk', '⚔️', '공격력') + `<div class="gh">10번 채우면 +1 (능력 +0.5%) · 특성 포인트 +1</div>`,
+        (b) => { if (b.dataset.up && CH_SV.genes >= CH_UP_COST) { const k = b.dataset.up; CH_SV.genes -= CH_UP_COST; CH_SV.up[k] = (CH_SV.up[k] || 0) + 1; chSave(); { const m = ov.querySelector('.map'); draw(m ? m.scrollLeft : 0); }   /* c567: 지도는 보던 자리 그대로 */
+          const full = CH_SV.up[k] % 10 === 0; upSheet(full ? k : null); if (full) { const sh0 = sheet; setTimeout(() => { if (sheet === sh0 && sheet && sheet.querySelector('.ug.pop')) upSheet(); }, 700); } } });
+    };
+    const trSheet = (pop) => {   // c592: 특성 — 특성 포인트로 올린다 · 단계마다 비용 2배 · 최대 10단계
+      const tp = chTpLeft();
+      const row = (D) => { const L = chTrait(D.k), mx = L >= 10, c = chTrCost(L);
+        return `<div class="tr${pop === D.k ? ' pop' : ''}"><div class="ic">${D.ic}</div><div class="tx"><div class="n1">${D.nm} <span class="lv">${L}/10</span></div><div class="dt">${Array.from({ length: 10 }, (_, i) => `<i class="${i < L ? 'on' : ''}"></i>`).join('')}</div><div class="n2">${L ? '지금: ' + D.fx(L) : '아직 없음'}</div>${mx ? '' : `<div class="n3">다음: ${D.fx(L + 1)}</div>`}</div>${mx ? '<div class="mx">MAX</div>' : `<button class="ub" data-tr="${D.k}" ${tp < c ? 'disabled' : ''}>✦${c}</button>`}</div>`; };
+      openSheet(`<div class="hd"><div><div class="t2">특성</div></div><button class="x">✕</button></div><div class="ds">특성 포인트 <b class="tpn">✦ ${tp}</b> · 성장 게이지 1개 = 1포인트</div>` + CH_TRD.map(row).join(''),
+        (b) => { const k = b.dataset.tr; if (!k) return; const L = chTrait(k); if (L >= 10 || chTpLeft() < chTrCost(L)) return; CH_SV.tr[k] = L + 1; chSave(); { const m = ov.querySelector('.map'); draw(m ? m.scrollLeft : 0); } trSheet(k); });
+      const t = sheet && sheet.querySelector('.sh'); if (t && pop) { const el = t.querySelector('.tr.pop'); if (el) el.scrollIntoView({ block: 'nearest' }); }
     };
     const tutSheet = () => {   // c520: 튜토리얼 상세 — 생체 연구소 · 목표 탈출하기
       openSheet(`<div class="hd"><div><div class="t1">튜토리얼</div><div class="t2">생체 연구소</div></div><button class="x">✕</button></div><div class="ds">${CH_STORY.t}</div>` +
@@ -641,6 +687,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       if (sheet && sheet.contains(e.target)) return;
       const b = e.target.closest('button'); if (!b) return;
       if (b.dataset.ug) { upSheet(); return; }
+      if (b.dataset.trs) { trSheet(); return; }   /* c592 */
       if (b.dataset.set) { setSheet(); return; }
       if (b.dataset.tn) { tutSheet(); return; }
       if (b.dataset.st) { const n = +b.dataset.st; if (!chUnlocked(n, 'e')) { b.animate([{ transform: 'translate(-50%,-50%)' }, { transform: 'translate(-46%,-50%)' }, { transform: 'translate(-54%,-50%)' }, { transform: 'translate(-50%,-50%)' }], { duration: 250 }); return; }
@@ -3849,7 +3896,8 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     if (CHAPTER && v && v.kind === 'citizen' && a && isZombie(a)) v.flT = clock;   // c526: 우리한테 맞으면 움찔 — 제 발로 가는 이동만 0에서 0.15초 동안 회복
     if (CHAPTER && a && a.kind === 'citizen' && (v.kind === 'ally' || v === me) && !v.dead) v.objOff = clock + 2;   /* c64: 나도 */   // c58: 맞은 동료는 2초 동안 사물을 안 노린다
     if (CHAPTER && a && (a === me || a.kind === 'ally') && (!a.splashing || a === me)) dmg *= a === me ? 1.15 * 0.9 * 0.8 * 1.1 * 1.03 : 1.15 * 1.1 * 1.07 * 1.03;   /* c243 → c244: 나·동료 3% 올림 */   /* c231: 나 10% 줄임 · c233: 20% 더 · c240: 나 10% 올림 (c242: 동료는 되돌림) */   /* c162: 동료 7% 더 */   /* c160: 동료만 10% 더 */   // c135: 나와 동료 공격력 15% 올림 (덩치의 범위 공격은 본 공격에서 이미 올랐다)
-    if (CHAPTER && a && a.mini) dmg /= 3;   // c370: 작은 좀비 공격력 1/3
+    if (CHAPTER && a && a.mini) dmg /= 3;
+    if (CHAPTER && a === me && !a.splashing && !chTzHit && v && v.kind === 'citizen' && !v.robot && v.hp > 0 && chTrait('leech') && me.hp > 0) me.hp = Math.min(me.maxHp, me.hp + me.maxHp * 0.001 * chTrait('leech'));   /* c592: 흡혈 — 사람을 때릴 때마다 (한 번에 한 번) */   // c370: 작은 좀비 공격력 1/3
     if (CHAPTER && a && (a.kind === 'citizen' || a.kind === 'tank')) dmg *= 1.15 * 1.2 * 0.95 * 0.93 * 0.93;
     if (CHAPTER && a && a.kind === 'citizen') dmg *= CH_E7;   /* c555: 적 캐릭터 공격 7% 낮춤 (드론 · 차량 제외) */
     if (CHAPTER && CH_SK !== 1 && a && (a.kind === 'citizen' || a.kind === 'drone' || a.kind === 'tank')) dmg *= CH_SK;   /* c506: 보스 공격도 */   // c505: 스테이지 강화 — 적 공격력
@@ -4156,6 +4204,24 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     chMini(c); c.hp = c.maxHp = c.maxHp / 3; if (c.hpBar) c.hpDisp = c.hp;
     for (let i = 0; i < 8; i++) { const g = i / 8 * Math.PI * 2; puff(x, 0.3, z, 0xb65fd6, 0.25, 0.7, 0.4, Math.cos(g) * 1.6, 0.3, Math.sin(g) * 1.6, 0.85); }
     return c;
+  }
+  function chTaserDmg(c) {   // c592: 배터리 강화 — 내 한 대의 1/3(1단계) ~ 100%(10단계). 기계가 터지면 true
+    const L = chTrait('bat'); if (!CHAPTER || !L || c.tank) return false;
+    const dmg = zDamage(me) * (1 / 3 + 2 / 3 * (L - 1) / 9);
+    if (c.drone) { chDroneDmg(c, dmg); return !!c.dead; }
+    if (c.kind !== 'citizen' || c.hp <= 0) return false;
+    chTzHit = true; landHit(me, c, dmg); chTzHit = false;
+    if (c.robot && c.hp <= 0) { if (c.kind === 'citizen') chRobotDie(c); return true; }
+    return false;
+  }
+  function chStartAllies() {   // c592: 시작 동료 — 일반 좀비 (단계 ÷ 2) · 홀수 단계면 새끼 좀비 1
+    const L = chTrait('start'); if (!L) return; const n = Math.floor(L / 2), m = L % 2;
+    for (let i = 0; i < n + m; i++) for (let t = 0; t < 40; t++) {
+      const a = (i / (n + m)) * Math.PI * 2 + rand(-0.4, 0.4) + t * 0.3, r = 1.3 + t * 0.06, x = me.foot.x + Math.cos(a) * r, z = me.foot.z + Math.sin(a) * r;
+      if (spaceOf(x, z) !== me.space || !freeSpot(x, z, null) || blocked(me.foot.x, me.foot.z, x, z)) continue;
+      chExact = true; const c = chPut(x, z, { x0: x - 1, z0: z - 1, x1: x + 1, z1: z + 1 }, '', me.space); chExact = false;
+      makeZombie(c); if (i >= n) { chMini(c); c.hp = c.maxHp = c.maxHp / 3; if (c.hpBar) c.hpDisp = c.hp; } break;
+    }
   }
   function chSplitAcid(t) {                    // c422: 분열 산성 — 그 인간은 죽고 새끼 좀비 2마리 (경험치 1 · 사건 하나는 감염과 같다)
     for (const z of bodies) if (z.target === t && z.mode === 'pounce') { z.mode = 'free'; z.target = null; }
@@ -5132,7 +5198,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     me.maxHp = MY_HP * CH_UPK.hp;   // c505: 성장
     me.hp = MY_HP * (CHAPTER ? 0.8 : MY_START_HP);   /* c195: 처음 체력 80% */
     me.r = MY_BODY;                          // 내 부딪힘은 작고 미는 힘은 세다 — 동료들 사이에 덜 갇히게
-    me.force = CHAPTER ? CH_MY_FORCE : MY_FORCE;   /* c376: 평소 나 7 */
+    me.force = CHAPTER ? CH_MY_FORCE + chStrB() : MY_FORCE;   /* c592: 괴력 */   /* c376: 평소 나 7 */
     addHpBar(me, hpOurMat);
     me.hpBar.scale.set(barW(me, true), 3 * 0.7, 1);   // v440: 가로는 내 최대 체력에 비례 (처음 1.2)   // v275: 세로 30% 줄임   // v136에 가로 20% 늘림   // v76에 1.5배 더 두껍게 (늘 떠 있다)                    // 내 체력바는 두 배 두껍고, 다른 바·표시보다 늘 위에 그린다 (섞여도 보이게)
     for (const m of me.hpBar.children) m.renderOrder += UI_ME + 50 - UI;
@@ -5360,7 +5426,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
   //   경찰서·경찰은 START_COP_CLEAR(15칸) 안에 없어야 하고, 밖에 있는 시민(일반·수비형·공격형)은 내 인지거리 밖이면 된다
   function testPopulate() {                   // v396: 시험 맵 — 저격수 2명을 세로 가운데, 가로로 고르게 / 나는 아래 가운데
     const W = MM.x1 - MM.x0, cz = (MM.z0 + MM.z1) / 2;
-    if (CHAPTER) { chRoomDoors(); { const st = chStart(); me.foot.set(st[0], 0, st[1]); } if (CH_MAP.world) chSwG = new Map();   /* c406 */ me.space = null; if (CH_TUT) { const X = buildings.find((B) => B.type === 'box'); me.foot.set((X.x0 + X.x1) / 2, 0, (X.z0 + X.z1) / 2); me.px = me.foot.x; me.pz = me.foot.z; me.space = X; }   /* c289: 박스 한가운데서 시작 */   /* c53: 방문 반은 열어 두고, 시작 자리는 아무 구역 바깥 라인 */ chOutPlace(); if (CH_NOHUM) chPopReset(); else { chPopulate(); chSpotPeople(); } chSafes();   /* c357: 사람 없는 맵 (거점 맵 — 지금은 사물·차만) */ chFurnPlace(); chDispReset(); chBarReset(); chDecoPlace(); if (!CH_TUT) { chCull15(); chOrange10(); }   /* c556 */ if (CH_TYPEB) chTypeBSetup(); chStartW = { x: me.foot.x, z: me.foot.z, n: 1 + Math.floor(Math.random() * 2), tries: 0 }; chTrReset(); chSwG = null; return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작 · c11: 인간 200명
+    if (CHAPTER) { chRoomDoors(); { const st = chStart(); me.foot.set(st[0], 0, st[1]); } if (CH_MAP.world) chSwG = new Map();   /* c406 */ me.space = null; if (CH_TUT) { const X = buildings.find((B) => B.type === 'box'); me.foot.set((X.x0 + X.x1) / 2, 0, (X.z0 + X.z1) / 2); me.px = me.foot.x; me.pz = me.foot.z; me.space = X; }   /* c289: 박스 한가운데서 시작 */   /* c53: 방문 반은 열어 두고, 시작 자리는 아무 구역 바깥 라인 */ chOutPlace(); if (CH_NOHUM) chPopReset(); else { chPopulate(); chSpotPeople(); } chSafes();   /* c357: 사람 없는 맵 (거점 맵 — 지금은 사물·차만) */ chFurnPlace(); chDispReset(); chBarReset(); chDecoPlace(); if (!CH_TUT) { chCull15(); chOrange10(); }   /* c556 */ if (CH_TYPEB) chTypeBSetup(); chStartW = { x: me.foot.x, z: me.foot.z, n: 1 + Math.floor(Math.random() * 2), tries: 0 }; if (CH_RUN) chStartAllies();   /* c592: 시작 동료 */ chTrReset(); chSwG = null; return; }   // c1: 남서쪽 큰 구역 아래 대로에서 시작 · c11: 인간 200명
     me.foot.set((MM.x0 + MM.x1) / 2, 0, MM.z1 - 6); me.space = null;
     if (CAR_TEST) { carTestSetup(); return; }
     teamQueue.push(1);                        // v410: 시험 맵 — 시작하자마자 맵 가장자리에서 1팀 (군인 2 + 저격수 1)
@@ -6063,7 +6129,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       if (CHAPTER) for (const d of chDrones) { if (d.dead || d.stunT > 0) continue; const q = Math.hypot(d.x - me.foot.x, d.z - me.foot.z); if (q <= me.sense && !fireBlocked(me.foot.x, me.foot.z, d.x, d.z)) cand.push({ c: d, k: 999, d: q }); }   // c374 · c379: 드론은 무조건 1순위 (변이될 사람보다도 먼저)
       cand.sort((a, b) => b.k - a.k || a.d - b.d);
       const hit = cand.slice(0, CH_WV('taserN', lv('taser')));   /* c21: 대상만 늘어난다 (1 → 6명) */  // 한 번에 맞히는 수 = 1 + 똑똑한 두뇌 (v201)
-      for (const { c } of hit) { if (chRedR('taser')) { const f = puff(c.foot ? c.foot.x : c.x, 0.8, c.foot ? c.foot.z : c.z, 0x4aa8ff, 0.6, 2.2, 0.22, 0, 0, 0, 1); f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true; }   /* c480: 빨간 별 — 맞은 자리 파랑 번쩍 */ if (chMadRoll(c)) { zaps.push({ to: c, t: 0.45 }); continue; }   /* c480: 기계 오작동 */ if (c.drone) { c.stunT = chTaserT(c);   /* c431 */ zaps.push({ to: c, t: 0.45 }); continue; }   /* c374: 드론 — 땅에 떨어져 감전 */ if (c.tank) { c.stunT = chTaserT(c);   /* c431 */   /* c270: 보스도 같다 */ c.vx = c.vz = 0; zaps.push({ to: c, t: 0.45 }); continue; }   /* c191: 보스 = 3분의 1 */ c.stunT = chTaserT(c);   /* c431 */   /* c139 */ c.vel.set(0, 0); zaps.push({ to: c, t: 0.45 }); }
+      for (const { c } of hit) { if (chTaserDmg(c)) { zaps.push({ to: c, t: 0.45 }); continue; }   /* c592: 배터리 강화 — 맞는 순간 피해 (기계는 터진다) */ if (chRedR('taser')) { const f = puff(c.foot ? c.foot.x : c.x, 0.8, c.foot ? c.foot.z : c.z, 0x4aa8ff, 0.6, 2.2, 0.22, 0, 0, 0, 1); f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true; }   /* c480: 빨간 별 — 맞은 자리 파랑 번쩍 */ if (chMadRoll(c)) { zaps.push({ to: c, t: 0.45 }); continue; }   /* c480: 기계 오작동 */ if (c.drone) { c.stunT = chTaserT(c);   /* c431 */ zaps.push({ to: c, t: 0.45 }); continue; }   /* c374: 드론 — 땅에 떨어져 감전 */ if (c.tank) { c.stunT = chTaserT(c);   /* c431 */   /* c270: 보스도 같다 */ c.vx = c.vz = 0; zaps.push({ to: c, t: 0.45 }); continue; }   /* c191: 보스 = 3분의 1 */ c.stunT = chTaserT(c);   /* c431 */   /* c139 */ c.vel.set(0, 0); zaps.push({ to: c, t: 0.45 }); }
       if (!hit.length) zaps.push({ to: null, t: 0.2 });
     } else {                                  // 돈다발 3개를 내 둘레 2~4칸에 뿌린다 (나와 같은 공간)
       const fresh = [];
@@ -6137,7 +6203,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
   }
   function enterLured(c) { c.diaF = CHAPTER && chBr.cash === 'dia' && c.maxHp > 0 && Math.random() < chBrR('cash', 'dia') / 6;   /* c429: 다이아몬드 — 싸우는 쪽으로 바뀔 확률 */ c.state = 'lured'; c.lureAlert = false; c.foe = null; c.locked = false; c.lureHit = 0; c.pickT = 0; c.lureT = 0; }
   function luredStep(c, dt) {                 // 유혹: 좀비는 안 보고 가장 가까운 돈다발로 달려간다. 닿으면 돈다발이 사라진다
-    if ((c.lureT = (c.lureT || 0) + dt) >= (c.robot ? (c.robotLure || 0) : 1) * (c.robot ? 1 : CH_WV('cashT', chLvB('cash')) * chLingK() * chDiaK()) * (c.robot ? 1 : 1) * (c.robot ? 1 / 0.2 : 1) * (c.military ? 0.2 : c.police ? 0.5 : 1)) {   /* c139: 유혹 시간 — 저격수·군인 80% · 경찰 50% 짧다 */   /* v516: 군인·저격수 0.7초, 경찰 1.5초 */ c.state = 'normal'; c.ignoreCash = new Set(cashes); enterNormal(c); return; }   // v456: 군인·저격수는 최대 1.5초만 홀린다
+    if ((c.lureT = (c.lureT || 0) + dt) >= (c.robot ? (c.robotLure || 0) : 1) * (c.robot ? 1 : CH_WV('cashT', chLvB('cash')) * chLingK() * chDiaK()) * (c.robot ? 1 : 1) * (c.robot ? 1 / 0.2 : 1) * chLureK(c)   /* c592: 현금 강화 — 유혹 저항력 */) {   /* c139: 유혹 시간 — 저격수·군인 80% · 경찰 50% 짧다 */   /* v516: 군인·저격수 0.7초, 경찰 1.5초 */ c.state = 'normal'; c.ignoreCash = new Set(cashes); enterNormal(c); return; }   // v456: 군인·저격수는 최대 1.5초만 홀린다
     if (CHAPTER && chBr.cash === 'dia' && c.diaF && c.maxHp > 0 && c.hp > 0 && chDiaFight(c, dt)) return;   // c427: 다이아몬드 — 근접형은 싸우는 중 (원거리는 쏘고 아래로 — 다이아몬드 쪽으로)
     const s = seeCash(c, SIGHT * cashK());
     if (!s) { enterNormal(c); return; }      // 볼 수 있는 돈다발이 없으면 유혹 끝
@@ -6504,9 +6570,9 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
   function chCatT() { return CHAPTER && owned.catalyst ? (1 + lvE('catalyst')) / 6 : 0; }   // c373: 촉매제 진행 (획득 1/6 … 다 강화 6/6)
   function chMB(z) { if (!CHAPTER || !z) return null; const k = z === me ? 'awaken' : 'mutate', r = chRedR(k); return r ? { id: 'monster', r } : null; }   /* c485: 빨간 별 = 괴물 좀비 (빨★1~5) */   // c430: 그 좀비의 갈림길 (나 = 각성 주사 · 동료 = 변이 주사)
   const chMonster = (z) => { const B = chMB(z); return !!B && B.id === 'monster'; };
-  function chArmF(z) { const B = chMB(z); return (7 + (B && B.id === 'monster' ? 7 * B.r / 5 : 0)) * (z.bombing ? 3 : 1); }   /* c485: 빨★5 = 14 */   /* c460: 자폭 중 3배 */   /* c447: 기본 7 (괴물 ★6 = 14) */   /* c445: 기본 5 (괴물 ★6 = 9) */   // c430: 덩치 미는 힘 (괴물 10 → 14)
-  function chHydK(z) { const B = chMB(z); return B && B.id === 'monster' ? 1 + B.r / 5 : 1; }   /* c485: 빨★5 = ×2 */   // c420: 히드라 사거리 1배 고정 (촉매제와 상관없다)   // c373: 히드라 사거리 — 원래의 2/3, 촉매제 다 올리면 1.3배
-  function chSplK(z) { const B = chMB(z); return B && B.id === 'monster' ? 0.5 + 0.25 * (B.r - 1) : 0; }   /* c485: 범위 공격은 괴물부터 — ×0.5 · 0.75 · 1 · 1.25 · 1.5 */   // c430: 덩치 범위 공격 거리 — 0.5배 (괴물이면 1.5배까지)   // c420: 덩치 범위 공격 크기 1배 고정   // c378: 덩치 범위 공격 크기 — 촉매제 없으면 0.8배, 다 강화하면 1.5배
+  function chArmF(z) { const B = chMB(z); return (7 + (B && B.id === 'monster' ? 7 * B.r / 5 * chMutK() : 0) + (z === me ? chStrB() : 0))   /* c592: 돌연변이 · 괴력 */ * (z.bombing ? 3 : 1); }   /* c485: 빨★5 = 14 */   /* c460: 자폭 중 3배 */   /* c447: 기본 7 (괴물 ★6 = 14) */   /* c445: 기본 5 (괴물 ★6 = 9) */   // c430: 덩치 미는 힘 (괴물 10 → 14)
+  function chHydK(z) { const B = chMB(z); return B && B.id === 'monster' ? 1 + B.r / 5 * chMutK() : 1;   /* c592: 돌연변이 */ }   /* c485: 빨★5 = ×2 */   // c420: 히드라 사거리 1배 고정 (촉매제와 상관없다)   // c373: 히드라 사거리 — 원래의 2/3, 촉매제 다 올리면 1.3배
+  function chSplK(z) { const B = chMB(z); return B && B.id === 'monster' ? (0.5 + 0.25 * (B.r - 1)) * chMutK() : 0;   /* c592: 돌연변이 */ }   /* c485: 범위 공격은 괴물부터 — ×0.5 · 0.75 · 1 · 1.25 · 1.5 */   // c430: 덩치 범위 공격 거리 — 0.5배 (괴물이면 1.5배까지)   // c420: 덩치 범위 공격 크기 1배 고정   // c378: 덩치 범위 공격 크기 — 촉매제 없으면 0.8배, 다 강화하면 1.5배
   function chArmK() { return 10 / 11; }   // c420: 덩치 미는 힘 10 고정 (11 기준)   /* c377: 다 강화하면 미는 힘 13 (11 기준) */   // c373: 덩치 미는 힘 — 원래의 2/3, 촉매제 다 올리면 1.2배
   function mutate(z, force) {   /* c53: force = 정해진 변이를 영구로 (철창 수감자) */
     if (z.mut) unmutate(z);
@@ -6536,7 +6602,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; puff(me.foot.x, 0.4, me.foot.z, MUT_COL[type], 0.6, 1.6, 0.55, Math.cos(a) * 3.5, 0.4, Math.sin(a) * 3.5, 0.9); }
   }
   function unmutate(z) {
-    if (z === me) { if (me.catK) { me.maxHp /= me.catK; me.hp = Math.min(me.maxHp, me.hp / me.catK); me.catK = 0; }   /* c282 */ if (CHAPTER) chMeRing(false); me.mut = null; me.mesh.material.color.setHex(COLOR.me); me.r = MY_BODY; delete me.halfH; me.mesh.scale.setScalar(1); me.force = CHAPTER ? CH_MY_FORCE : MY_FORCE;   /* c376: 평소 나 7 */ me.speed = meSpeed(); return; }   // v558: 각성 끝
+    if (z === me) { if (me.catK) { me.maxHp /= me.catK; me.hp = Math.min(me.maxHp, me.hp / me.catK); me.catK = 0; }   /* c282 */ if (CHAPTER) chMeRing(false); me.mut = null; me.mesh.material.color.setHex(COLOR.me); me.r = MY_BODY; delete me.halfH; me.mesh.scale.setScalar(1); me.force = CHAPTER ? CH_MY_FORCE + chStrB() : MY_FORCE;   /* c592: 괴력 */   /* c376: 평소 나 7 */ me.speed = meSpeed(); return; }   // v558: 각성 끝
     z.mut = null;
     if (z.catK) { z.maxHp /= z.catK; z.hp = Math.min(z.hp, z.maxHp); z.catK = 0; }   // c282: 변이가 풀리면 원래 최대 체력
     z.mesh.material.color.setHex(COLOR.ally);   // v371: 흰색 없앰 (불꽃으로 표시)   // v369: 스팀팩 맞은 동료는 흰색으로
@@ -6656,7 +6722,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     const all = zombies.filter((z) => z !== me && isZombie(z) && !z.mad);   /* c480 */
     if (!all.length) return false;
     const al = all.filter((z) => !z.mut); if (!al.length) return false;   // c288: 변이 좀비는 자폭하지 않는다   // v521: 변이 좀비는 최후순위 — 일반 동료가 하나도 없을 때만
-    const R = 1.7 + 0.5 * chLvB('bomb');   /* c501: 1.7칸 · 0.5칸씩 · ★5 4.2칸 */   /* c483: 2칸 · 1칸씩 · ★5 7칸 */   /* c422 */   /* c139: 1.5칸에서 강화마다 +1칸 */   // c21: 자폭 범위 = 내 덮치는 거리(3.24칸), 강화마다 +20% (2배까지)   // v559: 20% 줄임 (5.4 → 4.32칸) — v556: 1.5배
+    const R = 1.7 + 0.5 * chLvB('bomb') + 0.17 * chTrait('bomb');   /* c592: 자폭 스위치 폭발력 강화 */   /* c501: 1.7칸 · 0.5칸씩 · ★5 4.2칸 */   /* c483: 2칸 · 1칸씩 · ★5 7칸 */   /* c422 */   /* c139: 1.5칸에서 강화마다 +1칸 */   // c21: 자폭 범위 = 내 덮치는 거리(3.24칸), 강화마다 +20% (2배까지)   // v559: 20% 줄임 (5.4 → 4.32칸) — v556: 1.5배
     if (CHAPTER) return chBombPick(al, R);   // c352
     const tier = (c) => CHAPTER ? chTier(c) : c.sniper ? 5 : c.soldier ? 4 : c.police ? 3 : c.attacker ? 2 : c.guard ? 1 : 0;
     let best = null, bT = -1, bN = -1, bD = Infinity, bS = -1, ties = [];
@@ -7444,7 +7510,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     return null;
   }
   const CH_STAT = {                           // c21: 획득창·설명창에 나오는 수치 (n = 강화 단계)
-    bomb: (n) => `터지는 범위 ${+(1.7 + 0.5 * Math.min(5, n)).toFixed(1)}칸 · 산성 ${+(4 + 0.6 * Math.min(5, n)).toFixed(1)}초` + (n > 5 ? ` · 보라 산성 — 맞은 적 ${15 * (n - 5)}% 느려짐` : ''),   /* c479 */   /* c474 */
+    bomb: (n) => `터지는 범위 ${+(1.7 + 0.5 * Math.min(5, n) + 0.17 * chTrait('bomb')).toFixed(1)}칸 · 산성 ${+(4 + 0.6 * Math.min(5, n)).toFixed(1)}초` + (n > 5 ? ` · 보라 산성 — 맞은 적 ${15 * (n - 5)}% 느려짐` : ''),   /* c479 */   /* c474 */
     mutate: (n) => `주사 ${CH_WV('mutN', n)}개 · 변이 ${CH_MUT_TT[Math.min(5, n)]}초` + (n > 5 ? ` · 괴물 — 히드라 사거리 ×${(1 + (n - 5) / 5).toFixed(1)} · 덩치 힘 ${(7 + 7 * (n - 5) / 5).toFixed(1)} · 범위 공격 ×${(0.5 + 0.25 * (n - 6)).toFixed(2)}` : ''),   /* c484 */
     taser: (n) => `한 번에 ${CH_WV('taserN', n)}명 · ${CH_WV('taserT', n)}초 감전 · 장탄 3` + (n > 5 ? ` · 기계 오작동 ${25 + 5 * (n - 6)}%` : ''),   /* c481 */   /* c420 */   /* c251 */
     awaken: (n) => `최대 사용 시간 ${CH_MUT_TT[Math.min(5, n)]}초 · 가득 차는 데 40초` + (n > 5 ? ` · 괴물 — 히드라 사거리 ×${(1 + (n - 5) / 5).toFixed(1)} · 덩치 힘 ${(7 + 7 * (n - 5) / 5).toFixed(1)} · 범위 공격 ×${(0.5 + 0.25 * (n - 6)).toFixed(2)}` : ''),   /* c484 */
@@ -7523,7 +7589,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
   }
   // ── c25 · c27: 레벨업 = 도구·장비 14종 가운데 랜덤 3장 중 하나를 고른다 — 없는 것이면 새로 얻고, 가진 것이면 강화 +1 ──
   const CH_SHORT = {                          // 카드 한 줄에 쓰는 짧은 수치 — [이름표, n단계 값]
-    bomb: ['', (n) => `${+(1.7 + 0.5 * Math.min(5, n)).toFixed(1)}칸·${+(4 + 0.6 * Math.min(5, n)).toFixed(1)}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${CH_MUT_TT[Math.min(5, n)]}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${CH_MUT_TT[Math.min(5, n)]}초`], cash: ['유혹', (n) => `${CH_WV('cashT', Math.min(5, n))}초`]   /* c496: 빨간 별에서 10초로 잘못 뜨던 것 */   /* c420 */   /* c226 */,
+    bomb: ['', (n) => `${+(1.7 + 0.5 * Math.min(5, n) + 0.17 * chTrait('bomb')).toFixed(1)}칸·${+(4 + 0.6 * Math.min(5, n)).toFixed(1)}초`], mutate: ['', (n) => `${CH_WV('mutN', n)}개·${CH_MUT_TT[Math.min(5, n)]}초`], taser: ['', (n) => `${CH_WV('taserN', n)}명·${CH_WV('taserT', n)}초`], awaken: ['최대', (n) => `${CH_MUT_TT[Math.min(5, n)]}초`], cash: ['유혹', (n) => `${CH_WV('cashT', Math.min(5, n))}초`]   /* c496: 빨간 별에서 10초로 잘못 뜨던 것 */   /* c420 */   /* c226 */,
     book: ['쿨타임', (n) => `-${5 + 9 * n}%`], bag: ['무기', (n) => `${Math.min(5, 2 + n)}칸`], rage: ['공속', (n) => `+${10 + 10 * n}%`], crowbar: ['건물', (n) => `+${15 * (1 + n)}%`], absorb: ['흡수', (n) => `${2 + 2.5 * n}`], vest: ['총격', (n) => `-${10 * (1 + n)}%`]   /* c278: 카드는 총격만 (밀림은 설명 칸에) */,
     shoes: ['이동', (n) => `+${5 * (1 + n)}%`], parasite: ['확률', (n) => `${20 + 5 * n}%`], teeth: ['감염', (n) => `${Math.round(100 + 80 / 6 * (1 + n))}%`], acid: ['확률', (n) => `${30 + 10 * n}%`], acidp: ['도트', (n) => `+${1 + n}`], linger: ['지속', (n) => `+${5 * (1 + n)}%`],   /* c420 */   /* c224 */ catalyst: ['변이', (n) => `+${5 * (1 + n)}%`], blood: ['체력', (n) => `+${12 * (1 + n)}%`], revive: ['쿨타임', (n) => `${Math.round(120 * Math.pow(0.9, n))}초`],
   };

@@ -1,0 +1,23 @@
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const errs = [];
+const p = await (await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 })).newPage(); p.on('pageerror', (e) => errs.push(e.message));
+await p.route('**/three.module.min.js', (r) => r.fulfill({ path: __dirname + '/../node_modules/three/build/three.module.min.js', contentType: 'application/javascript' }));
+const url = 'file:///home/user/s/running-dead/chapter/c592.html';
+await p.goto(url); await p.evaluate(() => localStorage.setItem('rd_save_v1', JSON.stringify({ genes: 2000, clr: { '1e': 1 }, sub: {}, up: { hp: 40, ahp: 10, atk: 30 }, tut: true, mig: 1, v2: 1, v3: 1, v4: 1, u2: 1 })));
+await p.goto(url); await p.waitForSelector('#outg .ugb', { timeout: 30000 }); await p.waitForTimeout(400);
+console.log('옮긴 뒤 저장:', await p.evaluate(() => { const o = JSON.parse(localStorage.getItem('rd_save_v1')); return JSON.stringify({ genes: o.genes, up: o.up, tr: o.tr, u3: o.u3 }); }));
+await p.screenshot({ path: __dirname + '/shots/c592_out.png' });
+await p.click('[data-ug="1"]'); await p.waitForTimeout(300);
+for (let i = 0; i < 9; i++) { await p.click('[data-up="hp"]'); await p.waitForTimeout(60); }
+await p.screenshot({ path: __dirname + '/shots/c592_up9.png' });
+await p.click('[data-up="hp"]'); await p.waitForTimeout(150);
+await p.screenshot({ path: __dirname + '/shots/c592_up10.png' });
+await p.waitForTimeout(900);
+console.log('10번 뒤:', await p.evaluate(() => [...document.querySelectorAll('#outg .ug')].map((r) => r.dataset.row + ' ' + r.querySelector('.pc').textContent + ' 칸' + r.querySelectorAll('.gg i.on').length).join(' | ') + ' · 특성 ' + document.querySelector('#outg .tpn').textContent));
+await p.click('.sh .x'); await p.waitForTimeout(300);
+await p.screenshot({ path: __dirname + '/shots/c592_btn.png', clip: { x: 0, y: 700, width: 390, height: 144 } });
+await p.click('[data-trs="1"]'); await p.waitForTimeout(300);
+await p.click('[data-tr="start"]'); await p.waitForTimeout(300);
+await p.screenshot({ path: __dirname + '/shots/c592_tr.png' });
+console.log('특성 산 뒤:', await p.evaluate(() => { const o = JSON.parse(localStorage.getItem('rd_save_v1')); return JSON.stringify({ genes: o.genes, up: o.up, tr: o.tr }) + ' · 남은 ' + document.querySelector('#outg .tpn').textContent; }));
+console.log('errors', JSON.stringify(errs.slice(0, 3))); await b.close(); })();
