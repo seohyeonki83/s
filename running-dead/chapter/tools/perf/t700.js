@@ -1,0 +1,12 @@
+const { chromium } = require('playwright'); const fs = require('fs');
+(async () => { const b = await chromium.launch(); const errs = [];
+const p = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage(); p.on('pageerror', (e) => errs.push(e.message));
+await p.route('**/three.module.min.js', (r) => r.fulfill({ path: __dirname + '/../node_modules/three/build/three.module.min.js', contentType: 'application/javascript' })); let navs = 0; p.on('framenavigated', (f) => { if (f === p.mainFrame()) navs++; });
+await p.goto('http://localhost:8765/index.html'); await p.evaluate(() => localStorage.setItem('rd_save_v1', JSON.stringify({ genes: 0, clr: {}, sub: {}, up: { hp: 0, ahp: 0, atk: 0 }, tr: {}, tut: true, mig: 1, v2: 1, v3: 1, v4: 1, u2: 1, u3: 1 })));
+await p.goto('http://localhost:8765/index.html'); await p.waitForSelector('#outg', { timeout: 60000 }); await p.waitForTimeout(500);
+const n0 = navs; await p.evaluate(() => document.dispatchEvent(new Event('visibilitychange'))); await p.waitForTimeout(1500);
+console.log('같은 버전(c604)일 때 새로고침:', navs - n0);
+fs.writeFileSync(process.argv[2] + '/version.txt', 'c605\n');
+const n1 = navs; await p.evaluate(() => document.dispatchEvent(new Event('visibilitychange'))); await p.waitForTimeout(3000);
+console.log('새 버전(c605)일 때 새로고침:', navs - n1, '· 다시 아웃게임 뜸:', !!(await p.$('#outg')));
+console.log('errors', JSON.stringify(errs.slice(0, 3))); await b.close(); })();
