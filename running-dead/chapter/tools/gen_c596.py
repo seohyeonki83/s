@@ -1,0 +1,18 @@
+import pathlib
+s = pathlib.Path('c595.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:80], s.count(a)); R.append((a, b))
+rep("        if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, Math.max(1, d / HPK));   // 화면에는 1\n      }\n",
+    """        if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, Math.max(1, d / HPK));   // 화면에는 1
+      }
+      const reach = (z.r || BODY) + 0.12;   // c596: 사물 · 건물(문 · 벽) · 바리케이트 · 차량 · 금고 · 가구도 — 몸에 닿아 있으면
+      const hitO = (o) => { const k = CH_SK !== 1 && !(o.car && (o.car.tank || o.car.cvy)) ? CH_SK : 1, dd = d / k; o.hp = Math.max(0, o.hp - dd);
+        if (o.kind === 'obj') { if (o.type === 'wall') { chWallWarp(o); chWallFlash(o); } if (o.hp <= 0) breakObj(o); } else if (o.kind === 'safe' && o.hp <= 0) breakSafe(o);
+        const p = o.foot || (o.car ? { x: o.car.x, z: o.car.z } : null); if (p) chDotPop(p.x + 0.6, p.z, Math.max(1, d / HPK)); };
+      for (const L of [objs, chWallObjs, chDecoObjs]) for (const o of L) { if (!o || o.dead || !(o.hp > 0)) continue; const p = o.type === 'wall' ? null : o.foot || (o.car ? { x: o.car.x, z: o.car.z } : o.L ? { x: o.L.cx, z: o.L.cz } : null); if (p && (Math.abs(p.x - z.foot.x) > 6 || Math.abs(p.z - z.foot.z) > 6)) continue; if (objGap(o, z) <= reach) hitO(o); }
+      for (const o of bodies) { if (o.kind !== 'safe' || o.dead || !(o.hp > 0) || o.space !== z.space || Math.abs(o.foot.x - z.foot.x) > 4 || Math.abs(o.foot.z - z.foot.z) > 4) continue; if (Math.hypot(o.foot.x - z.foot.x, o.foot.z - z.foot.z) - (o.r || BODY) <= reach) hitO(o); }
+""")
+rep("fx: (L) => `덩치: 닿은 적 ${(1.5 - (L - 1) / 19).toFixed(2)}초마다 피해 1 · 히드라: 회피 ${(2.5 * L).toFixed(1)}%` }", "fx: (L) => `덩치: 닿은 모든 것 ${(1.5 - (L - 1) / 19).toFixed(2)}초마다 피해 1 · 히드라: 회피 ${(2.5 * L).toFixed(1)}%` }")
+pathlib.Path('c596_patch.py').write_text('C596_R = ' + repr(R) + '\n')
+print(len(R))

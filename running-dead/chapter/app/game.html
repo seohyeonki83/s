@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c595</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c596</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -475,7 +475,7 @@
     { k: 'bat', ic: '⚡', nm: '배터리 강화', fx: (L) => L ? `테이저 피해 = 내 한 대의 ${Math.round((1 / 3 + 2 / 3 * (L - 1) / 19) * 100)}%` : '테이저 피해 없음' },
     { k: 'bomb', ic: '💥', nm: '자폭 스위치 폭발력 강화', fx: (L) => `자폭 범위 +${(0.085 * L).toFixed(2)}칸` },
     { k: 'cash', ic: '💵', nm: '현금 강화', fx: (L) => `유혹 저항력 -${(0.1 * L).toFixed(1)} · 군인 ${Math.round((10 - (8 - 0.1 * L)) * 10)}% · 경찰 ${Math.round((10 - (5 - 0.1 * L)) * 10)}%` },
-    { k: 'mut', ic: '🦠', nm: '돌연변이', fx: (L) => `덩치: 닿은 적 ${(1.5 - (L - 1) / 19).toFixed(2)}초마다 피해 1 · 히드라: 회피 ${(2.5 * L).toFixed(1)}%` },
+    { k: 'mut', ic: '🦠', nm: '돌연변이', fx: (L) => `덩치: 닿은 모든 것 ${(1.5 - (L - 1) / 19).toFixed(2)}초마다 피해 1 · 히드라: 회피 ${(2.5 * L).toFixed(1)}%` },
     { k: 'str', ic: '🦾', nm: '괴력', fx: (L) => `내 미는 힘 +${(0.075 * L).toFixed(3).replace(/0$/, '')}` },
   ];
   const CH_DIF_NM = { e: '쉬움', n: '보통', h: '어려움' };
@@ -7164,6 +7164,12 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
         if (c.hp <= 0 && !c.police && !c.robot && c.state !== 'held') enterPanic(c, null, true);
         if (c.mesh.visible) chDotPop(c.foot.x + 0.6, c.foot.z, Math.max(1, d / HPK));   // 화면에는 1
       }
+      const reach = (z.r || BODY) + 0.12;   // c596: 사물 · 건물(문 · 벽) · 바리케이트 · 차량 · 금고 · 가구도 — 몸에 닿아 있으면
+      const hitO = (o) => { const k = CH_SK !== 1 && !(o.car && (o.car.tank || o.car.cvy)) ? CH_SK : 1, dd = d / k; o.hp = Math.max(0, o.hp - dd);
+        if (o.kind === 'obj') { if (o.type === 'wall') { chWallWarp(o); chWallFlash(o); } if (o.hp <= 0) breakObj(o); } else if (o.kind === 'safe' && o.hp <= 0) breakSafe(o);
+        const p = o.foot || (o.car ? { x: o.car.x, z: o.car.z } : null); if (p) chDotPop(p.x + 0.6, p.z, Math.max(1, d / HPK)); };
+      for (const L of [objs, chWallObjs, chDecoObjs]) for (const o of L) { if (!o || o.dead || !(o.hp > 0)) continue; const p = o.type === 'wall' ? null : o.foot || (o.car ? { x: o.car.x, z: o.car.z } : o.L ? { x: o.L.cx, z: o.L.cz } : null); if (p && (Math.abs(p.x - z.foot.x) > 6 || Math.abs(p.z - z.foot.z) > 6)) continue; if (objGap(o, z) <= reach) hitO(o); }
+      for (const o of bodies) { if (o.kind !== 'safe' || o.dead || !(o.hp > 0) || o.space !== z.space || Math.abs(o.foot.x - z.foot.x) > 4 || Math.abs(o.foot.z - z.foot.z) > 4) continue; if (Math.hypot(o.foot.x - z.foot.x, o.foot.z - z.foot.z) - (o.r || BODY) <= reach) hitO(o); }
     }
   }
   function gooTick(dt) {
