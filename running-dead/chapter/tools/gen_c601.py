@@ -1,0 +1,22 @@
+import pathlib
+s = pathlib.Path('c600.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:80], s.count(a)); R.append((a, b))
+rep("  const chUpCost = (k) => CH_UP_COST + Math.floor((CH_SV.up[k] || 0) / 10);", "  const chUpCost = (k) => CH_UP_COST;   /* c601: 다시 10 고정 (몰빵은 라운드 잠금으로 막는다) */\n  const chUpRound = () => Math.min(chUpLv('hp'), chUpLv('ahp'), chUpLv('atk'));   // c601: 지금 라운드 = 가장 낮은 능력 숫자 — 이보다 앞선 능력은 MAX로 잠김")
+i0 = s.index("    const upSheet = (pop) => {"); i1 = s.index("    let trSel = 'start';")
+rep(s[i0:i1], r"""    const upSheet = (pop, unl) => {   // c601: 라운드 — 한 능력 게이지를 채우면 +1 · MAX로 잠김 · 셋 다 채우면 한 번에 풀린다
+      const R0 = chUpRound();
+      const row = (k, ic, nm) => { const v = CH_SV.up[k] || 0, lvN = Math.floor(v / 10), lock = lvN > R0, f = pop === k || lock ? 10 : v % 10;
+        return `<div class="ug${pop === k ? ' pop' : ''}${lock ? ' lk' : ''}${unl ? ' unl' : ''}" data-row="${k}"><div class="ic">${ic}</div><div class="tx"><div class="n1">${nm}</div><div class="gw"><div class="gg"><i style="width:${f * 10}%"></i></div><span class="ge${pop === k ? ' gon' : ''}">${CH_TP_I(20)}</span></div></div><div class="pc">${lvN}${pop === k ? '<b class="ufl">+1</b>' : ''}</div>` +
+          (lock && pop !== k ? `<button class="ub mxl" disabled>MAX</button>` : `<button class="ub" data-up="${k}" ${CH_SV.genes < chUpCost(k) || lock ? 'disabled' : ''}>+ ${CH_GENE_I(14)}${chUpCost(k)}</button>`) + `</div>`; };
+      const waitN = ['hp', 'ahp', 'atk'].filter((k) => chUpLv(k) <= R0).length;
+      openSheet(`<div class="hd"><div><div class="t2">성장</div></div><button class="x">✕</button></div><div class="ds">${CH_GENE_I(14)} <b>${CH_SV.genes}</b> · <span class="tpw">${CH_TP_I(16)} <b class="tpn">${pop ? chTpLeft() - 1 : chTpLeft()}</b></span></div>` +
+        row('hp', '❤️', '내 체력') + row('ahp', '🧟', '동료 체력') + row('atk', '⚔️', '공격력') + `<div class="gh">10번 채우면 +1 (능력 +0.5%) · 특성 포인트 +1<br>${waitN < 3 ? `나머지 ${waitN}개를 채우면 셋 다 다음 단계가 열립니다` : '셋 다 채우면 다음 단계가 열립니다'}</div>`,
+        (b) => { if (b.dataset.up && CH_SV.genes >= chUpCost(b.dataset.up)) { const k = b.dataset.up; if (chUpLv(k) > chUpRound()) return; const r0 = chUpRound(); CH_SV.genes -= chUpCost(k); CH_SV.up[k] = (CH_SV.up[k] || 0) + 1; chSave(); { const m = ov.querySelector('.map'); draw(m ? m.scrollLeft : 0); }   /* c567: 지도는 보던 자리 그대로 */
+          const full = CH_SV.up[k] % 10 === 0, opened = full && chUpRound() > r0; upSheet(full ? k : null); if (full) { chTpFly(sheet); const sh0 = sheet; setTimeout(() => { if (sheet === sh0 && sheet && sheet.querySelector('.ug.pop')) upSheet(null, opened); }, 1000); } } });
+    };
+""")
+rep("#outg .gh{font-size:12px;color:#8fa0b8;text-align:center;margin:4px 0 2px}", "#outg .gh{font-size:12px;color:#8fa0b8;text-align:center;margin:4px 0 2px;line-height:1.6}\n#outg .ug.lk .gg i{background:linear-gradient(90deg,#ffd34d,#ffb020);box-shadow:0 0 8px rgba(255,200,60,.55)}#outg .ug .ub.mxl{background:#3a3220;color:#ffd34d;border:1px solid #8a6a1e;min-width:76px;justify-content:center}\n#outg .ug.unl{animation:ugunl .8s ease-out}#outg .ug.unl .gg{animation:ugunl2 .8s ease-out}@keyframes ugunl{0%{border-color:#ffd34d;box-shadow:0 0 22px rgba(255,211,77,.7)}100%{border-color:#2a3442;box-shadow:none}}@keyframes ugunl2{0%{box-shadow:0 0 14px #ffd34d}100%{box-shadow:none}}")
+pathlib.Path('c601_patch.py').write_text('C601_R = ' + repr(R) + '\n')
+print(len(R))
