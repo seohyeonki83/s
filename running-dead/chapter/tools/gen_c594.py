@@ -1,0 +1,45 @@
+import pathlib
+s = pathlib.Path('c593.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:80], s.count(a)); R.append((a, b))
+# 보상: 서브 미션 유전자 100 · 첫 클리어 특성 5 · 서브 미션 특성 1
+rep("  const CH_SUB_G = 200;", "  const CH_SUB_G = 100;   /* c594: 200 → 100 (+ 특성 포인트 1) */")
+rep("  const chTpAll = () => chUpLv('hp') + chUpLv('ahp') + chUpLv('atk');",
+    "  const CH_TP_CLR = 5, CH_TP_SUB = 1;   // c594: 스테이지 첫 클리어 특성 5 · 서브 미션 특성 1\n  const chTpAll = () => chUpLv('hp') + chUpLv('ahp') + chUpLv('atk') + CH_TP_CLR * Object.keys(CH_SV.clr || {}).length + CH_TP_SUB * Object.keys(CH_SV.sub || {}).length;")
+# 특성 20단계 · 비용 단계마다 +1 (1 · 2 · 3 … 20)
+rep("  const chTrCost = (lv) => Math.pow(2, lv);   // lv → lv+1 비용", "  const CH_TR_MAX = 20;   // c594: 최대 20단계\n  const chTrCost = (lv) => lv + 1;   // c594: lv → lv+1 비용 (1 · 2 · 3 …)")
+rep("  const chTpLeft = () => chTpAll() - Object.values(CH_SV.tr || {}).reduce((n, lv) => n + Math.pow(2, lv) - 1, 0);",
+    "  const chTpLeft = () => chTpAll() - Object.values(CH_SV.tr || {}).reduce((n, lv) => n + lv * (lv + 1) / 2, 0);")
+# 효과 20등분 (최대치 그대로)
+rep("  const chMutK = () => 1 + 0.02 * chTrait('mut');", "  const chMutK = () => 1 + 0.01 * chTrait('mut');   /* c594: 20단계 */")
+rep("  const chStrB = () => 0.15 * chTrait('str');", "  const chStrB = () => 0.075 * chTrait('str');   /* c594 */")
+rep("r = Math.max(0, r0 - 0.2 * chTrait('cash'));", "r = Math.max(0, r0 - 0.1 * chTrait('cash'));   /* c594 */")
+rep("{ k: 'start', ic: '🧟', nm: '시작 동료', fx: (L) => { const n = Math.floor(L / 2), m = L % 2;", "{ k: 'start', ic: '🧟', nm: '시작 동료', fx: (L) => { const L2 = Math.floor(L / 2), n = Math.floor(L2 / 2), m = L2 % 2;   /* c594: 2단계마다 한 칸 */")
+rep("fx: (L) => `때릴 때마다 최대 체력의 ${(0.1 * L).toFixed(1)}% 회복` }", "fx: (L) => `때릴 때마다 최대 체력의 ${(0.05 * L).toFixed(2)}% 회복` }")
+rep("`테이저 피해 = 내 한 대의 ${Math.round((1 / 3 + 2 / 3 * (L - 1) / 9) * 100)}%`", "`테이저 피해 = 내 한 대의 ${Math.round((1 / 3 + 2 / 3 * (L - 1) / 19) * 100)}%`")
+rep("fx: (L) => `자폭 범위 +${(0.17 * L).toFixed(2)}칸` }", "fx: (L) => `자폭 범위 +${(0.085 * L).toFixed(2)}칸` }")
+rep("fx: (L) => `유혹 저항력 -${(0.2 * L).toFixed(1)} · 군인 ${Math.round((10 - (8 - 0.2 * L)) * 10)}% · 경찰 ${Math.round((10 - (5 - 0.2 * L)) * 10)}%` }",
+    "fx: (L) => `유혹 저항력 -${(0.1 * L).toFixed(1)} · 군인 ${Math.round((10 - (8 - 0.1 * L)) * 10)}% · 경찰 ${Math.round((10 - (5 - 0.1 * L)) * 10)}%` }")
+rep("fx: (L) => `괴물 추가 능력 +${2 * L}% (스플래시 · 미는 힘 · 사거리)` }", "fx: (L) => `괴물 추가 능력 +${L}% (스플래시 · 미는 힘 · 사거리)` }")
+rep("fx: (L) => `내 미는 힘 +${(0.15 * L).toFixed(2)}` }", "fx: (L) => `내 미는 힘 +${(0.075 * L).toFixed(3).replace(/0$/, '')}` }")
+rep("me.hp + me.maxHp * 0.001 * chTrait('leech'));", "me.hp + me.maxHp * 0.0005 * chTrait('leech'));   /* c594: 20단계 */")
+rep("const dmg = zDamage(me) * (1 / 3 + 2 / 3 * (L - 1) / 9);", "const dmg = zDamage(me) * (1 / 3 + 2 / 3 * (L - 1) / 19);   /* c594: 20단계 */")
+rep("    const L = chTrait('start'); if (!L) return; const n = Math.floor(L / 2), m = L % 2;", "    const L2 = Math.floor(chTrait('start') / 2); if (!L2) return; const n = Math.floor(L2 / 2), m = L2 % 2;   /* c594: 20단계 — 2단계마다 한 칸 (최대 일반 5) */")
+rep("+ 0.17 * chTrait('bomb');   /* c592: 자폭 스위치 폭발력 강화 */", "+ 0.085 * chTrait('bomb');   /* c594: 20단계 */   /* c592: 자폭 스위치 폭발력 강화 */")
+rep("터지는 범위 ${+(1.7 + 0.5 * Math.min(5, n) + 0.17 * chTrait('bomb')).toFixed(1)}칸", "터지는 범위 ${+(1.7 + 0.5 * Math.min(5, n) + 0.085 * chTrait('bomb')).toFixed(1)}칸")
+rep("bomb: ['', (n) => `${+(1.7 + 0.5 * Math.min(5, n) + 0.17 * chTrait('bomb')).toFixed(1)}칸·", "bomb: ['', (n) => `${+(1.7 + 0.5 * Math.min(5, n) + 0.085 * chTrait('bomb')).toFixed(1)}칸·")
+# 특성 창: 20단계 (점 20개)
+rep("const L = chTrait(D.k), mx = L >= 10, c = chTrCost(L);", "const L = chTrait(D.k), mx = L >= CH_TR_MAX, c = chTrCost(L);")
+rep("<span class=\"lv\">${L}/10</span>", "<span class=\"lv\">${L}/${CH_TR_MAX}</span>")
+rep("<div class=\"dt\">${Array.from({ length: 10 }, (_, i) => `<i class=\"${i < L ? 'on' : ''}\"></i>`).join('')}</div>", "<div class=\"dt\">${Array.from({ length: CH_TR_MAX }, (_, i) => `<i class=\"${i < L ? 'on' : ''}\"></i>`).join('')}</div>")
+rep("if (L >= 10 || chTpLeft() < chTrCost(L)) return;", "if (L >= CH_TR_MAX || chTpLeft() < chTrCost(L)) return;")
+rep("#outg .tr .dt{display:flex;gap:3px;margin:6px 0 5px}#outg .tr .dt i{width:12px;height:12px;", "#outg .tr .dt{display:flex;gap:2px;margin:6px 0 5px}#outg .tr .dt i{width:7px;height:9px;border-radius:2px !important;")
+rep("<div class=\"ds\">특성 포인트 <b class=\"tpn\">✦ ${tp}</b> · 성장 게이지 1개 = 1포인트</div>", "<div class=\"ds\">특성 포인트 <b class=\"tpn\">✦ ${tp}</b> · 성장 게이지 1개 · 첫 클리어 5 · 서브 미션 1</div>")
+# 결과 창 · 스테이지 창 · 서브 미션 팝업에 특성 포인트 표시
+rep("R.push(['★', CH_DIF_NM[CH_DIF] + ' 첫 클리어', g, true]);", "R.push(['★', CH_DIF_NM[CH_DIF] + ' 첫 클리어 · ✦+' + CH_TP_CLR, g, true]);")
+rep("R.push(['🎖', '서브 미션 ' + (i + 1), CH_SUB_G, true]);", "R.push(['🎖', '서브 미션 ' + (i + 1) + ' · ✦+' + CH_TP_SUB, CH_SUB_G, true]);")
+rep("<div class=\"lb\">첫 클리어${got ? ' · 받음 ✓' : ''}</div>", "<div class=\"lb\">첫 클리어 · ✦${CH_TP_CLR}${got ? ' · 받음 ✓' : ''}</div>")
+rep("<div class=\"lb\">${chMisTxt(d, i, n)}</div><div class=\"gi\">${CH_GENE_I()}${CH_SUB_G}</div>", "<div class=\"lb\">${chMisTxt(d, i, n)}</div><div class=\"gi\">${CH_GENE_I()}${CH_SUB_G} · ✦${CH_TP_SUB}</div>")
+pathlib.Path('c594_patch.py').write_text('C594_R = ' + repr(R) + '\n')
+print(len(R))
