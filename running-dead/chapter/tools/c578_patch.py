@@ -1,0 +1,1 @@
+C578_R = [("{ if (type === 'police' && ++chPolN % 5 === 0) chMakeSg(c);   /* c437 */ else if (type === 'soldier' && chAL >= CH_MIXL && ++chSolN % 5 === 0) chMakeRobot(c); }", "{ if (type === 'police' && ++chPolN % 3 === 0) chMakeSg(c);   /* c578: 5명 중 1 → 3명 중 1 */ else if (type === 'soldier' && chAL >= CH_MIXL && ++chSolN % 3 === 0) chMakeRobot(c); }")]
