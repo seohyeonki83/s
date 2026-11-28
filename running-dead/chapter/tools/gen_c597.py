@@ -1,0 +1,30 @@
+import pathlib
+s = pathlib.Path('c596.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:80], s.count(a)); R.append((a, b))
+# 특성 포인트 아이콘 (보라 네 꼭지 별)
+rep("  const CH_GENE_I = ", "  const CH_TP_I = (w = 16) => `<svg class=\"tpi\" viewBox=\"0 0 24 24\" width=\"${w}\" height=\"${w}\" style=\"vertical-align:-3px\"><path d=\"M12 1.5c.9 5.2 2.3 6.6 7.5 7.5v.1c-5.2.9-6.6 2.3-7.5 7.5h-.1c-.9-5.2-2.3-6.6-7.5-7.5V9c5.2-.9 6.6-2.3 7.5-7.5z\" transform=\"translate(0 3)\" fill=\"#c79bff\" stroke=\"#f1e3ff\" stroke-width=\"1.1\" stroke-linejoin=\"round\"/><circle cx=\"12\" cy=\"12\" r=\"2\" fill=\"#fff\" opacity=\".85\"/></svg>`;   // c597: 특성 포인트 아이콘\n  const CH_GENE_I = ")
+# 성장 창: 게이지 끝에 특성 포인트 아이콘 · 꽉 차면 날아가 위 숫자에 박힌다
+rep("<div class=\"gg\"><i style=\"width:${f * 10}%\"></i></div>", "<div class=\"gw\"><div class=\"gg\"><i style=\"width:${f * 10}%\"></i></div><span class=\"ge${pop === k ? ' gon' : ''}\">${CH_TP_I(20)}</span></div>")
+rep("· 특성 포인트 <b class=\"tpn\">${chTpLeft()}</b></div>`", "· <span class=\"tpw\">${CH_TP_I(16)} <b class=\"tpn\">${pop ? chTpLeft() - 1 : chTpLeft()}</b></span></div>`")
+rep("const full = CH_SV.up[k] % 10 === 0; upSheet(full ? k : null); if (full) { const sh0 = sheet; setTimeout(() => { if (sheet === sh0 && sheet && sheet.querySelector('.ug.pop')) upSheet(); }, 700); }",
+    "const full = CH_SV.up[k] % 10 === 0; upSheet(full ? k : null); if (full) { chTpFly(sheet); const sh0 = sheet; setTimeout(() => { if (sheet === sh0 && sheet && sheet.querySelector('.ug.pop')) upSheet(); }, 1000); }")
+rep("    const upSheet = (pop) => {", """    const chTpFly = (sh) => {   // c597: 게이지 끝 특성 아이콘이 위 '특성 포인트' 숫자로 날아가 박힌다
+      const from = sh && sh.querySelector('.ug.pop .ge'), to = sh && sh.querySelector('.tpw .tpi'), num = sh && sh.querySelector('.tpw .tpn'); if (!from || !to) return;
+      const a = from.getBoundingClientRect(), b = to.getBoundingClientRect(), f = document.createElement('div'); f.className = 'tpfly'; f.innerHTML = CH_TP_I(26);
+      Object.assign(f.style, { position: 'fixed', left: a.left + a.width / 2 - 13 + 'px', top: a.top + a.height / 2 - 13 + 'px', zIndex: 3000, pointerEvents: 'none' }); document.body.appendChild(f); from.style.visibility = 'hidden';
+      const dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);
+      const an = f.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: `translate(${dx * 0.45}px,${dy * 0.45 - 60}px) scale(1.8)`, opacity: 1, offset: 0.45 }, { transform: `translate(${dx}px,${dy}px) scale(0.7)`, opacity: 1 }], { duration: 620, easing: 'cubic-bezier(.45,0,.55,1)', fill: 'forwards' });
+      an.onfinish = () => { f.remove(); if (num && num.isConnected) { num.textContent = chTpLeft(); const w = num.parentNode; w.classList.remove('bump'); void w.offsetWidth; w.classList.add('bump'); } };
+    };
+    const upSheet = (pop) => {""")
+rep("#outg .ug .gg{position:relative;height:10px;margin-top:8px;", "#outg .ug .gw{display:flex;align-items:center;gap:4px;margin-top:8px}#outg .ug .ge{flex:none;display:flex;opacity:.35;filter:grayscale(.6)}#outg .ug .ge.gon{opacity:1;filter:none;animation:geglow .35s ease-out}@keyframes geglow{0%{transform:scale(1)}60%{transform:scale(1.6)}100%{transform:scale(1.3)}}\n#outg .tpw{display:inline-flex;align-items:center;gap:3px;color:#c79bff}#outg .tpw.bump{animation:tpbump .5s ease-out}@keyframes tpbump{0%{transform:scale(1)}35%{transform:scale(1.5);text-shadow:0 0 12px #c79bff}100%{transform:scale(1)}}\n.tpfly svg{filter:drop-shadow(0 0 8px rgba(199,155,255,.95))}\n#outg .ug .gg{flex:1;position:relative;height:10px;")
+# 다른 곳의 ✦ 를 아이콘으로
+rep("<span class=\"i\">✦</span>특성", "<span class=\"i\">${CH_TP_I(24)}</span>특성")
+rep("<div class=\"lb\">첫 클리어 · ✦${CH_TP_CLR}", "<div class=\"lb\">첫 클리어 · ${CH_TP_I(14)}${CH_TP_CLR}")
+rep("${CH_SUB_G} · ✦${CH_TP_SUB}</div>", "${CH_SUB_G} · ${CH_TP_I(14)}${CH_TP_SUB}</div>")
+rep("<div class=\"ds\">특성 포인트 <b class=\"tpn\">✦ ${tp}</b>", "<div class=\"ds\"><span class=\"tpw\">${CH_TP_I(16)} 특성 포인트 <b class=\"tpn\">${tp}</b></span>")
+rep("data-tr=\"${D.k}\" ${tp < c ? 'disabled' : ''}>✦${c}", "data-tr=\"${D.k}\" ${tp < c ? 'disabled' : ''}>${CH_TP_I(15)}${c}")
+pathlib.Path('c597_patch.py').write_text('C597_R = ' + repr(R) + '\n')
+print(len(R))

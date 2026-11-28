@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c596</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c597</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -501,6 +501,7 @@
     2: '공장과 창고 너머로 감염이 퍼지자 군은 중장비를 앞세웠다. 벽을 밀고 들어오는 강철을 무너뜨리고 이 지구를 삼켜라.',
     3: '모든 병력은 북쪽 군사기지에서 나온다. 검문소를 넘어 기지 한가운데까지 밀고 들어가라. 그곳이 무너지면 군은 머리를 잃는다.',
     4: '마지막 방어선, 국경 요새. 장갑차가 길을 막고 서 있다. 이곳만 넘으면 더는 우리를 막을 것이 없다.' };
+  const CH_TP_I = (w = 16) => `<svg class="tpi" viewBox="0 0 24 24" width="${w}" height="${w}" style="vertical-align:-3px"><path d="M12 1.5c.9 5.2 2.3 6.6 7.5 7.5v.1c-5.2.9-6.6 2.3-7.5 7.5h-.1c-.9-5.2-2.3-6.6-7.5-7.5V9c5.2-.9 6.6-2.3 7.5-7.5z" transform="translate(0 3)" fill="#c79bff" stroke="#f1e3ff" stroke-width="1.1" stroke-linejoin="round"/><circle cx="12" cy="12" r="2" fill="#fff" opacity=".85"/></svg>`;   // c597: 특성 포인트 아이콘
   const CH_GENE_I = (w = 16) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" style="vertical-align:-3px"><path d="M7 2c0 6 10 6 10 10S7 16 7 22" fill="none" stroke="#7fe3ff" stroke-width="2.6" stroke-linecap="round"/><path d="M17 2c0 6-10 6-10 10s10 4 10 10" fill="none" stroke="#c78bff" stroke-width="2.6" stroke-linecap="round"/><path d="M9 7h6M8 12h8M9 17h6" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity="0.8"/></svg>`;
   const chClrText = (d, n = CH_STG) => n === 3 ? '메인 기지 점령하기' : d === 'e' ? '특공대 3번 물리치기' : d === 'n' ? '특공대 4번 물리치기' : '보스 물리치기';   // c539
   const chMisTxt = (d, i, n = CH_STG) => { if (n === 3) { const B = CH_MIS_B[d]; return i ? `${B[1]}분 안에 스테이지 클리어` : `${B[0]}분 안에 검문소 점령`; } const M = CH_MIS_T[d]; return i ? `동료 ${M[1]}마리 모으기` : `${M[0][1]}분 안에 경보 '${CH_LVN[M[0][0] - 1]}' 도달`; };   // c539
@@ -577,7 +578,10 @@
 #outg .ub:disabled{background:#3a4250;color:#8a93a3}
 #outg .bt{gap:10px}#outg .bt .ugb{width:min(170px,43vw);position:relative}#outg .ugb.trb{background:linear-gradient(#b36bff,#7a35d0);box-shadow:0 4px 0 #4a1d85}
 #outg .ugb .bd2{position:absolute;top:-8px;right:-6px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:#ff3b5c;color:#fff;font-size:13px;line-height:22px;box-shadow:0 2px 4px rgba(0,0,0,.4)}
-#outg .ug{position:relative}#outg .ug .gg{position:relative;height:10px;margin-top:8px;border-radius:5px;background:#11161e;border:1px solid #2a3442;overflow:hidden}#outg .ug .gg i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:linear-gradient(90deg,#4fc3f7,#7fe3ff);box-shadow:0 0 8px rgba(127,227,255,.6);transition:width .15s}   /* c593: 칸 없는 게이지 */
+#outg .ug{position:relative}#outg .ug .gw{display:flex;align-items:center;gap:4px;margin-top:8px}#outg .ug .ge{flex:none;display:flex;opacity:.35;filter:grayscale(.6)}#outg .ug .ge.gon{opacity:1;filter:none;animation:geglow .35s ease-out}@keyframes geglow{0%{transform:scale(1)}60%{transform:scale(1.6)}100%{transform:scale(1.3)}}
+#outg .tpw{display:inline-flex;align-items:center;gap:3px;color:#c79bff}#outg .tpw.bump{animation:tpbump .5s ease-out}@keyframes tpbump{0%{transform:scale(1)}35%{transform:scale(1.5);text-shadow:0 0 12px #c79bff}100%{transform:scale(1)}}
+.tpfly svg{filter:drop-shadow(0 0 8px rgba(199,155,255,.95))}
+#outg .ug .gg{flex:1;position:relative;height:10px;border-radius:5px;background:#11161e;border:1px solid #2a3442;overflow:hidden}#outg .ug .gg i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:linear-gradient(90deg,#4fc3f7,#7fe3ff);box-shadow:0 0 8px rgba(127,227,255,.6);transition:width .15s}   /* c593: 칸 없는 게이지 */
 #outg .ug.pop{animation:ugflash .7s ease-out}#outg .ug.pop .gg i{background:#fff;box-shadow:0 0 12px #7fe3ff}#outg .ug.pop .pc{animation:ugpop .7s ease-out}
 #outg .ug .pc{position:relative}#outg .ug .ufl{position:absolute;right:0;top:-6px;font-size:18px;color:#ffe066;text-shadow:0 0 8px rgba(255,200,60,.8);animation:ugfl .8s ease-out forwards}
 @keyframes ugpop{0%{transform:scale(1)}30%{transform:scale(1.7);color:#fff;text-shadow:0 0 16px #7fe3ff}100%{transform:scale(1)}}
@@ -631,7 +635,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
         const ok = okN(n);
         h += `<button class="nd ${ok ? '' : 'lk'} ${n === curN ? 'cur' : ''} ${['e', 'n', 'h'].some((q) => cleared(n + q)) ? 'dn' : ''}" data-st="${n}" style="left:${x}%;top:${y}%"><div class="nm">${!ok ? '<span class="lkI">🔒 </span>' : ''}${CH_STG_INFO[n].nm}</div><div class="cbx">${['e', 'n', 'h'].map((q) => `<i class="cb ${cleared(n + q) ? 'on' : ''}" data-cb="${n + q}"></i>`).join('')}</div></button>`;
       });
-      h += `</div></div><div class="hint">← 지도를 밀어서 둘러보기 →</div><div class="bt"><button class="ugb" data-ug="1"><span class="i">💪</span>성장</button><button class="ugb trb" data-trs="1"><span class="i">✦</span>특성${chTpLeft() > 0 ? `<span class="bd2">${chTpLeft()}</span>` : ''}</button></div>`;
+      h += `</div></div><div class="hint">← 지도를 밀어서 둘러보기 →</div><div class="bt"><button class="ugb" data-ug="1"><span class="i">💪</span>성장</button><button class="ugb trb" data-trs="1"><span class="i">${CH_TP_I(24)}</span>특성${chTpLeft() > 0 ? `<span class="bd2">${chTpLeft()}</span>` : ''}</button></div>`;
       ov.innerHTML = h;
       const m = ov.querySelector('.map'), nd = ov.querySelector(anim ? (anim.t ? '.nd[data-tn]' : `.nd[data-st="${anim.n}"]`) : `.nd[data-st="${curN}"]`); if (m && nd && keep === undefined) requestAnimationFrame(() => { m.scrollLeft = Math.max(0, nd.offsetLeft + nd.offsetParent.offsetLeft - m.clientWidth / 2); }); else if (m && keep !== undefined) m.scrollLeft = keep;
     };
@@ -647,25 +651,33 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       if (d === 'h') h += `<div class="cd bs"><div class="k">보스</div><img src="${I.boss[2] === 'bbot' ? CH_BBOT_IMG : CH_BOSS_IMG[I.boss[2]]}" alt=""><div class="bn">${I.boss[0]}</div><div class="bbt">${I.boss[1]}</div></div>`;
       /* c527: 위험도 칸 뺌 */
       const g = CH_CLR_G[d], got = cleared(key);
-      h += `<div class="cd"><div class="k">보상</div><div class="rw ${got ? 'got' : ''}"><div class="gi">${CH_GENE_I()}${g}</div><div class="lb">첫 클리어 · ✦${CH_TP_CLR}${got ? ' · 받음 ✓' : ''}</div></div></div>`;
-      h += `<div class="cd"><div class="k">서브 미션</div>${[0, 1].map((i) => { const dn = !!CH_SV.sub[key + i]; return `<div class="rw ${dn ? 'got' : ''}"><div class="ck ${dn ? 'on' : ''}">${dn ? '✓' : ''}</div><div class="lb">${chMisTxt(d, i, n)}</div><div class="gi">${CH_GENE_I()}${CH_SUB_G} · ✦${CH_TP_SUB}</div></div>`; }).join('')}</div>`;
+      h += `<div class="cd"><div class="k">보상</div><div class="rw ${got ? 'got' : ''}"><div class="gi">${CH_GENE_I()}${g}</div><div class="lb">첫 클리어 · ${CH_TP_I(14)}${CH_TP_CLR}${got ? ' · 받음 ✓' : ''}</div></div></div>`;
+      h += `<div class="cd"><div class="k">서브 미션</div>${[0, 1].map((i) => { const dn = !!CH_SV.sub[key + i]; return `<div class="rw ${dn ? 'got' : ''}"><div class="ck ${dn ? 'on' : ''}">${dn ? '✓' : ''}</div><div class="lb">${chMisTxt(d, i, n)}</div><div class="gi">${CH_GENE_I()}${CH_SUB_G} · ${CH_TP_I(14)}${CH_TP_SUB}</div></div>`; }).join('')}</div>`;
       h += ok ? `<button class="go" data-go="1">시작하기</button>` : `<button class="go" disabled>🔒 ${chLockWhy(n, d)}</button>`;
       openSheet(h, (b) => { if (b.dataset.d) stageSheet(n, b.dataset.d); else if (b.dataset.go) { CH_UPK.hp = 1 + CH_UP_K * chUpLv('hp'); CH_UPK.ahp = 1 + CH_UP_K * chUpLv('ahp'); CH_UPK.atk = 1 + CH_UP_K * chUpLv('atk');   /* c592 */ ov.remove(); go(n, d); } });
       const t = sheet.querySelector('.sh'); if (t) t.scrollTop = 0;
     };
+    const chTpFly = (sh) => {   // c597: 게이지 끝 특성 아이콘이 위 '특성 포인트' 숫자로 날아가 박힌다
+      const from = sh && sh.querySelector('.ug.pop .ge'), to = sh && sh.querySelector('.tpw .tpi'), num = sh && sh.querySelector('.tpw .tpn'); if (!from || !to) return;
+      const a = from.getBoundingClientRect(), b = to.getBoundingClientRect(), f = document.createElement('div'); f.className = 'tpfly'; f.innerHTML = CH_TP_I(26);
+      Object.assign(f.style, { position: 'fixed', left: a.left + a.width / 2 - 13 + 'px', top: a.top + a.height / 2 - 13 + 'px', zIndex: 3000, pointerEvents: 'none' }); document.body.appendChild(f); from.style.visibility = 'hidden';
+      const dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);
+      const an = f.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: `translate(${dx * 0.45}px,${dy * 0.45 - 60}px) scale(1.8)`, opacity: 1, offset: 0.45 }, { transform: `translate(${dx}px,${dy}px) scale(0.7)`, opacity: 1 }], { duration: 620, easing: 'cubic-bezier(.45,0,.55,1)', fill: 'forwards' });
+      an.onfinish = () => { f.remove(); if (num && num.isConnected) { num.textContent = chTpLeft(); const w = num.parentNode; w.classList.remove('bump'); void w.offsetWidth; w.classList.add('bump'); } };
+    };
     const upSheet = (pop) => {   // c592: 성장 — 표시 100부터 · 클릭 1번 = 유전자 10 · 10칸 게이지가 꽉 차면 +1 (팡) · 특성 포인트 +1
       const row = (k, ic, nm) => { const v = CH_SV.up[k] || 0, lvN = Math.floor(v / 10), f = pop === k ? 10 : v % 10;
-        return `<div class="ug${pop === k ? ' pop' : ''}" data-row="${k}"><div class="ic">${ic}</div><div class="tx"><div class="n1">${nm}</div><div class="gg"><i style="width:${f * 10}%"></i></div></div><div class="pc">${100 + lvN}${pop === k ? '<b class="ufl">+1</b>' : ''}</div><button class="ub" data-up="${k}" ${CH_SV.genes < CH_UP_COST ? 'disabled' : ''}>+ ${CH_GENE_I(14)}${CH_UP_COST}</button></div>`; };
-      openSheet(`<div class="hd"><div><div class="t2">성장</div></div><button class="x">✕</button></div><div class="ds">${CH_GENE_I(14)} <b>${CH_SV.genes}</b> · 특성 포인트 <b class="tpn">${chTpLeft()}</b></div>` +
+        return `<div class="ug${pop === k ? ' pop' : ''}" data-row="${k}"><div class="ic">${ic}</div><div class="tx"><div class="n1">${nm}</div><div class="gw"><div class="gg"><i style="width:${f * 10}%"></i></div><span class="ge${pop === k ? ' gon' : ''}">${CH_TP_I(20)}</span></div></div><div class="pc">${100 + lvN}${pop === k ? '<b class="ufl">+1</b>' : ''}</div><button class="ub" data-up="${k}" ${CH_SV.genes < CH_UP_COST ? 'disabled' : ''}>+ ${CH_GENE_I(14)}${CH_UP_COST}</button></div>`; };
+      openSheet(`<div class="hd"><div><div class="t2">성장</div></div><button class="x">✕</button></div><div class="ds">${CH_GENE_I(14)} <b>${CH_SV.genes}</b> · <span class="tpw">${CH_TP_I(16)} <b class="tpn">${pop ? chTpLeft() - 1 : chTpLeft()}</b></span></div>` +
         row('hp', '❤️', '내 체력') + row('ahp', '🧟', '동료 체력') + row('atk', '⚔️', '공격력') + `<div class="gh">10번 채우면 +1 (능력 +0.5%) · 특성 포인트 +1</div>`,
         (b) => { if (b.dataset.up && CH_SV.genes >= CH_UP_COST) { const k = b.dataset.up; CH_SV.genes -= CH_UP_COST; CH_SV.up[k] = (CH_SV.up[k] || 0) + 1; chSave(); { const m = ov.querySelector('.map'); draw(m ? m.scrollLeft : 0); }   /* c567: 지도는 보던 자리 그대로 */
-          const full = CH_SV.up[k] % 10 === 0; upSheet(full ? k : null); if (full) { const sh0 = sheet; setTimeout(() => { if (sheet === sh0 && sheet && sheet.querySelector('.ug.pop')) upSheet(); }, 700); } } });
+          const full = CH_SV.up[k] % 10 === 0; upSheet(full ? k : null); if (full) { chTpFly(sheet); const sh0 = sheet; setTimeout(() => { if (sheet === sh0 && sheet && sheet.querySelector('.ug.pop')) upSheet(); }, 1000); } } });
     };
     const trSheet = (pop) => {   // c592: 특성 — 특성 포인트로 올린다 · 단계마다 비용 2배 · 최대 10단계
       const tp = chTpLeft();
       const row = (D) => { const L = chTrait(D.k), mx = L >= CH_TR_MAX, c = chTrCost(L);
-        return `<div class="tr${pop === D.k ? ' pop' : ''}"><div class="ic">${D.ic}</div><div class="tx"><div class="n1">${D.nm} <span class="lv">${L}/${CH_TR_MAX}</span></div><div class="dt">${Array.from({ length: CH_TR_MAX }, (_, i) => `<i class="${i < L ? 'on' : ''}"></i>`).join('')}</div><div class="n2">${L ? '지금: ' + D.fx(L) : '아직 없음'}</div>${mx ? '' : `<div class="n3">다음: ${D.fx(L + 1)}</div>`}</div>${mx ? '<div class="mx">MAX</div>' : `<button class="ub" data-tr="${D.k}" ${tp < c ? 'disabled' : ''}>✦${c}</button>`}</div>`; };
-      openSheet(`<div class="hd"><div><div class="t2">특성</div></div><button class="x">✕</button></div><div class="ds">특성 포인트 <b class="tpn">✦ ${tp}</b> · 성장 게이지 1개 · 첫 클리어 5 · 서브 미션 1</div>` + CH_TRD.map(row).join(''),
+        return `<div class="tr${pop === D.k ? ' pop' : ''}"><div class="ic">${D.ic}</div><div class="tx"><div class="n1">${D.nm} <span class="lv">${L}/${CH_TR_MAX}</span></div><div class="dt">${Array.from({ length: CH_TR_MAX }, (_, i) => `<i class="${i < L ? 'on' : ''}"></i>`).join('')}</div><div class="n2">${L ? '지금: ' + D.fx(L) : '아직 없음'}</div>${mx ? '' : `<div class="n3">다음: ${D.fx(L + 1)}</div>`}</div>${mx ? '<div class="mx">MAX</div>' : `<button class="ub" data-tr="${D.k}" ${tp < c ? 'disabled' : ''}>${CH_TP_I(15)}${c}</button>`}</div>`; };
+      openSheet(`<div class="hd"><div><div class="t2">특성</div></div><button class="x">✕</button></div><div class="ds"><span class="tpw">${CH_TP_I(16)} 특성 포인트 <b class="tpn">${tp}</b></span> · 성장 게이지 1개 · 첫 클리어 5 · 서브 미션 1</div>` + CH_TRD.map(row).join(''),
         (b) => { const k = b.dataset.tr; if (!k) return; const L = chTrait(k); if (L >= CH_TR_MAX || chTpLeft() < chTrCost(L)) return; CH_SV.tr[k] = L + 1; chSave(); { const m = ov.querySelector('.map'); draw(m ? m.scrollLeft : 0); } trSheet(k); });
       const t = sheet && sheet.querySelector('.sh'); if (t && pop) { const el = t.querySelector('.tr.pop'); if (el) el.scrollIntoView({ block: 'nearest' }); }
     };
