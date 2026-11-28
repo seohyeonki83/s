@@ -1,0 +1,15 @@
+const { chromium } = require('playwright'); const fs = require('fs');
+(async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const errs = [];
+const src = fs.readFileSync(__dirname + '/var/c602.html', 'utf8').replace('window.__map = "b";', 'window.__map = "m"; window.__stg = 1; window.__dif = "e";').replace('window.__rd = { get me() { return me; },', 'window.__rd = { ev: (s) => eval(s), get me() { return me; },');
+fs.writeFileSync(__dirname + '/var/c602_st.html', src);
+const p = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage(); p.on('pageerror', (e) => errs.push(e.message));
+await p.route('**/three.module.min.js', (r) => r.fulfill({ path: __dirname + '/../node_modules/three/build/three.module.min.js', contentType: 'application/javascript' }));
+const url = 'file://' + __dirname + '/var/c602_st.html';
+await p.goto(url); await p.evaluate(() => localStorage.setItem('rd_save_v1', JSON.stringify({ genes: 0, clr: {}, sub: {}, up: { hp: 0, ahp: 0, atk: 0 }, tr: { start: 10 }, tut: true, mig: 1, v2: 1, v3: 1, v4: 1, u2: 1, u3: 1 })));
+await p.goto(url); await p.waitForFunction(() => window.__rdReady && window.__rd && window.__rd.me, null, { timeout: 60000 });
+console.log(await p.evaluate(() => window.__rd.ev(`(() => { const A = bodies.filter((b) => b.kind === 'ally'); chNoMix = true; const B = []; for (let i = 0; i < 3; i++) { const x = me.foot.x - 1.3 + i * 0.6, z = me.foot.z - 1.2; const c = addCitizen(x, z, square(x, z), ''); c.sleep = false; c.met = true; makeZombie(c); if (!zombies.includes(c)) zombies.push(c); B.push(c); } chNoMix = false; const info = A.map((a) => [a.sleep, a.phase, a.mode, a.dorm, a.space === me.space, zombies.includes(a)].join('/')).join(' ; ');
+  const d0 = A.map((a) => Math.hypot(a.foot.x - me.foot.x, a.foot.z - me.foot.z).toFixed(1));
+  const dir = [1, 0]; for (let i = 0; i < 300; i++) { paused = false; me.vel.set(dir[0] * 3, dir[1] * 3); stepWorld(1 / 30); }
+  const dB = B.map((a) => Math.hypot(a.foot.x - me.foot.x, a.foot.z - me.foot.z).toFixed(1)); const d1 = A.map((a) => Math.hypot(a.foot.x - me.foot.x, a.foot.z - me.foot.z).toFixed(1));
+  return '동료 ' + A.length + ' · 상태 ' + info + ' · 거리 전 ' + d0 + ' → 10초 이동 후 ' + d1 + ' · 비교용 일반 감염 동료 ' + dB + ' · 내 속도 ' + me.speed.toFixed(2) + ' 동료 속도 ' + A[0].speed.toFixed(2); })()`)));
+console.log('errors', JSON.stringify(errs.slice(0, 3))); await b.close(); })();

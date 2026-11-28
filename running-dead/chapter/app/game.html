@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c601</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c602</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -4274,7 +4274,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       const a = (i / (n + m)) * Math.PI * 2 + rand(-0.4, 0.4) + t * 0.3, r = 1.3 + t * 0.06, x = me.foot.x + Math.cos(a) * r, z = me.foot.z + Math.sin(a) * r;
       if (spaceOf(x, z) !== me.space || !freeSpot(x, z, null) || blocked(me.foot.x, me.foot.z, x, z)) continue;
       chExact = true; const c = chPut(x, z, { x0: x - 1, z0: z - 1, x1: x + 1, z1: z + 1 }, '', me.space); chExact = false;
-      makeZombie(c); if (i >= n) { chMini(c); c.hp = c.maxHp = c.maxHp / 3; if (c.hpBar) c.hpDisp = c.hp; } break;
+      c.sleep = false; c.met = true; makeZombie(c); c.sleep = false;   /* c602: 잠든 채로 만들어져 안 따라오던 것 */ if (i >= n) { chMini(c); c.hp = c.maxHp = c.maxHp / 3; if (c.hpBar) c.hpDisp = c.hp; } break;
     }
   }
   function chSplitAcid(t) {                    // c422: 분열 산성 — 그 인간은 죽고 새끼 좀비 2마리 (경험치 1 · 사건 하나는 감염과 같다)
