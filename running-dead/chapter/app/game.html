@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c585</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c586</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1555,7 +1555,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     rifle: [[0.0, 0.22, 0.13], [0.22, 0.56, 0.1], [0.3, 0.42, 0.14], [0.56, 0.8, 0.05], [0.78, 0.84, 0.08]],   // 소총 — 개머리 · 몸통 · 손잡이 · 총열 · 소염기
     sniper: [[0.0, 0.2, 0.13], [0.2, 0.52, 0.09], [0.24, 0.46, 0.15], [0.52, 1.02, 0.045], [0.98, 1.1, 0.1]],  // 저격총 — 길쭉 · 가운데 조준경 · 끝에 머즐 브레이크
     shotgun: [[0.0, 0.2, 0.21], [0.2, 0.42, 0.195], [0.42, 0.74, 0.15], [0.46, 0.62, 0.225], [0.72, 0.76, 0.18]],  // 샷건 — 굵은 총열 · 펌프 손잡이   /* c584: 두께 1.5배 */
-    tgat: [[0.06, 0.36, 0.28], [0.36, 0.78, 0.045, -0.08], [0.36, 0.8, 0.045, 0], [0.36, 0.78, 0.045, 0.08], [0.46, 0.52, 0.24], [0.72, 0.78, 0.24]],   // c585: 터렛 기관포 (조금 더 크게)
+    tgat: [[0.06, 0.36, 0.28], [0.36, 0.64, 0.055, -0.08], [0.36, 0.65, 0.055, 0], [0.36, 0.64, 0.055, 0.08], [0.43, 0.49, 0.25], [0.58, 0.65, 0.25]],   /* c586: 총신 3분의 1 짧게 · 조금 굵게 (뭉툭) */   // c585: 터렛 기관포 (조금 더 크게)
     gatling: [[0.08, 0.34, 0.24], [0.34, 0.66, 0.04, -0.065], [0.34, 0.68, 0.04, 0], [0.34, 0.66, 0.04, 0.065], [0.42, 0.47, 0.2], [0.62, 0.67, 0.2]],   // c584: 사각 로봇 기관포 — 몸통 · 총신 3개 · 고리 2개
   };
   const chTurMat = new THREE.MeshBasicMaterial({ color: 0x1a1d21, transparent: true, depthTest: false, depthWrite: false }), chGatMat = new THREE.MeshBasicMaterial({ color: 0x2a2f35, transparent: true, depthTest: false, depthWrite: false });   /* c584: 권총은 밝은 회색 */
