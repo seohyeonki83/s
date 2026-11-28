@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c610</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c611</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -7316,7 +7316,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     p.img = img;
     return t;
   }
-  const CH_MAG_R = 1.5;   /* c570: 자석 거리 = 내 공격 거리 × 1.5 */
+  const CH_MAG_R = 3.0;   /* c611: 자석 거리 2배 (공격 거리 × 1.5 → × 3) */   /* c570: 자석 거리 = 내 공격 거리 × 1.5 */
   function dropPickup(kind, x, z, space) {
     const p = { kind, x, z, space, t: 0 };
     p.s = new THREE.Sprite(new THREE.SpriteMaterial({ map: itemTex(kind, p), transparent: true, depthTest: false, depthWrite: false }));
