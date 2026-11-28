@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c581</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c582</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1551,7 +1551,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
   const chGunMat = new THREE.MeshBasicMaterial({ color: 0x1d2024, transparent: true, depthTest: false, depthWrite: false }), chSqGeo = new THREE.PlaneGeometry(RADIUS * 1.8, RADIUS * 1.8);
   function chAddGun(c, L, W, col) { const g = new THREE.Mesh(new THREE.PlaneGeometry(L, W).translate(L / 2 + 0.05, 0, 0), col ? new THREE.MeshBasicMaterial({ color: col, transparent: true, depthTest: false, depthWrite: false }) : chGunMat); g.position.z = 0.012; g.renderOrder = 1; c.mesh.add(g); c.aimGun = g; }
   function chMakeSg(c) {                       // c436: 샷건 경찰 — 경찰 + 늘 앞을 향한 샷건 · 체력 150% · 경찰 사거리 0.4배까지 다가가 쏜다
-    c.sg = true; c.hp = c.maxHp = c.maxHp * CH_SG_HPK; chAddGun(c, 0.62, 0.15); c.baseCol = 0x7a1f94; c.mesh.material.color.setHex(c.baseCol);   /* c573: 체력 450(스테이지 1) · 살짝 진한 보라 */
+    c.sg = true; c.hp = c.maxHp = c.maxHp * CH_SG_HPK; chAddGun(c, 0.62, 0.15); c.baseCol = 0x5c1470;   /* c582: 더 어두운 보라 */ c.mesh.material.color.setHex(c.baseCol);   /* c573: 체력 450(스테이지 1) · 살짝 진한 보라 */
   }
   function chMakeRobot(c) { if (c.robot) return;   // c505: 두 번 안 바뀐다                    // c436: 사각 로봇 — 군인 바탕 · 체력 2배 · 몸 1.5배 · 감염 안 됨(체력 0이면 터짐) · 현금 · 다이아몬드에 반응 안 함
     chRobotAny = true; c.robot = true; c.noLure = true; c.hp = c.maxHp = c.maxHp * 1.6;   /* c554: 사각 로봇 체력 20% 줄임 (2 → 1.6배) */ c.r = BODY * 1.5; c.halfH = RADIUS * 1.5; c.mesh.scale.setScalar(1.5);
@@ -10852,7 +10852,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     soldier: { col: '#' + COLOR.soldier.toString(16).padStart(6, '0'), name: '군인', say: '훈련된 인간입니다.' },   // v480
     sniper: { col: '#ff2a2a', name: '저격수', say: CHAPTER ? '매우 위험한 인간입니다.<br>제거 1순위' : '발빠른 저격수<br>제거 1순위' },   // v270: 총(건) — 권법 아님
     station: { col: '#b44ee6', name: '경찰서', say: '깝치면 개털림' },
-    sg: { col: '#7a1f94', name: '샷건 경찰', say: '샷건을 든 경찰입니다.' }   /* c576: 짧게 */,   /* c575: 챕터 첫 발견 소개 */
+    sg: { col: '#8a2aa8', name: '샷건 경찰', say: '샷건을 든 경찰입니다.' }   /* c576: 짧게 */,   /* c575: 챕터 첫 발견 소개 */
     robot: { col: '#2f5a1a', name: '사각 로봇', say: '인간이 다루는 튼튼한 로봇입니다.' },
     turret: { col: '#8a93a3', name: '터렛', say: '건널목을 지키는 고정 포대입니다.' },
     drone: { col: '#7fe3ff', name: '드론', say: '하늘에서 총을 쏘는 드론입니다.' },
