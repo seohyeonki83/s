@@ -1,0 +1,10 @@
+import pathlib
+s = pathlib.Path('c612.mjs').read_text()
+R = []
+def rep(a, b, n=1):
+    assert s.count(a) == n, (a[:80], s.count(a)); R.append((a, b))
+rep("  const CH_MAG_R = 3.0;", "  const CH_MAG_R = 1.5;   /* c613: 다시 반으로 (공격 거리 × 1.5) · 저격수 장비만 2배 */")
+rep("if (!p.mag && (p.snip || (d <= CH_MAG_R * (MELEE + Math.max(0, (me.r || BODY) - BODY)) && (chSameSp(me.space, p.space) || !fireBlocked(me.foot.x, me.foot.z, p.x, p.z))))) {   /* c612: 저격수 장비는 바로 */",
+    "if (!p.mag && d <= CH_MAG_R * (p.snip ? 2 : 1) * (MELEE + Math.max(0, (me.r || BODY) - BODY)) && (chSameSp(me.space, p.space) || !fireBlocked(me.foot.x, me.foot.z, p.x, p.z))) {   /* c613: 저격수 장비는 자석 거리 2배 (벽은 똑같이 막힌다) */")
+pathlib.Path('c613_patch.py').write_text('C613_R = ' + repr(R) + '\n')
+print(len(R))
