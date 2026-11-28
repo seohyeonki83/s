@@ -1,0 +1,18 @@
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const errs = [];
+const p = await (await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 })).newPage(); p.on('pageerror', (e) => errs.push(e.message));
+await p.route('**/three.module.min.js', (r) => r.fulfill({ path: __dirname + '/../node_modules/three/build/three.module.min.js', contentType: 'application/javascript' }));
+const url = 'file:///home/user/s/running-dead/chapter/c599.html';
+await p.goto(url); await p.evaluate(() => localStorage.setItem('rd_save_v1', JSON.stringify({ genes: 500, clr: {}, sub: {}, up: { hp: 9, ahp: 0, atk: 0 }, tr: {}, tut: true, mig: 1, v2: 1, v3: 1, v4: 1, u2: 1, u3: 1 })));
+await p.goto(url); await p.waitForSelector('#outg .ugb', { timeout: 30000 }); await p.waitForTimeout(300);
+await p.screenshot({ path: __dirname + '/shots/c599_btn.png', clip: { x: 0, y: 700, width: 390, height: 144 } });
+await p.click('[data-ug="1"]'); await p.waitForTimeout(300);
+await p.screenshot({ path: __dirname + '/shots/c599_before.png', clip: { x: 0, y: 460, width: 390, height: 260 } });
+await p.click('[data-up="hp"]'); await p.waitForTimeout(260);
+await p.screenshot({ path: __dirname + '/shots/c599_fly.png', clip: { x: 0, y: 460, width: 390, height: 260 } });
+console.log('폭', await p.evaluate(() => { const r = document.querySelector('#outg .ug.pop'); const w = (q) => { const e = r.querySelector(q); return e ? Math.round(e.getBoundingClientRect().width) + 'x' + Math.round(e.getBoundingClientRect().height) : '-'; }; return ['.tx', '.gw', '.gg', '.gg i', '.ge', '.pc'].map((q) => q + ':' + w(q)).join(' '); }));
+console.log('날아가는 중 숫자:', await p.textContent('#outg .tpn'));
+await p.waitForTimeout(500);
+console.log('도착 뒤 숫자:', await p.textContent('#outg .tpn'));
+await p.screenshot({ path: __dirname + '/shots/c599_after.png', clip: { x: 0, y: 460, width: 390, height: 260 } });
+console.log('errors', JSON.stringify(errs.slice(0, 3))); await b.close(); })();

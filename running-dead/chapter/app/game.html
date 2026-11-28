@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c598</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c599</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -681,7 +681,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     };
     const upSheet = (pop) => {   // c592: 성장 — 표시 100부터 · 클릭 1번 = 유전자 10 · 10칸 게이지가 꽉 차면 +1 (팡) · 특성 포인트 +1
       const row = (k, ic, nm) => { const v = CH_SV.up[k] || 0, lvN = Math.floor(v / 10), f = pop === k ? 10 : v % 10;
-        return `<div class="ug${pop === k ? ' pop' : ''}" data-row="${k}"><div class="ic">${ic}</div><div class="tx"><div class="n1">${nm}</div><div class="gw"><div class="gg"><i style="width:${f * 10}%"></i></div><span class="ge${pop === k ? ' gon' : ''}">${CH_TP_I(20)}</span></div></div><div class="pc">${100 + lvN}${pop === k ? '<b class="ufl">+1</b>' : ''}</div><button class="ub" data-up="${k}" ${CH_SV.genes < CH_UP_COST ? 'disabled' : ''}>+ ${CH_GENE_I(14)}${CH_UP_COST}</button></div>`; };
+        return `<div class="ug${pop === k ? ' pop' : ''}" data-row="${k}"><div class="ic">${ic}</div><div class="tx"><div class="n1">${nm}</div><div class="gw"><div class="gg"><i style="width:${f * 10}%"></i></div><span class="ge${pop === k ? ' gon' : ''}">${CH_TP_I(20)}</span></div></div><div class="pc">${lvN}${pop === k ? '<b class="ufl">+1</b>' : ''}</div><button class="ub" data-up="${k}" ${CH_SV.genes < CH_UP_COST ? 'disabled' : ''}>+ ${CH_GENE_I(14)}${CH_UP_COST}</button></div>`; };
       openSheet(`<div class="hd"><div><div class="t2">성장</div></div><button class="x">✕</button></div><div class="ds">${CH_GENE_I(14)} <b>${CH_SV.genes}</b> · <span class="tpw">${CH_TP_I(16)} <b class="tpn">${pop ? chTpLeft() - 1 : chTpLeft()}</b></span></div>` +
         row('hp', '❤️', '내 체력') + row('ahp', '🧟', '동료 체력') + row('atk', '⚔️', '공격력') + `<div class="gh">10번 채우면 +1 (능력 +0.5%) · 특성 포인트 +1</div>`,
         (b) => { if (b.dataset.up && CH_SV.genes >= CH_UP_COST) { const k = b.dataset.up; CH_SV.genes -= CH_UP_COST; CH_SV.up[k] = (CH_SV.up[k] || 0) + 1; chSave(); { const m = ov.querySelector('.map'); draw(m ? m.scrollLeft : 0); }   /* c567: 지도는 보던 자리 그대로 */
