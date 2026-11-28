@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c589</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c590</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -1567,7 +1567,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     g.position.z = 0.012; c.mesh.add(g); c.aimGun = g;
   }
   const chRSqGeo = (() => { const h = RADIUS * 0.9, r = 0.13, S = new THREE.Shape(); S.moveTo(-h + r, -h); S.lineTo(h - r, -h); S.quadraticCurveTo(h, -h, h, -h + r); S.lineTo(h, h - r); S.quadraticCurveTo(h, h, h - r, h); S.lineTo(-h + r, h); S.quadraticCurveTo(-h, h, -h, h - r); S.lineTo(-h, -h + r); S.quadraticCurveTo(-h, -h, -h + r, -h); return new THREE.ShapeGeometry(S, 6); })();   // c584: 둥근 모서리 사각
-  const chTurLeg = (() => { const g = new THREE.PlaneGeometry(0.24, 0.09).translate(0.3 + 0.12, 0, 0), p = new THREE.PlaneGeometry(0.16, 0.16).translate(0.54, 0, 0);   /* c589: 받침판 0.12 안쪽으로 */ const pos = [...g.attributes.position.array, ...p.attributes.position.array], idx = [...g.index.array, ...p.index.array.map((v) => v + 4)]; const G = new THREE.BufferGeometry(); G.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); G.setIndex(idx); return G; })(), chTurLegMat = new THREE.MeshBasicMaterial({ color: 0x2b3037, transparent: true, depthTest: false, depthWrite: false });   // c588: 다리 + 끝의 받침판
+  const chTurLeg = (() => { const g = new THREE.PlaneGeometry(0.34, 0.09).translate(0.3 + 0.17, 0, 0), p = new THREE.PlaneGeometry(0.128, 0.128).translate(0.66, 0, 0);   /* c590: 자리는 c588대로 밖 · 받침판만 20% 작게 */ const pos = [...g.attributes.position.array, ...p.attributes.position.array], idx = [...g.index.array, ...p.index.array.map((v) => v + 4)]; const G = new THREE.BufferGeometry(); G.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); G.setIndex(idx); return G; })(), chTurLegMat = new THREE.MeshBasicMaterial({ color: 0x2b3037, transparent: true, depthTest: false, depthWrite: false });   // c588: 다리 + 끝의 받침판
   const chTurGeo = new THREE.CircleGeometry(RADIUS * 0.9, 40), chTurDome = new THREE.CircleGeometry(RADIUS * 0.52, 32), chTurDomeMat = new THREE.MeshBasicMaterial({ color: 0x5f6875, transparent: true, depthTest: false, depthWrite: false });   // c587
   const chOctGeo = new THREE.CircleGeometry(RADIUS * 1.04, 8, Math.PI / 8);   // c583: 샷건 경찰 — 팔각형 몸
   function chMakeSg(c) {                       // c436: 샷건 경찰 — 경찰 + 늘 앞을 향한 샷건 · 체력 150% · 경찰 사거리 0.4배까지 다가가 쏜다
