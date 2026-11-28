@@ -251,7 +251,7 @@
   <canvas id="smell"></canvas>
   <div id="lvbox"><div class="lv">Lv 0</div><div class="bar"><i></i></div><div class="xp"></div></div>
   <div id="joy"><div id="knob"></div></div>
-  <div id="ver">챕터 c580</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
+  <div id="ver">챕터 c581</div><div id="danger" style="position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0) 55%, rgba(220,0,0,0.55) 85%, rgba(200,0,0,0.9) 100%)"></div>
   <div id="stars"></div>
   <canvas id="minimap"></canvas>
   <div id="legend"><i class="domain"></i><span id="legendDomain">지배</span><i class="fight"></i><span id="legendFight">공격 지배</span></div>
@@ -461,7 +461,7 @@
   const CH_LVN = ['수상함', '경계', '비상', '팬데믹', '총동원령', '계엄', '데프콘', '전면전', '대재앙', '종말'];
   const CH_MIS_T = { e: [[3, 6], 30], n: [[4, 7], 50], h: [[5, 8], 70] };
   const CH_MIS_B = { e: [4, 10], n: [3, 9], h: [2, 8] };   // c539: Type B 서브 미션 (임시) — [검문소 점령 분, 클리어 분]   // 서브 미션 (임시) — [경보 단계, 분] · 동료 수
-  const CH_MIX_T = { e: 5, n: 4, h: 3 };
+  const CH_MIX_T = { e: 4, n: 3, h: 2 };
   const CH_CLR_G = { e: 300, n: 400, h: 500 };   /* c543 */
   const CH_SUB_G = 200;   // c543: 서브 미션 보상
   const CH_BBOT_IMG = 'data:image/jpeg;base64,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fT+tbHmlmiiigAooooAKKKKACiiigANMi+7+NPqOL+Ie9AFqy/4/IP8AroP512Wa4cEg5HBp/nS/89H/ADqoysS1c7XNGa4rzpf+ej/nR50v/PR/zp84uU7XNGa4rzpf+ej/AJ0edL/z0f8AOjnDlO1zRmuK86X/AJ6P+dHnS/8APR/zo5w5Ttc0ZFcV50v/AD0f86ZLNLtz5r9f71HOHKdxmjNcUJpcf6x/zo86X/no/wCdHOHKdrmiuK86X/no/wCdFHOHKMoooqCwooooAKKKKACiiigBkv3KcOgpkvYe9SUAFFFFABRRRQAUUUUAFFFFABUf/LX8KkqNf9a1AElFFFABUN3EZrd41IBYd6mooAxv7Jm/vpR/ZM399K2aKAMb+yZv76Uf2TN/fStmigDG/smb++lB0qYD76Vs0jfdNAGMulzMMh1pf7Jm/vpWtF9wU+gDG/smb++lH9kzf30rZooAxv7Jm/vpR/ZM399K2aKAMb+yZv76Uf2TN/fStmigDG/smb++lH9kzf30rZooAxW0uZcZZea1LSIw26RsQSo7U6X+H61JQAUUUUAFFFFABRRRQAUUUUAFRp99hUlRr/rWoAkooooAKKKKACiiigAooooAKbJyhp1I3KmgAT7opaZF9wU+gAooooAKKKKACiiigAooooAKKKKAI35dRUlRnmUe1SUAFFFFABRRRQAUUUUAFFFFABUaf6xqkqOP7zfWgCSiiigAooooAKKKKACiiigApG+6fpS0jfdP0oAbF9wU+mRfcFPoAKKKKACiiigAooooAKKKKAGS9B9afTJfu/jTx0oAKKKKACiiigAooooAKKKKACo/+Wv4VJUbf61aAJKKKKACiiigAooooAKKKKACiiigBkXQj0NPqNOHYVJQAUUUUAN3r60b19aXaPQUbR6CgBN6+tG9fWl2j0FG0egoATevrRvX1pdo9BRtHoKAE3r60b19aXaPQUbR6CgCMMvmE54xT96+tNQAu3FP2j0FACb19aN6+tLtHoKNo9BQAm9fWjevrS7R6CjaPQUAJvX1o3r60u0ego2j0FACb19aN6+tLtHoKNo9BQAm9fWmRsAWyepqTA9BTIgCDx3oAdvX1o3r60u0ego2j0FACb19aN6+tLtHoKNo9BQAm9fWjevrS7R6CjaPQUAJvX1o3r60u0ego2j0FACb19aRnUqeadtHoKRgNp4FADUdQoBNO3r60kYGwcU7aPQUAJvX1o3r60u0ego2j0FACb19aN6+tLtHoKNo9BQAm9fWjevrS7R6CjaPQUAJvX1o3r60u0ego2j0FAEcjKV4NPDrjrSSAbDgUqgYHAoAN6+tG9fWl2j0FG0egoATevrRvX1pdo9BRtHoKAE3r60b19aXaPQUbR6CgBN6+tG9fWl2j0FG0egoATevrTGZSykHpUm0egpkgA28d6AHb19aN6+tLtHoKNo9BQAm9fWjevrS7R6CjaPQUAJvX1o3r60u0ego2j0FACb19aN6+tLtHoKNo9BQAm9fWjevrS7R6CjaPQUARhgJCc8Gn719aawAkXin7R6CgBN6+tFLtHoKKAFooooAKKKKACiiigAoopD0oAZF/EfepKZF938afQAUUUUAFFFFABRRRQAUUUUAIelNi+7+NOb7ppsX3BQA+iiigAooooAKKKKACiiigApH+6fpS01/un6UAEf3BTqbH9wU6gAooooAKKKKACiiigAooooAbJ9w0q/dH0pJPuGhPuj6UAOooooAKKKKACiiigAooooAKZL938afTJfuGgB46UUi/dFLQAUUUUAFFFFABRRRQAUUUUARydVPvUlMl+7+NOHSgBaKKKACiiigAooooAKKKKACkf7ppabJ9w0AEf3BTqRPuj6UtABRRRQAUUUUAFFFFABRRRQA1/un6UR/cFEn3DQn3BQA6iiigAooooAKKKKACiiigApr/cNOpr/cNABH9wU6mx/cFOoAKKKKACiiigAooooAKKKKAGv9w0R/cFK/3T9KSP7goAdRRRQAUUUUAFFFFABRRRQAU2T7hp1I33TQAifcFOpkX3BT6ACiiigAooooAKKKKACiiigBsnKGhOVFKwyppsX3BQA+iiigAooooAKKKKACiiigApkv3fxp9Ry/wj3oAeOlLRRQAUUUUAFFFFABRRRQAUUUUAMl+4acv3R9KbL9ynDoKAFooooAKKKKACiiigAooooAKa/3DTqbJ9w0ACfcFOpqfcFOoAKKKKACiiigAooooAKKKKAEb7p+lNi+4Kc3Q02L7lAD6KKKACiiigAooooAKKKKACg9KKKAGRfd/Gn1HF3HvUlABRRRQAUUUUAFFFFABRRRQAVHF0I9DUlRpw7CgCSiiigAopnmD0P5UeYPQ/lQA+imeYPQ/lR5g9D+VAD6KZ5g9D+VHmD0P5UAPqN/vqKXzB6H8qYWzIDg8UATUUzzB6H8qPMHofyoAfRTPMHofyo8weh/KgB9FM8weh/KjzB6H8qAH0UzzB6H8qPMHofyoAfRTPMHofyo8weh/KgAl+6PrTx0qKRs44PWneYPQ/lQA+imeYPQ/lR5g9D+VAD6KZ5g9D+VHmD0P5UAPopnmD0P5UeYPQ/lQA+imeYPQ/lR5g9D+VAD6bJ9w0nmD0P5UjvlSMGgByfcFOqNXwoGD+VL5g9D+VAD6KZ5g9D+VHmD0P5UAPopnmD0P5UeYPQ/lQA+imeYPQ/lR5g9D+VAD6KZ5g9D+VHmD0P5UAOPSmxfdo3j0P5U2N8DGDQBLRTPMHofyo8weh/KgB9FM8weh/KjzB6H8qAH0UzzB6H8qPMHofyoAfRTPMHofyo8weh/KgB9FM8weh/KjzB6H8qAEj+8w96kqJWw7HB5p3mD0P5UAPopnmD0P5UeYPQ/lQA+imeYPQ/lR5g9D+VAD6KZ5g9D+VHmD0P5UAPopnmD0P5UeYPQ/lQA+o+kv1FL5g9D+VNLfODg0AS0UzzB6H8qKAH0UUUAFFFFABRRRQAVGOZT7VJUacuxoAkooooAKKKKACiiigAooooAKKKKAI5PvL9akqN/9YtSUAFFFFABRRRQAUUUUAFFFFABTZPuGnU2T7hoAE+6PpTqRPuj6UtABRRRQAUUUUAFFFFABRRRQAVHF0P1qSo4urfWgCSiiigAooooAKKKKACiiigAooooAj/5bfhUlRniUfSpKACiiigAooooAKKKKACiiigAqOXqp96kpkv3aAH0Ug5AooAWiiigAooooAKKKKACo4v4j7089DTYvuUAPooooAKKKKACiiigAooooAKKKKAI2/1q1JUZ/wBaPpUlABRRRQAUUUUAFFFFABRRRQAUyX7hp9Ml+4aAHL90fSlpF+6PpS0AFFFFABRRRQAUUUUAFFFFABUcfVvrUlRx/fagCSiiigAooooAKKKKACiiigAooooAjf8A1i1JUcnVfrUlABRRRQAUUUUAFFFFABRRRQAU2TlDTqRuQaAETlBRSRfcooAfRRRQAUUUUAFFFFADX+6aI/uCkl+4acn3R9KAFooooAKKKKACiiigAooooAKKKKAI/wDlt+FSVGv+tapKACiiigAooooAKKKKACiiigApkv3DT6ZL9w0AOX7o+lLSL90UtABRRRQAUUUUAFFFFABRRRQAVGn+sapKjX/WNQBJRRRQAUUUUAFFFFABRRRQAUUUUARy9B9akFMl+5Tl6CgBaKKKACiiigAooooAKKKKACiiigCOL+Ie9FCcSMKKAJKKKKACiiigAooooAZL938aeOlRy9VHvUlABRRRQAUUUUAFFFFABRRRQAUUUUARp/rGqSo4/vN9akoAKKKKACiiigAooooAKKKKACmS/cp9Ml+5QA5fuilpF+6KWgAooooAKKKKACiiigAooooAKjX/AFpqSox/rj9KAJKKKKACiiigAooooAKKKKACiiigBsn3DQn3RQ/3T9KI/uCgB1FFFABRRRQAUUUUAFFFFABRRRQBH0m+ooofiRTRQBJRTNh/vmjYf75oAfRTNh/vmjYf75oAfRTNh/vmjYf75oAR/wDWKKkqHafMxuP1p+w/3zQA+imbD/fNGw/3zQA+imbD/fNGw/3zQA+imbD/AHzRsP8AfNAD6KZsP980bD/fNAD6KZsP980mw/3zQARfxfWpKhjUkHDEU/Yf75oAfRTNh/vmjYf75oAfRTNh/vmjYf75oAfRTNh/vmjYf75oAfRTNh/vmjYf75oAfTJfuUbD/fNMkUheWJoAlHQUtRhDj75pdh/vmgB9FM2H++aNh/vmgB9FM2H++aNh/vmgB9FM2H++aNh/vmgB9FM2H++aNh/vmgB9R/8ALb8KXYf75phU+YBuP1oAmopmw/3zRsP980APopmw/wB80bD/AHzQA+imbD/fNGw/3zQA+imbD/fNGw/3zQA+imbD/fNGw/3zQA49DTYvuUbD/fNMjUkHDEUATUUzYf75o2H++aAH0UzYf75o2H++aAH0UzYf75o2H++aAH0UzYf75o2H++aAH0UzYf75o2H++aAEl/hPvRSOhC53E0UAf//Z';   // c539
@@ -709,7 +709,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
   const CH_E7H = 0.93 * 0.95;   /* c563: 적 체력만 5% 더 (공격력은 0.93 그대로) */
   const CH_E7 = 0.93;   /* c560: 다시 7%로 */   /* c557: 7% → 10% (원래 값 기준) · 챕터 강화(CH_SK)는 이 값 위에 곱해진다 */   /* c555: 적 캐릭터 기본 체력 · 공격력 7% 낮춤 (드론 · 차량 제외, 튜토리얼 포함) */
   const CH_SK = CH_RUN ? 1 + 0.1 * (CH_STG - 1) : 1;   /* c544: 챕터마다 +10% (복리 아님 — 1.0 · 1.1 · 1.2 · 1.3) */   /* c522: 다시 +20%씩 (1.0 · 1.2 · 1.4) */   /* c521: 스테이지마다 +30% (1.0 · 1.3 · 1.6) */   // 스테이지 강화 — 적 체력 · 공격력 · 벽 · 사물 (보스 체력 제외)
-  const CH_MIXL = CH_RUN ? { e: 5, n: 4, h: 3 }[CH_DIF] : 5;   /* c571: 쉬움 총동원령 · 보통 팬데믹 · 어려움 비상 */   /* c550: 한 단계씩 뒤로 — 쉬움 계엄 · 보통 총동원령 · 어려움 팬데믹 */   // 샷건 · 로봇 섞임 + 건널목 터렛 — 쉬움 총동원령 · 보통 팬데믹 · 어려움 비상
+  const CH_MIXL = CH_RUN ? { e: 4, n: 3, h: 2 }[CH_DIF] : 5;   /* c581: 샷건 · 사각 섞임 + 건널목 터렛 + 출동 25% — 쉬움 팬데믹 · 보통 비상 · 어려움 경계 */   /* c571: 쉬움 총동원령 · 보통 팬데믹 · 어려움 비상 */   /* c550: 한 단계씩 뒤로 — 쉬움 계엄 · 보통 총동원령 · 어려움 팬데믹 */   // 샷건 · 로봇 섞임 + 건널목 터렛 — 쉬움 총동원령 · 보통 팬데믹 · 어려움 비상
   const CH_MIS = CH_MIS_T[CH_RUN ? CH_DIF : 'e'];   // c517: 표는 위 (아웃게임과 같은 것)   // 서브 미션 (임시) — [경보 단계, 분] · 동료 수
   const chMis = [{ done: false }, { done: false }];
   let chRunT = 0, chRunGenes = 0, chRunOver = false, chAnimKey = '';
@@ -1563,6 +1563,16 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     chBTgone(c); if (isZombie(me)) gainXp(); if (CHAPTER && !c.mad) chGeneAdd(1);   /* c505 */
   }
   const chSgBuf = [];
+  const chFans = [];   // c581: 샷건 부채꼴 면적 이펙트
+  function chFanAdd(x, z, a0, R, space) {
+    const mk = (r, col, op) => { const g = new THREE.CircleGeometry(r, 28, -Math.PI / 6, Math.PI / 3).rotateX(-Math.PI / 2); const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: op, depthWrite: false })); m.position.set(x, 0.04, z); m.rotation.y = -a0; m.renderOrder = 4; scene.add(m); return m; };
+    chFans.push({ t: 0, life: 0.28, out: mk(R, 0xffb020, 0.42), inn: mk(R * 0.55, 0xfff3a0, 0.6) });
+  }
+  function chFanTick(dt) {
+    for (let i = chFans.length - 1; i >= 0; i--) { const f = chFans[i]; f.t += dt; const u = f.t / f.life;
+      if (u >= 1) { for (const m of [f.out, f.inn]) { scene.remove(m); m.geometry.dispose(); m.material.dispose(); } chFans.splice(i, 1); continue; }
+      f.out.material.opacity = 0.42 * (1 - u) * (1 - u); f.inn.material.opacity = 0.6 * Math.max(0, 1 - u * 1.8); f.out.material.color.setHex(u < 0.3 ? 0xffd040 : 0xff8a20); }
+  }
   const CH_SG_HPK = 450 / 252;   /* c573: 스테이지 1 경찰 252 → 샷건 450 (스테이지 강화는 그대로 곱해진다) */
   function chShotgun(c, z) {                   // c436: 샷건 — 앞쪽 60° 부채꼴, 경찰 사거리 0.5배 안 좀비 모두 (경찰 공격력 1/5) · 넉백 가까우면 저격수의 40% → 끝에서 0
     const R = c.sight * 0.8, dx = z.foot.x - c.foot.x,   /* c573: 맞는 범위 = 경찰 사거리 0.8배 */ dz = z.foot.z - c.foot.z, d0 = Math.hypot(dx, dz) || 1, ux = dx / d0, uz = dz / d0, cs = Math.cos(Math.PI / 6);
@@ -1570,10 +1580,11 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     { const f = puff(c.foot.x + ux * RADIUS, 0, c.foot.z + uz * RADIUS, 0xfff23a, 1.4, 1.6, 0.09, 0, 0, 0, 0.8); f.s.material.map = flashTex; f.s.position.addScaledVector(UP, RADIUS); f.s.renderOrder = UI - 0.5; f.peak = true; }
     {   /* c574: 샷건 머즐 — 앞쪽 60° 부채꼴로 번쩍 + 산탄이 맞는 범위 끝까지 방사형으로 */
       const a0 = Math.atan2(uz, ux), mx = c.foot.x + ux * 0.55, mz = c.foot.z + uz * 0.55;
-      for (let k = -2; k <= 2; k++) { const a = a0 + k * 0.21, d = 0.75 + (2 - Math.abs(k)) * 0.2; const f = puff(mx + Math.cos(a) * d, 0, mz + Math.sin(a) * d, 0xfff23a, 1.05 - Math.abs(k) * 0.12, 0.5, 0.09, 0, 0, 0, 0.85); f.s.material.map = flashTex; f.s.position.addScaledVector(UP, RADIUS); f.s.renderOrder = UI - 0.5; f.peak = true; }   // 부채꼴 섬광
+      for (let k = -2; k <= 2; k++) { const a = a0 + k * 0.21, d = 0.75 + (2 - Math.abs(k)) * 0.2; const f = puff(mx + Math.cos(a) * d, 0, mz + Math.sin(a) * d, 0xfff23a, 1.4 - Math.abs(k) * 0.15, 0.6, 0.11, 0, 0, 0, 0.95); f.s.material.map = flashTex; f.s.position.addScaledVector(UP, RADIUS); f.s.renderOrder = UI - 0.5; f.peak = true; }   // 부채꼴 섬광
       const life = 0.15, sp = R / life * 1.25;   /* 이펙트 감속(초당 2.5) 만큼 보탠다 */
-      for (let i = 0; i < 13; i++) { const a = a0 + (i / 12 - 0.5) * (Math.PI / 3) + rand(-0.04, 0.04), v = sp * rand(0.8, 1.0);   // 산탄 13알 — 부채꼴 끝까지
-        for (let j = 0; j < 3; j++) { const f = puff(mx, 0.6, mz, j ? 0xffc864 : 0xfff6c8, j ? 0.16 - j * 0.03 : 0.22, 0.06, life, Math.cos(a) * v, 0, Math.sin(a) * v, j ? 0.7 - j * 0.2 : 1, j * 0.018); f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true; } }   // 알갱이 + 꼬리 2개
+      chFanAdd(c.foot.x, c.foot.z, a0, R, c.space);   /* c581: 맞는 범위 부채꼴이 땅에 번쩍 */
+      for (let i = 0; i < 18; i++) { const a = a0 + (i / 17 - 0.5) * (Math.PI / 3) + rand(-0.04, 0.04), v = sp * rand(0.8, 1.0);   // 산탄 13알 — 부채꼴 끝까지
+        for (let j = 0; j < 3; j++) { const f = puff(mx, 0.6, mz, j ? 0xffc864 : 0xfff6c8, j ? 0.22 - j * 0.04 : 0.3, 0.08, life, Math.cos(a) * v, 0, Math.sin(a) * v, j ? 0.7 - j * 0.2 : 1, j * 0.018); f.s.material.map = flashTex; f.s.renderOrder = UI - 0.5; f.peak = true; } }   // 알갱이 + 꼬리 2개
     }
     const dmg = CH_DMG_PO / 5;
     for (const t of nearIn(zCells, c.foot.x, c.foot.z, R + 1, chSgBuf)) {
@@ -1581,7 +1592,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
       const ex = t.foot.x - c.foot.x, ez = t.foot.z - c.foot.z, e = Math.hypot(ex, ez);
       if (e > R + (t.r || BODY) || e < 1e-3 || (ex * ux + ez * uz) / e < cs || fireBlocked(c.foot.x, c.foot.z, t.foot.x, t.foot.z)) continue;
       landHit(c, t, t === me && hasVest ? dmg * vestK(lvE('vest')) : dmg);
-      const D = SNIPER_KD * 0.8 * Math.max(0, 1 - e / R);   /* c573: 붙어 있으면 저격수 넉백의 80% */
+      const D = SNIPER_KD * (1 - 0.5 * Math.min(1, e / R));   /* c581: 저격수 넉백 — 붙으면 100% · 끝에서 50% */
       if (D > 0.001 && t.hp > 0 && t.mode !== 'bite' && chKbAbs(t) < D - 0.001) { const T = ARMOR_KT * D / SNIPER_KD, V = D * 4 / (1 - Math.exp(-4 * T)); if (t.mode === 'pounce') stopPounce(t); giveKnock(t, ex, ez, V, T); }
     }
   }
@@ -2426,7 +2437,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     if (CHAPTER && !c.police) { c.soft = true; c.sight *= CH_SOFT_SIGHT; }   // c84: 하양·노랑·주황 (빨강·분홍은 chVig·chBoss에서 되돌린다)
     if (c.soldier) c.sense = c.sight;    // v410: 군인은 경계 없이 시야 안이면 바로 싸움
     if (c.sniper) { c.evadeR = sniperEvadeR(); c.sight = SIGHT * 1.1; c.sense = c.sight;   /* v432: 시야(사거리) = 경찰의 1.1배 → 7.92칸 */   /* v404: 경찰과 차이를 절반으로 (1.5 → 1.25배, 9칸) */ c.mark = new THREE.Sprite(diamondMat); c.mark.scale.set(1.3, 1.3, 1); /* v482: 테두리 + 십자 */ c.mark.renderOrder = UI; c.mark.visible = false; scene.add(c.mark); }   // v396: 저격수 시야 10.8칸 — 시야 안이면 경계 없이 바로 싸움
-    if (CHAPTER && chAL >= CH_MIXL - 1 && !chNoMix)   /* c572: 경찰 → 샷건 섞임은 한 단계 먼저 (쉬움 팬데믹 · 보통 비상 · 어려움 경계) */ { if (type === 'police' && ++chPolN % 3 === 0) chMakeSg(c);   /* c578: 5명 중 1 → 3명 중 1 */ else if (type === 'soldier' && chAL >= CH_MIXL && ++chSolN % 3 === 0) chMakeRobot(c); }   // c436
+    if (CHAPTER && chAL >= CH_MIXL && !chNoMix)   /* c581: 경찰 30% → 샷건 · 군인 30% → 사각 (같은 단계부터) */ { if (type === 'police' && (chPolN += CH_MIX_K) >= 1) { chPolN -= 1; chMakeSg(c); } else if (type === 'soldier' && (chSolN += CH_MIX_K) >= 1) { chSolN -= 1; chMakeRobot(c); } }   // c436
     c.flee = new THREE.Vector2();
     c.lastSeen = new THREE.Vector3();
     c.lastSeenSpeed = SPEED;
@@ -3261,7 +3272,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     let sn = null;
     for (const t of car.squad) {
       const p = t === 'sniper' ? far.shift() : S.shift();
-      const c = addCitizen(p.x, p.z, square(p.x, p.z), t); if (car.sfw) c.sfw = car.sfw; if (car.cvy) c.cvy = true;   /* c505 */
+      chNoMix = !!car.cvy; const c = addCitizen(p.x, p.z, square(p.x, p.z), t); chNoMix = false; if (car.sfw) c.sfw = car.sfw; if (car.cvy) c.cvy = true;   /* c581: 보스 인원은 섞임 없음 */   /* c505 */
       if (CHAPTER) { (car.crew = car.crew || []).push(c); c.met = true; }   // c47 · c52: 내린 사람은 깨어 있다
       if (car.tkWave) c.tkU = true; if (t === 'sniper') sn = c; else if (CHAPTER && !sn) c.noMaster = true; else if (sn) { c.master = sn; c.slotA = Math.random() * Math.PI * 2; c.slotK = rand(0.5, 1); }   // 저격수 뒤에 오는 군인 = 그 저격수 호위
       c.tick = 0;
@@ -4139,7 +4150,8 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     if (CHAPTER && b.home && b.home.x0 !== undefined) { const P = b.home.parent || b.home; if (P.called === 1) P.lost = true; }   // c54: 문이 부서진 건물 안 사람이 감염됐다 → 두 번째 출동
     if (b.mark) { scene.remove(b.mark); b.mark = null; }
     if (b.stick) { b.mesh.remove(b.stick); b.stick = null; b.vig = false; } if (b.tool) { b.mesh.remove(b.tool); b.tool = null; }   /* c85: 들고 있던 것(기타·연장)도 사라진다 */   // c40: 감염되면 몽둥이를 놓는다   // v401: 감염되면 저격수 다이아몬드 지움
-    if (b.gooS) { b.mesh.remove(b.gooS); b.gooS = null; } b.goo = false;   // v275: 좀비가 되면 산성 덩어리는 사라진다
+    if (b.gooS) { b.mesh.remove(b.gooS); b.gooS = null; } b.goo = false;
+    if (b.aimGun) { b.mesh.remove(b.aimGun); b.aimGun = null; } if (b.sg) { b.sg = false; b.baseCol = undefined; }   /* c581: 샷건 경찰이 좀비가 되면 샷건은 사라진다 */   // v275: 좀비가 되면 산성 덩어리는 사라진다
     if (b.scr) scr.inf[b.scr]++;              // 성장 구역 스폰이 감염됨 (v230)
     b.kind = 'ally';
     if (CH_TUT && !chTutAlly1 && !b.fromVat) { chTutAlly1 = true; pendingAward.push('mut:zombie'); }   // c341: 튜토리얼 — 처음 감염시킨 동료 한 번만 동료 획득창
@@ -5699,7 +5711,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     draw(dt);
     if (CHAPTER) chShadow();                  // c13: 산 그림자
     checkTut();                               // 처음 만난 적 소개 (v202)
-    stepFx(dt); stepChips(dt); drawObjBars(dt);              // 사물 이펙트·체력바 (v239)
+    stepFx(dt); stepChips(dt); drawObjBars(dt); if (CHAPTER) chFanTick(dt);   /* c581 */              // 사물 이펙트·체력바 (v239)
     itemsTick(dt);                            // v275: 변이 시간 · 히드라 토사물 · 산성 덩어리 (v286: 권총 삭제)
     scrTick(dt);                              // 첫 마을 성장 구역 스폰 (v230)
     spawnFrames++;
@@ -7637,6 +7649,12 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
   //   ② 경보 출동: 경보 1단계가 되는 순간 한 번, 그 뒤 40초마다 (단계마다 3초씩 짧아진다). 걸어서 / 경찰차 50:50.
   //      내가 있는 구역의 바깥 라인 중 안 보이는 곳에서 나와 마지막 사건 자리를 쫓는다 (테스트맵과 같다)
   const CH_LM = new Set(['bank', 'police', 'fire', 'mart', 'hospital', 'army', 'library', 'conv', 'gym']);
+  const CH_MORE = 1.25, CH_MIX_K = 0.3;   /* c581: 섞임 시작부터 출동 경찰 · 특공대 군인 25% 늘림 · 그중 30% 교체 */
+  function chSfMore(groups) {   // c581: 무리들의 군인 수 합을 1.25배로 — 늘어난 군인은 무리마다 돌아가며 붙인다 (저격수 그대로)
+    if (!(CHAPTER && chAL >= CH_MIXL)) return;
+    const g = groups.reduce((n, L) => n + L.filter((t) => t === 'soldier').length, 0), add = Math.round(g * CH_MORE) - g;
+    for (let i = 0; i < add; i++) groups[i % groups.length].push('soldier');
+  }
   const CH_DISP_N = [[2, 2], [2, 3], [3, 4], [4, 4], [5, 6]], CH_DISP_T = [28, 26.5, 25, 23.5, 22];   // c248: 경보 단계별 출동 인원 (최소, 최대) · 간격(초)   // 경보 단계별 출동 인원 (최소, 최대)
   let chDispT = -1, chDispStage = 0;
   const CH_TWICE = new Set(['mart', 'hospital', 'bank', 'library']);   // c48: 두 번 출동 — c54: 문이 부서졌을 때 · 그 뒤 안에 있던 사람이 한 명이라도 감염됐을 때
@@ -7675,7 +7693,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
     if (chDispT > 0) { chDispT -= dt; return; }
     const chCarK = 1 + 0.15 * (5 - stars) / 4; chDispT = CH_DISP_T[Math.min(CH_DISP_T.length, stars) - 1];   /* c248: 수상함 28초 → 데프콘 22초 (사이는 1.5초씩) */
     const site = lastIncident ? lastIncident.clone() : new THREE.Vector2(me.foot.x, me.foot.z);
-    const [lo, hi] = CH_DISP_N[Math.min(CH_DISP_N.length, stars) - 1], n = lo + Math.floor(Math.random() * (hi - lo + 1));
+    const [lo, hi] = CH_DISP_N[Math.min(CH_DISP_N.length, stars) - 1], n0 = (lo + Math.floor(Math.random() * (hi - lo + 1))) * (chAL >= CH_MIXL ? CH_MORE : 1), n = Math.floor(n0) + (Math.random() < n0 % 1 ? 1 : 0);   /* c581 */
     const pCar = chCarK / (1 + chCarK), zi = chZoneAt(me.foot.x, me.foot.z);   // c248: 인원을 무리로 나눠 — 무리마다 경찰차(2~3명) 또는 걸어서(1~2명)
     for (let left = n; left > 0;) {
       if (Math.random() < pCar) { const k = Math.min(left, 2 + (Math.random() < 0.5 ? 1 : 0)), q = chEdgeSpot(zi); addCar(q.x, q.z, Math.atan2(site.y - q.z, site.x - q.x), site, k); left -= k; continue; }
@@ -8130,7 +8148,7 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
           for (let i = 0; i < k; i++) if (Math.random() < 2 / 3 && live(true) < 6) chBarAdd(X, e, true); if (Math.random() < 0.2 * 2 / 3 && live(false) < 3) chBarAdd(X, e, false); }   /* c88: 한쪽 끝에 바리케이트 6개 · 경찰차 3대까지 */   // 가끔 경찰차도 한 대
       }
       const r2 = Math.random();                // 수비대: 말한 수에서 한두 명씩 다르게 — 1단계 경찰 4 · 2단계 경찰 +2 · 3단계 군인 +3 저격수 +1 · 4단계 군인 +2 저격수 +1 · 그 뒤로 군인 +3씩
-      const add = s <= 2 ? { police: N(2, 4) } : s < CH_MIXL ? { soldier: 1, sniper: 1 } : s === CH_MIXL ? {} : (() => { const o = { soldier: 1, sniper: 1, sg: 1 }; delete o[['soldier', 'sniper', 'sg'][Math.floor(Math.random() * 3)]]; return o; })();   /* c551: 1~2 경찰 2~4 · 터렛 전 군인 1 + 사각 1 · 터렛 단계는 터렛만 · 그 뒤 사각·군인·샷건 중 랜덤 둘 */
+      const add = s === 1 ? { police: 2 } : s === 2 ? { police: N(2, 4) } : CHAPTER && s > CH_MIXL ? { soldier: 2, sniper: 1 } : { soldier: 2 };   /* c581: 수상함 경찰 2 · 경계 경찰 2~4 · 그 뒤 군인 2씩 · 터렛 다음 단계부터 군인 2 + 사각 1 */
       chNoMix = true;   /* c551: 건널목 증원은 정한 그대로 (섞임 없음) */
       for (const type of ['police', 'soldier', 'sniper', 'sg']) for (let i = 0, n = add[type] || 0; i < n; i++) {   /* c72: 인원 절반 */ const c = addCitizen(X.cx, X.cz, square(X.cx, X.cz), type === 'sniper' ? 'robot' : type === 'sg' ? 'police' : type); if (type === 'sg') chMakeSg(c);   /* c505: 건널목 저격수 → 로봇 */ c.gar = X; c.fresh = true; X.units.push(c); }
       chNoMix = false;
@@ -9068,13 +9086,15 @@ ${[1, 2, 3, 4].map((n) => [n, NODES[n][0] * 24, NODES[n][1] * 10]).map(([n, x, y
         const cut = Math.random() < 0.5 ? 0 : 1 + Math.floor(Math.random() * (L.length - 1)), C = cut ? [L.slice(0, cut), L.slice(cut)] : [L];
         for (const c of C) { c.sort((a, b) => (b === S_) - (a === S_)); P.push(['C', c]); }
       }   /* c461: 1팀 저1군3 · 2팀 저2군4 · 3팀 저2군6 (보스 뒤 반복도 3팀) */   /* c459: 보스 뒤 반복 팀 저2군6 */   /* c457: 4번째를 2 · 3번째에 나눔 — 저1군3 · 저3군8 · 저4군10 */
+      chSfMore(P.map(([, c]) => c));   /* c581 */
       P.forEach(([m, c], k) => teamWait.push(m === 'W' ? { comp: c, t: k * 3, first: false, seg, hold: true, sfw: i + 1 } : { car: c, t: k * 3, seg: k ? chTeamSeg2(seg) : seg, hold: true, sfw: i + 1 }));   /* c505: 몇 번째 특공대 */
       return;
     }   /* c223: 2대 · 차마다 군인 1명 빼고 */
     const q = Math.random(), G6 = [G_, G_, G_, G_, G_, G_];
-    if (q < 0.1) { teamWait.push({ car: [S_, G_, G_, G_], t: 0, seg, hold: true }); return; }   // 쉬어 가는 차례 — 군인차 1대
+    if (q < 0.1) { const C1 = [S_, G_, G_, G_]; chSfMore([C1]); teamWait.push({ car: C1, t: 0, seg, hold: true }); return; }   /* c581 */   // 쉬어 가는 차례 — 군인차 1대
     const L = q < 0.3 ? [G6, G6.slice()] : q < 0.65 ? [[S_, G_, G_, S_, G_], [S_, G_, G_, G_]] : [[S_, G_, G_, S_, G_], G6];
     if (Math.random() < 0.5) L.reverse();
+    L[0] = L[0].slice(); L[1] = L[1].slice(); chSfMore(L);   /* c581 */
     teamWait.push({ car: L[0], t: 0, seg, hold: true }, { car: L[1], t: rand(0, 5), seg: chTeamSeg2(seg), hold: true });
   }
   // ── c64: 근접 거리 안에 적(사람)이 있으면 사물(문·차·바리케이트·금고)보다 그 적을 먼저 친다 — 나도 동료도 ──
