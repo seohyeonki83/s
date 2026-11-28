@@ -1,0 +1,1 @@
+C589_R = [('new THREE.PlaneGeometry(0.34, 0.09).translate(0.3 + 0.17, 0, 0), p = new THREE.PlaneGeometry(0.16, 0.16).translate(0.66, 0, 0);', 'new THREE.PlaneGeometry(0.24, 0.09).translate(0.3 + 0.12, 0, 0), p = new THREE.PlaneGeometry(0.16, 0.16).translate(0.54, 0, 0);   /* c589: 받침판 0.12 안쪽으로 */')]
